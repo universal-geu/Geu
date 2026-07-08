@@ -4,6 +4,8 @@ import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import { getSiteImages } from "@/lib/site-images";
 
+export const dynamic = "force-dynamic";
+
 const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Cauchos", href: "/cauchos" },

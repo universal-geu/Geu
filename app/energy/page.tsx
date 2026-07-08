@@ -4,6 +4,8 @@ import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../
 import SolutionsCarousel from "./solutions-carousel";
 import { getSiteImages } from "@/lib/site-images";
 
+export const dynamic = "force-dynamic";
+
 const heroImage = "/geu-energy-hero-field.png";
 const heroVideo = "/geu-energy-hero-field.mp4";
 const orbitStatsImage = "/geu-energy-orbit-stats.png";

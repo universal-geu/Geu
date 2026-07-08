@@ -10,6 +10,8 @@ import { DEV_ADMIN_USER, getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import { getCartItemsForUser } from "@/lib/cart";
 
+export const dynamic = "force-dynamic";
+
 const orbitron = Orbitron({
   subsets: ["latin"],
   variable: "--font-display",

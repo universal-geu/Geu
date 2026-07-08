@@ -7,6 +7,8 @@ import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../
 import { cauchosCategoriasNombres, productosCatalogo } from "../data/catalog";
 import { getSiteImages } from "@/lib/site-images";
 
+export const dynamic = "force-dynamic";
+
 const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Cauchos", href: "/cauchos" },
