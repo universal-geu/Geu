@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImages, resolveImage } from "@/lib/site-images";
 
 export const dynamic = "force-dynamic";
 
@@ -229,8 +229,7 @@ export default async function InnovationPage() {
           <div
             className="mx-auto min-h-[260px] max-w-[1920px] bg-cover bg-center md:min-h-[420px] xl:min-h-[560px]"
             style={{
-              backgroundImage:
-                "linear-gradient(90deg, rgba(4,152,180,0.18), rgba(2,6,23,0.08)), url('/innovation-hero-banner.png')",
+              backgroundImage: `linear-gradient(90deg, rgba(4,152,180,0.18), rgba(2,6,23,0.08)), url('${resolveImage("innovation-principal", siteImages)}')`,
             }}
             aria-label="Innovacion empresarial para cada industria"
             role="img"

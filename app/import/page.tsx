@@ -5,7 +5,7 @@ import CauchosCartLink from "../components/cauchos-cart-link";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import { cauchosCategoriasNombres, productosCatalogo } from "../data/catalog";
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImages, resolveImage } from "@/lib/site-images";
 
 export const dynamic = "force-dynamic";
 
@@ -262,7 +262,7 @@ export default async function ImportPage() {
             style={{ maxWidth: "1632px" }}
           >
             <Image
-              src="/geu-import-main-banner.png"
+              src={resolveImage("import-principal", siteImages)}
               alt="GEU Import conecta proveedores y mercados internacionales"
               fill
               priority
