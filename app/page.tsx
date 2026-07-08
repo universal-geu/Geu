@@ -1,65 +1,249 @@
 import Image from "next/image";
+import Link from "next/link";
+import type { CSSProperties } from "react";
+import { geuCompanies } from "./data/geu-companies";
+
+const homeCards = [
+  {
+    ...geuCompanies[0],
+    image: "/home-cauchos.png",
+    alt: "Rollos de caucho industrial en una fabrica iluminada en azul.",
+  },
+  {
+    ...geuCompanies[1],
+    image: "/home-import.png",
+    alt: "Contenedor rojo en puerto industrial al atardecer.",
+  },
+  {
+    ...geuCompanies[2],
+    image: "/home-innovation.png",
+    alt: "Bombillo luminoso en entorno tecnologico.",
+  },
+  {
+    ...geuCompanies[3],
+    image: "/home-energy.png",
+    alt: "Paneles solares y aerogeneradores al atardecer.",
+  },
+  {
+    ...geuCompanies[4],
+    image: "/home-plastic.png",
+    alt: "Perfiles plasticos industriales sobre materia prima blanca.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main
+      className="geu-entry-home"
+      style={{
+        position: "relative",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        overflowX: "hidden",
+        background: "#ffffff",
+        color: "#0b2f7e",
+        padding: 0,
+      }}
+    >
+      <Link
+        href="/quienes-somos"
+        className="geu-entry-about"
+        style={{
+          position: "absolute",
+          top: "clamp(1.2rem, 4.7vh, 2.1rem)",
+          right: "clamp(1rem, 2vw, 1.9rem)",
+          zIndex: 4,
+          color: "#0b419a",
+          fontSize: "clamp(0.72rem, 0.86vw, 0.9rem)",
+          fontWeight: 700,
+          lineHeight: 1,
+        }}
+      >
+        Nosotros
+      </Link>
+
+      <header
+        className="geu-entry-brand"
+        aria-label="Grupo Empresarial Universal"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+          margin: 0,
+          padding: "clamp(1.4rem, 4vh, 3rem) clamp(1rem, 3vw, 2rem) clamp(1.1rem, 3vh, 1.8rem)",
+          flex: "0 0 auto",
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), url('/geu-home-texture.png')",
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+          borderBottom: "1px solid rgba(15,23,42,0.12)",
+        }}
+      >
+        <span className="geu-entry-logo-wrap">
+          <Image
+            src="/home-geu-logo.png"
+            alt="GEU Grupo Empresarial Universal"
+            width={2048}
+            height={768}
+            priority
+            style={{
+              width: "min(56vw, 48rem)",
+              minWidth: "22rem",
+              height: "auto",
+              objectFit: "contain",
+            }}
+            className="geu-entry-logo"
+          />
+        </span>
+      </header>
+
+      <section
+        className="geu-entry-grid"
+        aria-label="Unidades de negocio GEU"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+          gridAutoRows: "1fr",
+          gap: 0,
+          width: "100%",
+          margin: 0,
+          flex: "1 1 auto",
+          minHeight: "clamp(26rem, 55vh, 43rem)",
+        }}
+      >
+        {homeCards.map((company, index) => (
+          <Link
+            key={company.slug}
+            href={company.href}
+            aria-label={`Entrar a ${company.name}`}
+            className="geu-entry-card"
+            style={
+              {
+                "--accent": company.accent,
+                "--card-index": index,
+                position: "relative",
+                display: "block",
+                minHeight: "100%",
+                overflow: "hidden",
+                isolation: "isolate",
+                background: "#05070b",
+                color: "white",
+                borderRight: index < homeCards.length - 1 ? "3px solid #ffffff" : "0",
+                opacity: 1,
+                transform: "none",
+                animation: "none",
+              } as CSSProperties
+            }
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={company.image}
+              alt={company.alt}
+              className="geu-entry-card-image"
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            <span
+              className="geu-entry-card-shade"
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 1,
+              }}
+            />
+            <span className="geu-entry-card-glow" />
+            <span className="geu-entry-card-scan" />
+              <span
+                className="geu-entry-card-copy"
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  bottom: "clamp(1.25rem, 4.5vh, 3.2rem)",
+                  zIndex: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  width: "min(82%, 17rem)",
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                  transform: "translateX(-50%)",
+                }}
+              >
+              <span
+                className="geu-entry-accent"
+                style={{
+                  display: "block",
+                  width: "clamp(2.6rem, 5vw, 4rem)",
+                  height: "0.16rem",
+                  marginBottom: "clamp(0.42rem, 1.3vh, 0.7rem)",
+                  background: company.accent,
+                }}
+              />
+              <span
+                className="geu-entry-eyebrow"
+                style={{
+                  fontSize: "clamp(0.78rem, 1vw, 1rem)",
+                  fontWeight: 800,
+                  lineHeight: 0.95,
+                  letterSpacing: 0,
+                }}
+              >
+                {company.eyebrow}
+              </span>
+              <span
+                  className="geu-entry-title"
+                  style={{
+                  marginTop: "0.05rem",
+                  fontSize: "clamp(1.35rem, 2.1vw, 2.25rem)",
+                  fontWeight: 950,
+                  lineHeight: 0.9,
+                  letterSpacing: 0,
+                }}
+              >
+                {company.title}
+              </span>
+              <span
+                className="geu-entry-description"
+                style={{
+                  maxWidth: "15rem",
+                  marginTop: "clamp(0.35rem, 1vh, 0.58rem)",
+                  color: "rgba(255,255,255,0.86)",
+                  fontSize: "clamp(0.66rem, 0.82vw, 0.86rem)",
+                  fontWeight: 700,
+                  lineHeight: 1.24,
+                  textTransform: "none",
+                }}
+              >
+                {company.description}
+              </span>
+              <span
+                className="geu-entry-cta"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  marginTop: "clamp(0.95rem, 2.1vh, 1.35rem)",
+                  color: "#ffffff",
+                  fontSize: "clamp(0.78rem, 0.95vw, 1rem)",
+                  fontWeight: 800,
+                  lineHeight: 1,
+                  textTransform: "none",
+                }}
+              >
+                Entrar <span aria-hidden="true">→</span>
+              </span>
+            </span>
+          </Link>
+        ))}
+      </section>
+    </main>
   );
 }
