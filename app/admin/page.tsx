@@ -61,7 +61,7 @@ const initialState: FormState = {
   garantia: "Garantía técnica según aplicación y condiciones de uso.",
 };
 
-const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 const RECOMMENDED_FILE_SIZE_KB = 500;
 const EXTRA_IMAGE_SLOTS = 3;
 const LOCAL_PRODUCT_IMAGE_FALLBACK = "/cauchos-product-sellos.png";
@@ -750,7 +750,7 @@ export default function AdminPage() {
     const file = event.target.files?.[0] ?? null;
 
     if (file && file.size > MAX_FILE_SIZE_BYTES) {
-      setRequestError("La imagen supera el límite de 3 MB. Intenta con una versión más liviana.");
+      setRequestError("La imagen supera el límite de 4 MB. Intenta con una versión más liviana.");
       setSelectedImage(null);
       setFileInputKey((current) => current + 1);
       return;
@@ -765,7 +765,7 @@ export default function AdminPage() {
       const file = event.target.files?.[0] ?? null;
 
       if (file && file.size > MAX_FILE_SIZE_BYTES) {
-        setRequestError("Una de las imágenes extra supera el límite de 3 MB. Intenta con una versión más liviana.");
+        setRequestError("Una de las imágenes extra supera el límite de 4 MB. Intenta con una versión más liviana.");
         setSelectedExtraImages((current) =>
           current.map((item, itemIndex) => (itemIndex === index ? null : item)),
         );
@@ -1199,7 +1199,7 @@ export default function AdminPage() {
     setImageError(null);
     try {
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        throw new Error("La imagen supera el límite de 3 MB.");
+        throw new Error("La imagen supera el límite de 4 MB.");
       }
 
       const form = new FormData();
@@ -1963,7 +1963,7 @@ export default function AdminPage() {
                     Formatos permitidos: JPG, PNG o WEBP. En local, si Storage no está configurado, se guardará una imagen temporal.
                   </p>
                   <p className="text-xs leading-6 text-[#6e7379]">
-                    Recomendado: hasta {RECOMMENDED_FILE_SIZE_KB} KB por imagen. Límite máximo: 3 MB.
+                    Recomendado: hasta {RECOMMENDED_FILE_SIZE_KB} KB por imagen. Límite máximo: 4 MB.
                   </p>
                   {selectedImage && (
                     <p className="text-xs leading-6 text-[#16384f]">
@@ -3456,7 +3456,7 @@ export default function AdminPage() {
                     Editar imágenes
                   </h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
-                    Sube o reemplaza las imágenes del sitio público. JPG · PNG · WEBP · máx. 3 MB.
+                    Sube o reemplaza las imágenes del sitio público. JPG · PNG · WEBP · máx. 4 MB.
                   </p>
                 </div>
                 <button

@@ -2,7 +2,7 @@ import { getStorageBucket, createSupabaseStorageClient } from "@/lib/supabase-st
 import { slugify } from "@/app/data/catalog";
 import { requireAdminUser } from "@/lib/admin";
 
-const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 function getFileExtension(fileName: string) {
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
       return Response.json(
-        { error: "La imagen supera el límite de 3 MB." },
+        { error: "La imagen supera el límite de 4 MB." },
         { status: 400 },
       );
     }
