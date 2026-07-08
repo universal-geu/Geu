@@ -202,16 +202,6 @@ export default async function CauchosPage() {
             style={{ maxWidth: "1632px" }}
           />
         </div>
-        <div className="bg-white">
-          <Image
-            src={resolveImage("banner-marcas-promo", siteImages)}
-            alt="Promociones y marcas destacadas"
-            width={2048}
-            height={768}
-            className="mx-auto h-auto w-full object-contain"
-            style={{ maxWidth: "1632px" }}
-          />
-        </div>
       </section>
 
       <section id="productos" className="scroll-mt-56 border-b border-slate-200 bg-slate-50 text-slate-950">
@@ -384,8 +374,8 @@ export default async function CauchosPage() {
 
       <section className="mx-auto max-w-[1500px] px-5 pb-10 md:px-8">
         <Image
-          src="/banner-universal-cauchos-new.jpg"
-          alt="Banner Universal de Cauchos"
+          src={resolveImage("banner-marcas-promo", siteImages)}
+          alt="Promociones y marcas destacadas"
           width={2048}
           height={768}
           className="h-auto w-full rounded-[10px] border border-slate-200 shadow-[0_18px_44px_rgba(15,23,42,0.12)]"

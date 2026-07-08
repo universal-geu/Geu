@@ -9,7 +9,7 @@ export type ImageSlot = {
 
 export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "banner-principal", label: "Banner principal", group: "Página de inicio", division: "Cauchos", defaultSrc: "/banner-geu-universal-de-cauchos.jpg", dims: "2048 × 768 px" },
-  { key: "banner-marcas-promo", label: "Promociones y marcas", group: "Página de inicio", division: "Cauchos", defaultSrc: "/cauchos-brand-promo.png", dims: "2048 × 768 px" },
+  { key: "banner-marcas-promo", label: "Promociones y marcas", group: "Página de inicio", division: "Cauchos", defaultSrc: "/banner-universal-cauchos-new.jpg", dims: "2048 × 768 px" },
   { key: "oferta-cauchos-productos", label: "Oferta 1 · Productos de caucho", group: "Ofertas", division: "Cauchos", defaultSrc: "/offer-productos-caucho.png", dims: "1024 × 1792 px" },
   { key: "oferta-cauchos-industriales", label: "Oferta 2 · Cauchos industriales", group: "Ofertas", division: "Cauchos", defaultSrc: "/offer-cauchos-industriales.png", dims: "1024 × 1792 px" },
   { key: "oferta-mangueras-industriales", label: "Oferta 3 · Mangueras industriales", group: "Ofertas", division: "Cauchos", defaultSrc: "/offer-mangueras-industriales.png", dims: "1024 × 1792 px" },
