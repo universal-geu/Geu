@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import SolutionsCarousel from "./solutions-carousel";
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImages, resolveImage } from "@/lib/site-images";
 
 export const dynamic = "force-dynamic";
 
@@ -203,7 +203,7 @@ export default async function EnergyPage() {
       <section className="relative isolate flex min-h-screen flex-col overflow-hidden border-b border-white/10">
         <video
           src={heroVideo}
-          poster={heroImage}
+          poster={resolveImage("energy-principal", siteImages)}
           autoPlay
           muted
           loop

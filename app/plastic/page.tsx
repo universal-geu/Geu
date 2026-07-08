@@ -2,11 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImages, resolveImage } from "@/lib/site-images";
 
 export const dynamic = "force-dynamic";
-
-const plasticHeroImage = "/geu-plastic-main-banner.png";
 
 const navItems = [
   { label: "Inicio", href: "/" },
@@ -205,7 +203,7 @@ export default async function PlasticPage() {
         <div
           className="mx-auto min-h-[320px] max-w-[1920px] bg-cover bg-center md:min-h-[520px] xl:min-h-[650px]"
           style={{
-            backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0.04), rgba(0,0,0,0.1)), url('${plasticHeroImage}')`,
+            backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0.04), rgba(0,0,0,0.1)), url('${resolveImage("plastic-principal", siteImages)}')`,
           }}
           aria-label="GEU Plastic, perfiles en PVC de alta calidad para todas las industrias"
           role="img"
@@ -293,7 +291,7 @@ export default async function PlasticPage() {
           </div>
           <div className="relative min-h-[420px] overflow-hidden rounded-[8px] border border-slate-200 shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
             <Image
-              src={plasticHeroImage}
+              src={resolveImage("plastic-principal", siteImages)}
               alt="Materiales plasticos tecnicos GEU Plastic"
               fill
               sizes="(min-width: 1024px) 50vw, 100vw"
