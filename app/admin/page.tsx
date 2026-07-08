@@ -517,6 +517,9 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<
     "create" | "edit" | "inventory" | "orders" | "reports" | "images" | null
   >(null);
+  const [imageDivisionFilter, setImageDivisionFilter] = useState<
+    "Cauchos" | "Import" | "Innovation" | "Plastic" | "Energy"
+  >(isImportAdmin ? "Import" : "Cauchos");
   const [siteImages, setSiteImages] = useState<Record<string, string>>({});
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(null);
@@ -1195,13 +1198,19 @@ export default function AdminPage() {
     setUploadingImageKey(slotKey);
     setImageError(null);
     try {
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        throw new Error("La imagen supera el límite de 3 MB.");
+      }
+
       const form = new FormData();
       form.append("file", file);
       form.append("key", slotKey);
       const uploadResponse = await fetch("/api/admin/images/upload", { method: "POST", body: form });
-      const uploadPayload = (await uploadResponse.json()) as { publicUrl?: string; error?: string };
-      if (!uploadResponse.ok || !uploadPayload.publicUrl) {
-        throw new Error(uploadPayload.error || "No se pudo subir la imagen.");
+      const uploadPayload = (await uploadResponse
+        .json()
+        .catch(() => null)) as { publicUrl?: string; error?: string } | null;
+      if (!uploadResponse.ok || !uploadPayload?.publicUrl) {
+        throw new Error(uploadPayload?.error || "No se pudo subir la imagen.");
       }
 
       const saveResponse = await fetch("/api/admin/images", {
@@ -3447,7 +3456,7 @@ export default function AdminPage() {
                     Editar imágenes
                   </h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
-                    Sube o reemplaza las imágenes del sitio público. JPG · PNG · WEBP · máx. 5 MB.
+                    Sube o reemplaza las imágenes del sitio público. JPG · PNG · WEBP · máx. 3 MB.
                   </p>
                 </div>
                 <button
@@ -3465,16 +3474,43 @@ export default function AdminPage() {
                 </p>
               )}
 
+              <div className="mb-8 flex flex-wrap gap-2">
+                {(["Cauchos", "Import", "Innovation", "Plastic", "Energy"] as const).map(
+                  (division) => (
+                    <button
+                      key={division}
+                      type="button"
+                      onClick={() => setImageDivisionFilter(division)}
+                      className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
+                        imageDivisionFilter === division
+                          ? "border-[#16384f] bg-[#16384f] text-white"
+                          : "border-black/10 text-[#16384f] hover:bg-[#16384f]/10"
+                      }`}
+                    >
+                      {division}
+                    </button>
+                  ),
+                )}
+              </div>
+
               {isLoadingImages ? (
                 <p className="text-sm text-[#6e7379]">Cargando imágenes...</p>
               ) : (
-                Array.from(new Set(IMAGE_SLOTS.map((slot) => slot.group))).map((group) => (
+                Array.from(
+                  new Set(
+                    IMAGE_SLOTS.filter(
+                      (slot) => slot.division === imageDivisionFilter,
+                    ).map((slot) => slot.group),
+                  ),
+                ).map((group) => (
                   <div key={group} className="mb-8 last:mb-0">
                     <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">
                       {group}
                     </h3>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {IMAGE_SLOTS.filter((slot) => slot.group === group).map((slot) => {
+                      {IMAGE_SLOTS.filter(
+                        (slot) => slot.group === group && slot.division === imageDivisionFilter,
+                      ).map((slot) => {
                         const currentSrc = siteImages[slot.key] ?? slot.defaultSrc;
                         const isUploading = uploadingImageKey === slot.key;
                         const isSaved = savedImageKey === slot.key;

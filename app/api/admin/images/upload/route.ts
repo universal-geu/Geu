@@ -1,7 +1,7 @@
 import { requireAdminUser } from "@/lib/admin";
 import { createSupabaseStorageClient, getStorageBucket } from "@/lib/supabase-storage";
 
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export async function POST(request: Request) {
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Formato no válido. Usa JPG, PNG o WEBP." }, { status: 400 });
     }
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      return Response.json({ error: "La imagen supera el límite de 5 MB." }, { status: 400 });
+      return Response.json({ error: "La imagen supera el límite de 3 MB." }, { status: 400 });
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
