@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GEU
 
-## Getting Started
+Proyecto `Next.js 16` para la plataforma de GEU, separado de `Unipars` pero reutilizando una base funcional similar.
 
-First, run the development server:
+## Base de datos propia para GEU
+
+Este proyecto ya quedó preparado para usar una base de datos independiente.
+
+### 1. Crear archivo de entorno
+
+Copia `.env.example` a `.env.local` y completa al menos:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/geu"
+DIRECT_URL="postgresql://USER:PASSWORD@HOST:5432/geu"
+APP_SESSION_SECRET="un-secreto-largo-y-seguro"
+ADMIN_EXTRA_PIN="1234"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Si usarás Supabase Storage o OpenAI, completa también las demás variables.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Crear la nueva base
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Crea una base exclusiva para GEU, por ejemplo:
 
-## Learn More
+- nombre sugerido: `geu`
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Generar y aplicar esquema
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run db:generate
+npm run db:push
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 4. Sembrar datos iniciales
 
-## Deploy on Vercel
+```bash
+npm run db:seed
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+El seed crea:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- usuario admin: `admin@geu.com.co`
+- clave inicial: `123456789`
+
+## Desarrollo
+
+```bash
+npm run dev -- --port 3001
+```
+
+Abrir:
+
+- [http://localhost:3001](http://localhost:3001)
+
+## Nota
+
+`GEU` y `Unipars` deben usar bases separadas para no mezclar:
+
+- usuarios
+- productos
+- pedidos
+- inventario
+- configuración comercial
