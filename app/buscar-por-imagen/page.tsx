@@ -3,6 +3,8 @@ import Link from "next/link";
 import { slugCategoria } from "../data/catalog";
 import { getProducts } from "@/lib/products";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Buscar por imagen | Unipars",
   description: "Concepto visual de búsqueda de repuestos por imagen en Unipars.",

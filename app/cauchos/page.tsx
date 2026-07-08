@@ -7,6 +7,8 @@ import CauchosDynamicMenu from "../components/cauchos-dynamic-menu";
 import { cauchosCategoriasNombres, productosCatalogo } from "../data/catalog";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 
+export const dynamic = "force-dynamic";
+
 const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Cauchos", href: "/cauchos", active: true },
