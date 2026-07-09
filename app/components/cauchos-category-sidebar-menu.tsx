@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { cauchosCategoriasNombres, slugify } from "../data/catalog";
 import { useProducts } from "./products-provider";
+import { useCauchosMenu } from "./cauchos-menu-context";
 
 const fallbackDepartments = [...cauchosCategoriasNombres];
 
@@ -73,6 +74,7 @@ const DEPARTMENT_ICONS: Record<string, () => React.JSX.Element> = {
 
 export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath?: string }) {
   const { products } = useProducts();
+  const { isOpen, close } = useCauchosMenu();
   const cauchosBasePath = basePath || "/cauchos";
   const [activeDept, setActiveDept] = useState<string | null>(null);
 
@@ -115,8 +117,17 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
 
   const active = menuData.find((department) => department.title === activeDept) ?? null;
 
+  if (!isOpen) {
+    return null;
+  }
+
   return (
-    <div className="border-t border-slate-200 bg-white">
+    <div className="absolute inset-x-0 top-full z-40 border-t border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
+      <div
+        className="fixed inset-0 -z-10"
+        aria-hidden="true"
+        onClick={close}
+      />
       <div className="relative" onMouseLeave={() => setActiveDept(null)}>
         <nav
           className="w-[260px] shrink-0 border-r border-slate-200 py-4"

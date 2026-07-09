@@ -7,6 +7,8 @@ import { cauchosCategoriasNombres, slugify } from "../data/catalog";
 import CauchosAddToCartButton from "./cauchos-add-to-cart-button";
 import CauchosCartLink from "./cauchos-cart-link";
 import CauchosCategorySidebarMenu from "./cauchos-category-sidebar-menu";
+import CauchosMenuButton from "./cauchos-menu-button";
+import { CauchosMenuProvider } from "./cauchos-menu-context";
 import { useProducts } from "./products-provider";
 
 type Props = {
@@ -220,6 +222,7 @@ export default function CauchosCategoryProductsPage({ segments }: Props) {
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
+      <CauchosMenuProvider>
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
         <div className="border-b border-slate-200 bg-slate-50">
           <div className="mx-auto flex h-8 max-w-[1500px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8">
@@ -257,20 +260,23 @@ export default function CauchosCategoryProductsPage({ segments }: Props) {
             />
           </Link>
 
-          <form className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner">
-            <input
-              aria-label="Buscar productos de caucho"
-              className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-              placeholder="Buscar laminas, sellos, mangueras, empaques..."
-            />
-            <button
-              type="button"
-              className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
-              aria-label="Buscar"
-            >
-              ⌕
-            </button>
-          </form>
+          <div className="flex items-center gap-3">
+            <CauchosMenuButton />
+            <form className="flex min-h-11 flex-1 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner">
+              <input
+                aria-label="Buscar productos de caucho"
+                className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                placeholder="Buscar laminas, sellos, mangueras, empaques..."
+              />
+              <button
+                type="button"
+                className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
+                aria-label="Buscar"
+              >
+                ⌕
+              </button>
+            </form>
+          </div>
 
           <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
             <CauchosCartLink />
@@ -281,6 +287,7 @@ export default function CauchosCategoryProductsPage({ segments }: Props) {
         </div>
         <CauchosCategorySidebarMenu basePath="/cauchos" />
       </header>
+      </CauchosMenuProvider>
 
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-[1500px] px-5 pb-3 pt-5 md:px-8">
