@@ -48,151 +48,261 @@ export const categorias: string[] = categoriasData.map((item) => item.nombre);
 
 // Placeholder subcategory groups for the Cauchos category menu, shown until
 // real products are assigned to each of the 8 industry categories from the
-// admin panel. Matches the "column of grouped links" layout used by
-// homecenter.com.co's category flyout.
+// admin panel. Each official category name is itself a list of sub-sectors
+// (e.g. "Alimentos, Farmacéuticos y cosméticos"), so each of those parts
+// becomes its own subcategory column, matching the "column of grouped
+// links" layout used by homecenter.com.co's category flyout.
 export const cauchosCategorySubcategories: Record<string, { name: string; items: string[] }[]> = {
   "Alimentos, Farmacéuticos y cosméticos": [
     {
-      name: "Sellos y Empaques Sanitarios",
-      items: ["Empaques para envases", "Sellos herméticos", "Juntas sanitarias", "O-rings grado alimenticio"],
+      name: "Alimentos",
+      items: [
+        "Empaques para envases alimenticios",
+        "Mangueras para líquidos alimenticios",
+        "Sellos herméticos para alimentos",
+        "Bandas transportadoras para alimentos",
+      ],
     },
     {
-      name: "Mangueras Sanitarias",
-      items: ["Mangueras para líquidos alimenticios", "Mangueras para vapor", "Mangueras de silicona"],
+      name: "Farmacéuticos",
+      items: [
+        "O-rings grado farmacéutico",
+        "Mangueras para laboratorio",
+        "Sellos para dosificadores",
+        "Diafragmas farmacéuticos",
+      ],
     },
     {
-      name: "Componentes para Envasado",
-      items: ["Tapas y válvulas", "Membranas dosificadoras", "Diafragmas"],
-    },
-    {
-      name: "Accesorios de Higiene Industrial",
-      items: ["Guantes técnicos", "Cintas antideslizantes", "Bandas transportadoras"],
+      name: "Cosméticos",
+      items: [
+        "Empaques para envases cosméticos",
+        "Válvulas para dispensadores",
+        "Sellos para frascos",
+        "Membranas dosificadoras",
+      ],
     },
   ],
   Agroindustria: [
     {
-      name: "Mangueras Agrícolas",
-      items: ["Mangueras de riego", "Mangueras para fumigación", "Mangueras de succión"],
-    },
-    {
-      name: "Sellos para Maquinaria Agrícola",
-      items: ["Empaques para tractores", "Retenes", "Juntas de motor"],
-    },
-    {
-      name: "Bandas y Correas",
-      items: ["Correas trapezoidales", "Bandas transportadoras", "Correas dentadas"],
-    },
-    {
-      name: "Piezas de Desgaste",
-      items: ["Rodillos de caucho", "Ruedas y llantas sólidas", "Topes y amortiguadores"],
+      name: "Agroindustria",
+      items: [
+        "Mangueras de riego",
+        "Mangueras para fumigación",
+        "Empaques para tractores",
+        "Retenes para maquinaria agrícola",
+        "Correas trapezoidales",
+        "Rodillos de caucho",
+      ],
     },
   ],
   "Petróleo, minería, gas, energías renovables y petroquímica": [
     {
-      name: "Mangueras Industriales",
-      items: ["Mangueras para petróleo", "Mangueras para gas", "Mangueras hidráulicas de alta presión"],
+      name: "Petróleo",
+      items: [
+        "Mangueras para petróleo",
+        "Empaques para válvulas de crudo",
+        "Juntas para bridas",
+        "Protectores de tubería",
+      ],
     },
     {
-      name: "Sellos y Empaques Técnicos",
-      items: ["Empaques para válvulas", "O-rings resistentes a químicos", "Juntas para bridas"],
+      name: "Minería",
+      items: [
+        "Rodillos de caucho para minería",
+        "Bandas transportadoras mineras",
+        "Revestimientos antidesgaste",
+        "Mangueras de succión",
+      ],
     },
     {
-      name: "Componentes para Perforación",
-      items: ["Revestimientos de caucho", "Protectores de tubería", "Empaques de pozo"],
+      name: "Gas",
+      items: [
+        "Mangueras para gas",
+        "O-rings resistentes a gas",
+        "Sellos para reguladores",
+        "Empaques para compresores",
+      ],
     },
     {
-      name: "Energías Renovables",
-      items: ["Sellos para paneles solares", "Juntas para turbinas eólicas", "Amortiguadores técnicos"],
+      name: "Energías renovables",
+      items: [
+        "Sellos para paneles solares",
+        "Juntas para turbinas eólicas",
+        "Amortiguadores técnicos",
+        "Empaques para inversores",
+      ],
+    },
+    {
+      name: "Petroquímica",
+      items: [
+        "Mangueras químicas",
+        "O-rings de vitón",
+        "Juntas resistentes a solventes",
+        "Empaques anticorrosivos",
+      ],
     },
   ],
   "Químico, aseo y plásticos": [
     {
-      name: "Mangueras Químicas",
-      items: ["Mangueras resistentes a ácidos", "Mangueras para solventes", "Mangueras de descarga química"],
+      name: "Químico",
+      items: [
+        "Mangueras resistentes a ácidos",
+        "Empaques químicos",
+        "O-rings de vitón",
+        "Juntas resistentes a solventes",
+      ],
     },
     {
-      name: "Sellos Anticorrosivos",
-      items: ["Empaques químicos", "O-rings de vitón", "Juntas resistentes a solventes"],
+      name: "Aseo",
+      items: [
+        "Escobillas técnicas",
+        "Mangueras de limpieza",
+        "Guantes resistentes a químicos",
+        "Bandas para lavado industrial",
+      ],
     },
     {
-      name: "Componentes para Plásticos",
-      items: ["Rodillos para extrusión", "Bandas para líneas de producción", "Piezas técnicas moldeadas"],
-    },
-    {
-      name: "Productos de Aseo Industrial",
-      items: ["Escobillas técnicas", "Mangueras de limpieza", "Guantes resistentes a químicos"],
+      name: "Plásticos",
+      items: [
+        "Rodillos para extrusión",
+        "Bandas para líneas de producción",
+        "Piezas técnicas moldeadas",
+        "Sellos para moldes",
+      ],
     },
   ],
   "Construcción, infraestructura, obra civil, cemento y agregados": [
     {
-      name: "Sellos para Construcción",
-      items: ["Juntas de dilatación", "Empaques para tuberías", "Sellos impermeabilizantes"],
+      name: "Construcción",
+      items: [
+        "Juntas de dilatación",
+        "Sellos impermeabilizantes",
+        "Empaques para tuberías",
+        "Bandas antivibratorias",
+      ],
     },
     {
-      name: "Mangueras para Obra Civil",
-      items: ["Mangueras para concreto", "Mangueras de succión", "Mangueras para bombeo"],
+      name: "Infraestructura",
+      items: [
+        "Apoyos de neopreno",
+        "Placas antivibratorias",
+        "Juntas de puente",
+        "Sellos para alcantarillado",
+      ],
     },
     {
-      name: "Amortiguación y Soportes",
-      items: ["Apoyos de neopreno", "Placas antivibratorias", "Topes de caucho"],
+      name: "Obra civil",
+      items: [
+        "Mangueras para concreto",
+        "Mangueras de succión",
+        "Mangueras para bombeo",
+        "Topes de caucho",
+      ],
     },
     {
-      name: "Piezas para Maquinaria Pesada",
-      items: ["Orugas de caucho", "Rodillos para maquinaria", "Fajas transportadoras"],
+      name: "Cemento",
+      items: [
+        "Bandas transportadoras para cemento",
+        "Mangueras para polvo",
+        "Sellos para silos",
+        "Fajas de descarga",
+      ],
+    },
+    {
+      name: "Agregados",
+      items: [
+        "Rodillos para maquinaria",
+        "Orugas de caucho",
+        "Fajas transportadoras",
+        "Revestimientos antidesgaste",
+      ],
     },
   ],
   "Transporte, logística y puertos marítimos": [
     {
-      name: "Defensas y Amortiguación Portuaria",
-      items: ["Defensas para muelles", "Parachoques industriales", "Topes de atraque"],
+      name: "Transporte",
+      items: [
+        "Mangueras para combustibles",
+        "Sellos para vehículos de carga",
+        "Empaques para contenedores",
+        "Burletes",
+      ],
     },
     {
-      name: "Mangueras para Transporte",
-      items: ["Mangueras para combustibles", "Mangueras de carga y descarga", "Mangueras flexibles"],
+      name: "Logística",
+      items: [
+        "Bandas transportadoras",
+        "Bandas modulares",
+        "Rodillos de transporte",
+        "Topes de carga",
+      ],
     },
     {
-      name: "Sellos para Vehículos de Carga",
-      items: ["Empaques para contenedores", "Juntas para remolques", "Burletes"],
-    },
-    {
-      name: "Bandas Transportadoras",
-      items: ["Bandas para carga", "Bandas modulares", "Rodillos de transporte"],
+      name: "Puertos marítimos",
+      items: [
+        "Defensas para muelles",
+        "Parachoques industriales",
+        "Topes de atraque",
+        "Mangueras de carga y descarga",
+      ],
     },
   ],
   "Manufactura, metalmecánica, siderúrgica y textiles": [
     {
-      name: "Bandas y Correas Industriales",
-      items: ["Correas de transmisión", "Bandas transportadoras", "Correas dentadas"],
+      name: "Manufactura",
+      items: [
+        "Bandas de transmisión",
+        "Sellos técnicos para maquinaria",
+        "Piezas moldeadas",
+        "Amortiguadores industriales",
+      ],
     },
     {
-      name: "Sellos Técnicos para Maquinaria",
-      items: ["Retenes", "O-rings", "Empaques para prensas"],
+      name: "Metalmecánica",
+      items: [
+        "Retenes",
+        "O-rings",
+        "Empaques para prensas",
+        "Recubrimientos de rodillos",
+      ],
     },
     {
-      name: "Piezas de Caucho a Medida",
-      items: ["Piezas moldeadas", "Recubrimientos de rodillos", "Amortiguadores industriales"],
+      name: "Siderúrgica",
+      items: [
+        "Bandas resistentes a altas temperaturas",
+        "Mangueras para hornos",
+        "Sellos térmicos",
+        "Piezas antidesgaste",
+      ],
     },
     {
-      name: "Textiles Técnicos",
-      items: ["Telas recubiertas de caucho", "Bandas textiles", "Lonas industriales"],
+      name: "Textiles",
+      items: [
+        "Telas recubiertas de caucho",
+        "Bandas textiles",
+        "Lonas industriales",
+        "Correas para telares",
+      ],
     },
   ],
   "Ferretería y otros": [
     {
-      name: "Sellos y Empaques Generales",
-      items: ["O-rings estándar", "Empaques planos", "Juntas universales"],
+      name: "Ferretería",
+      items: [
+        "O-rings estándar",
+        "Empaques planos",
+        "Juntas universales",
+        "Mangueras multiuso",
+      ],
     },
     {
-      name: "Mangueras de Uso General",
-      items: ["Mangueras de jardín", "Mangueras de aire", "Mangueras multiuso"],
-    },
-    {
-      name: "Accesorios de Caucho",
-      items: ["Topes de puerta", "Bases antideslizantes", "Protectores de esquina"],
-    },
-    {
-      name: "Herramientas y Repuestos",
-      items: ["Guantes de trabajo", "Bandas elásticas", "Repuestos varios"],
+      name: "Otros",
+      items: [
+        "Topes de puerta",
+        "Bases antideslizantes",
+        "Protectores de esquina",
+        "Repuestos varios",
+      ],
     },
   ],
 };
