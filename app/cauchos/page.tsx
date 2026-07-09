@@ -6,6 +6,7 @@ import CauchosCartLink from "../components/cauchos-cart-link";
 import CauchosCategorySidebarMenu from "../components/cauchos-category-sidebar-menu";
 import CauchosMenuButton from "../components/cauchos-menu-button";
 import { CauchosMenuProvider } from "../components/cauchos-menu-context";
+import CauchosProjectChat from "../components/cauchos-project-chat";
 import HeroVideo from "../components/hero-video";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
@@ -368,34 +369,28 @@ export default async function CauchosPage() {
       </section>
 
       <section id="contacto" className="mx-auto max-w-[1632px] px-5 pb-8 md:px-8">
-        <div className="relative overflow-hidden rounded-[10px] border border-white/10 bg-[#071225] shadow-[0_24px_70px_rgba(7,18,37,0.22)]">
-          <span className="absolute inset-y-0 left-0 w-1.5 bg-[#e4002b]" aria-hidden="true" />
+        <div className="relative overflow-hidden rounded-[10px] bg-[#075ed8] shadow-[0_24px_70px_rgba(7,94,216,0.28)]">
           <span
             className="absolute inset-0 opacity-80"
             aria-hidden="true"
             style={{
               background:
-                "radial-gradient(circle at 78% 18%, rgba(7,94,216,0.28), transparent 34%), linear-gradient(135deg, rgba(255,255,255,0.1), transparent 34%)",
+                "radial-gradient(circle at 78% 18%, rgba(255,255,255,0.16), transparent 34%), linear-gradient(135deg, rgba(255,255,255,0.08), transparent 34%)",
             }}
           />
           <div className="relative grid gap-6 px-8 py-10 md:grid-cols-[1fr_auto] md:items-center md:px-10">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-[#7db2ff]">
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-white/80">
                 Necesitas una solucion en caucho?
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] text-white md:text-4xl">
                 Hablemos de tu proyecto
               </h2>
-              <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-white/74">
-                Nuestro equipo de expertos esta listo para brindarte la mejor solucion para tus necesidades.
+              <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-white/80">
+                Cuentanos que necesitas y nuestro asistente arma contigo la evaluacion tecnica para tu producto.
               </p>
             </div>
-            <Link
-              href="mailto:contacto@grupogeu.com"
-              className="inline-flex items-center justify-center rounded-full border border-white/70 bg-white px-8 py-4 text-sm font-black uppercase tracking-[0.08em] text-[#071225] shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition hover:border-[#e4002b] hover:bg-[#e4002b] hover:text-white"
-            >
-              Hablar con un experto →
-            </Link>
+            <CauchosProjectChat />
           </div>
         </div>
       </section>
