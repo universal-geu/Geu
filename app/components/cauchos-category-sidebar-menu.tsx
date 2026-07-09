@@ -150,7 +150,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
       />
       <div className="relative" onMouseLeave={() => setActiveDept(null)}>
         <nav
-          className="w-[260px] shrink-0 border-r border-slate-200 py-4"
+          className="w-[500px] shrink-0 border-r border-slate-200 py-4"
           style={{ marginLeft: "max(0px, calc(50% - 750px))" }}
         >
           <p className="px-5 pb-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
@@ -167,11 +167,11 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
                     type="button"
                     onMouseEnter={() => setActiveDept(department.title)}
                     onClick={() => setActiveDept(isActive ? null : department.title)}
-                    className={`flex w-full items-center justify-between gap-3 px-5 py-3 text-left text-sm font-bold transition-colors duration-150 ${
+                    className={`flex w-full items-center justify-between gap-3 px-5 py-3 text-left text-[13px] font-bold transition-colors duration-150 ${
                       isActive ? "bg-[#eef5ff] text-[#075ed8]" : "text-slate-800 hover:bg-slate-50"
                     }`}
                   >
-                    <span className="flex items-center gap-3">
+                    <span className="flex items-center gap-3 whitespace-nowrap">
                       <Icon />
                       {department.title}
                     </span>
@@ -186,7 +186,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
         {active && active.subcategories.length > 0 && (
           <div
             className="absolute top-0 z-50 max-h-[560px] overflow-y-auto border-l border-slate-200 bg-white p-8 shadow-[0_24px_70px_rgba(15,23,42,0.16)]"
-            style={{ left: "max(260px, calc(50% - 750px + 260px))", right: 0 }}
+            style={{ left: "max(500px, calc(50% - 750px + 500px))", right: 0 }}
           >
             <div className="mb-8 flex gap-6 overflow-x-auto pb-2">
               {active.subcategories.slice(0, 10).map((subcategory) => {
