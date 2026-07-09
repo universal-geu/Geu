@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { cauchosCategorySubcategories, categorias, slugify } from "../data/catalog";
+import { cauchosCategorySubcategories, categoriasData, categorias, slugify } from "../data/catalog";
 import { useProducts } from "./products-provider";
 import { useCauchosMenu } from "./cauchos-menu-context";
 
@@ -80,6 +80,105 @@ function ToolIcon() {
   );
 }
 
+function ForkIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 2v8M9 2v8M7 10a2 2 0 0 1-2-2V2M9 10v11M15 2c-1.5 1.5-2 3-2 5s.5 3.5 2 5v9" />
+    </svg>
+  );
+}
+
+function PillIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="8" width="18" height="8" rx="4" transform="rotate(-30 12 12)" />
+      <path d="M11 8.5 15.5 15.5" />
+    </svg>
+  );
+}
+
+function SprayIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 8h4v13H9zM11 8V4h2a2 2 0 0 1 2 2v2" />
+      <path d="M16 6h3M16 9h4M16 3h2" />
+    </svg>
+  );
+}
+
+function MountainIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 19 9 8l4 6 2-3 6 8Z" />
+    </svg>
+  );
+}
+
+function FlameIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3s5 4.5 5 9a5 5 0 0 1-10 0c0-1.3.6-2.3 1.3-3.2.2 1 1 1.7 1.7 1.4C9 8.8 9 6.4 12 3Z" />
+    </svg>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
+    </svg>
+  );
+}
+
+function CubeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3 4 7v10l8 4 8-4V7Z" />
+      <path d="M4 7l8 4 8-4M12 11v10" />
+    </svg>
+  );
+}
+
+function BrickIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="8" height="5" />
+      <rect x="13" y="5" width="8" height="5" />
+      <rect x="7" y="14" width="8" height="5" />
+      <rect x="1.5" y="14" width="3" height="5" />
+      <rect x="17.5" y="14" width="3" height="5" />
+    </svg>
+  );
+}
+
+function AnchorIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="5" r="2" />
+      <path d="M12 7v14M7 12H3a9 9 0 0 0 9 9 9 9 0 0 0 9-9h-4M6 12a6 6 0 0 0 6 6M18 12a6 6 0 0 1-6 6" />
+    </svg>
+  );
+}
+
+function BoxIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8 12 4l9 4-9 4-9-4Z" />
+      <path d="M3 8v8l9 4 9-4V8M12 12v8" />
+    </svg>
+  );
+}
+
+function ThreadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 4c-3 3-3 13 0 16M12 4c3 3 3 13 0 16M4 12h16" />
+    </svg>
+  );
+}
+
 const DEPARTMENT_ICONS: Record<string, () => React.JSX.Element> = {
   "Alimentos, Farmacéuticos y cosméticos": CupIcon,
   Agroindustria: LeafIcon,
@@ -90,6 +189,41 @@ const DEPARTMENT_ICONS: Record<string, () => React.JSX.Element> = {
   "Manufactura, metalmecánica, siderúrgica y textiles": GearIcon,
   "Ferretería y otros": ToolIcon,
 };
+
+// Icons for the placeholder subcategory circles (no real product photos yet
+// for these industry sub-sectors), keyed by the subcategory column name.
+const SUBCATEGORY_ICONS: Record<string, () => React.JSX.Element> = {
+  Alimentos: ForkIcon,
+  Farmacéuticos: PillIcon,
+  Cosméticos: SprayIcon,
+  Agroindustria: LeafIcon,
+  Petróleo: DropletIcon,
+  Minería: MountainIcon,
+  Gas: FlameIcon,
+  "Energías renovables": SunIcon,
+  Petroquímica: FlaskIcon,
+  Químico: FlaskIcon,
+  Aseo: SprayIcon,
+  Plásticos: CubeIcon,
+  Construcción: BuildingIcon,
+  Infraestructura: BuildingIcon,
+  "Obra civil": BrickIcon,
+  Cemento: BrickIcon,
+  Agregados: MountainIcon,
+  Transporte: TruckIcon,
+  Logística: BoxIcon,
+  "Puertos marítimos": AnchorIcon,
+  Manufactura: GearIcon,
+  Metalmecánica: ToolIcon,
+  Siderúrgica: FlameIcon,
+  Textiles: ThreadIcon,
+  Ferretería: ToolIcon,
+  Otros: BoxIcon,
+};
+
+const DEPARTMENT_COLORS: Record<string, string> = Object.fromEntries(
+  categoriasData.map((item) => [item.nombre, item.color]),
+);
 
 export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath?: string }) {
   const { products } = useProducts();
@@ -232,29 +366,41 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
 
             {active.subcategories.length > 0 && (
               <>
-            <div className="mb-8 flex gap-6 overflow-x-auto pb-2">
-              {active.subcategories.slice(0, 10).map((subcategory) => (
-                <Link
-                  key={subcategory.name}
-                  href={subcategory.groupHref}
-                  className="flex shrink-0 flex-col items-center gap-2 text-center"
-                >
-                  <span className="relative block h-16 w-16 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-                    {subcategory.image && (
-                      <Image
-                        src={subcategory.image}
-                        alt={subcategory.name}
-                        fill
-                        sizes="64px"
-                        className="object-cover"
-                      />
-                    )}
-                  </span>
-                  <span className="max-w-[84px] text-xs font-bold leading-tight text-slate-800">
-                    {subcategory.name}
-                  </span>
-                </Link>
-              ))}
+            <div className="mb-8 flex flex-wrap gap-x-12 gap-y-6 overflow-x-auto pb-2">
+              {active.subcategories.slice(0, 10).map((subcategory) => {
+                const SubIcon = SUBCATEGORY_ICONS[subcategory.name] ?? DEPARTMENT_ICONS[active.title] ?? GearIcon;
+                const color = DEPARTMENT_COLORS[active.title] ?? "#075ed8";
+
+                return (
+                  <Link
+                    key={subcategory.name}
+                    href={subcategory.groupHref}
+                    className="flex shrink-0 flex-col items-center gap-2 text-center"
+                  >
+                    <span
+                      className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-slate-200"
+                      style={{ backgroundColor: subcategory.image ? undefined : `${color}1A` }}
+                    >
+                      {subcategory.image ? (
+                        <Image
+                          src={subcategory.image}
+                          alt={subcategory.name}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span style={{ color }}>
+                          <SubIcon />
+                        </span>
+                      )}
+                    </span>
+                    <span className="max-w-[84px] text-xs font-bold leading-tight text-slate-800">
+                      {subcategory.name}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="grid gap-x-10 gap-y-8 border-t border-slate-100 pt-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
