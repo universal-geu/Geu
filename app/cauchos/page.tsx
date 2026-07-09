@@ -369,7 +369,7 @@ export default async function CauchosPage() {
       </section>
 
       <section id="contacto" className="mx-auto max-w-[1632px] px-5 pb-8 md:px-8">
-        <div className="relative overflow-hidden rounded-[10px] bg-[#075ed8] shadow-[0_24px_70px_rgba(7,94,216,0.28)]">
+        <div className="relative overflow-hidden rounded-[10px] bg-[#dd1b44] shadow-[0_24px_70px_rgba(221,27,68,0.28)]">
           <span
             className="absolute inset-0 opacity-80"
             aria-hidden="true"
