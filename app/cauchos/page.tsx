@@ -4,6 +4,7 @@ import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import CauchosCartLink from "../components/cauchos-cart-link";
 import CauchosDynamicMenu from "../components/cauchos-dynamic-menu";
+import HeroVideo from "../components/hero-video";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getProducts } from "@/lib/products";
@@ -193,12 +194,8 @@ export default async function CauchosPage() {
         </div>
         <div className="bg-white">
           {isVideoUrl(resolveImage("banner-principal", siteImages)) ? (
-            <video
+            <HeroVideo
               src={resolveImage("banner-principal", siteImages)}
-              autoPlay
-              muted
-              loop
-              playsInline
               className="mx-auto h-auto w-full object-contain"
               style={{ maxWidth: "1632px" }}
             />
