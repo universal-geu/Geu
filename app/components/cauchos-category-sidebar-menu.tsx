@@ -183,11 +183,24 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
           </ul>
         </nav>
 
-        {active && active.subcategories.length > 0 && (
+        {active && (
           <div
-            className="absolute top-0 z-50 max-h-[560px] overflow-y-auto border-l border-slate-200 bg-white p-8 shadow-[0_24px_70px_rgba(15,23,42,0.16)]"
+            className="absolute top-0 z-50 min-h-[420px] max-h-[560px] overflow-y-auto border-l border-slate-200 bg-white p-8 shadow-[0_24px_70px_rgba(15,23,42,0.16)]"
             style={{ left: "max(500px, calc(50% - 750px + 500px))", right: 0 }}
           >
+            {active.subcategories.length === 0 && (
+              <div className="flex h-full min-h-[350px] flex-col items-center justify-center gap-2 text-center">
+                <p className="text-sm font-bold text-slate-700">
+                  Muy pronto vas a encontrar productos en {active.title}
+                </p>
+                <p className="text-[13px] text-slate-500">
+                  Estamos cargando el catálogo de esta categoría.
+                </p>
+              </div>
+            )}
+
+            {active.subcategories.length > 0 && (
+              <>
             <div className="mb-8 flex gap-6 overflow-x-auto pb-2">
               {active.subcategories.slice(0, 10).map((subcategory) => {
                 const firstProduct = subcategory.items[0];
@@ -259,6 +272,8 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
                 );
               })}
             </div>
+              </>
+            )}
           </div>
         )}
       </div>
