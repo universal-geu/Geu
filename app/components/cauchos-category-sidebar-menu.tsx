@@ -274,7 +274,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
       const groupHref = `${cauchosBasePath}/categoria/${slugify(title)}`;
       return groups.map((group) => ({
         name: group.name,
-        image: null as string | null,
+        image: group.image as string | null,
         groupHref,
         itemLinks: group.items.map((label) => ({ label, href: groupHref })),
       }));
