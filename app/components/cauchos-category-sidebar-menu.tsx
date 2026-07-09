@@ -403,7 +403,10 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
               })}
             </div>
 
-            <div className="grid gap-x-10 gap-y-8 border-t border-slate-100 pt-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div
+              className="grid gap-x-10 gap-y-8 border-t border-slate-100 pt-8"
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}
+            >
               {active.subcategories.map((subcategory) => (
                 <div key={subcategory.name}>
                   <Link
