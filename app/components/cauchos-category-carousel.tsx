@@ -62,6 +62,7 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
           <Link
             key={category.label}
             href="#productos"
+            title={category.title}
             className={
               accent === "red" || accent === "silver"
                 ? "group grid min-w-[150px] justify-items-center gap-3 px-2 py-2 text-center transition hover:-translate-y-1 md:min-w-[165px]"
@@ -84,7 +85,7 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
               />
             </span>
             <span className={`${accent === "red" || accent === "silver" ? "min-h-9" : ""} flex max-w-full items-center justify-center text-sm font-black leading-tight text-slate-950`}>
-              {category.title}
+              {category.label}
             </span>
             <span className="block self-start text-xs font-bold leading-none text-slate-500">
               {category.count}
