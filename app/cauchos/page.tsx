@@ -3,7 +3,7 @@ import Link from "next/link";
 import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import CauchosCartLink from "../components/cauchos-cart-link";
-import CauchosDynamicMenu from "../components/cauchos-dynamic-menu";
+import CauchosCategorySidebarMenu from "../components/cauchos-category-sidebar-menu";
 import HeroVideo from "../components/hero-video";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
@@ -169,7 +169,7 @@ export default async function CauchosPage() {
           </div>
         </div>
 
-        <CauchosDynamicMenu />
+        <CauchosCategorySidebarMenu />
       </header>
 
       <section id="catalogo-cauchos" className="border-b border-slate-200 bg-white text-slate-900">
