@@ -54,7 +54,7 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
 
       <div
         ref={scrollerRef}
-        className={`flex overflow-x-auto scroll-smooth px-12 [scrollbar-width:none] xl:justify-center [&::-webkit-scrollbar]:hidden ${
+        className={`flex overflow-x-auto scroll-smooth px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
           accent === "red" ? "gap-7 py-2" : "gap-3 py-1"
         }`}
       >
