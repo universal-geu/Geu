@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type CauchosCategory = {
   label: string;
@@ -33,6 +33,19 @@ const accentClasses = {
 export default function CauchosCategoryCarousel({ categories, accent = "blue" }: Props) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const tone = accentClasses[accent];
+  const [canScroll, setCanScroll] = useState(false);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const checkOverflow = () => setCanScroll(el.scrollWidth > el.clientWidth + 1);
+    checkOverflow();
+
+    const observer = new ResizeObserver(checkOverflow);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [categories]);
 
   const scroll = (direction: "left" | "right") => {
     scrollerRef.current?.scrollBy({
@@ -43,14 +56,16 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        aria-label="Ver categorias anteriores"
-        onClick={() => scroll("left")}
-        className={`absolute left-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-black shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition md:inline-flex ${tone.arrow}`}
-      >
-        ‹
-      </button>
+      {canScroll && (
+        <button
+          type="button"
+          aria-label="Ver categorias anteriores"
+          onClick={() => scroll("left")}
+          className={`absolute left-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-black shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition md:inline-flex ${tone.arrow}`}
+        >
+          ‹
+        </button>
+      )}
 
       <div
         ref={scrollerRef}
@@ -94,14 +109,16 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
         ))}
       </div>
 
-      <button
-        type="button"
-        aria-label="Ver mas categorias"
-        onClick={() => scroll("right")}
-        className={`absolute right-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-black shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition md:inline-flex ${tone.arrow}`}
-      >
-        ›
-      </button>
+      {canScroll && (
+        <button
+          type="button"
+          aria-label="Ver mas categorias"
+          onClick={() => scroll("right")}
+          className={`absolute right-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-black shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition md:inline-flex ${tone.arrow}`}
+        >
+          ›
+        </button>
+      )}
     </div>
   );
 }
