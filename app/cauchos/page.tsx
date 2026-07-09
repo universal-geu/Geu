@@ -202,7 +202,7 @@ export default async function CauchosPage() {
             style={{ maxWidth: "1632px" }}
           >
             <p className="text-lg font-black tracking-[-0.01em]">
-              Compra empresarial y proyectos a medida
+              Hablemos de tu proyecto
             </p>
             <span className="rounded bg-white px-3 py-1 text-sm font-black text-[#dd1b44]">
               Asesoria tecnica
