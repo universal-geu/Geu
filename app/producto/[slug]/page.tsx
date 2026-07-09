@@ -7,6 +7,8 @@ import { useParams } from "next/navigation";
 import AddToCartButton from "../../components/add-to-cart-button";
 import CauchosCartLink from "../../components/cauchos-cart-link";
 import CauchosCategorySidebarMenu from "../../components/cauchos-category-sidebar-menu";
+import CauchosMenuButton from "../../components/cauchos-menu-button";
+import { CauchosMenuProvider } from "../../components/cauchos-menu-context";
 import { useProducts } from "../../components/products-provider";
 import { cauchosCategoriasNombres } from "../../data/catalog";
 
@@ -224,6 +226,7 @@ function ProductImageGallery({
 
 function ProductCauchosHeader() {
   return (
+    <CauchosMenuProvider>
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
       <div className="border-b border-slate-200 bg-slate-50">
         <div className="mx-auto flex h-8 max-w-[1500px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8">
@@ -261,20 +264,23 @@ function ProductCauchosHeader() {
           />
         </Link>
 
-        <form className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner">
-          <input
-            aria-label="Buscar productos de caucho"
-            className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-            placeholder="Buscar laminas, sellos, mangueras, empaques..."
-          />
-          <button
-            type="button"
-            className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
-            aria-label="Buscar"
-          >
-            ⌕
-          </button>
-        </form>
+        <div className="flex items-center gap-3">
+          <CauchosMenuButton />
+          <form className="flex min-h-11 flex-1 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner">
+            <input
+              aria-label="Buscar productos de caucho"
+              className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+              placeholder="Buscar laminas, sellos, mangueras, empaques..."
+            />
+            <button
+              type="button"
+              className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
+              aria-label="Buscar"
+            >
+              ⌕
+            </button>
+          </form>
+        </div>
 
         <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
           <CauchosCartLink />
@@ -286,6 +292,7 @@ function ProductCauchosHeader() {
 
       <CauchosCategorySidebarMenu basePath="/cauchos" />
     </header>
+    </CauchosMenuProvider>
   );
 }
 
