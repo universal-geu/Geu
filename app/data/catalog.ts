@@ -52,10 +52,14 @@ export const categorias: string[] = categoriasData.map((item) => item.nombre);
 // (e.g. "Alimentos, Farmacéuticos y cosméticos"), so each of those parts
 // becomes its own subcategory column, matching the "column of grouped
 // links" layout used by homecenter.com.co's category flyout.
-export const cauchosCategorySubcategories: Record<string, { name: string; items: string[] }[]> = {
+export const cauchosCategorySubcategories: Record<
+  string,
+  { name: string; image: string; items: string[] }[]
+> = {
   "Alimentos, Farmacéuticos y cosméticos": [
     {
       name: "Alimentos",
+      image: "/subcategorias/alimentos.jpg",
       items: [
         "Empaques para envases alimenticios",
         "Mangueras para líquidos alimenticios",
@@ -65,6 +69,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Farmacéuticos",
+      image: "/subcategorias/farmaceuticos.jpg",
       items: [
         "O-rings grado farmacéutico",
         "Mangueras para laboratorio",
@@ -74,6 +79,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Cosméticos",
+      image: "/subcategorias/cosmeticos.jpg",
       items: [
         "Empaques para envases cosméticos",
         "Válvulas para dispensadores",
@@ -85,6 +91,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
   Agroindustria: [
     {
       name: "Agroindustria",
+      image: "/subcategorias/agroindustria.jpg",
       items: [
         "Mangueras de riego",
         "Mangueras para fumigación",
@@ -98,6 +105,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
   "Petróleo, minería, gas, energías renovables y petroquímica": [
     {
       name: "Petróleo",
+      image: "/subcategorias/petroleo.jpg",
       items: [
         "Mangueras para petróleo",
         "Empaques para válvulas de crudo",
@@ -107,6 +115,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Minería",
+      image: "/subcategorias/mineria.jpg",
       items: [
         "Rodillos de caucho para minería",
         "Bandas transportadoras mineras",
@@ -116,6 +125,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Gas",
+      image: "/subcategorias/gas.jpg",
       items: [
         "Mangueras para gas",
         "O-rings resistentes a gas",
@@ -125,6 +135,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Energías renovables",
+      image: "/subcategorias/energias-renovables.jpg",
       items: [
         "Sellos para paneles solares",
         "Juntas para turbinas eólicas",
@@ -134,6 +145,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Petroquímica",
+      image: "/subcategorias/petroquimica.jpg",
       items: [
         "Mangueras químicas",
         "O-rings de vitón",
@@ -145,6 +157,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
   "Químico, aseo y plásticos": [
     {
       name: "Químico",
+      image: "/subcategorias/quimico.jpg",
       items: [
         "Mangueras resistentes a ácidos",
         "Empaques químicos",
@@ -154,6 +167,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Aseo",
+      image: "/subcategorias/aseo.jpg",
       items: [
         "Escobillas técnicas",
         "Mangueras de limpieza",
@@ -163,6 +177,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Plásticos",
+      image: "/subcategorias/plasticos.jpg",
       items: [
         "Rodillos para extrusión",
         "Bandas para líneas de producción",
@@ -174,6 +189,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
   "Construcción, infraestructura, obra civil, cemento y agregados": [
     {
       name: "Construcción",
+      image: "/subcategorias/construccion.jpg",
       items: [
         "Juntas de dilatación",
         "Sellos impermeabilizantes",
@@ -183,6 +199,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Infraestructura",
+      image: "/subcategorias/infraestructura.jpg",
       items: [
         "Apoyos de neopreno",
         "Placas antivibratorias",
@@ -192,6 +209,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Obra civil",
+      image: "/subcategorias/obra-civil.jpg",
       items: [
         "Mangueras para concreto",
         "Mangueras de succión",
@@ -201,6 +219,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Cemento",
+      image: "/subcategorias/cemento.jpg",
       items: [
         "Bandas transportadoras para cemento",
         "Mangueras para polvo",
@@ -210,6 +229,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Agregados",
+      image: "/subcategorias/agregados.jpg",
       items: [
         "Rodillos para maquinaria",
         "Orugas de caucho",
@@ -221,6 +241,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
   "Transporte, logística y puertos marítimos": [
     {
       name: "Transporte",
+      image: "/subcategorias/transporte.jpg",
       items: [
         "Mangueras para combustibles",
         "Sellos para vehículos de carga",
@@ -230,6 +251,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Logística",
+      image: "/subcategorias/logistica.jpg",
       items: [
         "Bandas transportadoras",
         "Bandas modulares",
@@ -239,6 +261,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Puertos marítimos",
+      image: "/subcategorias/puertos-maritimos.jpg",
       items: [
         "Defensas para muelles",
         "Parachoques industriales",
@@ -250,6 +273,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
   "Manufactura, metalmecánica, siderúrgica y textiles": [
     {
       name: "Manufactura",
+      image: "/subcategorias/manufactura.jpg",
       items: [
         "Bandas de transmisión",
         "Sellos técnicos para maquinaria",
@@ -259,6 +283,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Metalmecánica",
+      image: "/subcategorias/metalmecanica.jpg",
       items: [
         "Retenes",
         "O-rings",
@@ -268,6 +293,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Siderúrgica",
+      image: "/subcategorias/siderurgica.jpg",
       items: [
         "Bandas resistentes a altas temperaturas",
         "Mangueras para hornos",
@@ -277,6 +303,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Textiles",
+      image: "/subcategorias/textiles.jpg",
       items: [
         "Telas recubiertas de caucho",
         "Bandas textiles",
@@ -288,6 +315,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
   "Ferretería y otros": [
     {
       name: "Ferretería",
+      image: "/subcategorias/ferreteria.jpg",
       items: [
         "O-rings estándar",
         "Empaques planos",
@@ -297,6 +325,7 @@ export const cauchosCategorySubcategories: Record<string, { name: string; items:
     },
     {
       name: "Otros",
+      image: "/subcategorias/otros.jpg",
       items: [
         "Topes de puerta",
         "Bases antideslizantes",
