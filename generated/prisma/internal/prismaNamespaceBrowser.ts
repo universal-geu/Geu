@@ -85,8 +85,11 @@ export const ProductScalarFieldEnum = {
   category: 'category',
   name: 'name',
   brand: 'brand',
+  division: 'division',
   price: 'price',
   previousPrice: 'previousPrice',
+  displayPriceOverride: 'displayPriceOverride',
+  displaySecondaryLabel: 'displaySecondaryLabel',
   stock: 'stock',
   minimumStock: 'minimumStock',
   image: 'image',
@@ -117,6 +120,7 @@ export const UserScalarFieldEnum = {
   addressLine2: 'addressLine2',
   passwordHash: 'passwordHash',
   role: 'role',
+  division: 'division',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

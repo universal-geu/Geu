@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { DivisionName } from "@/lib/divisions";
 
 export type CheckoutInput = {
   customerName: string;
@@ -246,7 +247,7 @@ export async function getAllOrders() {
   });
 }
 
-export async function getSalesReport(): Promise<SalesReport> {
+export async function getSalesReport(division?: DivisionName): Promise<SalesReport> {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
@@ -265,6 +266,7 @@ export async function getSalesReport(): Promise<SalesReport> {
         slug: true,
         category: true,
         stock: true,
+        division: true,
       },
     }),
   ]);
@@ -275,16 +277,37 @@ export async function getSalesReport(): Promise<SalesReport> {
       {
         category: product.category,
         stock: product.stock,
+        division: product.division,
       },
     ]),
   );
+  const matchesDivision = (productSlug: string) =>
+    !division || productLookup.get(productSlug)?.division === division;
+
   const productSales = new Map<string, SalesReportProduct>();
   const categorySales = new Map<string, SalesReportCategory>();
-  const activeOrders = orders.filter((order) => order.status !== "CANCELLED");
+  const allActiveOrders = orders.filter((order) => order.status !== "CANCELLED");
+  const activeOrders = allActiveOrders.filter((order) =>
+    order.items.some((item) => matchesDivision(item.productId)),
+  );
   const paidOrders = activeOrders.filter((order) => order.paymentStatus === "PAID");
 
+  let grossRevenue = 0;
+  let paidRevenue = 0;
+  let productsSold = 0;
+
   for (const order of activeOrders) {
-    for (const item of order.items) {
+    const matchingItems = order.items.filter((item) => matchesDivision(item.productId));
+    const orderRevenue = matchingItems.reduce((sum, item) => sum + item.lineTotal, 0);
+    const orderQuantity = matchingItems.reduce((sum, item) => sum + item.quantity, 0);
+
+    grossRevenue += orderRevenue;
+    productsSold += orderQuantity;
+    if (order.paymentStatus === "PAID") {
+      paidRevenue += orderRevenue;
+    }
+
+    for (const item of matchingItems) {
       const productMeta = productLookup.get(item.productId);
       const category = productMeta?.category || "Sin categoría";
       const currentProduct = productSales.get(item.productId) || {
@@ -319,11 +342,9 @@ export async function getSalesReport(): Promise<SalesReport> {
   const categories = Array.from(categorySales.values())
     .sort((a, b) => b.quantitySold - a.quantitySold || b.revenue - a.revenue)
     .slice(0, 6);
-  const grossRevenue = activeOrders.reduce(
-    (total, order) => total + order.subtotal,
-    0,
-  );
-  const paidRevenue = paidOrders.reduce((total, order) => total + order.subtotal, 0);
+  const scopedOrders = division
+    ? orders.filter((order) => order.items.some((item) => matchesDivision(item.productId)))
+    : orders;
 
   return {
     generatedAt: new Date().toISOString(),
@@ -332,11 +353,8 @@ export async function getSalesReport(): Promise<SalesReport> {
       paidOrders: paidOrders.length,
       pendingOrders: activeOrders.filter((order) => order.paymentStatus === "PENDING")
         .length,
-      cancelledOrders: orders.length - activeOrders.length,
-      productsSold: activeOrders.reduce(
-        (total, order) => total + order.totalItems,
-        0,
-      ),
+      cancelledOrders: orders.length - allActiveOrders.length,
+      productsSold,
       grossRevenue,
       paidRevenue,
       averageOrderValue:
@@ -345,7 +363,7 @@ export async function getSalesReport(): Promise<SalesReport> {
     topProduct: topProducts[0] || null,
     topProducts,
     categories,
-    recentOrders: orders.slice(0, 5).map((order) => ({
+    recentOrders: scopedOrders.slice(0, 5).map((order) => ({
       id: order.id,
       customerName: order.customerName,
       status: order.status,

@@ -1,4 +1,4 @@
-import { DEV_ADMIN_USER, getSessionFromCookies, setSessionCookie } from "@/lib/auth";
+import { getDevAdminUserById, getSessionFromCookies, setSessionCookie } from "@/lib/auth";
 import { getUserById, updateUserProfile } from "@/lib/users";
 
 export async function GET() {
@@ -9,8 +9,9 @@ export async function GET() {
       return Response.json({ error: "No autorizado." }, { status: 401 });
     }
 
-    if (session.userId === DEV_ADMIN_USER.id) {
-      return Response.json({ user: DEV_ADMIN_USER });
+    const devAdmin = getDevAdminUserById(session.userId);
+    if (devAdmin) {
+      return Response.json({ user: devAdmin });
     }
 
     const user = await getUserById(session.userId);
@@ -88,6 +89,7 @@ export async function PATCH(request: Request) {
       userId: user.id,
       email: user.email,
       role: user.role,
+      division: user.division ?? undefined,
     });
 
     return Response.json({

@@ -36,6 +36,7 @@ export type UserMinAggregateOutputType = {
   addressLine2: string | null
   passwordHash: string | null
   role: $Enums.UserRole | null
+  division: $Enums.Division | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -52,6 +53,7 @@ export type UserMaxAggregateOutputType = {
   addressLine2: string | null
   passwordHash: string | null
   role: $Enums.UserRole | null
+  division: $Enums.Division | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -68,6 +70,7 @@ export type UserCountAggregateOutputType = {
   addressLine2: number
   passwordHash: number
   role: number
+  division: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -86,6 +89,7 @@ export type UserMinAggregateInputType = {
   addressLine2?: true
   passwordHash?: true
   role?: true
+  division?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -102,6 +106,7 @@ export type UserMaxAggregateInputType = {
   addressLine2?: true
   passwordHash?: true
   role?: true
+  division?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -118,6 +123,7 @@ export type UserCountAggregateInputType = {
   addressLine2?: true
   passwordHash?: true
   role?: true
+  division?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -207,6 +213,7 @@ export type UserGroupByOutputType = {
   addressLine2: string | null
   passwordHash: string
   role: $Enums.UserRole
+  division: $Enums.Division | null
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -244,6 +251,7 @@ export type UserWhereInput = {
   addressLine2?: Prisma.StringNullableFilter<"User"> | string | null
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
+  division?: Prisma.EnumDivisionNullableFilter<"User"> | $Enums.Division | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   cartItems?: Prisma.CartItemListRelationFilter
@@ -262,6 +270,7 @@ export type UserOrderByWithRelationInput = {
   addressLine2?: Prisma.SortOrderInput | Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  division?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   cartItems?: Prisma.CartItemOrderByRelationAggregateInput
@@ -283,6 +292,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   addressLine2?: Prisma.StringNullableFilter<"User"> | string | null
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
+  division?: Prisma.EnumDivisionNullableFilter<"User"> | $Enums.Division | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   cartItems?: Prisma.CartItemListRelationFilter
@@ -301,6 +311,7 @@ export type UserOrderByWithAggregationInput = {
   addressLine2?: Prisma.SortOrderInput | Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  division?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -323,6 +334,7 @@ export type UserScalarWhereWithAggregatesInput = {
   addressLine2?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   passwordHash?: Prisma.StringWithAggregatesFilter<"User"> | string
   role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
+  division?: Prisma.EnumDivisionNullableWithAggregatesFilter<"User"> | $Enums.Division | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -339,6 +351,7 @@ export type UserCreateInput = {
   addressLine2?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  division?: $Enums.Division | null
   createdAt?: Date | string
   updatedAt?: Date | string
   cartItems?: Prisma.CartItemCreateNestedManyWithoutUserInput
@@ -357,6 +370,7 @@ export type UserUncheckedCreateInput = {
   addressLine2?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  division?: $Enums.Division | null
   createdAt?: Date | string
   updatedAt?: Date | string
   cartItems?: Prisma.CartItemUncheckedCreateNestedManyWithoutUserInput
@@ -375,6 +389,7 @@ export type UserUpdateInput = {
   addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  division?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cartItems?: Prisma.CartItemUpdateManyWithoutUserNestedInput
@@ -393,6 +408,7 @@ export type UserUncheckedUpdateInput = {
   addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  division?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cartItems?: Prisma.CartItemUncheckedUpdateManyWithoutUserNestedInput
@@ -411,6 +427,7 @@ export type UserCreateManyInput = {
   addressLine2?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  division?: $Enums.Division | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -427,6 +444,7 @@ export type UserUpdateManyMutationInput = {
   addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  division?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -443,6 +461,7 @@ export type UserUncheckedUpdateManyInput = {
   addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  division?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -459,6 +478,7 @@ export type UserCountOrderByAggregateInput = {
   addressLine2?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  division?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -475,6 +495,7 @@ export type UserMaxOrderByAggregateInput = {
   addressLine2?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  division?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -491,6 +512,7 @@ export type UserMinOrderByAggregateInput = {
   addressLine2?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  division?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -502,6 +524,10 @@ export type UserScalarRelationFilter = {
 
 export type EnumUserRoleFieldUpdateOperationsInput = {
   set?: $Enums.UserRole
+}
+
+export type NullableEnumDivisionFieldUpdateOperationsInput = {
+  set?: $Enums.Division | null
 }
 
 export type UserCreateNestedOneWithoutCartItemsInput = {
@@ -544,6 +570,7 @@ export type UserCreateWithoutCartItemsInput = {
   addressLine2?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  division?: $Enums.Division | null
   createdAt?: Date | string
   updatedAt?: Date | string
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
@@ -561,6 +588,7 @@ export type UserUncheckedCreateWithoutCartItemsInput = {
   addressLine2?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  division?: $Enums.Division | null
   createdAt?: Date | string
   updatedAt?: Date | string
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
@@ -594,6 +622,7 @@ export type UserUpdateWithoutCartItemsInput = {
   addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  division?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
@@ -611,6 +640,7 @@ export type UserUncheckedUpdateWithoutCartItemsInput = {
   addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  division?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
@@ -628,6 +658,7 @@ export type UserCreateWithoutOrdersInput = {
   addressLine2?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  division?: $Enums.Division | null
   createdAt?: Date | string
   updatedAt?: Date | string
   cartItems?: Prisma.CartItemCreateNestedManyWithoutUserInput
@@ -645,6 +676,7 @@ export type UserUncheckedCreateWithoutOrdersInput = {
   addressLine2?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  division?: $Enums.Division | null
   createdAt?: Date | string
   updatedAt?: Date | string
   cartItems?: Prisma.CartItemUncheckedCreateNestedManyWithoutUserInput
@@ -678,6 +710,7 @@ export type UserUpdateWithoutOrdersInput = {
   addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  division?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cartItems?: Prisma.CartItemUpdateManyWithoutUserNestedInput
@@ -695,6 +728,7 @@ export type UserUncheckedUpdateWithoutOrdersInput = {
   addressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  division?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cartItems?: Prisma.CartItemUncheckedUpdateManyWithoutUserNestedInput
@@ -752,6 +786,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   addressLine2?: boolean
   passwordHash?: boolean
   role?: boolean
+  division?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   cartItems?: boolean | Prisma.User$cartItemsArgs<ExtArgs>
@@ -771,6 +806,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   addressLine2?: boolean
   passwordHash?: boolean
   role?: boolean
+  division?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -787,6 +823,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   addressLine2?: boolean
   passwordHash?: boolean
   role?: boolean
+  division?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -803,11 +840,12 @@ export type UserSelectScalar = {
   addressLine2?: boolean
   passwordHash?: boolean
   role?: boolean
+  division?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "fullName" | "company" | "email" | "phone" | "department" | "city" | "addressLine1" | "addressLine2" | "passwordHash" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "fullName" | "company" | "email" | "phone" | "department" | "city" | "addressLine1" | "addressLine2" | "passwordHash" | "role" | "division" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   cartItems?: boolean | Prisma.User$cartItemsArgs<ExtArgs>
   orders?: boolean | Prisma.User$ordersArgs<ExtArgs>
@@ -834,6 +872,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     addressLine2: string | null
     passwordHash: string
     role: $Enums.UserRole
+    division: $Enums.Division | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -1272,6 +1311,7 @@ export interface UserFieldRefs {
   readonly addressLine2: Prisma.FieldRef<"User", 'String'>
   readonly passwordHash: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'UserRole'>
+  readonly division: Prisma.FieldRef<"User", 'Division'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }

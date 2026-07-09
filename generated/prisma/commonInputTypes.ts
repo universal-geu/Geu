@@ -44,6 +44,13 @@ export type StringNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedStringNullableFilter<$PrismaModel> | string | null
 }
 
+export type EnumDivisionFilter<$PrismaModel = never> = {
+  equals?: $Enums.Division | Prisma.EnumDivisionFieldRefInput<$PrismaModel>
+  in?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDivisionFilter<$PrismaModel> | $Enums.Division
+}
+
 export type IntFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -112,6 +119,16 @@ export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedStringNullableFilter<$PrismaModel>
 }
 
+export type EnumDivisionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Division | Prisma.EnumDivisionFieldRefInput<$PrismaModel>
+  in?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDivisionWithAggregatesFilter<$PrismaModel> | $Enums.Division
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDivisionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDivisionFilter<$PrismaModel>
+}
+
 export type IntWithAggregatesFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -157,6 +174,13 @@ export type EnumUserRoleFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
 }
 
+export type EnumDivisionNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.Division | Prisma.EnumDivisionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDivisionNullableFilter<$PrismaModel> | $Enums.Division | null
+}
+
 export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.UserRole | Prisma.EnumUserRoleFieldRefInput<$PrismaModel>
   in?: $Enums.UserRole[] | Prisma.ListEnumUserRoleFieldRefInput<$PrismaModel>
@@ -165,6 +189,16 @@ export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumUserRoleFilter<$PrismaModel>
   _max?: Prisma.NestedEnumUserRoleFilter<$PrismaModel>
+}
+
+export type EnumDivisionNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Division | Prisma.EnumDivisionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDivisionNullableWithAggregatesFilter<$PrismaModel> | $Enums.Division | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDivisionNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDivisionNullableFilter<$PrismaModel>
 }
 
 export type EnumOrderStatusFilter<$PrismaModel = never> = {
@@ -288,6 +322,13 @@ export type NestedStringNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedStringNullableFilter<$PrismaModel> | string | null
 }
 
+export type NestedEnumDivisionFilter<$PrismaModel = never> = {
+  equals?: $Enums.Division | Prisma.EnumDivisionFieldRefInput<$PrismaModel>
+  in?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDivisionFilter<$PrismaModel> | $Enums.Division
+}
+
 export type NestedIntFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -360,6 +401,16 @@ export type NestedIntNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedIntNullableFilter<$PrismaModel> | number | null
 }
 
+export type NestedEnumDivisionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Division | Prisma.EnumDivisionFieldRefInput<$PrismaModel>
+  in?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDivisionWithAggregatesFilter<$PrismaModel> | $Enums.Division
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDivisionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDivisionFilter<$PrismaModel>
+}
+
 export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -416,6 +467,13 @@ export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
 }
 
+export type NestedEnumDivisionNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.Division | Prisma.EnumDivisionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDivisionNullableFilter<$PrismaModel> | $Enums.Division | null
+}
+
 export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.UserRole | Prisma.EnumUserRoleFieldRefInput<$PrismaModel>
   in?: $Enums.UserRole[] | Prisma.ListEnumUserRoleFieldRefInput<$PrismaModel>
@@ -424,6 +482,16 @@ export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumUserRoleFilter<$PrismaModel>
   _max?: Prisma.NestedEnumUserRoleFilter<$PrismaModel>
+}
+
+export type NestedEnumDivisionNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.Division | Prisma.EnumDivisionFieldRefInput<$PrismaModel> | null
+  in?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDivisionNullableWithAggregatesFilter<$PrismaModel> | $Enums.Division | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDivisionNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDivisionNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumOrderStatusFilter<$PrismaModel = never> = {

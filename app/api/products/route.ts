@@ -8,9 +8,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdminUser();
+    const admin = await requireAdminUser();
     const body = await request.json();
-    const product = await createProduct(body);
+    const product = await createProduct({ ...body, division: admin.division });
 
     return Response.json({ product }, { status: 201 });
   } catch (error) {

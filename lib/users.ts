@@ -1,5 +1,6 @@
 import { compare, hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import type { DivisionName } from "@/lib/divisions";
 
 export type RegisterUserInput = {
   fullName: string;
@@ -24,6 +25,7 @@ export type PublicUser = {
   addressLine1: string | null;
   addressLine2: string | null;
   role: "CUSTOMER" | "ADMIN";
+  division: DivisionName | null;
   createdAt: Date;
 };
 
@@ -104,6 +106,7 @@ export async function authenticateUser(email: string, password: string) {
     addressLine1: user.addressLine1,
     addressLine2: user.addressLine2,
     role: user.role,
+    division: user.division as DivisionName | null,
   };
 }
 
@@ -125,6 +128,7 @@ export async function getUserById(userId: string) {
       addressLine1: true,
       addressLine2: true,
       role: true,
+      division: true,
       createdAt: true,
     },
   });
@@ -207,6 +211,7 @@ export async function updateUserProfile(
       addressLine1: true,
       addressLine2: true,
       role: true,
+      division: true,
       createdAt: true,
     },
   });
@@ -232,6 +237,7 @@ export async function getUserByEmail(email: string) {
       addressLine1: true,
       addressLine2: true,
       role: true,
+      division: true,
       createdAt: true,
     },
   });

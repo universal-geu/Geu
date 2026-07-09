@@ -16,6 +16,100 @@ import { categorias, type Categoria, type ProductoCatalogo } from "../data/catal
 import type { InventoryMovementSummary } from "@/lib/products";
 import type { SalesReport, ShippingStatus } from "@/lib/orders";
 import { IMAGE_SLOTS } from "@/lib/image-slots";
+import { getDivisionFromBrandParam, isServiceDivision, type DivisionName } from "@/lib/divisions";
+
+type AdminBrandConfig = {
+  label: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  logo: string;
+  logoAlt: string;
+  siteHref: string;
+  productsHref: string;
+  contactHref: string;
+  accent: string;
+  accentHover: string;
+  sessionLabel: string;
+};
+
+const ADMIN_BRAND_CONFIG: Record<DivisionName, AdminBrandConfig> = {
+  Cauchos: {
+    label: "Universal de Cauchos",
+    eyebrow: "UNIVERSAL DE CAUCHOS",
+    title: "Panel maestro de productos",
+    description:
+      "Desde aquí puedes crear, editar e inventariar productos de Universal de Cauchos para que aparezcan en el catálogo.",
+    logo: "/logo-universal-cauchos.png",
+    logoAlt: "GEU Universal de Cauchos",
+    siteHref: "/cauchos",
+    productsHref: "/cauchos#productos",
+    contactHref: "/cauchos#contacto",
+    accent: "#075ed8",
+    accentHover: "#064fb7",
+    sessionLabel: "Administrador GEU",
+  },
+  Import: {
+    label: "GEU Import",
+    eyebrow: "GEU IMPORT",
+    title: "Panel maestro GEU Import",
+    description:
+      "Desde aquí puedes crear, editar e inventariar productos de GEU Import para que aparezcan en el catálogo.",
+    logo: "/logo-geu-import.png",
+    logoAlt: "GEU Import",
+    siteHref: "/import",
+    productsHref: "/import#productos",
+    contactHref: "/import#contacto",
+    accent: "#e31313",
+    accentHover: "#ba1010",
+    sessionLabel: "Administrador GEU Import",
+  },
+  Innovation: {
+    label: "GEU Innovation",
+    eyebrow: "GEU INNOVATION",
+    title: "Panel maestro GEU Innovation",
+    description:
+      "Desde aquí puedes crear y editar las fichas de servicio de GEU Innovation para que aparezcan en el sitio.",
+    logo: "/logo-geu-innovation.png",
+    logoAlt: "GEU Innovation",
+    siteHref: "/innovation",
+    productsHref: "/innovation#productos",
+    contactHref: "/innovation#contacto",
+    accent: "#0498b4",
+    accentHover: "#037c92",
+    sessionLabel: "Administrador GEU Innovation",
+  },
+  Energy: {
+    label: "GEU Energy",
+    eyebrow: "GEU ENERGY",
+    title: "Panel maestro GEU Energy",
+    description:
+      "Desde aquí puedes crear y editar las fichas de servicio de GEU Energy para que aparezcan en el sitio.",
+    logo: "/logo-geu-energy.png",
+    logoAlt: "GEU Energy",
+    siteHref: "/energy",
+    productsHref: "/energy#productos",
+    contactHref: "/energy#contacto",
+    accent: "#d4a900",
+    accentHover: "#b38f00",
+    sessionLabel: "Administrador GEU Energy",
+  },
+  Plastic: {
+    label: "GEU Plastic",
+    eyebrow: "GEU PLASTIC",
+    title: "Panel maestro GEU Plastic",
+    description:
+      "Desde aquí puedes crear y editar las fichas de servicio de GEU Plastic para que aparezcan en el sitio.",
+    logo: "/logo-geu-plastic.png",
+    logoAlt: "GEU Plastic",
+    siteHref: "/plastic",
+    productsHref: "/plastic#productos",
+    contactHref: "/plastic#contacto",
+    accent: "#6b7280",
+    accentHover: "#565c64",
+    sessionLabel: "Administrador GEU Plastic",
+  },
+};
 
 const disponibilidades: ProductoCatalogo["disponibilidad"][] = [
   "Entrega inmediata",
@@ -34,6 +128,8 @@ type FormState = {
   marca: string;
   precioValor: string;
   precioAnteriorValor: string;
+  displayPriceOverride: string;
+  displaySecondaryLabel: string;
   stock: string;
   stockMinimo: string;
   disponibilidad: ProductoCatalogo["disponibilidad"];
@@ -53,6 +149,8 @@ const initialState: FormState = {
   marca: "Universal de Cauchos",
   precioValor: "",
   precioAnteriorValor: "",
+  displayPriceOverride: "",
+  displaySecondaryLabel: "",
   stock: "0",
   stockMinimo: "0",
   disponibilidad: "Entrega inmediata",
@@ -475,51 +573,25 @@ function splitCommaSeparatedValues(value: string) {
 export default function AdminPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isImportAdmin = searchParams.get("brand") === "import";
-  const adminBrand = isImportAdmin
-    ? {
-        label: "GEU Import",
-        eyebrow: "GEU IMPORT",
-        title: "Panel maestro GEU Import",
-        description:
-          "Desde aquí puedes crear, editar e inventariar productos de GEU Import para que aparezcan en el catálogo.",
-        logo: "/logo-geu-import.png",
-        logoAlt: "GEU Import",
-        siteHref: "/import",
-        productsHref: "/import#productos",
-        contactHref: "/import#contacto",
-        accent: "#e31313",
-        accentHover: "#ba1010",
-        sessionLabel: "Administrador GEU Import",
-      }
-    : {
-        label: "Universal de Cauchos",
-        eyebrow: "UNIVERSAL DE CAUCHOS",
-        title: "Panel maestro de productos",
-        description:
-          "Desde aquí puedes crear, editar e inventariar productos de Universal de Cauchos para que aparezcan en el catálogo.",
-        logo: "/logo-universal-cauchos.png",
-        logoAlt: "GEU Universal de Cauchos",
-        siteHref: "/cauchos",
-        productsHref: "/cauchos#productos",
-        contactHref: "/cauchos#contacto",
-        accent: "#075ed8",
-        accentHover: "#064fb7",
-        sessionLabel: "Administrador GEU",
-      };
+  const loginDivision = getDivisionFromBrandParam(searchParams.get("brand"));
+  const [adminDivision, setAdminDivision] = useState<DivisionName>(loginDivision);
+  const adminBrand = ADMIN_BRAND_CONFIG[adminDivision];
+  const isServiceAdmin = isServiceDivision(adminDivision);
   const {
-    adminProducts,
+    adminProducts: allAdminProducts,
     createProduct,
     updateProduct,
     removeProduct,
     adjustInventory,
   } = useProducts();
+  const adminProducts = useMemo(
+    () => allAdminProducts.filter((product) => product.division === adminDivision),
+    [allAdminProducts, adminDivision],
+  );
   const [activeTab, setActiveTab] = useState<
     "create" | "edit" | "inventory" | "orders" | "reports" | "images" | null
   >(null);
-  const [imageDivisionFilter, setImageDivisionFilter] = useState<
-    "Cauchos" | "Import" | "Innovation" | "Plastic" | "Energy"
-  >(isImportAdmin ? "Import" : "Cauchos");
+  const imageDivisionFilter = adminDivision;
   const [siteImages, setSiteImages] = useState<Record<string, string>>({});
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(null);
@@ -709,12 +781,17 @@ export default function AdminPage() {
       }
 
       const payload = (await response.json()) as {
-        user?: { fullName: string; role: "CUSTOMER" | "ADMIN" };
+        user?: {
+          fullName: string;
+          role: "CUSTOMER" | "ADMIN";
+          division?: DivisionName | null;
+        };
       };
 
-      if (payload.user?.role === "ADMIN") {
+      if (payload.user?.role === "ADMIN" && payload.user.division) {
         setIsAuthenticated(true);
         setAdminName(payload.user.fullName);
+        setAdminDivision(payload.user.division);
       } else {
         setIsAuthenticated(false);
         setAdminName("");
@@ -735,9 +812,12 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!isCheckingSession && !isAuthenticated) {
-      router.replace(isImportAdmin ? "/login?next=/admin&brand=import" : "/login?next=/admin");
+      const brandParam = searchParams.get("brand");
+      router.replace(
+        brandParam ? `/login?next=/admin&brand=${brandParam}` : "/login?next=/admin",
+      );
     }
-  }, [isAuthenticated, isCheckingSession, isImportAdmin, router]);
+  }, [isAuthenticated, isCheckingSession, router, searchParams]);
 
   const handleChange = (
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -900,13 +980,18 @@ export default function AdminPage() {
         categoriaMenor: form.categoriaMenor,
         nombre: form.nombre,
         marca: form.marca,
-        precioValor: Number(form.precioValor),
-        precioAnteriorValor: Number(form.precioAnteriorValor || form.precioValor),
-        stock: Number(form.stock),
-        stockMinimo: Number(form.stockMinimo),
+        division: adminDivision,
+        precioValor: isServiceAdmin ? 1 : Number(form.precioValor),
+        precioAnteriorValor: isServiceAdmin
+          ? 1
+          : Number(form.precioAnteriorValor || form.precioValor),
+        displayPriceOverride: isServiceAdmin ? form.displayPriceOverride : undefined,
+        displaySecondaryLabel: isServiceAdmin ? form.displaySecondaryLabel : undefined,
+        stock: isServiceAdmin ? 0 : Number(form.stock),
+        stockMinimo: isServiceAdmin ? 0 : Number(form.stockMinimo),
         imagen: nextPrimaryImage,
         imagenesExtra: reorderedExtraImages.slice(0, EXTRA_IMAGE_SLOTS),
-        disponibilidad: form.disponibilidad,
+        disponibilidad: isServiceAdmin ? "Disponible por pedido" : form.disponibilidad,
         aplicacion: form.aplicacion,
         compatibilidad: splitCommaSeparatedValues(form.compatibilidad),
         garantia: form.garantia,
@@ -974,6 +1059,8 @@ export default function AdminPage() {
       marca: product.marca,
       precioValor: String(product.precioValor),
       precioAnteriorValor: String(precioAnteriorValor),
+      displayPriceOverride: product.displayPriceOverride || "",
+      displaySecondaryLabel: product.displaySecondaryLabel || "",
       stock: String(product.stock ?? 0),
       stockMinimo: String(product.stockMinimo ?? 0),
       disponibilidad: product.disponibilidad,
@@ -1414,7 +1501,7 @@ export default function AdminPage() {
           <div className="flex items-center justify-between gap-4 text-sm text-slate-700 md:justify-end">
             {adminName && (
               <span className="hidden max-w-[190px] truncate font-bold lg:inline">
-                {isImportAdmin ? adminBrand.sessionLabel : adminName}
+                {adminName || adminBrand.sessionLabel}
               </span>
             )}
             <Link
@@ -1437,7 +1524,9 @@ export default function AdminPage() {
 
         <nav className="border-t border-slate-200 bg-white">
           <div className="mx-auto flex max-w-[1500px] items-center gap-1 overflow-x-auto px-5 md:px-8">
-            {adminMenuItems.map((item) => (
+            {adminMenuItems
+              .filter((item) => !isServiceAdmin || item !== "Inventario")
+              .map((item) => (
               <button
                 key={item}
                 type="button"
@@ -1481,7 +1570,7 @@ export default function AdminPage() {
             </p>
             {adminName && (
               <p className="mt-3 text-sm font-medium text-[#16384f]">
-                Sesión activa: {isImportAdmin ? adminBrand.sessionLabel : adminName}
+                Sesión activa: {adminName || adminBrand.sessionLabel}
               </p>
             )}
           </div>
@@ -1612,44 +1701,46 @@ export default function AdminPage() {
                     </p>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={openInventoryView}
-                    className={`admin-card-drift relative min-h-[220px] overflow-hidden rounded-[1.6rem] border px-6 py-6 text-left transition-all duration-200 ${
-                      activeTab === "inventory"
-                        ? "border-[#16384f] bg-[#16384f] text-white shadow-[0_18px_35px_rgba(22,56,79,0.22)]"
-                        : "border-black/8 bg-[#fbfbfa] text-[#1f2328] hover:-translate-y-0.5 hover:border-[#16384f]/18 hover:shadow-[0_16px_30px_rgba(15,23,42,0.08)]"
-                    }`}
-                  >
-                    <span className="flex items-center justify-between gap-4">
-                      <span className="text-sm font-semibold uppercase tracking-[0.18em]">
-                        Inventario
+                  {!isServiceAdmin && (
+                    <button
+                      type="button"
+                      onClick={openInventoryView}
+                      className={`admin-card-drift relative min-h-[220px] overflow-hidden rounded-[1.6rem] border px-6 py-6 text-left transition-all duration-200 ${
+                        activeTab === "inventory"
+                          ? "border-[#16384f] bg-[#16384f] text-white shadow-[0_18px_35px_rgba(22,56,79,0.22)]"
+                          : "border-black/8 bg-[#fbfbfa] text-[#1f2328] hover:-translate-y-0.5 hover:border-[#16384f]/18 hover:shadow-[0_16px_30px_rgba(15,23,42,0.08)]"
+                      }`}
+                    >
+                      <span className="flex items-center justify-between gap-4">
+                        <span className="text-sm font-semibold uppercase tracking-[0.18em]">
+                          Inventario
+                        </span>
+                        <span
+                          className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 ${
+                            activeTab === "inventory"
+                              ? "bg-white/14 text-white"
+                              : "bg-[#1f8b45] text-white"
+                          }`}
+                        >
+                          ≡
+                        </span>
                       </span>
-                      <span
-                        className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 ${
-                          activeTab === "inventory"
-                            ? "bg-white/14 text-white"
-                            : "bg-[#1f8b45] text-white"
+                      <p
+                        className={`mt-4 text-2xl font-semibold tracking-[-0.04em] ${
+                          activeTab === "inventory" ? "text-white" : "text-[#16384f]"
                         }`}
                       >
-                        ≡
-                      </span>
-                    </span>
-                    <p
-                      className={`mt-4 text-2xl font-semibold tracking-[-0.04em] ${
-                        activeTab === "inventory" ? "text-white" : "text-[#16384f]"
-                      }`}
-                    >
-                      Inventario
-                    </p>
-                    <p
-                      className={`mt-3 max-w-[18rem] text-sm leading-6 ${
-                        activeTab === "inventory" ? "text-white/78" : "text-[#6e7379]"
-                      }`}
-                    >
-                      Ajusta stock, revisa alertas y controla movimientos recientes del inventario.
-                    </p>
-                  </button>
+                        Inventario
+                      </p>
+                      <p
+                        className={`mt-3 max-w-[18rem] text-sm leading-6 ${
+                          activeTab === "inventory" ? "text-white/78" : "text-[#6e7379]"
+                        }`}
+                      >
+                        Ajusta stock, revisa alertas y controla movimientos recientes del inventario.
+                      </p>
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -1897,55 +1988,84 @@ export default function AdminPage() {
                   />
                 </label>
 
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-[#4f545a]">Precio actual</span>
-                  <input
-                    name="precioValor"
-                    type="number"
-                    min="1"
-                    value={form.precioValor}
-                    onChange={handleChange}
-                    required
-                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                  />
-                </label>
+                {isServiceAdmin ? (
+                  <>
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-[#4f545a]">Precio o llamada a la acción</span>
+                      <input
+                        name="displayPriceOverride"
+                        value={form.displayPriceOverride}
+                        onChange={handleChange}
+                        placeholder="Ej. Cotizar"
+                        required
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                      />
+                    </label>
 
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-[#4f545a]">Stock actual</span>
-                  <input
-                    name="stock"
-                    type="number"
-                    min="0"
-                    value={form.stock}
-                    onChange={handleChange}
-                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                  />
-                </label>
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-[#4f545a]">Nota secundaria</span>
+                      <input
+                        name="displaySecondaryLabel"
+                        value={form.displaySecondaryLabel}
+                        onChange={handleChange}
+                        placeholder="Ej. Diagnóstico técnico"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                      />
+                    </label>
+                  </>
+                ) : (
+                  <>
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-[#4f545a]">Precio actual</span>
+                      <input
+                        name="precioValor"
+                        type="number"
+                        min="1"
+                        value={form.precioValor}
+                        onChange={handleChange}
+                        required
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                      />
+                    </label>
 
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-[#4f545a]">Precio anterior</span>
-                  <input
-                    name="precioAnteriorValor"
-                    type="number"
-                    min="1"
-                    value={form.precioAnteriorValor}
-                    onChange={handleChange}
-                    required
-                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                  />
-                </label>
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-[#4f545a]">Stock actual</span>
+                      <input
+                        name="stock"
+                        type="number"
+                        min="0"
+                        value={form.stock}
+                        onChange={handleChange}
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                      />
+                    </label>
 
-                <label className="space-y-2">
-                  <span className="text-sm font-medium text-[#4f545a]">Stock mínimo</span>
-                  <input
-                    name="stockMinimo"
-                    type="number"
-                    min="0"
-                    value={form.stockMinimo}
-                    onChange={handleChange}
-                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                  />
-                </label>
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-[#4f545a]">Precio anterior</span>
+                      <input
+                        name="precioAnteriorValor"
+                        type="number"
+                        min="1"
+                        value={form.precioAnteriorValor}
+                        onChange={handleChange}
+                        required
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                      />
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-[#4f545a]">Stock mínimo</span>
+                      <input
+                        name="stockMinimo"
+                        type="number"
+                        min="0"
+                        value={form.stockMinimo}
+                        onChange={handleChange}
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                      />
+                    </label>
+                  </>
+                )}
 
                 <label className="space-y-2 md:col-span-2">
                   <span className="text-sm font-medium text-[#4f545a]">
@@ -2037,21 +2157,23 @@ export default function AdminPage() {
                   description="Puedes escoger cuál de las imágenes será la principal del producto."
                 />
 
-                <label className="space-y-2 md:col-span-2">
-                  <span className="text-sm font-medium text-[#4f545a]">Disponibilidad</span>
-                  <select
-                    name="disponibilidad"
-                    value={form.disponibilidad}
-                    onChange={handleChange}
-                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                  >
-                    {disponibilidades.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {!isServiceAdmin && (
+                  <label className="space-y-2 md:col-span-2">
+                    <span className="text-sm font-medium text-[#4f545a]">Disponibilidad</span>
+                    <select
+                      name="disponibilidad"
+                      value={form.disponibilidad}
+                      onChange={handleChange}
+                      className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                    >
+                      {disponibilidades.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
               </div>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -2358,55 +2480,84 @@ export default function AdminPage() {
                       />
                     </label>
 
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[#4f545a]">Precio actual</span>
-                      <input
-                        name="precioValor"
-                        type="number"
-                        min="1"
-                        value={form.precioValor}
-                        onChange={handleChange}
-                        required
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                      />
-                    </label>
+                    {isServiceAdmin ? (
+                      <>
+                        <label className="space-y-2">
+                          <span className="text-sm font-medium text-[#4f545a]">Precio o llamada a la acción</span>
+                          <input
+                            name="displayPriceOverride"
+                            value={form.displayPriceOverride}
+                            onChange={handleChange}
+                            placeholder="Ej. Cotizar"
+                            required
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                          />
+                        </label>
 
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[#4f545a]">Stock actual</span>
-                      <input
-                        name="stock"
-                        type="number"
-                        min="0"
-                        value={form.stock}
-                        onChange={handleChange}
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                      />
-                    </label>
+                        <label className="space-y-2">
+                          <span className="text-sm font-medium text-[#4f545a]">Nota secundaria</span>
+                          <input
+                            name="displaySecondaryLabel"
+                            value={form.displaySecondaryLabel}
+                            onChange={handleChange}
+                            placeholder="Ej. Diagnóstico técnico"
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                          />
+                        </label>
+                      </>
+                    ) : (
+                      <>
+                        <label className="space-y-2">
+                          <span className="text-sm font-medium text-[#4f545a]">Precio actual</span>
+                          <input
+                            name="precioValor"
+                            type="number"
+                            min="1"
+                            value={form.precioValor}
+                            onChange={handleChange}
+                            required
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                          />
+                        </label>
 
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[#4f545a]">Precio anterior</span>
-                      <input
-                        name="precioAnteriorValor"
-                        type="number"
-                        min="1"
-                        value={form.precioAnteriorValor}
-                        onChange={handleChange}
-                        required
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                      />
-                    </label>
+                        <label className="space-y-2">
+                          <span className="text-sm font-medium text-[#4f545a]">Stock actual</span>
+                          <input
+                            name="stock"
+                            type="number"
+                            min="0"
+                            value={form.stock}
+                            onChange={handleChange}
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                          />
+                        </label>
 
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[#4f545a]">Stock mínimo</span>
-                      <input
-                        name="stockMinimo"
-                        type="number"
-                        min="0"
-                        value={form.stockMinimo}
-                        onChange={handleChange}
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                      />
-                    </label>
+                        <label className="space-y-2">
+                          <span className="text-sm font-medium text-[#4f545a]">Precio anterior</span>
+                          <input
+                            name="precioAnteriorValor"
+                            type="number"
+                            min="1"
+                            value={form.precioAnteriorValor}
+                            onChange={handleChange}
+                            required
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                          />
+                        </label>
+
+                        <label className="space-y-2">
+                          <span className="text-sm font-medium text-[#4f545a]">Stock mínimo</span>
+                          <input
+                            name="stockMinimo"
+                            type="number"
+                            min="0"
+                            value={form.stockMinimo}
+                            onChange={handleChange}
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                          />
+                        </label>
+                      </>
+                    )}
 
                     <label className="space-y-2 md:col-span-2">
                       <span className="text-sm font-medium text-[#4f545a]">
@@ -2494,21 +2645,23 @@ export default function AdminPage() {
                       description="La imagen marcada como principal será la que verá primero el cliente."
                     />
 
-                    <label className="space-y-2 md:col-span-2">
-                      <span className="text-sm font-medium text-[#4f545a]">Disponibilidad</span>
-                      <select
-                        name="disponibilidad"
-                        value={form.disponibilidad}
-                        onChange={handleChange}
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                      >
-                        {disponibilidades.map((item) => (
-                          <option key={item} value={item}>
-                            {item}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    {!isServiceAdmin && (
+                      <label className="space-y-2 md:col-span-2">
+                        <span className="text-sm font-medium text-[#4f545a]">Disponibilidad</span>
+                        <select
+                          name="disponibilidad"
+                          value={form.disponibilidad}
+                          onChange={handleChange}
+                          className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        >
+                          {disponibilidades.map((item) => (
+                            <option key={item} value={item}>
+                              {item}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                   </div>
 
                   <div className="mt-8 flex flex-wrap gap-3">
@@ -3154,7 +3307,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === "inventory" && (
+          {activeTab === "inventory" && !isServiceAdmin && (
             <div className="admin-fade-up space-y-8">
               <div className="grid gap-8 xl:grid-cols-[300px_minmax(0,1fr)]">
                 <aside className="space-y-5">
@@ -3475,22 +3628,9 @@ export default function AdminPage() {
               )}
 
               <div className="mb-8 flex flex-wrap gap-2">
-                {(["Cauchos", "Import", "Innovation", "Plastic", "Energy"] as const).map(
-                  (division) => (
-                    <button
-                      key={division}
-                      type="button"
-                      onClick={() => setImageDivisionFilter(division)}
-                      className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
-                        imageDivisionFilter === division
-                          ? "border-[#16384f] bg-[#16384f] text-white"
-                          : "border-black/10 text-[#16384f] hover:bg-[#16384f]/10"
-                      }`}
-                    >
-                      {division}
-                    </button>
-                  ),
-                )}
+                <span className="rounded-full border border-[#16384f] bg-[#16384f] px-4 py-2 text-sm font-semibold text-white">
+                  {imageDivisionFilter}
+                </span>
               </div>
 
               {isLoadingImages ? (

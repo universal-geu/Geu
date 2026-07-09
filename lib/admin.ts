@@ -1,5 +1,6 @@
-import { DEV_ADMIN_USER, getSessionFromCookies } from "@/lib/auth";
+import { getDevAdminUserById, getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
+import type { DivisionName } from "@/lib/divisions";
 
 export async function requireAdminUser() {
   const session = await getSessionFromCookies();
@@ -8,15 +9,16 @@ export async function requireAdminUser() {
     throw new Error("UNAUTHORIZED");
   }
 
-  if (session.userId === DEV_ADMIN_USER.id && session.role === "ADMIN") {
-    return DEV_ADMIN_USER;
+  const devAdmin = getDevAdminUserById(session.userId);
+  if (devAdmin && session.role === "ADMIN") {
+    return devAdmin;
   }
 
   const user = await getUserById(session.userId);
 
-  if (!user || user.role !== "ADMIN") {
+  if (!user || user.role !== "ADMIN" || !user.division) {
     throw new Error("FORBIDDEN");
   }
 
-  return user;
+  return { ...user, division: user.division as DivisionName };
 }
