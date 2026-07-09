@@ -366,70 +366,79 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
 
             {active.subcategories.length > 0 && (
               <>
-            <div
-              className="grid gap-x-10 gap-y-8"
-              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}
-            >
-              {active.subcategories.map((subcategory) => {
+            <div className="mb-6 flex flex-wrap gap-x-8 gap-y-4 overflow-x-auto pb-1">
+              {active.subcategories.slice(0, 10).map((subcategory) => {
                 const SubIcon = SUBCATEGORY_ICONS[subcategory.name] ?? DEPARTMENT_ICONS[active.title] ?? GearIcon;
                 const color = DEPARTMENT_COLORS[active.title] ?? "#075ed8";
 
                 return (
-                  <div key={subcategory.name}>
-                    <Link
-                      href={subcategory.groupHref}
-                      className="mb-4 flex flex-col items-start gap-2"
+                  <Link
+                    key={subcategory.name}
+                    href={subcategory.groupHref}
+                    className="flex w-20 shrink-0 flex-col items-center gap-1.5 text-center"
+                  >
+                    <span
+                      className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border border-slate-200"
+                      style={{ backgroundColor: subcategory.image ? undefined : `${color}1A` }}
                     >
-                      <span
-                        className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-slate-200"
-                        style={{ backgroundColor: subcategory.image ? undefined : `${color}1A` }}
-                      >
-                        {subcategory.image ? (
-                          <Image
-                            src={subcategory.image}
-                            alt={subcategory.name}
-                            fill
-                            sizes="64px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <span style={{ color }}>
-                            <SubIcon />
-                          </span>
-                        )}
-                      </span>
-                    </Link>
-
-                    <div className="border-t border-slate-100 pt-4">
-                      <Link
-                        href={subcategory.groupHref}
-                        className="text-[13px] font-black tracking-[0.02em] hover:underline"
-                        style={{ color: "#075ed8" }}
-                      >
-                        {subcategory.name} &gt;
-                      </Link>
-                      <div className="mt-3 grid gap-2 text-[13px] text-slate-900">
-                        {subcategory.itemLinks.map((item, index) => (
-                          <Link
-                            key={`${subcategory.name}-${item.label}-${index}`}
-                            href={item.href}
-                            className="leading-5 hover:text-[#075ed8] hover:underline"
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
-                        <Link
-                          href={subcategory.groupHref}
-                          className="mt-1 text-[13px] font-semibold hover:underline"
-                          style={{ color: "#075ed8" }}
-                        >
-                          Ver más &gt;
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
+                      {subcategory.image ? (
+                        <Image
+                          src={subcategory.image}
+                          alt={subcategory.name}
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span style={{ color }}>
+                          <SubIcon />
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-[11px] font-bold leading-tight text-slate-800">
+                      {subcategory.name}
+                    </span>
+                  </Link>
                 );
               })}
+            </div>
+
+            <div
+              className="grid gap-x-8 gap-y-8 border-t border-slate-100 pt-6"
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}
+            >
+              {active.subcategories.map((subcategory, index) => (
+                <div
+                  key={subcategory.name}
+                  className={index === 0 ? "" : "border-l border-slate-100 pl-8"}
+                >
+                  <Link
+                    href={subcategory.groupHref}
+                    className="text-[13px] font-black tracking-[0.02em] hover:underline"
+                    style={{ color: "#075ed8" }}
+                  >
+                    {subcategory.name} &gt;
+                  </Link>
+                  <div className="mt-3 grid gap-2 text-[13px] text-slate-900">
+                    {subcategory.itemLinks.map((item, itemIndex) => (
+                      <Link
+                        key={`${subcategory.name}-${item.label}-${itemIndex}`}
+                        href={item.href}
+                        className="leading-5 hover:text-[#075ed8] hover:underline"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                    <Link
+                      href={subcategory.groupHref}
+                      className="mt-1 text-[13px] font-semibold hover:underline"
+                      style={{ color: "#075ed8" }}
+                    >
+                      Ver más &gt;
+                    </Link>
+                  </div>
+                </div>
+              ))}
             </div>
               </>
             )}
