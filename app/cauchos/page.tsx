@@ -133,7 +133,7 @@ export default async function CauchosPage() {
       <CauchosMenuProvider>
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
         <div className="border-b border-slate-200 bg-slate-50">
-          <div className="mx-auto flex h-8 max-w-[1500px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8">
+          <div className="mx-auto flex h-8 max-w-[1800px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8">
             <div className="hidden gap-3 md:flex">
               <span>Servicio al cliente 320 88 999 33</span>
               <span className="text-slate-300">|</span>
@@ -149,7 +149,7 @@ export default async function CauchosPage() {
           </div>
         </div>
 
-        <div className="mx-auto grid min-h-[74px] max-w-[1500px] items-center gap-4 px-5 py-3 md:grid-cols-[260px_1fr_auto] md:px-8">
+        <div className="mx-auto grid min-h-[74px] max-w-[1800px] items-center gap-4 px-5 py-3 md:grid-cols-[260px_1fr_auto] md:px-8">
           <Link href="/" className="flex shrink-0 items-center">
             <Image
               src="/logo-universal-cauchos.png"
@@ -192,7 +192,7 @@ export default async function CauchosPage() {
       </CauchosMenuProvider>
 
       <section id="catalogo-cauchos" className="border-b border-slate-200 bg-white text-slate-900">
-        <div className="mx-auto max-w-[1500px] px-5 py-7 md:px-8">
+        <div className="mx-auto max-w-[1800px] px-5 py-7 md:px-8">
           <CauchosCategoryCarousel categories={cauchosCategories} />
         </div>
         <div className="bg-white text-white">
@@ -233,7 +233,7 @@ export default async function CauchosPage() {
       </section>
 
       <section id="productos" className="scroll-mt-56 border-b border-slate-200 bg-slate-50 text-slate-950">
-        <div className="mx-auto max-w-[1500px] px-5 py-12 md:px-8">
+        <div className="mx-auto max-w-[1800px] px-5 py-12 md:px-8">
           <div>
               <div className="flex flex-wrap items-end justify-between gap-5">
                 <div>
@@ -327,7 +327,7 @@ export default async function CauchosPage() {
       </section>
 
       <section className="border-b border-slate-200 bg-white text-slate-950">
-        <div className="mx-auto max-w-[1500px] px-5 py-12 md:px-8">
+        <div className="mx-auto max-w-[1800px] px-5 py-12 md:px-8">
           <div className="mb-7 flex flex-wrap items-end justify-between gap-5">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[#075ed8]">
@@ -367,7 +367,7 @@ export default async function CauchosPage() {
         </div>
       </section>
 
-      <section id="contacto" className="mx-auto max-w-[1500px] px-5 pb-8 md:px-8">
+      <section id="contacto" className="mx-auto max-w-[1800px] px-5 pb-8 md:px-8">
         <div className="relative overflow-hidden rounded-[10px] border border-white/10 bg-[#071225] shadow-[0_24px_70px_rgba(7,18,37,0.22)]">
           <span className="absolute inset-y-0 left-0 w-1.5 bg-[#e4002b]" aria-hidden="true" />
           <span
@@ -400,7 +400,7 @@ export default async function CauchosPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1500px] px-5 pb-10 md:px-8">
+      <section className="mx-auto max-w-[1800px] px-5 pb-10 md:px-8">
         <Image
           src={resolveImage("banner-marcas-promo", siteImages)}
           alt="Promociones y marcas destacadas"
@@ -411,7 +411,7 @@ export default async function CauchosPage() {
       </section>
 
       <section className="bg-white px-5 py-8 md:px-8">
-        <div className="mx-auto max-w-[1500px] overflow-hidden rounded-[8px] border border-slate-200 shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
+        <div className="mx-auto max-w-[1800px] overflow-hidden rounded-[8px] border border-slate-200 shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
           <Image
             src={resolveImage("banner-categorias", siteImages)}
             alt="Cierre Universal de Cauchos"
@@ -423,7 +423,7 @@ export default async function CauchosPage() {
       </section>
 
       <section className="border-t border-slate-200 bg-[#f5f5f5] text-slate-950">
-        <div className="mx-auto max-w-[1500px] px-5 py-7 md:px-8">
+        <div className="mx-auto max-w-[1800px] px-5 py-7 md:px-8">
           <h2 className="text-center text-xl font-black tracking-[-0.02em] text-slate-900">
             Nuestras marcas destacadas
           </h2>
@@ -450,7 +450,7 @@ export default async function CauchosPage() {
       </section>
 
       <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-[1500px] gap-8 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:px-8">
+        <div className="mx-auto grid max-w-[1800px] gap-8 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:px-8">
           <div>
             <Image
               src="/logo-universal-cauchos.png"
