@@ -4,8 +4,8 @@ import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
 import CauchosCartLink from "../components/cauchos-cart-link";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
-import { cauchosCategoriasNombres, productosCatalogo } from "../data/catalog";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { getProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
@@ -110,10 +110,6 @@ const megaMenuColumns = [
   },
 ];
 
-const importProducts = productosCatalogo
-  .filter((product) => !(cauchosCategoriasNombres as readonly string[]).includes(product.categoria))
-  .slice(0, 4);
-
 const importOffers = [
   { title: "Repuestos importados", href: "#catalogo-import", imageKey: "import-oferta-1" },
   { title: "Abastecimiento global", href: "#catalogo-import", imageKey: "import-oferta-2" },
@@ -143,6 +139,10 @@ function GeuMark() {
 
 export default async function ImportPage() {
   const siteImages = await getSiteImages();
+  const allProducts = await getProducts();
+  const importCatalog = allProducts.filter((product) => product.division === "Import");
+  const importFeaturedProducts = importCatalog.filter((product) => product.destacado);
+  const importProducts = (importFeaturedProducts.length > 0 ? importFeaturedProducts : importCatalog).slice(0, 4);
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
