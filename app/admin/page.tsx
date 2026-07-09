@@ -142,7 +142,7 @@ const initialState: FormState = {
   sku: "",
   oemReferencia: "",
   referenciasAlternas: "",
-  categoria: "Sellos y empaques",
+  categoria: "Ferretería y otros",
   subcategoria: "",
   categoriaMenor: "",
   nombre: "",
@@ -1933,7 +1933,7 @@ export default function AdminPage() {
                       value={form.categoria}
                       onChange={handleChange}
                       list="admin-category-options"
-                      placeholder="Ej. Sellos y empaques"
+                      placeholder="Ej. Transporte, logística y puertos marítimos"
                       required
                       className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
                     />
@@ -2425,7 +2425,7 @@ export default function AdminPage() {
                         value={form.categoria}
                         onChange={handleChange}
                         list="admin-edit-category-options"
-                        placeholder="Ej. Sellos y empaques"
+                        placeholder="Ej. Transporte, logística y puertos marítimos"
                         required
                         className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
                       />

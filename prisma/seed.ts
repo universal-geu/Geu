@@ -2,7 +2,6 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { hash } from "bcryptjs";
 import { PrismaClient } from "../generated/prisma/client";
 import {
-  cauchosCategoriasNombres,
   descripcionProducto,
   productosCatalogo,
 } from "../app/data/catalog";
@@ -12,6 +11,17 @@ import {
   DIVISION_ADMIN_NAMES,
   DIVISION_ADMIN_PASSWORD,
 } from "../lib/divisions";
+
+// Historical product-type categories used by the static seed catalog to
+// tell Cauchos and Import items apart, independent of the current
+// industry-based "categoria" taxonomy admins pick from going forward.
+const SEED_CAUCHOS_CATEGORIES = [
+  "Sellos y empaques",
+  "Laminas y rollos",
+  "Mangueras",
+  "Piezas tecnicas",
+  "Fabricacion especial",
+] as const;
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -70,7 +80,7 @@ async function main() {
         category: producto.categoria,
         name: producto.nombre,
         brand: producto.marca,
-        division: (cauchosCategoriasNombres as readonly string[]).includes(producto.categoria)
+        division: (SEED_CAUCHOS_CATEGORIES as readonly string[]).includes(producto.categoria)
           ? "Cauchos"
           : "Import",
         price: producto.precioValor,

@@ -2,61 +2,49 @@ import type { DivisionName } from "@/lib/divisions";
 
 export const categoriasData = [
   {
-    nombre: "Motores y ventiladores",
-    color: "#7b4bb7",
-    icono: "◎",
+    nombre: "Alimentos, Farmacéuticos y cosméticos",
+    color: "#2f9e44",
+    icono: "✚",
   },
   {
-    nombre: "Luces y direccionales",
-    color: "#f39a05",
-    icono: "◐",
+    nombre: "Agroindustria",
+    color: "#5c940d",
+    icono: "☘",
   },
   {
-    nombre: "Línea inyección y extrusión",
-    color: "#2fa8ad",
-    icono: "◍",
+    nombre: "Petróleo, minería, gas, energías renovables y petroquímica",
+    color: "#e8590c",
+    icono: "◈",
   },
   {
-    nombre: "Línea mecanizado",
-    color: "#d61f1f",
-    icono: "◇",
+    nombre: "Químico, aseo y plásticos",
+    color: "#1971c2",
+    icono: "◆",
   },
   {
-    nombre: "Sellos y empaques",
-    color: "#3954b8",
-    icono: "◓",
+    nombre: "Construcción, infraestructura, obra civil, cemento y agregados",
+    color: "#868e96",
+    icono: "▲",
   },
   {
-    nombre: "Laminas y rollos",
-    color: "#3954b8",
-    icono: "◓",
+    nombre: "Transporte, logística y puertos marítimos",
+    color: "#0c8599",
+    icono: "▶",
   },
   {
-    nombre: "Mangueras",
-    color: "#3954b8",
-    icono: "◓",
+    nombre: "Manufactura, metalmecánica, siderúrgica y textiles",
+    color: "#495057",
+    icono: "⬢",
   },
   {
-    nombre: "Piezas tecnicas",
-    color: "#3954b8",
-    icono: "◓",
-  },
-  {
-    nombre: "Fabricacion especial",
-    color: "#3954b8",
-    icono: "◓",
+    nombre: "Ferretería y otros",
+    color: "#c92a2a",
+    icono: "✦",
   },
 ] as const;
 
 export type Categoria = string;
 export const categorias: string[] = categoriasData.map((item) => item.nombre);
-export const cauchosCategoriasNombres = [
-  "Sellos y empaques",
-  "Laminas y rollos",
-  "Mangueras",
-  "Piezas tecnicas",
-  "Fabricacion especial",
-] as const;
 export const disponibilidades = [
   "Entrega inmediata",
   "Disponible por pedido",

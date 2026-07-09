@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { cauchosCategoriasNombres, slugify } from "../data/catalog";
+import { slugify } from "../data/catalog";
 import CauchosAddToCartButton from "./cauchos-add-to-cart-button";
 import CauchosCartLink from "./cauchos-cart-link";
 import CauchosCategorySidebarMenu from "./cauchos-category-sidebar-menu";
@@ -21,16 +21,6 @@ const priceRanges = [
   { label: "Más de $300.000", min: 300000, max: Number.POSITIVE_INFINITY },
 ];
 
-function normalize(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function cleanCategory(value: string) {
-  return value.replace(/^Línea\s+/i, "").trim();
-}
 
 function humanizeSegment(value?: string) {
   if (!value) return "";
@@ -38,24 +28,6 @@ function humanizeSegment(value?: string) {
   return value
     .replace(/-/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-function isCauchosProduct(product: {
-  categoria: string;
-  marca: string;
-  nombre: string;
-  subcategoria?: string;
-  categoriaMenor?: string;
-}) {
-  const searchable = normalize(
-    `${product.categoria} ${product.marca} ${product.nombre} ${product.subcategoria || ""} ${product.categoriaMenor || ""}`,
-  );
-
-  return (
-    (cauchosCategoriasNombres as readonly string[]).includes(product.categoria) ||
-    searchable.includes("caucho") ||
-    searchable.includes("universal de cauchos")
-  );
 }
 
 export default function CauchosCategoryProductsPage({ segments }: Props) {
@@ -68,11 +40,11 @@ export default function CauchosCategoryProductsPage({ segments }: Props) {
 
   const categoryProducts = useMemo(() => {
     return products.filter((product) => {
-      if (!isCauchosProduct(product)) return false;
+      if (product.division !== "Cauchos") return false;
 
       const productSubcategory = product.subcategoria?.trim() || "Productos";
       const productMinor = product.categoriaMenor?.trim() || product.nombre;
-      const department = cleanCategory(product.categoria);
+      const department = product.categoria.trim();
 
       const matchesSubcategory =
         !subcategorySlug ||
