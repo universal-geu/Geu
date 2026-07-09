@@ -15,7 +15,7 @@ import { useProducts } from "../components/products-provider";
 import { categorias, type Categoria, type ProductoCatalogo } from "../data/catalog";
 import type { InventoryMovementSummary } from "@/lib/products";
 import type { SalesReport, ShippingStatus } from "@/lib/orders";
-import { IMAGE_SLOTS } from "@/lib/image-slots";
+import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
 import { getDivisionFromBrandParam, isServiceDivision, type DivisionName } from "@/lib/divisions";
 
 type AdminBrandConfig = {
@@ -3609,7 +3609,7 @@ export default function AdminPage() {
                     Editar imágenes
                   </h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
-                    Sube o reemplaza las imágenes del sitio público. JPG · PNG · WEBP · máx. 4 MB.
+                    Sube o reemplaza las imágenes o videos del sitio público. JPG · PNG · WEBP · MP4 · WEBM · MOV · máx. 4 MB.
                   </p>
                 </div>
                 <button
@@ -3663,12 +3663,23 @@ export default function AdminPage() {
                               className="relative overflow-hidden bg-[#f0f2f4]"
                               style={{ paddingBottom: "56.25%" }}
                             >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={currentSrc}
-                                alt={slot.label}
-                                className="absolute inset-0 h-full w-full object-contain"
-                              />
+                              {isVideoUrl(currentSrc) ? (
+                                <video
+                                  src={currentSrc}
+                                  muted
+                                  loop
+                                  autoPlay
+                                  playsInline
+                                  className="absolute inset-0 h-full w-full object-contain"
+                                />
+                              ) : (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={currentSrc}
+                                  alt={slot.label}
+                                  className="absolute inset-0 h-full w-full object-contain"
+                                />
+                              )}
                               {isUploading && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                                   <div className="h-7 w-7 animate-spin rounded-full border-4 border-white border-t-transparent" />
@@ -3704,10 +3715,10 @@ export default function AdminPage() {
                                     : "bg-[#075ed8] text-white hover:bg-[#054eb3]"
                                 } ${isUploading ? "pointer-events-none opacity-60" : ""}`}
                               >
-                                {isSaved ? "✓ Guardado" : isUploading ? "Subiendo..." : "Cambiar imagen"}
+                                {isSaved ? "✓ Guardado" : isUploading ? "Subiendo..." : "Cambiar imagen o video"}
                                 <input
                                   type="file"
-                                  accept="image/jpeg,image/png,image/webp"
+                                  accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
                                   className="sr-only"
                                   disabled={isUploading}
                                   onChange={(event) => {

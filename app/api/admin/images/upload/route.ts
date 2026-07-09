@@ -3,7 +3,14 @@ import { createSupabaseStorageClient, getStorageBucket } from "@/lib/supabase-st
 import { IMAGE_SLOTS } from "@/lib/image-slots";
 
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
-const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_FILE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+];
 
 export async function POST(request: Request) {
   try {
@@ -22,10 +29,10 @@ export async function POST(request: Request) {
 
     if (!(file instanceof File)) return Response.json({ error: "Archivo requerido." }, { status: 400 });
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      return Response.json({ error: "Formato no válido. Usa JPG, PNG o WEBP." }, { status: 400 });
+      return Response.json({ error: "Formato no válido. Usa JPG, PNG, WEBP, MP4, WEBM o MOV." }, { status: 400 });
     }
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      return Response.json({ error: "La imagen supera el límite de 4 MB." }, { status: 400 });
+      return Response.json({ error: "El archivo supera el límite de 4 MB." }, { status: 400 });
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
