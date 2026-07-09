@@ -17,12 +17,16 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdminUser();
+    const admin = await requireAdminUser();
     if (!prisma) return Response.json({ error: "BD no disponible." }, { status: 503 });
 
     const body = (await request.json()) as { key?: string; url?: string };
     if (!body.key || !body.url) return Response.json({ error: "key y url son requeridos." }, { status: 400 });
-    if (!IMAGE_SLOTS.find((s) => s.key === body.key)) return Response.json({ error: "key no válida." }, { status: 400 });
+    const slot = IMAGE_SLOTS.find((s) => s.key === body.key);
+    if (!slot) return Response.json({ error: "key no válida." }, { status: 400 });
+    if (slot.division !== admin.division) {
+      return Response.json({ error: "No autorizado para esta división." }, { status: 403 });
+    }
 
     const image = await prisma.siteImage.upsert({
       where: { key: body.key },

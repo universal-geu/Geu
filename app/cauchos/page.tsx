@@ -5,6 +5,7 @@ import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import CauchosCartLink from "../components/cauchos-cart-link";
 import CauchosDynamicMenu from "../components/cauchos-dynamic-menu";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { isVideoUrl } from "@/lib/image-slots";
 import { getProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
@@ -191,15 +192,25 @@ export default async function CauchosPage() {
           </div>
         </div>
         <div className="bg-white">
-          <Image
-            src={resolveImage("banner-principal", siteImages)}
-            alt="Todo en caucho para cada industria"
-            width={2048}
-            height={768}
-            priority
-            className="mx-auto h-auto w-full object-contain"
-            style={{ maxWidth: "1632px" }}
-          />
+          {isVideoUrl(resolveImage("banner-principal", siteImages)) ? (
+            <video
+              src={resolveImage("banner-principal", siteImages)}
+              controls
+              playsInline
+              className="mx-auto h-auto w-full object-contain"
+              style={{ maxWidth: "1632px" }}
+            />
+          ) : (
+            <Image
+              src={resolveImage("banner-principal", siteImages)}
+              alt="Todo en caucho para cada industria"
+              width={2048}
+              height={768}
+              priority
+              className="mx-auto h-auto w-full object-contain"
+              style={{ maxWidth: "1632px" }}
+            />
+          )}
         </div>
       </section>
 

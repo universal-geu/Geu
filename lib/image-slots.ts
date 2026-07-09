@@ -66,3 +66,10 @@ export type SiteImages = Record<string, string>;
 export function resolveImage(key: string, siteImages: SiteImages): string {
   return siteImages[key] ?? IMAGE_SLOTS.find((s) => s.key === key)?.defaultSrc ?? "";
 }
+
+const VIDEO_EXTENSIONS = [".mp4", ".webm", ".mov"];
+
+export function isVideoUrl(url: string): boolean {
+  const path = url.split("?")[0].toLowerCase();
+  return VIDEO_EXTENSIONS.some((ext) => path.endsWith(ext));
+}
