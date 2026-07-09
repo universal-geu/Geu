@@ -195,7 +195,9 @@ export default async function CauchosPage() {
           {isVideoUrl(resolveImage("banner-principal", siteImages)) ? (
             <video
               src={resolveImage("banner-principal", siteImages)}
-              controls
+              autoPlay
+              muted
+              loop
               playsInline
               className="mx-auto h-auto w-full object-contain"
               style={{ maxWidth: "1632px" }}
