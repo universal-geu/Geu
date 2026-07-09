@@ -45,6 +45,157 @@ export const categoriasData = [
 
 export type Categoria = string;
 export const categorias: string[] = categoriasData.map((item) => item.nombre);
+
+// Placeholder subcategory groups for the Cauchos category menu, shown until
+// real products are assigned to each of the 8 industry categories from the
+// admin panel. Matches the "column of grouped links" layout used by
+// homecenter.com.co's category flyout.
+export const cauchosCategorySubcategories: Record<string, { name: string; items: string[] }[]> = {
+  "Alimentos, Farmacéuticos y cosméticos": [
+    {
+      name: "Sellos y Empaques Sanitarios",
+      items: ["Empaques para envases", "Sellos herméticos", "Juntas sanitarias", "O-rings grado alimenticio"],
+    },
+    {
+      name: "Mangueras Sanitarias",
+      items: ["Mangueras para líquidos alimenticios", "Mangueras para vapor", "Mangueras de silicona"],
+    },
+    {
+      name: "Componentes para Envasado",
+      items: ["Tapas y válvulas", "Membranas dosificadoras", "Diafragmas"],
+    },
+    {
+      name: "Accesorios de Higiene Industrial",
+      items: ["Guantes técnicos", "Cintas antideslizantes", "Bandas transportadoras"],
+    },
+  ],
+  Agroindustria: [
+    {
+      name: "Mangueras Agrícolas",
+      items: ["Mangueras de riego", "Mangueras para fumigación", "Mangueras de succión"],
+    },
+    {
+      name: "Sellos para Maquinaria Agrícola",
+      items: ["Empaques para tractores", "Retenes", "Juntas de motor"],
+    },
+    {
+      name: "Bandas y Correas",
+      items: ["Correas trapezoidales", "Bandas transportadoras", "Correas dentadas"],
+    },
+    {
+      name: "Piezas de Desgaste",
+      items: ["Rodillos de caucho", "Ruedas y llantas sólidas", "Topes y amortiguadores"],
+    },
+  ],
+  "Petróleo, minería, gas, energías renovables y petroquímica": [
+    {
+      name: "Mangueras Industriales",
+      items: ["Mangueras para petróleo", "Mangueras para gas", "Mangueras hidráulicas de alta presión"],
+    },
+    {
+      name: "Sellos y Empaques Técnicos",
+      items: ["Empaques para válvulas", "O-rings resistentes a químicos", "Juntas para bridas"],
+    },
+    {
+      name: "Componentes para Perforación",
+      items: ["Revestimientos de caucho", "Protectores de tubería", "Empaques de pozo"],
+    },
+    {
+      name: "Energías Renovables",
+      items: ["Sellos para paneles solares", "Juntas para turbinas eólicas", "Amortiguadores técnicos"],
+    },
+  ],
+  "Químico, aseo y plásticos": [
+    {
+      name: "Mangueras Químicas",
+      items: ["Mangueras resistentes a ácidos", "Mangueras para solventes", "Mangueras de descarga química"],
+    },
+    {
+      name: "Sellos Anticorrosivos",
+      items: ["Empaques químicos", "O-rings de vitón", "Juntas resistentes a solventes"],
+    },
+    {
+      name: "Componentes para Plásticos",
+      items: ["Rodillos para extrusión", "Bandas para líneas de producción", "Piezas técnicas moldeadas"],
+    },
+    {
+      name: "Productos de Aseo Industrial",
+      items: ["Escobillas técnicas", "Mangueras de limpieza", "Guantes resistentes a químicos"],
+    },
+  ],
+  "Construcción, infraestructura, obra civil, cemento y agregados": [
+    {
+      name: "Sellos para Construcción",
+      items: ["Juntas de dilatación", "Empaques para tuberías", "Sellos impermeabilizantes"],
+    },
+    {
+      name: "Mangueras para Obra Civil",
+      items: ["Mangueras para concreto", "Mangueras de succión", "Mangueras para bombeo"],
+    },
+    {
+      name: "Amortiguación y Soportes",
+      items: ["Apoyos de neopreno", "Placas antivibratorias", "Topes de caucho"],
+    },
+    {
+      name: "Piezas para Maquinaria Pesada",
+      items: ["Orugas de caucho", "Rodillos para maquinaria", "Fajas transportadoras"],
+    },
+  ],
+  "Transporte, logística y puertos marítimos": [
+    {
+      name: "Defensas y Amortiguación Portuaria",
+      items: ["Defensas para muelles", "Parachoques industriales", "Topes de atraque"],
+    },
+    {
+      name: "Mangueras para Transporte",
+      items: ["Mangueras para combustibles", "Mangueras de carga y descarga", "Mangueras flexibles"],
+    },
+    {
+      name: "Sellos para Vehículos de Carga",
+      items: ["Empaques para contenedores", "Juntas para remolques", "Burletes"],
+    },
+    {
+      name: "Bandas Transportadoras",
+      items: ["Bandas para carga", "Bandas modulares", "Rodillos de transporte"],
+    },
+  ],
+  "Manufactura, metalmecánica, siderúrgica y textiles": [
+    {
+      name: "Bandas y Correas Industriales",
+      items: ["Correas de transmisión", "Bandas transportadoras", "Correas dentadas"],
+    },
+    {
+      name: "Sellos Técnicos para Maquinaria",
+      items: ["Retenes", "O-rings", "Empaques para prensas"],
+    },
+    {
+      name: "Piezas de Caucho a Medida",
+      items: ["Piezas moldeadas", "Recubrimientos de rodillos", "Amortiguadores industriales"],
+    },
+    {
+      name: "Textiles Técnicos",
+      items: ["Telas recubiertas de caucho", "Bandas textiles", "Lonas industriales"],
+    },
+  ],
+  "Ferretería y otros": [
+    {
+      name: "Sellos y Empaques Generales",
+      items: ["O-rings estándar", "Empaques planos", "Juntas universales"],
+    },
+    {
+      name: "Mangueras de Uso General",
+      items: ["Mangueras de jardín", "Mangueras de aire", "Mangueras multiuso"],
+    },
+    {
+      name: "Accesorios de Caucho",
+      items: ["Topes de puerta", "Bases antideslizantes", "Protectores de esquina"],
+    },
+    {
+      name: "Herramientas y Repuestos",
+      items: ["Guantes de trabajo", "Bandas elásticas", "Repuestos varios"],
+    },
+  ],
+};
 export const disponibilidades = [
   "Entrega inmediata",
   "Disponible por pedido",

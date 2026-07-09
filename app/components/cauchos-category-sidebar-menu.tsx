@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { categorias, slugify } from "../data/catalog";
+import { cauchosCategorySubcategories, categorias, slugify } from "../data/catalog";
 import { useProducts } from "./products-provider";
 import { useCauchosMenu } from "./cauchos-menu-context";
 
@@ -111,22 +111,54 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
       departmentMap.set(department, subcategoryMap);
     });
 
-    const toDepartment = (title: string, subcategoryMap?: Map<string, typeof cauchosProducts>) => ({
-      title,
-      subcategories: subcategoryMap
-        ? Array.from(subcategoryMap.entries()).map(([name, items]) => ({
-            name,
-            items: items.slice(0, 8),
-          }))
-        : [],
-    });
+    const buildFromProducts = (subcategoryMap: Map<string, typeof cauchosProducts>) =>
+      Array.from(subcategoryMap.entries()).map(([name, items]) => {
+        const minorItems = Array.from(
+          new Map(items.map((product) => [product.categoriaMenor || product.nombre, product])).values(),
+        );
+        const groupHref = `${cauchosBasePath}/categoria/${slugify(name)}`;
+
+        return {
+          name,
+          image: items[0]?.imagen ?? null,
+          groupHref,
+          itemLinks: minorItems.map((product) => ({
+            label: product.categoriaMenor || product.nombre,
+            href: `${groupHref}/${slugify(product.categoriaMenor || product.nombre)}`,
+          })),
+        };
+      });
+
+    // Placeholder subcategory groups (invented names, no real products yet)
+    // for departments still waiting on real catalog data from the admin
+    // panel. Every link funnels to the department's own category page since
+    // there's nothing to filter by yet.
+    const buildFromPlaceholders = (title: string) => {
+      const groups = cauchosCategorySubcategories[title];
+      if (!groups) return [];
+
+      const groupHref = `${cauchosBasePath}/categoria/${slugify(title)}`;
+      return groups.map((group) => ({
+        name: group.name,
+        image: null as string | null,
+        groupHref,
+        itemLinks: group.items.map((label) => ({ label, href: groupHref })),
+      }));
+    };
 
     // Only the 8 official industry categories are shown, in order, each
-    // populated with whatever products already carry that category. Older
-    // category values from not-yet-recategorized demo products are not
-    // listed here.
-    return fallbackDepartments.map((title) => toDepartment(title, departmentMap.get(title)));
-  }, [products]);
+    // populated with whatever products already carry that category, or with
+    // placeholder subcategory groups until real products are assigned.
+    return fallbackDepartments.map((title) => {
+      const subcategoryMap = departmentMap.get(title);
+      const subcategories =
+        subcategoryMap && subcategoryMap.size > 0
+          ? buildFromProducts(subcategoryMap)
+          : buildFromPlaceholders(title);
+
+      return { title, subcategories };
+    });
+  }, [products, cauchosBasePath]);
 
   const active = menuData.find((department) => department.title === activeDept) ?? null;
 
@@ -201,75 +233,60 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
             {active.subcategories.length > 0 && (
               <>
             <div className="mb-8 flex gap-6 overflow-x-auto pb-2">
-              {active.subcategories.slice(0, 10).map((subcategory) => {
-                const firstProduct = subcategory.items[0];
-
-                return (
-                  <Link
-                    key={subcategory.name}
-                    href={`${cauchosBasePath}/categoria/${slugify(subcategory.name)}`}
-                    className="flex shrink-0 flex-col items-center gap-2 text-center"
-                  >
-                    <span className="relative block h-16 w-16 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-                      {firstProduct && (
-                        <Image
-                          src={firstProduct.imagen}
-                          alt={subcategory.name}
-                          fill
-                          sizes="64px"
-                          className="object-cover"
-                        />
-                      )}
-                    </span>
-                    <span className="max-w-[84px] text-xs font-bold leading-tight text-slate-800">
-                      {subcategory.name}
-                    </span>
-                  </Link>
-                );
-              })}
+              {active.subcategories.slice(0, 10).map((subcategory) => (
+                <Link
+                  key={subcategory.name}
+                  href={subcategory.groupHref}
+                  className="flex shrink-0 flex-col items-center gap-2 text-center"
+                >
+                  <span className="relative block h-16 w-16 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
+                    {subcategory.image && (
+                      <Image
+                        src={subcategory.image}
+                        alt={subcategory.name}
+                        fill
+                        sizes="64px"
+                        className="object-cover"
+                      />
+                    )}
+                  </span>
+                  <span className="max-w-[84px] text-xs font-bold leading-tight text-slate-800">
+                    {subcategory.name}
+                  </span>
+                </Link>
+              ))}
             </div>
 
             <div className="grid gap-x-10 gap-y-8 border-t border-slate-100 pt-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {active.subcategories.map((subcategory) => {
-                const minorItems = Array.from(
-                  new Map(
-                    subcategory.items.map((product) => [
-                      product.categoriaMenor || product.nombre,
-                      product,
-                    ]),
-                  ).values(),
-                );
-
-                return (
-                  <div key={subcategory.name}>
+              {active.subcategories.map((subcategory) => (
+                <div key={subcategory.name}>
+                  <Link
+                    href={subcategory.groupHref}
+                    className="text-[13px] font-black tracking-[0.02em] hover:underline"
+                    style={{ color: "#075ed8" }}
+                  >
+                    {subcategory.name} &gt;
+                  </Link>
+                  <div className="mt-3 grid gap-2 text-[13px] text-slate-900">
+                    {subcategory.itemLinks.map((item, index) => (
+                      <Link
+                        key={`${subcategory.name}-${item.label}-${index}`}
+                        href={item.href}
+                        className="leading-5 hover:text-[#075ed8] hover:underline"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
                     <Link
-                      href={`${cauchosBasePath}/categoria/${slugify(subcategory.name)}`}
-                      className="text-[13px] font-black tracking-[0.02em] hover:underline"
+                      href={subcategory.groupHref}
+                      className="mt-1 text-[13px] font-semibold hover:underline"
                       style={{ color: "#075ed8" }}
                     >
-                      {subcategory.name} &gt;
+                      Ver más &gt;
                     </Link>
-                    <div className="mt-3 grid gap-2 text-[13px] text-slate-900">
-                      {minorItems.map((product) => (
-                        <Link
-                          key={`${product.slug}-${product.categoriaMenor || product.nombre}`}
-                          href={`${cauchosBasePath}/categoria/${slugify(subcategory.name)}/${slugify(product.categoriaMenor || product.nombre)}`}
-                          className="leading-5 hover:text-[#075ed8] hover:underline"
-                        >
-                          {product.categoriaMenor || product.nombre}
-                        </Link>
-                      ))}
-                      <Link
-                        href={`${cauchosBasePath}/categoria/${slugify(subcategory.name)}`}
-                        className="mt-1 text-[13px] font-semibold hover:underline"
-                        style={{ color: "#075ed8" }}
-                      >
-                        Ver más &gt;
-                      </Link>
-                    </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
               </>
             )}
