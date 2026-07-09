@@ -10,7 +10,6 @@ import CauchosCategorySidebarMenu from "../../components/cauchos-category-sideba
 import CauchosMenuButton from "../../components/cauchos-menu-button";
 import { CauchosMenuProvider } from "../../components/cauchos-menu-context";
 import { useProducts } from "../../components/products-provider";
-import { cauchosCategoriasNombres } from "../../data/catalog";
 
 const importProductNavItems = [
   "Luces y direccionales",
@@ -22,41 +21,6 @@ const importProductNavItems = [
   "Logistica",
   "Rastreo",
 ];
-
-function normalizeProductDivision(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function belongsToUniversalCauchos(producto: {
-  categoria: string;
-  marca: string;
-  nombre: string;
-  subcategoria?: string;
-  categoriaMenor?: string;
-}) {
-  const divisionText = normalizeProductDivision(
-    [
-      producto.categoria,
-      producto.subcategoria || "",
-      producto.categoriaMenor || "",
-      producto.marca,
-      producto.nombre,
-    ].join(" "),
-  );
-
-  return (
-    (cauchosCategoriasNombres as readonly string[]).includes(producto.categoria) ||
-    divisionText.includes("caucho") ||
-    divisionText.includes("universal de cauchos") ||
-    divisionText.includes("laminas") ||
-    divisionText.includes("sellos") ||
-    divisionText.includes("empaques") ||
-    divisionText.includes("mangueras")
-  );
-}
 
 function ProductImageGallery({
   nombre,
@@ -429,7 +393,7 @@ export default function ProductoDetallePage() {
         item.categoria === producto.categoria && item.slug !== producto.slug,
     )
     .slice(0, 3);
-  const isCauchosProduct = belongsToUniversalCauchos(producto);
+  const isCauchosProduct = producto.division === "Cauchos";
   const isImportProduct = !isCauchosProduct;
   const productImage = producto.imagen === "/hero-unipars.jpg" && isImportProduct
     ? "/home-import.png"

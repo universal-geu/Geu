@@ -3,46 +3,62 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { cauchosCategoriasNombres, slugify } from "../data/catalog";
+import { categorias, slugify } from "../data/catalog";
 import { useProducts } from "./products-provider";
 import { useCauchosMenu } from "./cauchos-menu-context";
 
-const fallbackDepartments = [...cauchosCategoriasNombres];
+const fallbackDepartments = [...categorias];
 
-function normalize(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function cleanCategory(value: string) {
-  return value.replace(/^Línea\s+/i, "").trim();
-}
-
-function LayersIcon() {
+function CupIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m12 3 9 5-9 5-9-5 9-5Z" />
-      <path d="m3 13 9 5 9-5" />
+      <path d="M5 3h11v10a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V3Z" />
+      <path d="M16 6h2a3 3 0 0 1 0 6h-2" />
     </svg>
   );
 }
 
-function SealIcon() {
+function LeafIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7">
-      <circle cx="12" cy="12" r="8" />
-      <circle cx="12" cy="12" r="3.2" />
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 4c0 9-6 15-15 15C5 10 11 4 20 4Z" />
+      <path d="M5 19 15 9" />
     </svg>
   );
 }
 
-function HoseIcon() {
+function DropletIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
-      <path d="M4 6c3 0 3 4 6 4s3-4 6-4 3 4 6 4" />
-      <path d="M4 16c3 0 3 4 6 4s3-4 6-4 3 4 6 4" />
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3c-4 5-7 8.5-7 12a7 7 0 0 0 14 0c0-3.5-3-7-7-12Z" />
+    </svg>
+  );
+}
+
+function FlaskIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3" />
+    </svg>
+  );
+}
+
+function BuildingIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 21V9l7-5 7 5v12" />
+      <path d="M9 21v-6h4v6" />
+    </svg>
+  );
+}
+
+function TruckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7h11v9H3z" />
+      <path d="M14 10h4l3 3v3h-7z" />
+      <circle cx="7" cy="18" r="1.6" />
+      <circle cx="17" cy="18" r="1.6" />
     </svg>
   );
 }
@@ -65,11 +81,14 @@ function ToolIcon() {
 }
 
 const DEPARTMENT_ICONS: Record<string, () => React.JSX.Element> = {
-  "Laminas y rollos": LayersIcon,
-  "Sellos y empaques": SealIcon,
-  Mangueras: HoseIcon,
-  "Piezas tecnicas": GearIcon,
-  "Fabricacion especial": ToolIcon,
+  "Alimentos, Farmacéuticos y cosméticos": CupIcon,
+  Agroindustria: LeafIcon,
+  "Petróleo, minería, gas, energías renovables y petroquímica": DropletIcon,
+  "Químico, aseo y plásticos": FlaskIcon,
+  "Construcción, infraestructura, obra civil, cemento y agregados": BuildingIcon,
+  "Transporte, logística y puertos marítimos": TruckIcon,
+  "Manufactura, metalmecánica, siderúrgica y textiles": GearIcon,
+  "Ferretería y otros": ToolIcon,
 };
 
 export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath?: string }) {
@@ -79,19 +98,11 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
   const [activeDept, setActiveDept] = useState<string | null>(null);
 
   const menuData = useMemo(() => {
-    const cauchosProducts = products.filter((product) => {
-      const searchable = normalize(`${product.categoria} ${product.marca}`);
-
-      return (
-        (cauchosCategoriasNombres as readonly string[]).includes(product.categoria) ||
-        searchable.includes("caucho") ||
-        searchable.includes("universal de cauchos")
-      );
-    });
+    const cauchosProducts = products.filter((product) => product.division === "Cauchos");
     const departmentMap = new Map<string, Map<string, typeof cauchosProducts>>();
 
     cauchosProducts.forEach((product) => {
-      const department = cleanCategory(product.categoria) || "Productos de caucho";
+      const department = product.categoria.trim() || "Productos de caucho";
       const subcategory = product.subcategoria?.trim() || "Productos";
       const subcategoryMap = departmentMap.get(department) || new Map();
       const existing = subcategoryMap.get(subcategory) || [];
@@ -100,19 +111,28 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
       departmentMap.set(department, subcategoryMap);
     });
 
-    const departments = Array.from(departmentMap.entries()).map(([title, subcategoryMap]) => ({
+    const toDepartment = (title: string, subcategoryMap?: Map<string, typeof cauchosProducts>) => ({
       title,
-      subcategories: Array.from(subcategoryMap.entries()).map(([name, items]) => ({
-        name,
-        items: items.slice(0, 8),
-      })),
-    }));
+      subcategories: subcategoryMap
+        ? Array.from(subcategoryMap.entries()).map(([name, items]) => ({
+            name,
+            items: items.slice(0, 8),
+          }))
+        : [],
+    });
 
-    if (departments.length > 0) {
-      return departments;
-    }
+    // Always list the 8 official categories, in order, populated with whatever
+    // products already carry that category. Any other category value still
+    // present on older products (not yet recategorized from the admin panel)
+    // is appended after, so nothing disappears from navigation silently.
+    const officialDepartments = fallbackDepartments.map((title) =>
+      toDepartment(title, departmentMap.get(title)),
+    );
+    const extraDepartments = Array.from(departmentMap.entries())
+      .filter(([title]) => !fallbackDepartments.includes(title))
+      .map(([title, subcategoryMap]) => toDepartment(title, subcategoryMap));
 
-    return fallbackDepartments.map((title) => ({ title, subcategories: [] }));
+    return [...officialDepartments, ...extraDepartments];
   }, [products]);
 
   const active = menuData.find((department) => department.title === activeDept) ?? null;
