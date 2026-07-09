@@ -204,12 +204,10 @@ export default async function CauchosPage() {
             <p className="text-lg font-black tracking-[-0.01em]">
               Hablemos de tu proyecto
             </p>
-            <span className="rounded bg-white px-3 py-1 text-sm font-black text-[#dd1b44]">
-              Asesoria tecnica
-            </span>
-            <span className="text-sm font-bold text-white/86">
-              Laminas, sellos, mangueras, piezas especiales y despachos nacionales.
-            </span>
+            <CauchosProjectChat
+              triggerLabel="Asesoria tecnica"
+              triggerClassName="asesoria-tecnica-btn rounded bg-white px-3 py-1 text-sm font-black text-[#dd1b44] transition hover:bg-[#fdecf0]"
+            />
           </div>
         </div>
         <div className="bg-white">
