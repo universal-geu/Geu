@@ -198,13 +198,13 @@ export default async function CauchosPage() {
         </div>
         <div className="bg-white text-white">
           <div
-            className="mx-auto flex min-h-14 w-full flex-wrap items-center justify-center gap-4 bg-[#075ed8] px-5 py-3 text-center md:px-8"
+            className="mx-auto flex min-h-14 w-full flex-wrap items-center justify-center gap-4 bg-[#dd1b44] px-5 py-3 text-center md:px-8"
             style={{ maxWidth: "1632px" }}
           >
             <p className="text-lg font-black tracking-[-0.01em]">
               Compra empresarial y proyectos a medida
             </p>
-            <span className="rounded bg-white px-3 py-1 text-sm font-black text-[#075ed8]">
+            <span className="rounded bg-white px-3 py-1 text-sm font-black text-[#dd1b44]">
               Asesoria tecnica
             </span>
             <span className="text-sm font-bold text-white/86">
