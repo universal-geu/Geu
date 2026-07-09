@@ -366,7 +366,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
 
             {active.subcategories.length > 0 && (
               <>
-            <div className="mb-6 flex flex-wrap gap-x-8 gap-y-4 overflow-x-auto pb-1">
+            <div className="mb-6 flex flex-wrap gap-x-14 gap-y-6 overflow-x-auto pb-1">
               {active.subcategories.slice(0, 10).map((subcategory) => {
                 const SubIcon = SUBCATEGORY_ICONS[subcategory.name] ?? DEPARTMENT_ICONS[active.title] ?? GearIcon;
                 const color = DEPARTMENT_COLORS[active.title] ?? "#075ed8";
@@ -375,10 +375,10 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
                   <Link
                     key={subcategory.name}
                     href={subcategory.groupHref}
-                    className="flex w-20 shrink-0 flex-col items-center gap-1.5 text-center"
+                    className="flex shrink-0 flex-col items-center gap-2 text-center"
                   >
                     <span
-                      className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border border-slate-200"
+                      className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-slate-200"
                       style={{ backgroundColor: subcategory.image ? undefined : `${color}1A` }}
                     >
                       {subcategory.image ? (
@@ -386,7 +386,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
                           src={subcategory.image}
                           alt={subcategory.name}
                           fill
-                          sizes="56px"
+                          sizes="80px"
                           className="object-cover"
                         />
                       ) : (
@@ -395,7 +395,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
                         </span>
                       )}
                     </span>
-                    <span className="text-[11px] font-bold leading-tight text-slate-800">
+                    <span className="max-w-[96px] text-xs font-bold leading-tight text-slate-800">
                       {subcategory.name}
                     </span>
                   </Link>
