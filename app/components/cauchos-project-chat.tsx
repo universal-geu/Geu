@@ -91,7 +91,15 @@ const STEP_LABELS: Record<string, string> = {
   comercial: "Cantidad / entrega",
 };
 
-export default function CauchosProjectChat() {
+type Props = {
+  triggerLabel?: string;
+  triggerClassName?: string;
+};
+
+export default function CauchosProjectChat({
+  triggerLabel = "Hablemos de tu proyecto →",
+  triggerClassName = "inline-flex items-center justify-center rounded-full border border-white bg-white px-8 py-4 text-sm font-black uppercase tracking-[0.08em] text-[#dd1b44] shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition hover:bg-[#fdecf0]",
+}: Props) {
   const [open, setOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [messages, setMessages] = useState<Message[]>([{ from: "bot", text: STEPS[0].bot }]);
@@ -160,12 +168,8 @@ export default function CauchosProjectChat() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center rounded-full border border-white bg-white px-8 py-4 text-sm font-black uppercase tracking-[0.08em] text-[#dd1b44] shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition hover:bg-[#fdecf0]"
-      >
-        Hablemos de tu proyecto →
+      <button type="button" onClick={() => setOpen(true)} className={triggerClassName}>
+        {triggerLabel}
       </button>
 
       {open && (
