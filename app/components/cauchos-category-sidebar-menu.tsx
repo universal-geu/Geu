@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { categorias, slugify } from "../data/catalog";
 import { useProducts } from "./products-provider";
 import { useCauchosMenu } from "./cauchos-menu-context";
@@ -121,21 +121,23 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
         : [],
     });
 
-    // Always list the 8 official categories, in order, populated with whatever
-    // products already carry that category. Any other category value still
-    // present on older products (not yet recategorized from the admin panel)
-    // is appended after, so nothing disappears from navigation silently.
-    const officialDepartments = fallbackDepartments.map((title) =>
-      toDepartment(title, departmentMap.get(title)),
-    );
-    const extraDepartments = Array.from(departmentMap.entries())
-      .filter(([title]) => !fallbackDepartments.includes(title))
-      .map(([title, subcategoryMap]) => toDepartment(title, subcategoryMap));
-
-    return [...officialDepartments, ...extraDepartments];
+    // Only the 8 official industry categories are shown, in order, each
+    // populated with whatever products already carry that category. Older
+    // category values from not-yet-recategorized demo products are not
+    // listed here.
+    return fallbackDepartments.map((title) => toDepartment(title, departmentMap.get(title)));
   }, [products]);
 
   const active = menuData.find((department) => department.title === activeDept) ?? null;
+
+  // Match homecenter.com.co: the panel opens with the first department's
+  // content already showing, rather than staying blank until the user
+  // hovers something.
+  useEffect(() => {
+    if (isOpen) {
+      setActiveDept(menuData[0]?.title ?? null);
+    }
+  }, [isOpen, menuData]);
 
   if (!isOpen) {
     return null;
