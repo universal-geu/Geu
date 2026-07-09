@@ -38,49 +38,61 @@ enum InventoryMovementType {
   ORDER_DEDUCTION
 }
 
+enum Division {
+  Cauchos
+  Import
+  Innovation
+  Energy
+  Plastic
+}
+
 model Product {
-  id                 String              @id @default(cuid())
-  slug               String              @unique
-  sku                String?             @unique
-  oemReference       String?
-  alternativeReferences String[]         @default([])
-  category           String
-  name               String
-  brand              String
-  price              Int
-  previousPrice      Int
-  stock              Int                 @default(12)
-  minimumStock       Int                 @default(3)
-  image              String
-  galleryImages      String[]            @default([])
-  availability       String
-  description        String
-  application        String?
-  compatibility      String[]            @default([])
-  warranty           String?
-  featured           Boolean             @default(false)
-  active             Boolean             @default(true)
-  inventoryMovements InventoryMovement[]
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  id                    String              @id @default(cuid())
+  slug                  String              @unique
+  sku                   String?             @unique
+  oemReference          String?
+  alternativeReferences String[]            @default([])
+  category              String
+  name                  String
+  brand                 String
+  division              Division            @default(Cauchos)
+  price                 Int
+  previousPrice         Int
+  displayPriceOverride   String?
+  displaySecondaryLabel  String?
+  stock                 Int                 @default(12)
+  minimumStock          Int                 @default(3)
+  image                 String
+  galleryImages         String[]            @default([])
+  availability          String
+  description           String
+  application           String?
+  compatibility         String[]            @default([])
+  warranty              String?
+  featured              Boolean             @default(false)
+  active                Boolean             @default(true)
+  inventoryMovements    InventoryMovement[]
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   fullName     String
   company      String?
-  email        String   @unique
+  email        String    @unique
   phone        String?
   department   String?
   city         String?
   addressLine1 String?
   addressLine2 String?
   passwordHash String
-  role         UserRole @default(CUSTOMER)
+  role         UserRole  @default(CUSTOMER)
+  division     Division?
   cartItems    CartItem[]
   orders       Order[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model CartItem {

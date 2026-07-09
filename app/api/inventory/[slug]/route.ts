@@ -1,4 +1,4 @@
-import { adjustProductInventory } from "@/lib/products";
+import { adjustProductInventory, getProductDivision } from "@/lib/products";
 import { requireAdminUser } from "@/lib/admin";
 
 export async function PATCH(
@@ -6,8 +6,14 @@ export async function PATCH(
   context: { params: Promise<{ slug: string }> },
 ) {
   try {
-    await requireAdminUser();
+    const admin = await requireAdminUser();
     const { slug } = await context.params;
+    const existingDivision = await getProductDivision(slug);
+
+    if (existingDivision && existingDivision !== admin.division) {
+      return Response.json({ error: "No autorizado." }, { status: 403 });
+    }
+
     const body = (await request.json()) as {
       quantity?: number;
       note?: string;

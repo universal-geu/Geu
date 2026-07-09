@@ -2,9 +2,16 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { hash } from "bcryptjs";
 import { PrismaClient } from "../generated/prisma/client";
 import {
+  cauchosCategoriasNombres,
   descripcionProducto,
   productosCatalogo,
 } from "../app/data/catalog";
+import {
+  DIVISIONS,
+  DIVISION_ADMIN_EMAILS,
+  DIVISION_ADMIN_NAMES,
+  DIVISION_ADMIN_PASSWORD,
+} from "../lib/divisions";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -19,24 +26,29 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  const adminPasswordHash = await hash("123456789", 10);
+  const adminPasswordHash = await hash(DIVISION_ADMIN_PASSWORD, 10);
 
-  await prisma.user.upsert({
-    where: {
-      email: "admin@geu.com.co",
-    },
-    update: {
-      fullName: "Administrador GEU",
-      role: "ADMIN",
-      passwordHash: adminPasswordHash,
-    },
-    create: {
-      fullName: "Administrador GEU",
-      email: "admin@geu.com.co",
-      passwordHash: adminPasswordHash,
-      role: "ADMIN",
-    },
-  });
+  for (const division of DIVISIONS) {
+    const email = DIVISION_ADMIN_EMAILS[division];
+    const fullName = DIVISION_ADMIN_NAMES[division];
+
+    await prisma.user.upsert({
+      where: { email },
+      update: {
+        fullName,
+        role: "ADMIN",
+        division,
+        passwordHash: adminPasswordHash,
+      },
+      create: {
+        fullName,
+        email,
+        passwordHash: adminPasswordHash,
+        role: "ADMIN",
+        division,
+      },
+    });
+  }
 
   await prisma.product.deleteMany();
 
@@ -58,6 +70,9 @@ async function main() {
         category: producto.categoria,
         name: producto.nombre,
         brand: producto.marca,
+        division: (cauchosCategoriasNombres as readonly string[]).includes(producto.categoria)
+          ? "Cauchos"
+          : "Import",
         price: producto.precioValor,
         previousPrice: Math.max(
           producto.precioValor,

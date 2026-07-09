@@ -53,3 +53,14 @@ export const InventoryMovementType = {
 } as const
 
 export type InventoryMovementType = (typeof InventoryMovementType)[keyof typeof InventoryMovementType]
+
+
+export const Division = {
+  Cauchos: 'Cauchos',
+  Import: 'Import',
+  Innovation: 'Innovation',
+  Energy: 'Energy',
+  Plastic: 'Plastic'
+} as const
+
+export type Division = (typeof Division)[keyof typeof Division]

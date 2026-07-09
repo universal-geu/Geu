@@ -11,6 +11,7 @@ import {
   type ProductoCatalogo,
 } from "@/app/data/catalog";
 import { prisma } from "@/lib/prisma";
+import type { DivisionName } from "@/lib/divisions";
 
 type ProductRecord = {
   id?: string;
@@ -21,8 +22,11 @@ type ProductRecord = {
   category: string;
   name: string;
   brand: string;
+  division: DivisionName;
   price: number;
   previousPrice: number;
+  displayPriceOverride?: string | null;
+  displaySecondaryLabel?: string | null;
   stock: number;
   minimumStock: number;
   image: string;
@@ -61,8 +65,11 @@ export type ProductMutationInput = {
   categoriaMenor?: string;
   nombre: string;
   marca: string;
+  division: DivisionName;
   precioValor: number;
   precioAnteriorValor: number;
+  displayPriceOverride?: string;
+  displaySecondaryLabel?: string;
   stock: number;
   stockMinimo: number;
   imagen: string;
@@ -206,8 +213,11 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
     categoria,
     nombre: product.name,
     marca: product.brand,
-    precio: formatearMoneda(product.price),
-    precioAnterior: formatearMoneda(product.previousPrice),
+    division: product.division,
+    displayPriceOverride: product.displayPriceOverride || undefined,
+    displaySecondaryLabel: product.displaySecondaryLabel || undefined,
+    precio: product.displayPriceOverride || formatearMoneda(product.price),
+    precioAnterior: product.displaySecondaryLabel || formatearMoneda(product.previousPrice),
     precioValor: product.price,
     stock: product.stock,
     stockMinimo: product.minimumStock,
@@ -242,6 +252,7 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
 function getFallbackProducts(): StoreProduct[] {
   return productosCatalogo.map((producto, index) => ({
     ...producto,
+    division: producto.division ?? "Cauchos",
     sku: producto.sku || createSkuFromName(producto.nombre),
     stock: producto.stock ?? 12,
     stockMinimo: producto.stockMinimo ?? 3,
@@ -271,6 +282,19 @@ function getFallbackProducts(): StoreProduct[] {
     garantia: producto.garantia || "1 año de garantía del fabricante",
     destacado: producto.destacado ?? index < 4,
   }));
+}
+
+export async function getProductDivision(slug: string): Promise<DivisionName | null> {
+  if (!prisma) {
+    return null;
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { slug },
+    select: { division: true },
+  });
+
+  return product?.division ?? null;
 }
 
 export async function getProducts() {
@@ -344,8 +368,11 @@ export async function createProduct(input: ProductMutationInput) {
       category: input.categoria,
       name: nombre,
       brand: marca,
+      division: input.division,
       price: precioValor,
       previousPrice: precioAnteriorValor,
+      displayPriceOverride: input.displayPriceOverride?.trim() || null,
+      displaySecondaryLabel: input.displaySecondaryLabel?.trim() || null,
       stock,
       minimumStock: stockMinimo,
       image: imagen,
@@ -465,6 +492,8 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
       brand: marca,
       price: precioValor,
       previousPrice: precioAnteriorValor,
+      displayPriceOverride: input.displayPriceOverride?.trim() || null,
+      displaySecondaryLabel: input.displaySecondaryLabel?.trim() || null,
       stock,
       minimumStock: stockMinimo,
       image: imagen,

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { getProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
@@ -105,6 +106,8 @@ function PlasticMark() {
 
 export default async function PlasticPage() {
   const siteImages = await getSiteImages();
+  const allProducts = await getProducts();
+  const plasticProducts = allProducts.filter((product) => product.division === "Plastic");
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
@@ -266,6 +269,73 @@ export default async function PlasticPage() {
               </article>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section id="productos" className="scroll-mt-56 border-b border-slate-200 bg-slate-50 text-slate-950">
+        <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+            Productos Plastic
+          </p>
+          <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] md:text-5xl">
+            Fichas de producto listas para cotizar.
+          </h2>
+
+          {plasticProducts.length > 0 ? (
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {plasticProducts.map((product) => (
+                <article
+                  key={product.slug}
+                  className="group flex min-h-[420px] flex-col overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition hover:-translate-y-1 hover:border-[#6b7280]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)]"
+                >
+                  <div
+                    className="relative h-52 overflow-hidden bg-slate-200"
+                    style={{
+                      backgroundImage: `linear-gradient(180deg,rgba(2,6,23,0.04),rgba(2,6,23,0.3)),url('${product.imagen}')`,
+                      backgroundPosition: "center",
+                      backgroundSize: "cover",
+                    }}
+                  >
+                    <span className="absolute left-3 top-3 rounded-[4px] bg-[#6b7280] px-2.5 py-1.5 text-xs font-black text-white shadow-sm">
+                      {product.descuento}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col p-6">
+                    <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#6b7280]">
+                      {product.marca}
+                    </span>
+                    <p className="mt-2 min-h-14 text-xl font-black leading-7 text-slate-950">
+                      {product.nombre}
+                    </p>
+                    <p className="mt-2 min-h-12 text-sm font-semibold leading-6 text-slate-500">
+                      {product.descripcion}
+                    </p>
+                    <span className="mt-3 inline-flex w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+                      {product.disponibilidad}
+                    </span>
+                    <span className="mt-auto border-t border-slate-100 pt-5">
+                      <span className="block text-xs font-bold text-slate-400">
+                        {product.precioAnterior}
+                      </span>
+                      <span className="mt-1 block text-2xl font-black tracking-[-0.02em] text-slate-950">
+                        {product.precio}
+                      </span>
+                    </span>
+                    <Link
+                      href="#contacto"
+                      className="mt-6 inline-flex justify-center rounded-full border border-[#6b7280] bg-white px-4 py-3 text-center text-xs font-black uppercase tracking-[0.08em] text-[#6b7280] transition-colors duration-200 hover:bg-[#6b7280] hover:text-white"
+                    >
+                      Cotizar
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-8 text-sm font-semibold text-slate-500">
+              Pronto publicaremos aqui nuestras fichas de producto.
+            </p>
+          )}
         </div>
       </section>
 

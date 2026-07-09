@@ -976,8 +976,11 @@ export const ProductScalarFieldEnum = {
   category: 'category',
   name: 'name',
   brand: 'brand',
+  division: 'division',
   price: 'price',
   previousPrice: 'previousPrice',
+  displayPriceOverride: 'displayPriceOverride',
+  displaySecondaryLabel: 'displaySecondaryLabel',
   stock: 'stock',
   minimumStock: 'minimumStock',
   image: 'image',
@@ -1008,6 +1011,7 @@ export const UserScalarFieldEnum = {
   addressLine2: 'addressLine2',
   passwordHash: 'passwordHash',
   role: 'role',
+  division: 'division',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1137,6 +1141,20 @@ export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 
  * Reference to a field of type 'String[]'
  */
 export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Division'
+ */
+export type EnumDivisionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Division'>
+    
+
+
+/**
+ * Reference to a field of type 'Division[]'
+ */
+export type ListEnumDivisionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Division[]'>
     
 
 

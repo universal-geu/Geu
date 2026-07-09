@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { getProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
@@ -67,7 +68,7 @@ const innovationCategories = [
   },
 ];
 
-const innovationProducts = [
+const innovationProductsFallback = [
   {
     slug: "automatizacion-industrial",
     marca: "GEU Innovation",
@@ -143,6 +144,10 @@ function InnovationLogo() {
 
 export default async function InnovationPage() {
   const siteImages = await getSiteImages();
+  const allProducts = await getProducts();
+  const innovationProducts = allProducts.filter((product) => product.division === "Innovation");
+  const displayProducts =
+    innovationProducts.length > 0 ? innovationProducts : innovationProductsFallback;
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
@@ -261,7 +266,7 @@ export default async function InnovationPage() {
           </div>
 
           <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {innovationProducts.map((product) => (
+            {displayProducts.map((product) => (
               <article
                 key={product.slug}
                 className="group flex min-h-[455px] flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#0498b4]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)]"

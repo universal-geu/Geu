@@ -1,3 +1,5 @@
+import type { DivisionName } from "@/lib/divisions";
+
 export const categoriasData = [
   {
     nombre: "Motores y ventiladores",
@@ -71,9 +73,12 @@ export type ProductoCatalogo = {
   categoria: Categoria;
   nombre: string;
   marca: string;
+  division?: DivisionName;
   precio: string;
   precioAnterior: string;
   precioValor: number;
+  displayPriceOverride?: string;
+  displaySecondaryLabel?: string;
   stock?: number;
   stockMinimo?: number;
   estadoInventario?: "in-stock" | "low-stock" | "out-of-stock";

@@ -1,4 +1,4 @@
-import { deleteProduct, updateProduct } from "@/lib/products";
+import { deleteProduct, getProductDivision, updateProduct } from "@/lib/products";
 import { requireAdminUser } from "@/lib/admin";
 
 export async function PATCH(
@@ -6,10 +6,16 @@ export async function PATCH(
   context: { params: Promise<{ slug: string }> },
 ) {
   try {
-    await requireAdminUser();
+    const admin = await requireAdminUser();
     const { slug } = await context.params;
+    const existingDivision = await getProductDivision(slug);
+
+    if (existingDivision && existingDivision !== admin.division) {
+      return Response.json({ error: "No autorizado." }, { status: 403 });
+    }
+
     const body = await request.json();
-    const product = await updateProduct(slug, body);
+    const product = await updateProduct(slug, { ...body, division: admin.division });
 
     return Response.json({ product });
   } catch (error) {
@@ -38,8 +44,14 @@ export async function DELETE(
   context: { params: Promise<{ slug: string }> },
 ) {
   try {
-    await requireAdminUser();
+    const admin = await requireAdminUser();
     const { slug } = await context.params;
+    const existingDivision = await getProductDivision(slug);
+
+    if (existingDivision && existingDivision !== admin.division) {
+      return Response.json({ error: "No autorizado." }, { status: 403 });
+    }
+
     await deleteProduct(slug);
 
     return new Response(null, { status: 204 });

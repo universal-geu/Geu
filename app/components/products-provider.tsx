@@ -15,6 +15,7 @@ import {
   type Disponibilidad,
 } from "../data/catalog";
 import type { StoreProduct } from "@/lib/products";
+import type { DivisionName } from "@/lib/divisions";
 
 export type AdminProductInput = {
   sku?: string;
@@ -25,8 +26,11 @@ export type AdminProductInput = {
   categoriaMenor?: string;
   nombre: string;
   marca: string;
+  division: DivisionName;
   precioValor: number;
   precioAnteriorValor: number;
+  displayPriceOverride?: string;
+  displaySecondaryLabel?: string;
   stock: number;
   stockMinimo: number;
   imagen: string;
@@ -108,8 +112,11 @@ function createLocalProduct(
     categoriaMenor: input.categoriaMenor?.trim() || undefined,
     nombre: input.nombre.trim(),
     marca: input.marca.trim(),
-    precio: formatearMoneda(precioValor),
-    precioAnterior: formatearMoneda(precioAnteriorValor),
+    division: input.division,
+    displayPriceOverride: input.displayPriceOverride?.trim() || undefined,
+    displaySecondaryLabel: input.displaySecondaryLabel?.trim() || undefined,
+    precio: input.displayPriceOverride?.trim() || formatearMoneda(precioValor),
+    precioAnterior: input.displaySecondaryLabel?.trim() || formatearMoneda(precioAnteriorValor),
     precioValor,
     stock,
     stockMinimo,

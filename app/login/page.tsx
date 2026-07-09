@@ -4,6 +4,19 @@ import { useEffect, useState, type CSSProperties, type ChangeEvent, type FormEve
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import CauchosCartLink from "../components/cauchos-cart-link";
+import {
+  DIVISION_ADMIN_EMAILS,
+  DIVISION_ADMIN_PASSWORD,
+  getDivisionFromBrandParam,
+} from "@/lib/divisions";
+
+const LOGIN_ACCENTS: Record<string, { accent: string; accentHover: string; brandName: string }> = {
+  Cauchos: { accent: "#075ed8", accentHover: "#064bb0", brandName: "GEU" },
+  Import: { accent: "#e31313", accentHover: "#ba1010", brandName: "GEU Import" },
+  Innovation: { accent: "#0498b4", accentHover: "#037c92", brandName: "GEU Innovation" },
+  Energy: { accent: "#d4a900", accentHover: "#b38f00", brandName: "GEU Energy" },
+  Plastic: { accent: "#6b7280", accentHover: "#565c64", brandName: "GEU Plastic" },
+};
 
 type LoginFormState = {
   email: string;
@@ -63,10 +76,11 @@ async function syncGuestCartAfterLogin(userId: string) {
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isImportLogin = searchParams.get("brand") === "import";
-  const accent = isImportLogin ? "#e31313" : "#075ed8";
-  const accentHover = isImportLogin ? "#ba1010" : "#064bb0";
-  const brandName = isImportLogin ? "GEU Import" : "GEU";
+  const brandParam = searchParams.get("brand");
+  const loginDivision = getDivisionFromBrandParam(brandParam);
+  const isImportLogin = loginDivision === "Import";
+  const { accent, accentHover, brandName } = LOGIN_ACCENTS[loginDivision];
+  const adminRedirectPath = brandParam ? `/admin?brand=${brandParam}` : "/admin";
   const [form, setForm] = useState<LoginFormState>(initialState);
   const [adminPin, setAdminPin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,9 +125,7 @@ export default function LoginPage() {
     const userId = payload.user?.id;
     const nextPath =
       payload.user?.role === "ADMIN"
-        ? isImportLogin
-          ? "/admin?brand=import"
-          : "/admin"
+        ? adminRedirectPath
         : requestedPath === "/admin"
           ? "/mi-cuenta"
           : requestedPath || "/mi-cuenta";
@@ -216,8 +228,8 @@ export default function LoginPage() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: "admin@geu.com.co",
-        password: "123456789",
+        email: DIVISION_ADMIN_EMAILS[loginDivision],
+        password: DIVISION_ADMIN_PASSWORD,
       }),
     });
 
@@ -242,7 +254,7 @@ export default function LoginPage() {
     });
 
     window.setTimeout(() => {
-      router.push(isImportLogin ? "/admin?brand=import" : "/admin");
+      router.push(adminRedirectPath);
       router.refresh();
     }, 350);
   };

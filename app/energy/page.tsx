@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import SolutionsCarousel from "./solutions-carousel";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { getProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ const projectHouseVideo = "/geu-energy-project-house.mp4";
 
 const navItems = [
   { label: "Soluciones", href: "#soluciones" },
+  { label: "Servicios", href: "#productos" },
   { label: "Proyectos", href: "#proyectos" },
   { label: "Diseña tu sistema", href: "#sistema" },
   { label: "Catálogos", href: "#contacto" },
@@ -173,6 +175,8 @@ const systemSteps = [
 
 export default async function EnergyPage() {
   const siteImages = await getSiteImages();
+  const allProducts = await getProducts();
+  const energyProducts = allProducts.filter((product) => product.division === "Energy");
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -295,6 +299,73 @@ export default async function EnergyPage() {
           <div className="mt-10">
             <SolutionsCarousel items={solutions} />
           </div>
+        </div>
+      </section>
+
+      <section id="productos" className="scroll-mt-56 border-b border-white/10 bg-[#050505] text-white">
+        <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#ffd400]">
+            Servicios Energy
+          </p>
+          <h2 className="mt-2 font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-5xl">
+            Proyectos energeticos a la medida.
+          </h2>
+
+          {energyProducts.length > 0 ? (
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {energyProducts.map((product) => (
+                <article
+                  key={product.slug}
+                  className="group flex min-h-[420px] flex-col overflow-hidden rounded-[10px] border border-white/10 bg-black/40 shadow-[0_14px_36px_rgba(0,0,0,0.3)] transition duration-300 hover:-translate-y-1 hover:border-[#ffd400]/50"
+                >
+                  <div
+                    className="relative h-52 overflow-hidden bg-white/5"
+                    style={{
+                      backgroundImage: `linear-gradient(180deg,rgba(0,0,0,0.04),rgba(0,0,0,0.5)),url('${product.imagen}')`,
+                      backgroundPosition: "center",
+                      backgroundSize: "cover",
+                    }}
+                  >
+                    <span className="absolute left-3 top-3 rounded-[4px] bg-[#ffd400] px-2.5 py-1.5 text-xs font-black text-black shadow-sm">
+                      {product.descuento}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col p-6">
+                    <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#ffd400]">
+                      {product.marca}
+                    </span>
+                    <p className="mt-2 min-h-14 text-xl font-black leading-7 text-white">
+                      {product.nombre}
+                    </p>
+                    <p className="mt-2 min-h-12 text-sm font-semibold leading-6 text-white/65">
+                      {product.descripcion}
+                    </p>
+                    <span className="mt-3 inline-flex w-fit rounded-full bg-white/10 px-3 py-1 text-xs font-black text-white/80">
+                      {product.disponibilidad}
+                    </span>
+                    <span className="mt-auto border-t border-white/10 pt-5">
+                      <span className="block text-xs font-bold text-white/50">
+                        {product.precioAnterior}
+                      </span>
+                      <span className="mt-1 block text-2xl font-black tracking-[-0.02em] text-white">
+                        {product.precio}
+                      </span>
+                    </span>
+                    <Link
+                      href="#contacto"
+                      className="mt-6 inline-flex justify-center rounded-full border border-[#ffd400] bg-transparent px-4 py-3 text-center text-xs font-black uppercase tracking-[0.08em] text-[#ffd400] transition-colors duration-200 hover:bg-[#ffd400] hover:text-black"
+                    >
+                      Solicitar asesoria
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-8 text-sm font-semibold text-white/60">
+              Pronto publicaremos aqui nuestros proyectos y servicios energeticos.
+            </p>
+          )}
         </div>
       </section>
 

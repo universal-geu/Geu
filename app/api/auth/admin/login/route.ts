@@ -1,5 +1,6 @@
 import { authenticateUser } from "@/lib/users";
-import { DEV_ADMIN_USER, setSessionCookie } from "@/lib/auth";
+import { getDevAdminUserByEmail, setSessionCookie } from "@/lib/auth";
+import { DIVISION_ADMIN_PASSWORD } from "@/lib/divisions";
 
 export async function POST(request: Request) {
   try {
@@ -23,13 +24,15 @@ export async function POST(request: Request) {
     try {
       user = await authenticateUser(email, password);
     } catch (error) {
+      const devAdmin = getDevAdminUserByEmail(email);
+
       if (
         error instanceof Error &&
         error.message === "DATABASE_NOT_CONFIGURED" &&
-        email.toLowerCase() === DEV_ADMIN_USER.email &&
-        password === "123456789"
+        devAdmin &&
+        password === DIVISION_ADMIN_PASSWORD
       ) {
-        user = DEV_ADMIN_USER;
+        user = devAdmin;
       } else {
         throw error;
       }
@@ -46,6 +49,7 @@ export async function POST(request: Request) {
       userId: user.id,
       email: user.email,
       role: user.role,
+      division: user.division ?? undefined,
     });
 
     return Response.json({

@@ -48,8 +48,11 @@ export type ProductMinAggregateOutputType = {
   category: string | null
   name: string | null
   brand: string | null
+  division: $Enums.Division | null
   price: number | null
   previousPrice: number | null
+  displayPriceOverride: string | null
+  displaySecondaryLabel: string | null
   stock: number | null
   minimumStock: number | null
   image: string | null
@@ -71,8 +74,11 @@ export type ProductMaxAggregateOutputType = {
   category: string | null
   name: string | null
   brand: string | null
+  division: $Enums.Division | null
   price: number | null
   previousPrice: number | null
+  displayPriceOverride: string | null
+  displaySecondaryLabel: string | null
   stock: number | null
   minimumStock: number | null
   image: string | null
@@ -95,8 +101,11 @@ export type ProductCountAggregateOutputType = {
   category: number
   name: number
   brand: number
+  division: number
   price: number
   previousPrice: number
+  displayPriceOverride: number
+  displaySecondaryLabel: number
   stock: number
   minimumStock: number
   image: number
@@ -136,8 +145,11 @@ export type ProductMinAggregateInputType = {
   category?: true
   name?: true
   brand?: true
+  division?: true
   price?: true
   previousPrice?: true
+  displayPriceOverride?: true
+  displaySecondaryLabel?: true
   stock?: true
   minimumStock?: true
   image?: true
@@ -159,8 +171,11 @@ export type ProductMaxAggregateInputType = {
   category?: true
   name?: true
   brand?: true
+  division?: true
   price?: true
   previousPrice?: true
+  displayPriceOverride?: true
+  displaySecondaryLabel?: true
   stock?: true
   minimumStock?: true
   image?: true
@@ -183,8 +198,11 @@ export type ProductCountAggregateInputType = {
   category?: true
   name?: true
   brand?: true
+  division?: true
   price?: true
   previousPrice?: true
+  displayPriceOverride?: true
+  displaySecondaryLabel?: true
   stock?: true
   minimumStock?: true
   image?: true
@@ -296,8 +314,11 @@ export type ProductGroupByOutputType = {
   category: string
   name: string
   brand: string
+  division: $Enums.Division
   price: number
   previousPrice: number
+  displayPriceOverride: string | null
+  displaySecondaryLabel: string | null
   stock: number
   minimumStock: number
   image: string
@@ -345,8 +366,11 @@ export type ProductWhereInput = {
   category?: Prisma.StringFilter<"Product"> | string
   name?: Prisma.StringFilter<"Product"> | string
   brand?: Prisma.StringFilter<"Product"> | string
+  division?: Prisma.EnumDivisionFilter<"Product"> | $Enums.Division
   price?: Prisma.IntFilter<"Product"> | number
   previousPrice?: Prisma.IntFilter<"Product"> | number
+  displayPriceOverride?: Prisma.StringNullableFilter<"Product"> | string | null
+  displaySecondaryLabel?: Prisma.StringNullableFilter<"Product"> | string | null
   stock?: Prisma.IntFilter<"Product"> | number
   minimumStock?: Prisma.IntFilter<"Product"> | number
   image?: Prisma.StringFilter<"Product"> | string
@@ -372,8 +396,11 @@ export type ProductOrderByWithRelationInput = {
   category?: Prisma.SortOrder
   name?: Prisma.SortOrder
   brand?: Prisma.SortOrder
+  division?: Prisma.SortOrder
   price?: Prisma.SortOrder
   previousPrice?: Prisma.SortOrder
+  displayPriceOverride?: Prisma.SortOrderInput | Prisma.SortOrder
+  displaySecondaryLabel?: Prisma.SortOrderInput | Prisma.SortOrder
   stock?: Prisma.SortOrder
   minimumStock?: Prisma.SortOrder
   image?: Prisma.SortOrder
@@ -402,8 +429,11 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   category?: Prisma.StringFilter<"Product"> | string
   name?: Prisma.StringFilter<"Product"> | string
   brand?: Prisma.StringFilter<"Product"> | string
+  division?: Prisma.EnumDivisionFilter<"Product"> | $Enums.Division
   price?: Prisma.IntFilter<"Product"> | number
   previousPrice?: Prisma.IntFilter<"Product"> | number
+  displayPriceOverride?: Prisma.StringNullableFilter<"Product"> | string | null
+  displaySecondaryLabel?: Prisma.StringNullableFilter<"Product"> | string | null
   stock?: Prisma.IntFilter<"Product"> | number
   minimumStock?: Prisma.IntFilter<"Product"> | number
   image?: Prisma.StringFilter<"Product"> | string
@@ -429,8 +459,11 @@ export type ProductOrderByWithAggregationInput = {
   category?: Prisma.SortOrder
   name?: Prisma.SortOrder
   brand?: Prisma.SortOrder
+  division?: Prisma.SortOrder
   price?: Prisma.SortOrder
   previousPrice?: Prisma.SortOrder
+  displayPriceOverride?: Prisma.SortOrderInput | Prisma.SortOrder
+  displaySecondaryLabel?: Prisma.SortOrderInput | Prisma.SortOrder
   stock?: Prisma.SortOrder
   minimumStock?: Prisma.SortOrder
   image?: Prisma.SortOrder
@@ -463,8 +496,11 @@ export type ProductScalarWhereWithAggregatesInput = {
   category?: Prisma.StringWithAggregatesFilter<"Product"> | string
   name?: Prisma.StringWithAggregatesFilter<"Product"> | string
   brand?: Prisma.StringWithAggregatesFilter<"Product"> | string
+  division?: Prisma.EnumDivisionWithAggregatesFilter<"Product"> | $Enums.Division
   price?: Prisma.IntWithAggregatesFilter<"Product"> | number
   previousPrice?: Prisma.IntWithAggregatesFilter<"Product"> | number
+  displayPriceOverride?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  displaySecondaryLabel?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   stock?: Prisma.IntWithAggregatesFilter<"Product"> | number
   minimumStock?: Prisma.IntWithAggregatesFilter<"Product"> | number
   image?: Prisma.StringWithAggregatesFilter<"Product"> | string
@@ -489,8 +525,11 @@ export type ProductCreateInput = {
   category: string
   name: string
   brand: string
+  division?: $Enums.Division
   price: number
   previousPrice: number
+  displayPriceOverride?: string | null
+  displaySecondaryLabel?: string | null
   stock?: number
   minimumStock?: number
   image: string
@@ -516,8 +555,11 @@ export type ProductUncheckedCreateInput = {
   category: string
   name: string
   brand: string
+  division?: $Enums.Division
   price: number
   previousPrice: number
+  displayPriceOverride?: string | null
+  displaySecondaryLabel?: string | null
   stock?: number
   minimumStock?: number
   image: string
@@ -543,8 +585,11 @@ export type ProductUpdateInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
+  division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displaySecondaryLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   minimumStock?: Prisma.IntFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
@@ -570,8 +615,11 @@ export type ProductUncheckedUpdateInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
+  division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displaySecondaryLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   minimumStock?: Prisma.IntFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
@@ -597,8 +645,11 @@ export type ProductCreateManyInput = {
   category: string
   name: string
   brand: string
+  division?: $Enums.Division
   price: number
   previousPrice: number
+  displayPriceOverride?: string | null
+  displaySecondaryLabel?: string | null
   stock?: number
   minimumStock?: number
   image: string
@@ -623,8 +674,11 @@ export type ProductUpdateManyMutationInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
+  division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displaySecondaryLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   minimumStock?: Prisma.IntFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
@@ -649,8 +703,11 @@ export type ProductUncheckedUpdateManyInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
+  division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displaySecondaryLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   minimumStock?: Prisma.IntFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
@@ -683,8 +740,11 @@ export type ProductCountOrderByAggregateInput = {
   category?: Prisma.SortOrder
   name?: Prisma.SortOrder
   brand?: Prisma.SortOrder
+  division?: Prisma.SortOrder
   price?: Prisma.SortOrder
   previousPrice?: Prisma.SortOrder
+  displayPriceOverride?: Prisma.SortOrder
+  displaySecondaryLabel?: Prisma.SortOrder
   stock?: Prisma.SortOrder
   minimumStock?: Prisma.SortOrder
   image?: Prisma.SortOrder
@@ -715,8 +775,11 @@ export type ProductMaxOrderByAggregateInput = {
   category?: Prisma.SortOrder
   name?: Prisma.SortOrder
   brand?: Prisma.SortOrder
+  division?: Prisma.SortOrder
   price?: Prisma.SortOrder
   previousPrice?: Prisma.SortOrder
+  displayPriceOverride?: Prisma.SortOrder
+  displaySecondaryLabel?: Prisma.SortOrder
   stock?: Prisma.SortOrder
   minimumStock?: Prisma.SortOrder
   image?: Prisma.SortOrder
@@ -738,8 +801,11 @@ export type ProductMinOrderByAggregateInput = {
   category?: Prisma.SortOrder
   name?: Prisma.SortOrder
   brand?: Prisma.SortOrder
+  division?: Prisma.SortOrder
   price?: Prisma.SortOrder
   previousPrice?: Prisma.SortOrder
+  displayPriceOverride?: Prisma.SortOrder
+  displaySecondaryLabel?: Prisma.SortOrder
   stock?: Prisma.SortOrder
   minimumStock?: Prisma.SortOrder
   image?: Prisma.SortOrder
@@ -788,6 +854,10 @@ export type NullableStringFieldUpdateOperationsInput = {
 export type ProductUpdatealternativeReferencesInput = {
   set?: string[]
   push?: string | string[]
+}
+
+export type EnumDivisionFieldUpdateOperationsInput = {
+  set?: $Enums.Division
 }
 
 export type IntFieldUpdateOperationsInput = {
@@ -839,8 +909,11 @@ export type ProductCreateWithoutInventoryMovementsInput = {
   category: string
   name: string
   brand: string
+  division?: $Enums.Division
   price: number
   previousPrice: number
+  displayPriceOverride?: string | null
+  displaySecondaryLabel?: string | null
   stock?: number
   minimumStock?: number
   image: string
@@ -865,8 +938,11 @@ export type ProductUncheckedCreateWithoutInventoryMovementsInput = {
   category: string
   name: string
   brand: string
+  division?: $Enums.Division
   price: number
   previousPrice: number
+  displayPriceOverride?: string | null
+  displaySecondaryLabel?: string | null
   stock?: number
   minimumStock?: number
   image: string
@@ -907,8 +983,11 @@ export type ProductUpdateWithoutInventoryMovementsInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
+  division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displaySecondaryLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   minimumStock?: Prisma.IntFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
@@ -933,8 +1012,11 @@ export type ProductUncheckedUpdateWithoutInventoryMovementsInput = {
   category?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
+  division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
+  displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displaySecondaryLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stock?: Prisma.IntFieldUpdateOperationsInput | number
   minimumStock?: Prisma.IntFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
@@ -990,8 +1072,11 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   category?: boolean
   name?: boolean
   brand?: boolean
+  division?: boolean
   price?: boolean
   previousPrice?: boolean
+  displayPriceOverride?: boolean
+  displaySecondaryLabel?: boolean
   stock?: boolean
   minimumStock?: boolean
   image?: boolean
@@ -1018,8 +1103,11 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   category?: boolean
   name?: boolean
   brand?: boolean
+  division?: boolean
   price?: boolean
   previousPrice?: boolean
+  displayPriceOverride?: boolean
+  displaySecondaryLabel?: boolean
   stock?: boolean
   minimumStock?: boolean
   image?: boolean
@@ -1044,8 +1132,11 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   category?: boolean
   name?: boolean
   brand?: boolean
+  division?: boolean
   price?: boolean
   previousPrice?: boolean
+  displayPriceOverride?: boolean
+  displaySecondaryLabel?: boolean
   stock?: boolean
   minimumStock?: boolean
   image?: boolean
@@ -1070,8 +1161,11 @@ export type ProductSelectScalar = {
   category?: boolean
   name?: boolean
   brand?: boolean
+  division?: boolean
   price?: boolean
   previousPrice?: boolean
+  displayPriceOverride?: boolean
+  displaySecondaryLabel?: boolean
   stock?: boolean
   minimumStock?: boolean
   image?: boolean
@@ -1087,7 +1181,7 @@ export type ProductSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "sku" | "oemReference" | "alternativeReferences" | "category" | "name" | "brand" | "price" | "previousPrice" | "stock" | "minimumStock" | "image" | "galleryImages" | "availability" | "description" | "application" | "compatibility" | "warranty" | "featured" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "sku" | "oemReference" | "alternativeReferences" | "category" | "name" | "brand" | "division" | "price" | "previousPrice" | "displayPriceOverride" | "displaySecondaryLabel" | "stock" | "minimumStock" | "image" | "galleryImages" | "availability" | "description" | "application" | "compatibility" | "warranty" | "featured" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   inventoryMovements?: boolean | Prisma.Product$inventoryMovementsArgs<ExtArgs>
   _count?: boolean | Prisma.ProductCountOutputTypeDefaultArgs<ExtArgs>
@@ -1109,8 +1203,11 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     category: string
     name: string
     brand: string
+    division: $Enums.Division
     price: number
     previousPrice: number
+    displayPriceOverride: string | null
+    displaySecondaryLabel: string | null
     stock: number
     minimumStock: number
     image: string
@@ -1556,8 +1653,11 @@ export interface ProductFieldRefs {
   readonly category: Prisma.FieldRef<"Product", 'String'>
   readonly name: Prisma.FieldRef<"Product", 'String'>
   readonly brand: Prisma.FieldRef<"Product", 'String'>
+  readonly division: Prisma.FieldRef<"Product", 'Division'>
   readonly price: Prisma.FieldRef<"Product", 'Int'>
   readonly previousPrice: Prisma.FieldRef<"Product", 'Int'>
+  readonly displayPriceOverride: Prisma.FieldRef<"Product", 'String'>
+  readonly displaySecondaryLabel: Prisma.FieldRef<"Product", 'String'>
   readonly stock: Prisma.FieldRef<"Product", 'Int'>
   readonly minimumStock: Prisma.FieldRef<"Product", 'Int'>
   readonly image: Prisma.FieldRef<"Product", 'String'>

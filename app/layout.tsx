@@ -6,7 +6,7 @@ import { ProductsProvider } from "./components/products-provider";
 import HeaderShell from "./components/header-shell";
 import SupportChat from "./components/support-chat";
 import { getProducts } from "@/lib/products";
-import { DEV_ADMIN_USER, getSessionFromCookies } from "@/lib/auth";
+import { getDevAdminUserById, getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import { getCartItemsForUser } from "@/lib/cart";
 
@@ -39,8 +39,10 @@ export default async function RootLayout({
   let currentUser = null;
   let initialCartItems: Awaited<ReturnType<typeof getCartItemsForUser>> = [];
 
-  if (session?.userId === DEV_ADMIN_USER.id) {
-    currentUser = DEV_ADMIN_USER;
+  const devAdmin = session ? getDevAdminUserById(session.userId) : undefined;
+
+  if (devAdmin) {
+    currentUser = devAdmin;
   } else if (session) {
     try {
       currentUser = await getUserById(session.userId);
@@ -53,7 +55,7 @@ export default async function RootLayout({
     }
   }
 
-  if (currentUser && currentUser.id !== DEV_ADMIN_USER.id) {
+  if (currentUser && !devAdmin) {
     try {
       initialCartItems = await getCartItemsForUser(currentUser.id);
     } catch (error) {
