@@ -157,7 +157,7 @@ export default async function PlasticPage() {
             >
               Cotizar
             </Link>
-            <Link href="/login" className="font-bold hover:text-slate-950">Mi cuenta</Link>
+            <Link href="/login?next=/mi-cuenta&brand=plastic" className="font-bold hover:text-slate-950">Mi cuenta</Link>
           </div>
         </div>
 

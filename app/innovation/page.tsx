@@ -192,7 +192,7 @@ export default async function InnovationPage() {
           <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
             <Link href="/quienes-somos" className="font-bold hover:text-[#0498b4]">Nosotros</Link>
             <Link href="#contacto" className="font-bold hover:text-[#0498b4]">Asesoria</Link>
-            <Link href="/login?next=/mi-cuenta" className="font-bold hover:text-[#0498b4]">Mi cuenta</Link>
+            <Link href="/login?next=/mi-cuenta&brand=innovation" className="font-bold hover:text-[#0498b4]">Mi cuenta</Link>
           </div>
         </div>
 
