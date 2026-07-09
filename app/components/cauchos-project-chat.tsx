@@ -163,7 +163,7 @@ export default function CauchosProjectChat() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center rounded-full border border-white bg-white px-8 py-4 text-sm font-black uppercase tracking-[0.08em] text-[#075ed8] shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition hover:bg-[#eef5ff]"
+        className="inline-flex items-center justify-center rounded-full border border-white bg-white px-8 py-4 text-sm font-black uppercase tracking-[0.08em] text-[#dd1b44] shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition hover:bg-[#fdecf0]"
       >
         Hablemos de tu proyecto →
       </button>
@@ -171,7 +171,7 @@ export default function CauchosProjectChat() {
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 px-4 py-6 md:items-center">
           <div className="flex h-[min(640px,90vh)] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-[0_30px_80px_rgba(2,6,23,0.35)]">
-            <div className="flex items-center justify-between bg-[#075ed8] px-5 py-4 text-white">
+            <div className="flex items-center justify-between bg-[#dd1b44] px-5 py-4 text-white">
               <div>
                 <p className="text-sm font-black uppercase tracking-[0.1em]">Universal de Cauchos</p>
                 <p className="text-xs font-semibold text-white/80">Asistente de evaluacion tecnica</p>
@@ -192,7 +192,7 @@ export default function CauchosProjectChat() {
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm font-semibold leading-6 ${
                       message.from === "user"
-                        ? "rounded-br-sm bg-[#075ed8] text-white"
+                        ? "rounded-br-sm bg-[#dd1b44] text-white"
                         : "rounded-bl-sm border border-slate-200 bg-white text-slate-800"
                     }`}
                   >
@@ -203,7 +203,7 @@ export default function CauchosProjectChat() {
 
               {done && (
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800">
-                  <p className="mb-2 text-xs font-black uppercase tracking-[0.1em] text-[#075ed8]">
+                  <p className="mb-2 text-xs font-black uppercase tracking-[0.1em] text-[#dd1b44]">
                     Resumen de la solicitud
                   </p>
                   <dl className="space-y-1.5">
@@ -229,12 +229,12 @@ export default function CauchosProjectChat() {
                     onChange={(event) => setTextValue(event.target.value)}
                     onKeyDown={(event) => event.key === "Enter" && handleTextSubmit()}
                     placeholder={currentStep.placeholder}
-                    className="flex-1 rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#075ed8]"
+                    className="flex-1 rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#dd1b44]"
                   />
                   <button
                     type="button"
                     onClick={handleTextSubmit}
-                    className="rounded-full bg-[#075ed8] px-5 py-3 text-sm font-black text-white hover:bg-[#0650b8]"
+                    className="rounded-full bg-[#dd1b44] px-5 py-3 text-sm font-black text-white hover:bg-[#b3153a]"
                   >
                     Enviar
                   </button>
@@ -249,12 +249,12 @@ export default function CauchosProjectChat() {
                     onChange={(event) => setTextValue(event.target.value)}
                     placeholder={currentStep.placeholder}
                     rows={3}
-                    className="w-full resize-none rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#075ed8]"
+                    className="w-full resize-none rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#dd1b44]"
                   />
                   <button
                     type="button"
                     onClick={handleTextSubmit}
-                    className="self-end rounded-full bg-[#075ed8] px-5 py-3 text-sm font-black text-white hover:bg-[#0650b8]"
+                    className="self-end rounded-full bg-[#dd1b44] px-5 py-3 text-sm font-black text-white hover:bg-[#b3153a]"
                   >
                     Enviar
                   </button>
@@ -268,7 +268,7 @@ export default function CauchosProjectChat() {
                       key={option}
                       type="button"
                       onClick={() => handleChoice(option)}
-                      className="rounded-full border border-[#075ed8] px-4 py-2 text-sm font-black text-[#075ed8] transition hover:bg-[#075ed8] hover:text-white"
+                      className="rounded-full border border-[#dd1b44] px-4 py-2 text-sm font-black text-[#dd1b44] transition hover:bg-[#dd1b44] hover:text-white"
                     >
                       {option}
                     </button>
@@ -288,8 +288,8 @@ export default function CauchosProjectChat() {
                           onClick={() => toggleMulti(option)}
                           className={`rounded-full border px-4 py-2 text-sm font-black transition ${
                             isSelected
-                              ? "border-[#075ed8] bg-[#075ed8] text-white"
-                              : "border-slate-300 text-slate-600 hover:border-[#075ed8] hover:text-[#075ed8]"
+                              ? "border-[#dd1b44] bg-[#dd1b44] text-white"
+                              : "border-slate-300 text-slate-600 hover:border-[#dd1b44] hover:text-[#dd1b44]"
                           }`}
                         >
                           {option}
@@ -301,7 +301,7 @@ export default function CauchosProjectChat() {
                     type="button"
                     onClick={handleMultiSubmit}
                     disabled={selected.length === 0}
-                    className="self-end rounded-full bg-[#075ed8] px-5 py-3 text-sm font-black text-white transition hover:bg-[#0650b8] disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="self-end rounded-full bg-[#dd1b44] px-5 py-3 text-sm font-black text-white transition hover:bg-[#b3153a] disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     Continuar
                   </button>
@@ -312,14 +312,14 @@ export default function CauchosProjectChat() {
                 <div className="flex flex-wrap gap-2">
                   <a
                     href={mailHref}
-                    className="inline-flex flex-1 items-center justify-center rounded-full bg-[#075ed8] px-5 py-3 text-center text-sm font-black uppercase tracking-[0.06em] text-white hover:bg-[#0650b8]"
+                    className="inline-flex flex-1 items-center justify-center rounded-full bg-[#dd1b44] px-5 py-3 text-center text-sm font-black uppercase tracking-[0.06em] text-white hover:bg-[#b3153a]"
                   >
                     Enviar solicitud
                   </a>
                   <button
                     type="button"
                     onClick={reset}
-                    className="rounded-full border border-slate-300 px-5 py-3 text-sm font-black text-slate-600 hover:border-[#075ed8] hover:text-[#075ed8]"
+                    className="rounded-full border border-slate-300 px-5 py-3 text-sm font-black text-slate-600 hover:border-[#dd1b44] hover:text-[#dd1b44]"
                   >
                     Reiniciar
                   </button>
