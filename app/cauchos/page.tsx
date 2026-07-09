@@ -4,8 +4,8 @@ import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import CauchosCartLink from "../components/cauchos-cart-link";
 import CauchosDynamicMenu from "../components/cauchos-dynamic-menu";
-import { cauchosCategoriasNombres, productosCatalogo } from "../data/catalog";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { getProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
@@ -59,11 +59,6 @@ const cauchosCategories = [
   },
 ];
 
-const cauchosProductMatches = productosCatalogo.filter((product) =>
-  (cauchosCategoriasNombres as readonly string[]).includes(product.categoria),
-);
-const cauchosProducts = cauchosProductMatches.slice(0, 4);
-
 const cauchosOffers = [
   {
     title: "Productos de caucho",
@@ -112,6 +107,10 @@ const featuredBrands = [
 
 export default async function CauchosPage() {
   const siteImages = await getSiteImages();
+  const allProducts = await getProducts();
+  const cauchosCatalog = allProducts.filter((product) => product.division === "Cauchos");
+  const cauchosFeatured = cauchosCatalog.filter((product) => product.destacado);
+  const cauchosProducts = (cauchosFeatured.length > 0 ? cauchosFeatured : cauchosCatalog).slice(0, 4);
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
