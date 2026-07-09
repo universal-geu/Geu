@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import AddToCartButton from "../../components/add-to-cart-button";
 import CauchosCartLink from "../../components/cauchos-cart-link";
-import CauchosDynamicMenu from "../../components/cauchos-dynamic-menu";
+import CauchosCategorySidebarMenu from "../../components/cauchos-category-sidebar-menu";
 import { useProducts } from "../../components/products-provider";
 import { cauchosCategoriasNombres } from "../../data/catalog";
 
@@ -284,7 +284,7 @@ function ProductCauchosHeader() {
         </div>
       </div>
 
-      <CauchosDynamicMenu basePath="/cauchos" />
+      <CauchosCategorySidebarMenu basePath="/cauchos" />
     </header>
   );
 }

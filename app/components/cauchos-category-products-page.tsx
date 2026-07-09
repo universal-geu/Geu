@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { cauchosCategoriasNombres, slugify } from "../data/catalog";
 import CauchosAddToCartButton from "./cauchos-add-to-cart-button";
 import CauchosCartLink from "./cauchos-cart-link";
-import CauchosDynamicMenu from "./cauchos-dynamic-menu";
+import CauchosCategorySidebarMenu from "./cauchos-category-sidebar-menu";
 import { useProducts } from "./products-provider";
 
 type Props = {
@@ -279,7 +279,7 @@ export default function CauchosCategoryProductsPage({ segments }: Props) {
             </Link>
           </div>
         </div>
-        <CauchosDynamicMenu basePath="/cauchos" />
+        <CauchosCategorySidebarMenu basePath="/cauchos" />
       </header>
 
       <section className="border-b border-slate-200 bg-white">
