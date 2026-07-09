@@ -151,10 +151,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
         onClick={close}
       />
       <div className="relative" onMouseLeave={() => setActiveDept(null)}>
-        <nav
-          className="w-[500px] shrink-0 border-r border-slate-200 py-4"
-          style={{ marginLeft: "max(0px, calc(50% - 750px))" }}
-        >
+        <nav className="w-[500px] shrink-0 border-r border-slate-200 py-4">
           <p className="px-5 pb-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
             Categorías
           </p>
@@ -188,7 +185,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
         {active && (
           <div
             className="absolute top-0 z-50 min-h-[420px] max-h-[560px] overflow-y-auto border-l border-slate-200 bg-white p-8 shadow-[0_24px_70px_rgba(15,23,42,0.16)]"
-            style={{ left: "max(500px, calc(50% - 750px + 500px))", right: 0 }}
+            style={{ left: "500px", right: 0 }}
           >
             {active.subcategories.length === 0 && (
               <div className="flex h-full min-h-[350px] flex-col items-center justify-center gap-2 text-center">
