@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { cauchosCategorySubcategories, categoriasData, categorias, slugify } from "../data/catalog";
 import { useProducts } from "./products-provider";
 import { useCauchosMenu } from "./cauchos-menu-context";
+import type { DivisionName } from "@/lib/divisions";
 
 const fallbackDepartments = [...categorias];
 
@@ -225,14 +226,24 @@ const DEPARTMENT_COLORS: Record<string, string> = Object.fromEntries(
   categoriasData.map((item) => [item.nombre, item.color]),
 );
 
-export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath?: string }) {
+type Props = {
+  basePath?: string;
+  division?: DivisionName;
+  accent?: string;
+};
+
+export default function CauchosCategorySidebarMenu({
+  basePath = "",
+  division = "Cauchos",
+  accent = "#075ed8",
+}: Props) {
   const { products } = useProducts();
   const { isOpen, close } = useCauchosMenu();
   const cauchosBasePath = basePath || "/cauchos";
   const [activeDept, setActiveDept] = useState<string | null>(null);
 
   const menuData = useMemo(() => {
-    const cauchosProducts = products.filter((product) => product.division === "Cauchos");
+    const cauchosProducts = products.filter((product) => product.division === division);
     const departmentMap = new Map<string, Map<string, typeof cauchosProducts>>();
 
     cauchosProducts.forEach((product) => {
@@ -292,7 +303,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
 
       return { title, subcategories };
     });
-  }, [products, cauchosBasePath]);
+  }, [products, cauchosBasePath, division]);
 
   const active = menuData.find((department) => department.title === activeDept) ?? null;
 
@@ -310,7 +321,10 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
   }
 
   return (
-    <div className="absolute inset-x-0 top-full z-40 border-t border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
+    <div
+      className="absolute inset-x-0 top-full z-40 border-t border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]"
+      style={{ "--brand-accent": accent } as CSSProperties}
+    >
       <div
         className="fixed inset-0 -z-10"
         aria-hidden="true"
@@ -333,7 +347,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
                     onMouseEnter={() => setActiveDept(department.title)}
                     onClick={() => setActiveDept(isActive ? null : department.title)}
                     className={`flex w-full items-center justify-between gap-3 px-5 py-3 text-left text-[13px] font-bold transition-colors duration-150 ${
-                      isActive ? "bg-[#eef5ff] text-[#075ed8]" : "text-slate-800 hover:bg-slate-50"
+                      isActive ? "bg-[#eef5ff] text-[var(--brand-accent)]" : "text-slate-800 hover:bg-slate-50"
                     }`}
                   >
                     <span className="flex items-center gap-3 whitespace-nowrap">
@@ -369,7 +383,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
             <div className="mb-6 flex flex-wrap gap-x-14 gap-y-6 overflow-x-auto pb-1">
               {active.subcategories.slice(0, 10).map((subcategory) => {
                 const SubIcon = SUBCATEGORY_ICONS[subcategory.name] ?? DEPARTMENT_ICONS[active.title] ?? GearIcon;
-                const color = DEPARTMENT_COLORS[active.title] ?? "#075ed8";
+                const color = DEPARTMENT_COLORS[active.title] ?? accent;
 
                 return (
                   <Link
@@ -415,7 +429,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
                   <Link
                     href={subcategory.groupHref}
                     className="text-[13px] font-black tracking-[0.02em] hover:underline"
-                    style={{ color: "#075ed8" }}
+                    style={{ color: "var(--brand-accent)" }}
                   >
                     {subcategory.name} &gt;
                   </Link>
@@ -424,7 +438,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
                       <Link
                         key={`${subcategory.name}-${item.label}-${itemIndex}`}
                         href={item.href}
-                        className="leading-5 hover:text-[#075ed8] hover:underline"
+                        className="leading-5 hover:text-[var(--brand-accent)] hover:underline"
                       >
                         {item.label}
                       </Link>
@@ -432,7 +446,7 @@ export default function CauchosCategorySidebarMenu({ basePath = "" }: { basePath
                     <Link
                       href={subcategory.groupHref}
                       className="mt-1 text-[13px] font-semibold hover:underline"
-                      style={{ color: "#075ed8" }}
+                      style={{ color: "var(--brand-accent)" }}
                     >
                       Ver más &gt;
                     </Link>

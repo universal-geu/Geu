@@ -35,6 +35,7 @@ export default function HeaderShell({ currentUser }: HeaderShellProps) {
     pathname === "/admin" ||
     pathname === "/quienes-somos" ||
     pathname === "/import" ||
+    pathname.startsWith("/import/") ||
     pathname === "/innovation" ||
     pathname === "/energy" ||
     pathname === "/plastic" ||

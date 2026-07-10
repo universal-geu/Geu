@@ -1,4 +1,10 @@
 import { registerUser } from "@/lib/users";
+import { setSessionCookie } from "@/lib/auth";
+import { DIVISIONS, type DivisionName } from "@/lib/divisions";
+
+function normalizeDivision(value: unknown): DivisionName | undefined {
+  return DIVISIONS.includes(value as DivisionName) ? (value as DivisionName) : undefined;
+}
 
 export async function POST(request: Request) {
   try {
@@ -13,6 +19,7 @@ export async function POST(request: Request) {
       addressLine2?: string;
       password?: string;
       confirmPassword?: string;
+      division?: string;
     };
 
     const fullName = body.fullName?.trim() || "";
@@ -44,6 +51,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const division = normalizeDivision(body.division);
+
     const user = await registerUser({
       fullName,
       company: body.company,
@@ -54,6 +63,14 @@ export async function POST(request: Request) {
       addressLine1,
       addressLine2: body.addressLine2,
       password,
+      division,
+    });
+
+    await setSessionCookie({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      division,
     });
 
     return Response.json(

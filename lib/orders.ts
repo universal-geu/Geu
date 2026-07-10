@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import type { DivisionName } from "@/lib/divisions";
+import { DIVISION_ADMIN_EMAILS, DIVISION_BRAND } from "@/lib/divisions";
+import { emailLayout, sendEmail } from "@/lib/email";
+import { formatOrderCode } from "@/lib/format-order";
 
 export type CheckoutInput = {
   customerName: string;
@@ -121,6 +124,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
         slug: true,
         stock: true,
         minimumStock: true,
+        division: true,
       },
     });
 
@@ -132,9 +136,12 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
       }
     }
 
+    const orderDivision: DivisionName = products[0]?.division ?? "Cauchos";
+
     const createdOrder = await tx.order.create({
       data: {
         userId,
+        division: orderDivision,
         customerName,
         customerEmail,
         customerPhone,
@@ -206,7 +213,76 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
     return createdOrder;
   });
 
+  void sendOrderConfirmationEmails(order);
+
   return order;
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+async function sendOrderConfirmationEmails(order: {
+  id: string;
+  division: DivisionName;
+  customerName: string;
+  customerEmail: string;
+  subtotal: number;
+  totalItems: number;
+  items: Array<{ name: string; quantity: number; lineTotal: number }>;
+}) {
+  const itemsHtml = order.items
+    .map(
+      (item) =>
+        `<tr>
+          <td style="padding: 8px 0; color: #16384f; font-size: 14px;">${item.name} × ${item.quantity}</td>
+          <td style="padding: 8px 0; text-align: right; color: #16384f; font-size: 14px; font-weight: 700;">${formatCurrency(item.lineTotal)}</td>
+        </tr>`,
+    )
+    .join("");
+
+  await sendEmail({
+    to: order.customerEmail,
+    subject: `Pedido ${formatOrderCode(order.id)} recibido`,
+    html: emailLayout(
+      "¡Gracias por tu pedido!",
+      `<p style="color:#6e7379;font-size:14px;line-height:22px;">
+        Hola ${order.customerName}, recibimos tu pedido <strong>${formatOrderCode(order.id)}</strong> y ya quedó guardado en tu cuenta.
+      </p>
+      <table style="width:100%;border-collapse:collapse;margin-top:16px;">${itemsHtml}</table>
+      <p style="margin-top:16px;font-size:16px;font-weight:900;color:#16384f;">Total: ${formatCurrency(order.subtotal)}</p>`,
+      order.division,
+    ),
+  });
+
+  await sendEmail({
+    to: DIVISION_ADMIN_EMAILS[order.division],
+    subject: `Nuevo pedido ${formatOrderCode(order.id)}`,
+    html: emailLayout(
+      "Nuevo pedido recibido",
+      `<p style="color:#6e7379;font-size:14px;line-height:22px;">
+        ${order.customerName} (${order.customerEmail}) hizo un pedido de ${order.totalItems} producto${order.totalItems === 1 ? "" : "s"} por ${formatCurrency(order.subtotal)}.
+      </p>`,
+      order.division,
+    ),
+  });
+}
+
+export async function getOrderDivision(orderId: string): Promise<DivisionName | null> {
+  if (!prisma) {
+    return null;
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { division: true },
+  });
+
+  return order?.division ?? null;
 }
 
 export async function getOrdersForUser(userId: string) {
@@ -225,12 +301,13 @@ export async function getOrdersForUser(userId: string) {
   });
 }
 
-export async function getAllOrders() {
+export async function getAllOrders(division?: DivisionName) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
 
   return await prisma.order.findMany({
+    where: division ? { division } : undefined,
     orderBy: { createdAt: "desc" },
     include: {
       user: {
@@ -487,6 +564,7 @@ export async function updateOrderShipping(
     trackingNumber?: string;
     adminNotes?: string;
   },
+  adminDivision?: DivisionName,
 ) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
@@ -515,11 +593,19 @@ export async function updateOrderShipping(
       id: true,
       status: true,
       paymentStatus: true,
+      shippingStatus: true,
+      customerName: true,
+      customerEmail: true,
+      division: true,
     },
   });
 
   if (!currentOrder) {
     throw new Error("ORDER_NOT_FOUND");
+  }
+
+  if (adminDivision && currentOrder.division !== adminDivision) {
+    throw new Error("FORBIDDEN");
   }
 
   const nextPaymentStatus = paymentStatus || currentOrder.paymentStatus;
@@ -536,7 +622,7 @@ export async function updateOrderShipping(
       : null;
   const deliveredAt = shippingStatus === "DELIVERED" ? new Date() : null;
 
-  return await prisma.order.update({
+  const updatedOrder = await prisma.order.update({
     where: { id: orderId },
     data: {
       shippingStatus,
@@ -560,6 +646,69 @@ export async function updateOrderShipping(
         orderBy: { createdAt: "asc" },
       },
     },
+  });
+
+  if (currentOrder.shippingStatus !== shippingStatus) {
+    void sendShippingStatusEmail({
+      orderId: updatedOrder.id,
+      division: currentOrder.division,
+      customerName: currentOrder.customerName,
+      customerEmail: currentOrder.customerEmail,
+      shippingStatus,
+      carrier,
+      trackingNumber,
+    });
+  }
+
+  return updatedOrder;
+}
+
+const SHIPPING_STATUS_LABELS: Record<ShippingStatus, string> = {
+  PENDING: "Pendiente de preparación",
+  PREPARING: "En preparación",
+  SHIPPED: "Enviado",
+  DELIVERED: "Entregado",
+  CANCELLED: "Cancelado",
+};
+
+async function sendShippingStatusEmail({
+  orderId,
+  division,
+  customerName,
+  customerEmail,
+  shippingStatus,
+  carrier,
+  trackingNumber,
+}: {
+  orderId: string;
+  division: DivisionName;
+  customerName: string;
+  customerEmail: string;
+  shippingStatus: ShippingStatus;
+  carrier: string | null;
+  trackingNumber: string | null;
+}) {
+  const label = SHIPPING_STATUS_LABELS[shippingStatus];
+  const trackingHtml =
+    shippingStatus === "SHIPPED" && (carrier || trackingNumber)
+      ? `<p style="color:#6e7379;font-size:14px;line-height:22px;">
+          ${carrier ? `Transportadora: <strong>${carrier}</strong>. ` : ""}
+          ${trackingNumber ? `Número de guía: <strong>${trackingNumber}</strong>.` : ""}
+        </p>`
+      : "";
+
+  await sendEmail({
+    to: customerEmail,
+    subject: `Tu pedido ${formatOrderCode(orderId)} cambió a: ${label}`,
+    html: emailLayout(
+      `Actualización de tu pedido`,
+      `<p style="color:#6e7379;font-size:14px;line-height:22px;">
+        Hola ${customerName}, tu pedido <strong>${formatOrderCode(orderId)}</strong> cambió de estado a
+        <strong style="color:${DIVISION_BRAND[division].accent};">${label}</strong>.
+      </p>
+      ${trackingHtml}`,
+      division,
+    ),
   });
 }
 

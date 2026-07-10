@@ -7,7 +7,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireAdminUser();
+    const admin = await requireAdminUser();
 
     const { id } = await params;
     const body = (await request.json()) as {
@@ -25,13 +25,17 @@ export async function PATCH(
       );
     }
 
-    const order = await updateOrderShipping(id, {
-      shippingStatus: body.shippingStatus,
-      paymentStatus: body.paymentStatus,
-      carrier: body.carrier,
-      trackingNumber: body.trackingNumber,
-      adminNotes: body.adminNotes,
-    });
+    const order = await updateOrderShipping(
+      id,
+      {
+        shippingStatus: body.shippingStatus,
+        paymentStatus: body.paymentStatus,
+        carrier: body.carrier,
+        trackingNumber: body.trackingNumber,
+        adminNotes: body.adminNotes,
+      },
+      admin.division,
+    );
 
     revalidatePath("/mi-cuenta");
     revalidatePath("/admin");

@@ -8,8 +8,14 @@ type AccountUser = {
   role: "CUSTOMER" | "ADMIN";
 };
 
-export default function CauchosAccountLink({ className }: { className?: string }) {
+type Props = {
+  className?: string;
+  brand?: string;
+};
+
+export default function CauchosAccountLink({ className, brand }: Props) {
   const [user, setUser] = useState<AccountUser | null>(null);
+  const brandQuery = brand ? `?brand=${brand}` : "";
 
   useEffect(() => {
     let cancelled = false;
@@ -31,14 +37,14 @@ export default function CauchosAccountLink({ className }: { className?: string }
 
   if (user) {
     return (
-      <Link href={user.role === "ADMIN" ? "/admin" : "/mi-cuenta"} className={className}>
+      <Link href={user.role === "ADMIN" ? `/admin${brandQuery}` : "/mi-cuenta"} className={className}>
         Mi cuenta
       </Link>
     );
   }
 
   return (
-    <Link href="/login?next=/mi-cuenta" className={className}>
+    <Link href={`/login?next=/mi-cuenta${brand ? `&brand=${brand}` : ""}`} className={className}>
       Ingresar
     </Link>
   );

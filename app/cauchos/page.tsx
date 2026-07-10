@@ -4,6 +4,7 @@ import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import CauchosAccountLink from "../components/cauchos-account-link";
 import CauchosCartLink from "../components/cauchos-cart-link";
+import CauchosSearchForm from "../components/cauchos-search-form";
 import CauchosCategorySidebarMenu from "../components/cauchos-category-sidebar-menu";
 import CauchosMenuButton from "../components/cauchos-menu-button";
 import { CauchosMenuProvider } from "../components/cauchos-menu-context";
@@ -157,7 +158,7 @@ export default async function CauchosPage() {
         </div>
 
         <div className="mx-auto grid min-h-[74px] max-w-[1632px] items-center gap-4 px-5 py-3 md:grid-cols-[260px_1fr_auto] md:px-8">
-          <Link href="/" className="flex shrink-0 items-center">
+          <Link href="/cauchos" className="flex shrink-0 items-center">
             <Image
               src="/logo-universal-cauchos.png"
               alt="GEU Universal de Cauchos"
@@ -171,20 +172,7 @@ export default async function CauchosPage() {
 
           <div className="flex items-center gap-3">
             <CauchosMenuButton />
-            <form className="flex min-h-11 flex-1 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner">
-              <input
-                aria-label="Buscar productos de caucho"
-                className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-                placeholder="Buscar laminas, sellos, mangueras, empaques..."
-              />
-              <button
-                type="button"
-                className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
-                aria-label="Buscar"
-              >
-                ⌕
-              </button>
-            </form>
+            <CauchosSearchForm className="flex min-h-11 flex-1 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner" />
           </div>
 
           <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">

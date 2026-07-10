@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-locations";
+import { formatOrderCode } from "@/lib/format-order";
 import CauchosHeader from "../components/cauchos-header";
+import { DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
 
 type AccountUser = {
   id: string;
@@ -17,6 +19,7 @@ type AccountUser = {
   addressLine1: string | null;
   addressLine2: string | null;
   createdAt: Date;
+  division: DivisionName | null;
 };
 
 type AccountOrder = {
@@ -191,7 +194,7 @@ function OrderProgressTimeline({ order }: { order: AccountOrder }) {
           <div className="absolute left-[12.5%] right-[12.5%] top-8">
             <span className="block h-[4px] rounded-full bg-black/10" />
             <span
-              className="absolute left-0 top-0 h-[4px] rounded-full bg-[#075ed8] transition-all duration-300"
+              className="absolute left-0 top-0 h-[4px] rounded-full bg-[var(--brand-accent)] transition-all duration-300"
               style={{
                 width:
                   activeStep < 0
@@ -214,7 +217,7 @@ function OrderProgressTimeline({ order }: { order: AccountOrder }) {
                   <span
                     className={`relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border ${
                       isCompleted
-                        ? "border-[#075ed8] bg-[#075ed8] text-white"
+                        ? "border-[var(--brand-accent)] bg-[var(--brand-accent)] text-white"
                         : "border-black/10 bg-[#f8f8f7] text-[#8b8d91]"
                     } ${isCurrent ? "shadow-[0_10px_24px_rgba(237,132,53,0.2)]" : ""}`}
                   >
@@ -229,7 +232,7 @@ function OrderProgressTimeline({ order }: { order: AccountOrder }) {
                       {step.label}
                     </p>
                     {isCurrent && (
-                      <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-[#075ed8]">
+                      <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-[var(--brand-accent)]">
                         Actual
                       </p>
                     )}
@@ -252,6 +255,8 @@ export default function AccountProfileForm({
   orders: AccountOrder[];
 }) {
   const router = useRouter();
+  const division = user.division ?? "Cauchos";
+  const brand = DIVISION_BRAND[division];
   const [activePanel, setActivePanel] = useState<AccountPanel>("summary");
   const [showFullOrderHistory, setShowFullOrderHistory] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(
@@ -379,17 +384,92 @@ export default function AccountProfileForm({
     router.refresh();
   };
 
+  const accountNavItems: { key: AccountPanel; label: string }[] = [
+    { key: "summary", label: "Resumen" },
+    { key: "details", label: "Datos" },
+    { key: "orders", label: "Pedidos" },
+  ];
+
   return (
-    <main className="bg-[#f5f5f5]">
-      <CauchosHeader />
-      <div className="px-6 py-16">
+    <main
+      className="min-h-screen bg-[#f5f5f5]"
+      style={{ "--brand-accent": brand.accent, "--brand-accent-hover": brand.accentHover } as CSSProperties}
+    >
+      <CauchosHeader division={division} />
+      <div className="flex min-h-screen items-stretch">
+        <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
+          <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-accent)] text-sm font-black text-white">
+              C
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-black text-[#1f2328]">Cuenta cliente</span>
+              <span className="block truncate text-xs font-semibold text-[#8b8d91]">{user.fullName}</span>
+            </span>
+          </div>
+
+          <nav className="flex-1 overflow-y-auto px-3 py-4">
+            <ul className="space-y-1">
+              {accountNavItems.map((item) => (
+                <li key={item.key}>
+                  <button
+                    type="button"
+                    onClick={() => setActivePanel(item.key)}
+                    className={`w-full rounded-lg px-4 py-2.5 text-left text-sm font-bold transition-colors duration-200 ${
+                      activePanel === item.key
+                        ? "bg-[var(--brand-accent)] text-white"
+                        : "text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div className="border-t border-slate-200 p-3">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-600 transition-colors duration-200 hover:bg-red-100"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        </aside>
+
+        <div className="flex-1 px-6 py-16">
+          <div className="mb-6 flex flex-wrap gap-2 overflow-x-auto md:hidden">
+            {accountNavItems.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setActivePanel(item.key)}
+                className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.06em] transition-colors duration-200 ${
+                  activePanel === item.key
+                    ? "bg-[var(--brand-accent)] text-white"
+                    : "border border-slate-200 text-slate-700"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.06em] text-red-600"
+            >
+              Cerrar sesión
+            </button>
+          </div>
       {toast && (
         <div className="fixed right-5 top-5 z-[80] w-[min(92vw,380px)]">
           <div
             className={`rounded-[1.4rem] border px-5 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.16)] backdrop-blur-sm ${
               toast.tone === "success"
                 ? "border-[#1f8b45]/18 bg-[#effaf2] text-[#1f6b39]"
-                : "border-[#075ed8]/18 bg-[#eef5ff] text-[#075ed8]"
+                : "border-red-200 bg-red-50 text-red-600"
             }`}
           >
             <div className="flex items-start justify-between gap-4">
@@ -414,61 +494,16 @@ export default function AccountProfileForm({
 
       <section className="mx-auto w-full max-w-6xl space-y-8">
         <section className="rounded-[2rem] bg-white p-8 shadow-lg shadow-black/10 md:p-10">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#075ed8]">
-                Cuenta cliente
-              </p>
-              <h1 className="mt-2 text-3xl font-bold text-[#16384f] md:text-4xl">
-                Mi cuenta
-              </h1>
-              <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600">
-                Aquí puedes revisar y actualizar tus datos principales.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => setActivePanel("summary")}
-                className={`rounded-full px-5 py-3 text-sm font-semibold transition-colors duration-200 ${
-                  activePanel === "summary"
-                    ? "bg-[#16384f] text-white"
-                    : "border border-[#16384f]/20 text-[#16384f] hover:bg-[#16384f] hover:text-white"
-                }`}
-              >
-                Resumen
-              </button>
-              <button
-                type="button"
-                onClick={() => setActivePanel("details")}
-                className={`rounded-full px-5 py-3 text-sm font-semibold transition-colors duration-200 ${
-                  activePanel === "details"
-                    ? "bg-[#16384f] text-white"
-                    : "border border-[#16384f]/20 text-[#16384f] hover:bg-[#16384f] hover:text-white"
-                }`}
-              >
-                Datos
-              </button>
-              <button
-                type="button"
-                onClick={() => setActivePanel("orders")}
-                className={`rounded-full px-5 py-3 text-sm font-semibold transition-colors duration-200 ${
-                  activePanel === "orders"
-                    ? "bg-[#16384f] text-white"
-                    : "border border-[#16384f]/20 text-[#16384f] hover:bg-[#16384f] hover:text-white"
-                }`}
-              >
-                Pedidos
-              </button>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="rounded-full border border-[#16384f]/20 px-5 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
-              >
-                Cerrar sesión
-              </button>
-            </div>
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
+              Cuenta cliente
+            </p>
+            <h1 className="mt-2 text-3xl font-bold text-[#16384f] md:text-4xl">
+              Mi cuenta
+            </h1>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600">
+              Aquí puedes revisar y actualizar tus datos principales.
+            </p>
           </div>
 
           <div className="mt-8 rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-5 text-sm text-[#5d6167]">
@@ -516,7 +551,7 @@ export default function AccountProfileForm({
                   value={form.fullName}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
               </div>
 
@@ -529,7 +564,7 @@ export default function AccountProfileForm({
                   type="text"
                   value={form.company}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
               </div>
 
@@ -543,7 +578,7 @@ export default function AccountProfileForm({
                   value={form.email}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
               </div>
 
@@ -556,7 +591,7 @@ export default function AccountProfileForm({
                   type="tel"
                   value={form.phone}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
               </div>
 
@@ -568,7 +603,7 @@ export default function AccountProfileForm({
                   id="department"
                   value={form.department}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 >
                   <option value="">Selecciona un departamento</option>
                   {departamentosColombia.map((department) => (
@@ -595,7 +630,7 @@ export default function AccountProfileForm({
                       ? "Busca o escribe tu ciudad"
                       : "Primero selecciona un departamento"
                   }
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
                 <datalist id="account-cities">
                   {cityOptions.map((city) => (
@@ -613,7 +648,7 @@ export default function AccountProfileForm({
                   type="text"
                   value={form.addressLine1}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
               </div>
 
@@ -627,7 +662,7 @@ export default function AccountProfileForm({
                   value={form.addressLine2}
                   onChange={handleChange}
                   placeholder="Opcional"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
               </div>
 
@@ -641,7 +676,7 @@ export default function AccountProfileForm({
                   value={form.newPassword}
                   onChange={handleChange}
                   placeholder="Opcional"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
               </div>
 
@@ -655,12 +690,12 @@ export default function AccountProfileForm({
                   value={form.confirmPassword}
                   onChange={handleChange}
                   placeholder="Repite la nueva contraseña"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
               </div>
 
               {inlineError && (
-                <p className="rounded-xl border border-[#075ed8]/20 bg-[#eef5ff] px-4 py-3 text-sm font-medium text-[#075ed8] md:col-span-2">
+                <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600 md:col-span-2">
                   {inlineError}
                 </p>
               )}
@@ -669,7 +704,7 @@ export default function AccountProfileForm({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-xl bg-[#075ed8] px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[#064fb7] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="w-full rounded-xl bg-[var(--brand-accent)] px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isSubmitting ? "Guardando cambios..." : "Actualizar cuenta"}
                 </button>
@@ -682,7 +717,7 @@ export default function AccountProfileForm({
           <section className="rounded-[2rem] bg-white p-8 shadow-lg shadow-black/10 md:p-10">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#075ed8]">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
                 Mis pedidos
               </p>
               <h2 className="mt-2 text-3xl font-bold text-[#16384f] md:text-4xl">
@@ -695,7 +730,7 @@ export default function AccountProfileForm({
             </div>
 
             <Link
-              href="/cauchos"
+              href={brand.basePath}
               className="rounded-full border border-[#16384f]/20 px-5 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
             >
               Seguir comprando
@@ -778,7 +813,7 @@ export default function AccountProfileForm({
                           Pedido
                         </p>
                         <h3 className="mt-2 text-lg font-semibold text-[#16384f] md:text-xl">
-                          {order.id}
+                          {formatOrderCode(order.id)}
                         </h3>
                         <p className="mt-2 text-sm text-[#6e7379]">
                           {new Date(order.createdAt).toLocaleDateString("es-CO")} ·{" "}
@@ -791,7 +826,7 @@ export default function AccountProfileForm({
                         <span className="rounded-full bg-[#16384f] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white">
                           {getOrderStatusLabel(order.status)}
                         </span>
-                        <span className="rounded-full border border-[#075ed8]/18 bg-[#eef5ff] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#075ed8]">
+                        <span className="rounded-full border border-[var(--brand-accent)]/18 bg-[#eef5ff] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-accent)]">
                           {getPaymentStatusLabel(order.paymentStatus)}
                         </span>
                         <span className="rounded-full border border-[#1f8b45]/18 bg-[#effaf2] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#1f6b39]">
@@ -821,7 +856,7 @@ export default function AccountProfileForm({
                         {order.carrier || "Transportadora pendiente"} ·{" "}
                         {order.trackingNumber || "Sin guía"}
                       </span>
-                      <span className="text-lg font-semibold text-[#075ed8]">
+                      <span className="text-lg font-semibold text-[var(--brand-accent)]">
                         {formatCurrency(order.subtotal)}
                       </span>
                     </div>
@@ -916,6 +951,7 @@ export default function AccountProfileForm({
           </section>
         )}
       </section>
+      </div>
       </div>
     </main>
   );

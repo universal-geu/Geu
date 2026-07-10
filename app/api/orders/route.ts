@@ -4,8 +4,8 @@ import { createOrderFromCart, getAllOrders } from "@/lib/orders";
 
 export async function GET() {
   try {
-    await requireAdminUser();
-    const orders = await getAllOrders();
+    const admin = await requireAdminUser();
+    const orders = await getAllOrders(admin.division);
 
     return Response.json({ orders });
   } catch (error) {
