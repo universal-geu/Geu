@@ -78,7 +78,7 @@ export default async function ImportPage() {
       <CauchosHeader division="Import" />
 
       <section id="catalogo-import" className="border-b border-slate-200 bg-white text-slate-900">
-        <div className="mx-auto max-w-[1500px] px-5 py-7 md:px-8">
+        <div className="mx-auto max-w-[1632px] px-5 py-7 md:px-8">
           <CauchosCategoryCarousel categories={importCategories} accent="red" />
         </div>
         <div className="bg-white text-white">
@@ -115,7 +115,7 @@ export default async function ImportPage() {
       </section>
 
       <section id="productos" className="scroll-mt-56 border-b border-slate-200 bg-slate-50 text-slate-950">
-        <div className="mx-auto max-w-[1500px] px-5 py-12 md:px-8">
+        <div className="mx-auto max-w-[1632px] px-5 py-12 md:px-8">
           <div className="flex flex-wrap items-end justify-between gap-5">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[#e31313]">
@@ -211,9 +211,10 @@ export default async function ImportPage() {
         ctaHref="/import"
         items={importOffers}
         siteImages={siteImages}
+        maxWidth="1632px"
       />
 
-      <section id="contacto" className="mx-auto max-w-[1500px] px-5 pb-8 md:px-8">
+      <section id="contacto" className="mx-auto max-w-[1632px] px-5 pb-8 md:px-8">
         <div
           className="relative overflow-hidden rounded-[10px] border border-[#2b0b0b] bg-[#140505] shadow-[0_24px_70px_rgba(23,6,6,0.22)]"
           style={{ backgroundColor: "#140505", color: "#ffffff" }}
@@ -257,16 +258,18 @@ export default async function ImportPage() {
         items={importFeatured}
         siteImages={siteImages}
         compact
+        maxWidth="1632px"
       />
 
       <BrandClosingBanner
         imageKey="import-cierre"
         alt="Cierre GEU Import"
         siteImages={siteImages}
+        maxWidth="1632px"
       />
 
       <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-[1500px] gap-8 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:px-8">
+        <div className="mx-auto grid max-w-[1632px] gap-8 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:px-8">
           <div>
             <Image
               src="/logo-geu-import.png"
