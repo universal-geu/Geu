@@ -165,5 +165,6 @@ model InventoryMovement {
 model SiteImage {
   key       String   @id
   url       String
+  link      String?
   updatedAt DateTime @updatedAt
 }

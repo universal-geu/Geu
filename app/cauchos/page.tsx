@@ -2,15 +2,17 @@ import Image from "next/image";
 import Link from "next/link";
 import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
+import CauchosAccountLink from "../components/cauchos-account-link";
 import CauchosCartLink from "../components/cauchos-cart-link";
 import CauchosCategorySidebarMenu from "../components/cauchos-category-sidebar-menu";
 import CauchosMenuButton from "../components/cauchos-menu-button";
 import { CauchosMenuProvider } from "../components/cauchos-menu-context";
 import CauchosProjectChat from "../components/cauchos-project-chat";
 import HeroVideo from "../components/hero-video";
-import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getProducts } from "@/lib/products";
+import { slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -74,7 +76,10 @@ const cauchosCategories = [
     image: "/subcategorias/ferreteria.jpg",
     count: "Ver productos",
   },
-];
+].map((category) => ({
+  ...category,
+  href: `/cauchos/categoria/${slugify(category.title)}`,
+}));
 
 const cauchosOffers = [
   {
@@ -124,6 +129,7 @@ const featuredBrands = [
 
 export default async function CauchosPage() {
   const siteImages = await getSiteImages();
+  const siteImageLinks = await getSiteImageLinks();
   const allProducts = await getProducts();
   const cauchosCatalog = allProducts.filter((product) => product.division === "Cauchos");
   const cauchosFeatured = cauchosCatalog.filter((product) => product.destacado);
@@ -184,7 +190,7 @@ export default async function CauchosPage() {
           <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
             <Link href="/quienes-somos" className="font-bold hover:text-[#075ed8]">Nosotros</Link>
             <CauchosCartLink />
-            <Link href="/login?next=/mi-cuenta" className="font-bold hover:text-[#075ed8]">Mi cuenta</Link>
+            <CauchosAccountLink className="font-bold hover:text-[#075ed8]" />
           </div>
         </div>
 
@@ -348,7 +354,7 @@ export default async function CauchosPage() {
             {cauchosOffers.map((offer) => (
               <Link
                 key={offer.title}
-                href={offer.href}
+                href={resolveLink(offer.imageKey, siteImageLinks, offer.href)}
                 aria-label={offer.title}
                 className="cauchos-offer-card group relative block aspect-[9/16] min-h-[430px] overflow-hidden rounded-[10px] border border-slate-200 bg-[#071225] shadow-[0_16px_40px_rgba(15,23,42,0.14)]"
               >
@@ -367,13 +373,13 @@ export default async function CauchosPage() {
       </section>
 
       <section id="contacto" className="mx-auto max-w-[1632px] px-5 pb-8 md:px-8">
-        <div className="relative overflow-hidden rounded-[10px] bg-[#dd1b44] shadow-[0_24px_70px_rgba(221,27,68,0.28)]">
+        <div className="relative overflow-hidden rounded-[10px] bg-[linear-gradient(120deg,#020617_0%,#071a3c_48%,#075ed8_100%)] shadow-[0_24px_70px_rgba(7,94,216,0.24)]">
           <span
-            className="absolute inset-0 opacity-80"
+            className="absolute inset-0 opacity-90"
             aria-hidden="true"
             style={{
               background:
-                "radial-gradient(circle at 78% 18%, rgba(255,255,255,0.16), transparent 34%), linear-gradient(135deg, rgba(255,255,255,0.08), transparent 34%)",
+                "radial-gradient(circle at 78% 18%, rgba(59,130,246,0.3), transparent 34%), linear-gradient(135deg, rgba(255,255,255,0.07), transparent 38%)",
             }}
           />
           <div className="relative grid gap-6 px-8 py-10 md:grid-cols-[1fr_auto] md:items-center md:px-10">
@@ -388,7 +394,9 @@ export default async function CauchosPage() {
                 Cuentanos que necesitas y nuestro asistente arma contigo la evaluacion tecnica para tu producto.
               </p>
             </div>
-            <CauchosProjectChat />
+            <CauchosProjectChat
+              triggerClassName="inline-flex items-center justify-center rounded-full border border-white/80 bg-white px-8 py-4 text-sm font-black uppercase tracking-[0.08em] text-[#075ed8] shadow-[0_12px_30px_rgba(0,0,0,0.22)] transition hover:bg-blue-50"
+            />
           </div>
         </div>
       </section>
@@ -424,7 +432,7 @@ export default async function CauchosPage() {
             {featuredBrands.map((brand) => (
               <Link
                 key={brand.title}
-                href={brand.href}
+                href={resolveLink(brand.imageKey, siteImageLinks, brand.href)}
                 aria-label={brand.title}
                 className="group block aspect-[18/5] overflow-hidden rounded-[4px] bg-[#071225] shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.12)]"
               >

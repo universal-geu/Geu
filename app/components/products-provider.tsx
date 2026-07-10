@@ -158,24 +158,25 @@ export function ProductsProvider({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    let animationFrameId: number | null = null;
 
     try {
       const stored = window.localStorage.getItem(LOCAL_PRODUCTS_KEY);
-      if (stored) {
-        animationFrameId = window.requestAnimationFrame(() => {
-          setProducts(JSON.parse(stored) as StoreProduct[]);
-        });
+      if (!stored) return;
+
+      const localProducts = JSON.parse(stored) as StoreProduct[];
+      const knownSlugs = new Set(initialProducts.map((product) => product.slug));
+      const localOnlyProducts = localProducts.filter(
+        (product) => !knownSlugs.has(product.slug),
+      );
+
+      if (localOnlyProducts.length > 0) {
+        setProducts([...localOnlyProducts, ...initialProducts]);
+      } else {
+        window.localStorage.removeItem(LOCAL_PRODUCTS_KEY);
       }
     } catch {
       window.localStorage.removeItem(LOCAL_PRODUCTS_KEY);
     }
-
-    return () => {
-      if (animationFrameId !== null) {
-        window.cancelAnimationFrame(animationFrameId);
-      }
-    };
   }, [initialProducts]);
 
   const value: ProductsContextValue = {

@@ -27,6 +27,9 @@ export default function HeaderShell({ currentUser }: HeaderShellProps) {
     pathname === "/cauchos" ||
     pathname.startsWith("/cauchos/") ||
     pathname === "/carrito" ||
+    pathname === "/checkout" ||
+    pathname === "/checkout/exito" ||
+    pathname === "/mi-cuenta" ||
     pathname === "/login" ||
     pathname === "/registro" ||
     pathname === "/admin" ||

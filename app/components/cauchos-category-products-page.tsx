@@ -3,8 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { slugify } from "../data/catalog";
+import { cauchosCategorySubcategories, categorias, slugify } from "../data/catalog";
 import CauchosAddToCartButton from "./cauchos-add-to-cart-button";
+import CauchosAccountLink from "./cauchos-account-link";
 import CauchosCartLink from "./cauchos-cart-link";
 import CauchosCategorySidebarMenu from "./cauchos-category-sidebar-menu";
 import CauchosMenuButton from "./cauchos-menu-button";
@@ -58,6 +59,15 @@ export default function CauchosCategoryProductsPage({ segments }: Props) {
       return matchesSubcategory && matchesMinor;
     });
   }, [minorSlug, products, subcategorySlug]);
+
+  const matchedDepartment = useMemo(
+    () => categorias.find((title) => slugify(title) === subcategorySlug),
+    [subcategorySlug],
+  );
+  const placeholderGroups = useMemo(() => {
+    if (minorSlug || !matchedDepartment) return [];
+    return cauchosCategorySubcategories[matchedDepartment] ?? [];
+  }, [matchedDepartment, minorSlug]);
 
   const brands = useMemo(
     () => [
@@ -252,9 +262,7 @@ export default function CauchosCategoryProductsPage({ segments }: Props) {
 
           <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
             <CauchosCartLink />
-            <Link href="/login?next=/mi-cuenta" className="font-bold hover:text-[#075ed8]">
-              Mi cuenta
-            </Link>
+            <CauchosAccountLink className="font-bold hover:text-[#075ed8]" />
           </div>
         </div>
         <CauchosCategorySidebarMenu basePath="/cauchos" />
@@ -525,20 +533,82 @@ export default function CauchosCategoryProductsPage({ segments }: Props) {
             </div>
           </div>
         ) : (
-          <div className="rounded-[10px] border border-slate-200 bg-white px-6 py-12 text-center shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#075ed8]">
-              Sin productos todavía
-            </p>
-            <h2 className="mt-3 text-3xl font-black">Esta sección se llenará al crear productos</h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm font-semibold leading-6 text-slate-500">
-              Cuando agregues productos con esta subcategoría desde el panel maestro, aparecerán aquí automáticamente.
-            </p>
-            <Link
-              href="/cauchos"
-              className="mt-6 inline-flex rounded-full bg-[#075ed8] px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white"
-            >
-              Volver a Cauchos
-            </Link>
+          <div>
+            {matchedDepartment && (
+              <nav
+                aria-label="Ruta de categoría"
+                className="mb-4 flex min-h-12 flex-wrap items-center gap-3 rounded-[2px] border border-slate-100 bg-white px-6 py-3 text-sm font-semibold text-slate-500 shadow-[0_10px_28px_rgba(15,23,42,0.04)]"
+              >
+                <Link href="/cauchos" className="text-[#075ed8] hover:underline">
+                  Cauchos
+                </Link>
+                <span className="text-slate-300">›</span>
+                <span className="text-slate-700">{matchedDepartment}</span>
+              </nav>
+            )}
+
+            {placeholderGroups.length > 0 && (
+              <div className="mb-6 rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.06)] md:p-8">
+                <h1 className="text-2xl font-black md:text-3xl">{matchedDepartment}</h1>
+                <p className="mt-1 text-sm font-semibold text-slate-500">
+                  Explora las subcategorías de esta industria.
+                </p>
+
+                <div className="mt-6 flex flex-wrap gap-x-10 gap-y-6">
+                  {placeholderGroups.map((group) => (
+                    <div key={group.name} className="flex w-24 shrink-0 flex-col items-center gap-2 text-center">
+                      <span className="relative block h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-slate-50">
+                        <Image src={group.image} alt={group.name} fill sizes="80px" className="object-cover" />
+                      </span>
+                      <span className="text-xs font-bold leading-tight text-slate-800">{group.name}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div
+                  className="mt-8 grid gap-x-8 gap-y-8 border-t border-slate-100 pt-6"
+                  style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}
+                >
+                  {placeholderGroups.map((group, index) => (
+                    <div
+                      key={group.name}
+                      className={index === 0 ? "" : "border-l border-slate-100 pl-8"}
+                    >
+                      <p className="text-[13px] font-black tracking-[0.02em] text-[#075ed8]">
+                        {group.name}
+                      </p>
+                      <div className="mt-3 grid gap-2 text-[13px] text-slate-900">
+                        {group.items.map((item) => (
+                          <Link
+                            key={item}
+                            href={`/cauchos/categoria/${subcategorySlug}/${slugify(item)}`}
+                            className="leading-5 hover:text-[#075ed8] hover:underline"
+                          >
+                            {item}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-[10px] border border-slate-200 bg-white px-6 py-12 text-center shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#075ed8]">
+                Sin productos todavía
+              </p>
+              <h2 className="mt-3 text-3xl font-black">Esta sección se llenará al crear productos</h2>
+              <p className="mx-auto mt-3 max-w-xl text-sm font-semibold leading-6 text-slate-500">
+                Cuando agregues productos con esta subcategoría desde el panel maestro, aparecerán aquí automáticamente.
+              </p>
+              <Link
+                href="/cauchos"
+                className="mt-6 inline-flex rounded-full bg-[#075ed8] px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white"
+              >
+                Volver a Cauchos
+              </Link>
+            </div>
           </div>
         )}
       </section>

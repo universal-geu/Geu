@@ -13,3 +13,23 @@ export async function getSiteImages(): Promise<SiteImages> {
     return {};
   }
 }
+
+export async function getSiteImageLinks(): Promise<SiteImages> {
+  if (!prisma) return {};
+  try {
+    const rows = await prisma.siteImage.findMany();
+    return Object.fromEntries(
+      rows.filter((r) => r.link?.trim()).map((r) => [r.key, r.link as string]),
+    );
+  } catch {
+    return {};
+  }
+}
+
+export function resolveLink(
+  key: string,
+  siteImageLinks: SiteImages,
+  fallbackHref: string,
+): string {
+  return siteImageLinks[key]?.trim() || fallbackHref;
+}
