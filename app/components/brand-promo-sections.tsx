@@ -17,6 +17,7 @@ type OfferSectionProps = {
   items: PromoItem[];
   siteImages: SiteImages;
   surface?: "light" | "dark";
+  maxWidth?: string;
 };
 
 type FeaturedSectionProps = {
@@ -25,12 +26,14 @@ type FeaturedSectionProps = {
   siteImages: SiteImages;
   surface?: "light" | "dark";
   compact?: boolean;
+  maxWidth?: string;
 };
 
 type ClosingBannerProps = {
   imageKey: string;
   alt: string;
   siteImages: SiteImages;
+  maxWidth?: string;
 };
 
 export function BrandOfferSection({
@@ -42,12 +45,13 @@ export function BrandOfferSection({
   items,
   siteImages,
   surface = "light",
+  maxWidth = "1500px",
 }: OfferSectionProps) {
   const isDark = surface === "dark";
 
   return (
     <section className={isDark ? "border-b border-white/10 bg-black text-white" : "border-b border-slate-200 bg-white text-slate-950"}>
-      <div className="mx-auto max-w-[1500px] px-5 py-12 md:px-8">
+      <div className="mx-auto px-5 py-12 md:px-8" style={{ maxWidth }}>
         <div className="mb-7 flex flex-wrap items-end justify-between gap-5">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.16em]" style={{ color: accent }}>
@@ -86,11 +90,17 @@ export function BrandOfferSection({
   );
 }
 
-export function BrandFeaturedSection({ title, items, siteImages, surface = "light", compact = false }: FeaturedSectionProps) {
+export function BrandFeaturedSection({
+  title,
+  items,
+  siteImages,
+  surface = "light",
+  compact = false,
+  maxWidth,
+}: FeaturedSectionProps) {
   const isDark = surface === "dark";
-  const containerClass = compact
-    ? "mx-auto max-w-[1500px] px-5 py-7 md:px-8"
-    : "mx-auto max-w-[1320px] px-5 py-10 md:px-8";
+  const containerClass = compact ? "mx-auto px-5 py-7 md:px-8" : "mx-auto px-5 py-10 md:px-8";
+  const containerMaxWidth = maxWidth ?? (compact ? "1500px" : "1320px");
   const titleClass = isDark
     ? compact
       ? "text-center text-xl font-black tracking-[-0.02em] text-white"
@@ -105,7 +115,7 @@ export function BrandFeaturedSection({ title, items, siteImages, surface = "ligh
 
   return (
     <section className={isDark ? "border-t border-white/10 bg-[#050505] text-white" : "border-t border-slate-200 bg-[#f5f5f5] text-slate-950"}>
-      <div className={containerClass}>
+      <div className={containerClass} style={{ maxWidth: containerMaxWidth }}>
         <h2 className={titleClass}>
           {title}
         </h2>
@@ -133,10 +143,13 @@ export function BrandFeaturedSection({ title, items, siteImages, surface = "ligh
   );
 }
 
-export function BrandClosingBanner({ imageKey, alt, siteImages }: ClosingBannerProps) {
+export function BrandClosingBanner({ imageKey, alt, siteImages, maxWidth = "1500px" }: ClosingBannerProps) {
   return (
     <section className="bg-white px-5 py-8 md:px-8">
-      <div className="mx-auto max-w-[1500px] overflow-hidden rounded-[8px] border border-slate-200 shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
+      <div
+        className="mx-auto overflow-hidden rounded-[8px] border border-slate-200 shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
+        style={{ maxWidth }}
+      >
         <Image
           src={resolveImage(imageKey, siteImages)}
           alt={alt}

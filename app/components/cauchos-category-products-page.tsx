@@ -289,7 +289,7 @@ export default function CauchosCategoryProductsPage({
       <CauchosHeader division={division} />
 
       <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-[1500px] px-5 pb-3 pt-5 md:px-8">
+        <div className="mx-auto max-w-[1632px] px-5 pb-3 pt-5 md:px-8">
           <Image
             src={banner.src}
             alt={banner.alt}
@@ -301,7 +301,7 @@ export default function CauchosCategoryProductsPage({
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1500px] px-5 pb-10 pt-5 md:px-8">
+      <section className="mx-auto max-w-[1632px] px-5 pb-10 pt-5 md:px-8">
         {categoryProducts.length > 0 ? (
           <div>
             {isSearchMode ? (

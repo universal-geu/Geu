@@ -23,7 +23,7 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
         <div className="border-b border-slate-200 bg-slate-50">
           <div
-            className="mx-auto flex h-8 max-w-[1500px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8"
+            className="mx-auto flex h-8 max-w-[1632px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8"
             style={{ "--brand-accent": brand.accent } as React.CSSProperties}
           >
             <div className="hidden gap-3 md:flex">
@@ -47,7 +47,7 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
           </div>
         </div>
 
-        <div className="mx-auto grid min-h-[74px] max-w-[1500px] items-center gap-4 px-5 py-3 md:grid-cols-[280px_1fr_auto] md:px-8">
+        <div className="mx-auto grid min-h-[74px] max-w-[1632px] items-center gap-4 px-5 py-3 md:grid-cols-[280px_1fr_auto] md:px-8">
           <Link href={brand.basePath} className="flex shrink-0 items-center">
             <Image
               src={brand.logo}
