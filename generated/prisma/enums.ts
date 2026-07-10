@@ -55,6 +55,15 @@ export const InventoryMovementType = {
 export type InventoryMovementType = (typeof InventoryMovementType)[keyof typeof InventoryMovementType]
 
 
+export const QuoteStatus = {
+  NEW: 'NEW',
+  CONTACTED: 'CONTACTED',
+  CLOSED: 'CLOSED'
+} as const
+
+export type QuoteStatus = (typeof QuoteStatus)[keyof typeof QuoteStatus]
+
+
 export const Division = {
   Cauchos: 'Cauchos',
   Import: 'Import',

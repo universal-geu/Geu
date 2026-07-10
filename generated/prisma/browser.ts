@@ -52,3 +52,8 @@ export type InventoryMovement = Prisma.InventoryMovementModel
  * 
  */
 export type SiteImage = Prisma.SiteImageModel
+/**
+ * Model Quote
+ * 
+ */
+export type Quote = Prisma.QuoteModel

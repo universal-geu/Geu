@@ -38,6 +38,12 @@ enum InventoryMovementType {
   ORDER_DEDUCTION
 }
 
+enum QuoteStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
 enum Division {
   Cauchos
   Import
@@ -117,6 +123,7 @@ model Order {
   status        OrderStatus   @default(PENDING)
   paymentStatus PaymentStatus @default(PENDING)
   shippingStatus ShippingStatus @default(PENDING)
+  division      Division      @default(Cauchos)
   customerName  String
   customerEmail String
   customerPhone String
@@ -167,4 +174,20 @@ model SiteImage {
   url       String
   link      String?
   updatedAt DateTime @updatedAt
+}
+
+model Quote {
+  id                  String      @id @default(cuid())
+  fullName            String
+  company             String
+  nit                 String
+  phone               String
+  division            Division
+  requestType         String
+  productDetails      String
+  process             String[]
+  conditions          String[]
+  quantityAndDeadline String
+  status              QuoteStatus @default(NEW)
+  createdAt           DateTime    @default(now())
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
 
 type StepType = "text" | "textarea" | "choice" | "multichoice";
 
@@ -17,10 +18,11 @@ type Message = {
   text: string;
 };
 
-const STEPS: Step[] = [
+function buildSteps(brandLabel: string): Step[] {
+  return [
   {
     key: "contacto",
-    bot: "Hola, soy el asistente de Universal de Cauchos. Vamos a armar tu evaluacion tecnica. Para empezar, cual es tu nombre y el de tu empresa?",
+    bot: `Hola, soy el asistente de ${brandLabel}. Vamos a armar tu evaluacion tecnica. Para empezar, cual es tu nombre y el de tu empresa?`,
     type: "text",
     placeholder: "Ej: Karen Dayanis - Ceramica San Lorenzo",
   },
@@ -79,7 +81,8 @@ const STEPS: Step[] = [
     type: "text",
     placeholder: "Ej: 100 mts - Entrega 5 de marzo",
   },
-];
+  ];
+}
 
 const STEP_LABELS: Record<string, string> = {
   contacto: "Cliente / contacto",
@@ -92,20 +95,30 @@ const STEP_LABELS: Record<string, string> = {
 };
 
 type Props = {
+  division?: DivisionName;
   triggerLabel?: string;
   triggerClassName?: string;
 };
 
 export default function CauchosProjectChat({
+  division = "Cauchos",
   triggerLabel = "Hablemos de tu proyecto →",
-  triggerClassName = "inline-flex items-center justify-center rounded-full border border-white bg-white px-8 py-4 text-sm font-black uppercase tracking-[0.08em] text-[#dd1b44] shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition hover:bg-[#fdecf0]",
+  triggerClassName,
 }: Props) {
+  const brandLabel = DIVISION_BRAND[division].label;
+  const accent = division === "Cauchos" ? "#dd1b44" : DIVISION_BRAND[division].accent;
+  const STEPS = useMemo(() => buildSteps(brandLabel), [brandLabel]);
+  const resolvedTriggerClassName =
+    triggerClassName ||
+    `inline-flex items-center justify-center rounded-full border border-white bg-white px-8 py-4 text-sm font-black uppercase tracking-[0.08em] shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition hover:opacity-90`;
   const [open, setOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [messages, setMessages] = useState<Message[]>([{ from: "bot", text: STEPS[0].bot }]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [multiAnswers, setMultiAnswers] = useState<Record<string, string[]>>({});
   const [textValue, setTextValue] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+  const [submitState, setSubmitState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const done = stepIndex >= STEPS.length;
 
@@ -117,8 +130,10 @@ export default function CauchosProjectChat({
     setStepIndex(0);
     setMessages([{ from: "bot", text: STEPS[0].bot }]);
     setAnswers({});
+    setMultiAnswers({});
     setTextValue("");
     setSelected([]);
+    setSubmitState("idle");
   };
 
   const advance = (answerText: string, storedValue: string) => {
@@ -156,7 +171,47 @@ export default function CauchosProjectChat({
 
   const handleMultiSubmit = () => {
     if (selected.length === 0) return;
+    const step = STEPS[stepIndex];
+    setMultiAnswers((prev) => ({ ...prev, [step.key]: selected }));
     advance(selected.join(", "), selected.join(", "));
+  };
+
+  const splitPair = (value: string | undefined): [string, string] => {
+    const raw = (value ?? "").split(" - ");
+    if (raw.length >= 2) {
+      return [raw[0].trim(), raw.slice(1).join(" - ").trim()];
+    }
+    return [(value ?? "").trim(), ""];
+  };
+
+  const handleSendQuote = async () => {
+    setSubmitState("sending");
+    const [fullName, company] = splitPair(answers.contacto);
+    const [nit, phone] = splitPair(answers.nitTelefono);
+
+    try {
+      const response = await fetch("/api/quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName,
+          company,
+          nit,
+          phone,
+          division,
+          requestType: answers.tipoProducto ?? "",
+          productDetails: answers.producto ?? "",
+          process: multiAnswers.proceso ?? [],
+          conditions: multiAnswers.condiciones ?? [],
+          quantityAndDeadline: answers.comercial ?? "",
+        }),
+      });
+
+      if (!response.ok) throw new Error("REQUEST_FAILED");
+      setSubmitState("sent");
+    } catch {
+      setSubmitState("error");
+    }
   };
 
   const mailBody = STEPS.map((step) => `${STEP_LABELS[step.key]}: ${answers[step.key] ?? ""}`).join("%0D%0A");
@@ -168,16 +223,29 @@ export default function CauchosProjectChat({
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={triggerClassName}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={resolvedTriggerClassName}
+        style={triggerClassName ? undefined : { color: accent }}
+      >
         {triggerLabel}
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 px-4 py-6 md:items-center">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 px-4 py-6 md:items-center"
+          style={
+            {
+              "--brand-accent": accent,
+              "--brand-accent-hover": division === "Cauchos" ? "#b3153a" : DIVISION_BRAND[division].accentHover,
+            } as React.CSSProperties
+          }
+        >
           <div className="flex h-[min(640px,90vh)] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-[0_30px_80px_rgba(2,6,23,0.35)]">
-            <div className="flex items-center justify-between bg-[#dd1b44] px-5 py-4 text-white">
+            <div className="flex items-center justify-between bg-[var(--brand-accent)] px-5 py-4 text-white">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.1em]">Universal de Cauchos</p>
+                <p className="text-sm font-black uppercase tracking-[0.1em]">{brandLabel}</p>
                 <p className="text-xs font-semibold text-white/80">Asistente de evaluacion tecnica</p>
               </div>
               <button
@@ -196,7 +264,7 @@ export default function CauchosProjectChat({
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm font-semibold leading-6 ${
                       message.from === "user"
-                        ? "rounded-br-sm bg-[#dd1b44] text-white"
+                        ? "rounded-br-sm bg-[var(--brand-accent)] text-white"
                         : "rounded-bl-sm border border-slate-200 bg-white text-slate-800"
                     }`}
                   >
@@ -207,7 +275,7 @@ export default function CauchosProjectChat({
 
               {done && (
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800">
-                  <p className="mb-2 text-xs font-black uppercase tracking-[0.1em] text-[#dd1b44]">
+                  <p className="mb-2 text-xs font-black uppercase tracking-[0.1em] text-[var(--brand-accent)]">
                     Resumen de la solicitud
                   </p>
                   <dl className="space-y-1.5">
@@ -233,12 +301,12 @@ export default function CauchosProjectChat({
                     onChange={(event) => setTextValue(event.target.value)}
                     onKeyDown={(event) => event.key === "Enter" && handleTextSubmit()}
                     placeholder={currentStep.placeholder}
-                    className="flex-1 rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#dd1b44]"
+                    className="flex-1 rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:border-[var(--brand-accent)]"
                   />
                   <button
                     type="button"
                     onClick={handleTextSubmit}
-                    className="rounded-full bg-[#dd1b44] px-5 py-3 text-sm font-black text-white hover:bg-[#b3153a]"
+                    className="rounded-full bg-[var(--brand-accent)] px-5 py-3 text-sm font-black text-white hover:bg-[var(--brand-accent-hover)]"
                   >
                     Enviar
                   </button>
@@ -253,12 +321,12 @@ export default function CauchosProjectChat({
                     onChange={(event) => setTextValue(event.target.value)}
                     placeholder={currentStep.placeholder}
                     rows={3}
-                    className="w-full resize-none rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:border-[#dd1b44]"
+                    className="w-full resize-none rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:border-[var(--brand-accent)]"
                   />
                   <button
                     type="button"
                     onClick={handleTextSubmit}
-                    className="self-end rounded-full bg-[#dd1b44] px-5 py-3 text-sm font-black text-white hover:bg-[#b3153a]"
+                    className="self-end rounded-full bg-[var(--brand-accent)] px-5 py-3 text-sm font-black text-white hover:bg-[var(--brand-accent-hover)]"
                   >
                     Enviar
                   </button>
@@ -272,7 +340,7 @@ export default function CauchosProjectChat({
                       key={option}
                       type="button"
                       onClick={() => handleChoice(option)}
-                      className="rounded-full border border-[#dd1b44] px-4 py-2 text-sm font-black text-[#dd1b44] transition hover:bg-[#dd1b44] hover:text-white"
+                      className="rounded-full border border-[var(--brand-accent)] px-4 py-2 text-sm font-black text-[var(--brand-accent)] transition hover:bg-[var(--brand-accent)] hover:text-white"
                     >
                       {option}
                     </button>
@@ -292,8 +360,8 @@ export default function CauchosProjectChat({
                           onClick={() => toggleMulti(option)}
                           className={`rounded-full border px-4 py-2 text-sm font-black transition ${
                             isSelected
-                              ? "border-[#dd1b44] bg-[#dd1b44] text-white"
-                              : "border-slate-300 text-slate-600 hover:border-[#dd1b44] hover:text-[#dd1b44]"
+                              ? "border-[var(--brand-accent)] bg-[var(--brand-accent)] text-white"
+                              : "border-slate-300 text-slate-600 hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)]"
                           }`}
                         >
                           {option}
@@ -305,7 +373,7 @@ export default function CauchosProjectChat({
                     type="button"
                     onClick={handleMultiSubmit}
                     disabled={selected.length === 0}
-                    className="self-end rounded-full bg-[#dd1b44] px-5 py-3 text-sm font-black text-white transition hover:bg-[#b3153a] disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="self-end rounded-full bg-[var(--brand-accent)] px-5 py-3 text-sm font-black text-white transition hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     Continuar
                   </button>
@@ -313,20 +381,43 @@ export default function CauchosProjectChat({
               )}
 
               {done && (
-                <div className="flex flex-wrap gap-2">
-                  <a
-                    href={mailHref}
-                    className="inline-flex flex-1 items-center justify-center rounded-full bg-[#dd1b44] px-5 py-3 text-center text-sm font-black uppercase tracking-[0.06em] text-white hover:bg-[#b3153a]"
-                  >
-                    Enviar solicitud
-                  </a>
-                  <button
-                    type="button"
-                    onClick={reset}
-                    className="rounded-full border border-slate-300 px-5 py-3 text-sm font-black text-slate-600 hover:border-[#dd1b44] hover:text-[#dd1b44]"
-                  >
-                    Reiniciar
-                  </button>
+                <div className="space-y-2">
+                  {submitState === "sent" ? (
+                    <p className="rounded-2xl bg-[#effaf2] px-4 py-3 text-center text-sm font-black text-[#1f6b39]">
+                      ¡Solicitud enviada! Nuestro equipo se pondrá en contacto pronto.
+                    </p>
+                  ) : (
+                    <>
+                      {submitState === "error" && (
+                        <p className="text-center text-xs font-bold text-[var(--brand-accent)]">
+                          No pudimos enviar la solicitud. Intenta de nuevo o usa el correo de respaldo.
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={handleSendQuote}
+                          disabled={submitState === "sending"}
+                          className="inline-flex flex-1 items-center justify-center rounded-full bg-[var(--brand-accent)] px-5 py-3 text-center text-sm font-black uppercase tracking-[0.06em] text-white hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:bg-slate-300"
+                        >
+                          {submitState === "sending" ? "Enviando..." : "Enviar solicitud"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={reset}
+                          className="rounded-full border border-slate-300 px-5 py-3 text-sm font-black text-slate-600 hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)]"
+                        >
+                          Reiniciar
+                        </button>
+                      </div>
+                      <a
+                        href={mailHref}
+                        className="block text-center text-xs font-bold text-slate-500 underline underline-offset-2 hover:text-[var(--brand-accent)]"
+                      >
+                        O envíala por correo desde tu cliente de email
+                      </a>
+                    </>
+                  )}
                 </div>
               )}
             </div>

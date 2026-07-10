@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
-import Image from "next/image";
+import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-locations";
-import CauchosCartLink from "../components/cauchos-cart-link";
+import CauchosHeader from "../components/cauchos-header";
+import { DIVISION_BRAND, getDivisionFromBrandParam } from "@/lib/divisions";
 
 type RegisterFormState = {
   fullName: string;
@@ -37,27 +38,73 @@ const initialState: RegisterFormState = {
   confirmPassword: "",
 };
 
-const menuItems = [
-  "Laminas y rollos",
-  "Sellos y empaques",
-  "Mangueras",
-  "Pisos industriales",
-  "Piezas tecnicas",
-  "Fabricacion especial",
-];
+function PasswordVisibilityToggle({
+  visible,
+  onToggle,
+}: {
+  visible: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 hover:text-[var(--brand-accent)]"
+    >
+      {visible ? (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      ) : (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M3 3l18 18" />
+          <path d="M10.6 10.6a3 3 0 0 0 4.24 4.24" />
+          <path d="M9.9 4.24A10.6 10.6 0 0 1 12 4c6.5 0 10 7 10 7a13.5 13.5 0 0 1-3.13 3.94M6.6 6.6C4.14 8.24 2 11 2 11s3.5 7 10 7c1.16 0 2.24-.18 3.24-.5" />
+        </svg>
+      )}
+    </button>
+  );
+}
 
 export default function RegistroPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const division = getDivisionFromBrandParam(searchParams.get("brand"));
+  const brand = DIVISION_BRAND[division];
+  const loginHref = division === "Cauchos" ? "/login" : `/login?brand=${division.toLowerCase()}`;
   const [form, setForm] = useState<RegisterFormState>(initialState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
   const [inlineError, setInlineError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const cityOptions = useMemo(
     () => getCitiesForDepartment(form.department),
     [form.department],
   );
   const fieldClass =
-    "w-full rounded-[4px] border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-colors duration-200 placeholder:text-slate-400 focus:border-[#075ed8] focus:ring-2 focus:ring-[#075ed8]/12 disabled:bg-slate-100 disabled:text-slate-400";
+    "w-full rounded-[4px] border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-colors duration-200 placeholder:text-slate-400 focus:border-[var(--brand-accent)] focus:ring-2 focus:ring-[var(--brand-accent)]/12 disabled:bg-slate-100 disabled:text-slate-400";
   const labelClass = "mb-2 block text-xs font-black uppercase tracking-[0.08em] text-slate-700";
 
   useEffect(() => {
@@ -102,7 +149,7 @@ export default function RegistroPage() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, division }),
     });
 
     const payload = (await response.json()) as {
@@ -125,17 +172,26 @@ export default function RegistroPage() {
       tone: "success",
       message: payload.message || "Cuenta creada correctamente.",
     });
+
+    const nextPath = searchParams.get("next") || "/mi-cuenta";
+    window.setTimeout(() => {
+      router.push(nextPath);
+      router.refresh();
+    }, 500);
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-950">
+    <main
+      className="min-h-screen bg-slate-100 text-slate-950"
+      style={{ "--brand-accent": brand.accent, "--brand-accent-hover": brand.accentHover } as CSSProperties}
+    >
       {toast && (
         <div className="fixed right-5 top-5 z-[80] w-[min(92vw,380px)]">
           <div
             className={`rounded-[1.4rem] border px-5 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.16)] backdrop-blur-sm ${
               toast.tone === "success"
                 ? "border-[#1f8b45]/18 bg-[#effaf2] text-[#1f6b39]"
-                : "border-[#ed8435]/18 bg-[#fff6ee] text-[#b85d12]"
+                : "border-red-200 bg-red-50 text-red-600"
             }`}
           >
             <div className="flex items-start justify-between gap-4">
@@ -158,88 +214,21 @@ export default function RegistroPage() {
         </div>
       )}
 
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-        <div className="border-b border-slate-200 bg-slate-50">
-          <div className="mx-auto flex h-8 max-w-[1500px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8">
-            <div className="hidden gap-3 md:flex">
-              <span>Servicio al cliente 320 88 999 33</span>
-              <span className="text-slate-300">|</span>
-              <span>Ventas empresariales</span>
-              <span className="text-slate-300">|</span>
-              <span>Centro de ayuda</span>
-            </div>
-            <div className="flex w-full justify-between gap-3 md:w-auto md:justify-end">
-              <Link href="/cauchos#contacto" className="hover:text-[#075ed8]">Cotizaciones</Link>
-              <Link href="/cauchos#productos" className="hover:text-[#075ed8]">Catalogos</Link>
-              <Link href="/quienes-somos" className="hover:text-[#075ed8]">GEU empresas</Link>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto grid min-h-[74px] max-w-[1500px] items-center gap-4 px-5 py-3 md:grid-cols-[260px_1fr_auto] md:px-8">
-          <Link href="/" className="flex shrink-0 items-center">
-            <Image
-              src="/logo-universal-cauchos.png"
-              alt="GEU Universal de Cauchos"
-              width={2518}
-              height={420}
-              priority
-              className="h-auto object-contain"
-              style={{ width: "260px", maxWidth: "100%" }}
-            />
-          </Link>
-
-          <form className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner">
-            <input
-              aria-label="Buscar productos de caucho"
-              className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-              placeholder="Buscar laminas, sellos, mangueras, empaques..."
-            />
-            <button
-              type="button"
-              className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
-              aria-label="Buscar"
-            >
-              ⌕
-            </button>
-          </form>
-
-          <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
-            <CauchosCartLink />
-            <Link href="/login?next=/mi-cuenta" className="font-bold hover:text-[#075ed8]">Mi cuenta</Link>
-          </div>
-        </div>
-
-        <div className="border-t border-slate-200 bg-white">
-          <div className="mx-auto max-w-[1500px] px-5 md:px-8">
-            <nav className="flex min-h-14 items-stretch justify-between gap-2 overflow-x-auto text-[11px] font-black uppercase tracking-[0.02em] text-slate-800">
-              {menuItems.map((item, index) => (
-                <Link
-                  key={item}
-                  href={index < 6 ? "/cauchos#catalogo-cauchos" : "/cauchos#contacto"}
-                  className="flex min-w-max items-center border-b-2 border-transparent px-3 text-center hover:border-[#075ed8] hover:text-[#075ed8]"
-                >
-                  {item}
-                </Link>
-              ))}
-          </nav>
-          </div>
-        </div>
-      </header>
+      <CauchosHeader division={division} />
 
       <section className="border-b border-slate-200 bg-slate-50">
         <div className="mx-auto max-w-3xl px-5 py-10 md:px-8 lg:py-14">
           <div className="rounded-[8px] border border-slate-200 bg-white p-6 shadow-[0_18px_44px_rgba(15,23,42,0.1)] md:p-8 lg:p-10">
             <Link
-              href="/cauchos"
-              className="text-xs font-black uppercase tracking-[0.12em] text-[#075ed8] transition-colors duration-200 hover:text-[#e4002b]"
+              href={brand.basePath}
+              className="text-xs font-black uppercase tracking-[0.12em] text-[var(--brand-accent)] transition-colors duration-200 hover:text-[#e4002b]"
             >
-              Volver a Universal de Cauchos
+              Volver a {brand.label}
             </Link>
 
             <div className="mt-6">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[#e4002b]">
-                Universal de Cauchos
+                {brand.label}
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] text-slate-950 md:text-4xl">
                 Datos de cliente
@@ -327,15 +316,45 @@ export default function RegistroPage() {
             >
               Contraseña
             </label>
-            <input
-              id="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Mínimo 8 caracteres"
-              required
-              className={fieldClass}
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Mínimo 8 caracteres"
+                required
+                className={`${fieldClass} pr-11`}
+              />
+              <PasswordVisibilityToggle
+                visible={showPassword}
+                onToggle={() => setShowPassword((current) => !current)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className={labelClass}
+            >
+              Confirmar contraseña
+            </label>
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                value={form.confirmPassword}
+                onChange={handleChange}
+                placeholder="Repite tu contraseña"
+                required
+                className={`${fieldClass} pr-11`}
+              />
+              <PasswordVisibilityToggle
+                visible={showConfirmPassword}
+                onToggle={() => setShowConfirmPassword((current) => !current)}
+              />
+            </div>
           </div>
 
           <div>
@@ -425,26 +444,8 @@ export default function RegistroPage() {
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="confirmPassword"
-              className={labelClass}
-            >
-              Confirmar contraseña
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              placeholder="Repite tu contraseña"
-              required
-              className={fieldClass}
-            />
-          </div>
-
           {inlineError && (
-            <p className="rounded-xl border border-[#ed8435]/20 bg-[#fff6ee] px-4 py-3 text-sm font-medium text-[#b85d12] md:col-span-2">
+            <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600 md:col-span-2">
               {inlineError}
             </p>
           )}
@@ -453,7 +454,7 @@ export default function RegistroPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-[4px] bg-[#075ed8] px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-white transition-colors duration-200 hover:bg-[#064fb7] disabled:cursor-not-allowed disabled:opacity-70"
+              className="w-full rounded-[4px] bg-[var(--brand-accent)] px-4 py-3 text-sm font-black uppercase tracking-[0.08em] text-white transition-colors duration-200 hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
             </button>
@@ -463,8 +464,8 @@ export default function RegistroPage() {
         <p className="mt-6 text-sm text-slate-600">
           ¿Ya tienes una cuenta?{" "}
           <Link
-            href="/login"
-            className="font-black text-[#075ed8] transition-colors duration-200 hover:text-[#e4002b]"
+            href={loginHref}
+            className="font-black text-[var(--brand-accent)] transition-colors duration-200 hover:text-[#e4002b]"
           >
             Inicia sesión
           </Link>

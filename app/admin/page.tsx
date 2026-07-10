@@ -20,6 +20,7 @@ import {
 } from "../data/catalog";
 import type { InventoryMovementSummary } from "@/lib/products";
 import type { DashboardMetrics, SalesReport, ShippingStatus } from "@/lib/orders";
+import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
 import { getDivisionFromBrandParam, isServiceDivision, type DivisionName } from "@/lib/divisions";
 
@@ -227,6 +228,32 @@ type OrderEditState = {
   trackingNumber: string;
   adminNotes: string;
 };
+
+type QuoteStatusValue = "NEW" | "CONTACTED" | "CLOSED";
+
+type AdminQuote = {
+  id: string;
+  fullName: string;
+  company: string;
+  nit: string;
+  phone: string;
+  division: string;
+  requestType: string;
+  productDetails: string;
+  process: string[];
+  conditions: string[];
+  quantityAndDeadline: string;
+  status: QuoteStatusValue;
+  createdAt: string | Date;
+};
+
+const quoteStatuses: QuoteStatusValue[] = ["NEW", "CONTACTED", "CLOSED"];
+
+function getQuoteStatusLabel(status: QuoteStatusValue) {
+  if (status === "CONTACTED") return "Contactado";
+  if (status === "CLOSED") return "Cerrado";
+  return "Nueva";
+}
 
 type ProductImageChoice = {
   label: string;
@@ -584,7 +611,7 @@ export default function AdminPage() {
     [allAdminProducts, adminDivision],
   );
   const [activeTab, setActiveTab] = useState<
-    "create" | "edit" | "inventory" | "orders" | "reports" | "images" | null
+    "create" | "edit" | "inventory" | "orders" | "quotes" | "reports" | "images" | null
   >(null);
   const imageDivisionFilter = adminDivision;
   const [siteImages, setSiteImages] = useState<Record<string, string>>({});
@@ -623,6 +650,11 @@ export default function AdminPage() {
   const [isLoadingInventory, setIsLoadingInventory] = useState(false);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [quotes, setQuotes] = useState<AdminQuote[]>([]);
+  const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
+  const [quoteStatusFilter, setQuoteStatusFilter] = useState<"all" | QuoteStatusValue>("all");
+  const [isSavingQuoteStatus, setIsSavingQuoteStatus] = useState(false);
   const [salesReport, setSalesReport] = useState<SalesReport | null>(null);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
@@ -767,6 +799,14 @@ export default function AdminPage() {
       return matchesFilter && matchesSearch;
     });
   }, [orderSearch, orderShippingFilter, orders]);
+
+  const filteredQuotes = useMemo(() => {
+    return quotes.filter(
+      (quote) => quoteStatusFilter === "all" || quote.status === quoteStatusFilter,
+    );
+  }, [quoteStatusFilter, quotes]);
+
+  const selectedQuote = quotes.find((quote) => quote.id === selectedQuoteId) ?? null;
 
   const productCountLabel = `${adminProducts.length} producto${adminProducts.length === 1 ? "" : "s"} en catálogo`;
 
@@ -1192,6 +1232,58 @@ export default function AdminPage() {
     }
   }
 
+  async function loadQuotes() {
+    setIsLoadingQuotes(true);
+
+    const response = await fetch("/api/quotes");
+    const payload = (await response.json()) as {
+      error?: string;
+      quotes?: AdminQuote[];
+    };
+
+    setIsLoadingQuotes(false);
+
+    if (!response.ok || !payload.quotes) {
+      setToast({
+        tone: "error",
+        message: payload.error || "No fue posible cargar las cotizaciones.",
+      });
+      return;
+    }
+
+    setQuotes(payload.quotes);
+
+    if (!selectedQuoteId && payload.quotes[0]) {
+      setSelectedQuoteId(payload.quotes[0].id);
+    }
+  }
+
+  async function handleQuoteStatusChange(id: string, status: QuoteStatusValue) {
+    setIsSavingQuoteStatus(true);
+
+    const response = await fetch(`/api/quotes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    const payload = (await response.json()) as { error?: string; quote?: AdminQuote };
+
+    setIsSavingQuoteStatus(false);
+
+    if (!response.ok || !payload.quote) {
+      setToast({
+        tone: "error",
+        message: payload.error || "No fue posible actualizar la cotización.",
+      });
+      return;
+    }
+
+    setQuotes((current) =>
+      current.map((quote) => (quote.id === id ? { ...quote, status } : quote)),
+    );
+    setToast({ tone: "success", message: "Cotización actualizada correctamente." });
+  }
+
   async function loadSalesReport() {
     setIsLoadingReport(true);
 
@@ -1300,6 +1392,16 @@ export default function AdminPage() {
     setOrderShippingFilter("all");
     setActiveTab("orders");
     void loadOrders();
+  };
+
+  const openQuotesView = () => {
+    setSelectedImage(null);
+    setRequestError("");
+    setPrimaryImageIndex(0);
+    setEditingSlug(null);
+    setQuoteStatusFilter("all");
+    setActiveTab("quotes");
+    void loadQuotes();
   };
 
   const openReportsView = () => {
@@ -1508,6 +1610,7 @@ export default function AdminPage() {
       ? [{ key: "inventory", label: "Inventario", active: activeTab === "inventory", onClick: openInventoryView }]
       : []),
     { key: "orders", label: "Pedidos", active: activeTab === "orders", onClick: openOrdersView },
+    { key: "quotes", label: "Cotizaciones", active: activeTab === "quotes", onClick: openQuotesView },
     { key: "reports", label: "Informes", active: activeTab === "reports", onClick: openReportsView },
     { key: "images", label: "Imágenes", active: activeTab === "images", onClick: openImagesView },
   ];
@@ -2936,7 +3039,7 @@ export default function AdminPage() {
                                       {order.customerName}
                                     </p>
                                     <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#8b8d91]">
-                                      {order.id}
+                                      {formatOrderCode(order.id)}
                                     </p>
                                     <p className="mt-2 text-xs text-[#6e7379]">
                                       {new Date(order.createdAt).toLocaleString("es-CO")}
@@ -3061,7 +3164,7 @@ export default function AdminPage() {
                           <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${selectedOrderId === order.id ? "text-white/72" : "text-[#8b8d91]"}`}>
                             Pedido
                           </p>
-                          <p className="mt-2 text-lg font-semibold">{order.id}</p>
+                          <p className="mt-2 text-lg font-semibold">{formatOrderCode(order.id)}</p>
                           <p className={`mt-2 text-sm ${selectedOrderId === order.id ? "text-white/78" : "text-[#5d6167]"}`}>
                             {order.customerName} · {order.city}
                           </p>
@@ -3322,6 +3425,188 @@ export default function AdminPage() {
                         </div>
                       </div>
                     </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "quotes" && (
+            <div className="admin-fade-up space-y-8">
+              <div className="grid gap-8 xl:grid-cols-[360px_minmax(0,1fr)]">
+                <aside className="space-y-5">
+                  <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
+                      Cotizaciones
+                    </p>
+                    <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                      Solicitudes de evaluación técnica
+                    </h2>
+                    <p className="mt-3 text-sm leading-7 text-[#6e7379]">
+                      Estas solicitudes las envían los clientes desde el asistente &quot;Hablemos de tu proyecto&quot; del sitio.
+                    </p>
+                  </div>
+
+                  <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setQuoteStatusFilter("all")}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
+                          quoteStatusFilter === "all"
+                            ? "bg-[#16384f] text-white"
+                            : "border border-black/10 bg-[#fafaf9] text-[#5d6167] hover:bg-[#ececea]"
+                        }`}
+                      >
+                        Todas
+                      </button>
+                      {quoteStatuses.map((status) => (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => setQuoteStatusFilter(status)}
+                          className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
+                            quoteStatusFilter === status
+                              ? "bg-[#6366f1] text-white"
+                              : "border border-black/10 bg-[#fafaf9] text-[#5d6167] hover:bg-[#ececea]"
+                          }`}
+                        >
+                          {getQuoteStatusLabel(status)}
+                        </button>
+                      ))}
+                    </div>
+
+                    <p className="mt-5 text-sm text-[#6e7379]">
+                      Mostrando {filteredQuotes.length} solicitud{filteredQuotes.length === 1 ? "" : "es"}.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {isLoadingQuotes ? (
+                      <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 text-sm text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                        Cargando cotizaciones...
+                      </div>
+                    ) : filteredQuotes.length === 0 ? (
+                      <div className="rounded-[1.5rem] border border-dashed border-black/12 bg-white p-5 text-sm leading-7 text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                        Aún no hay solicitudes que coincidan con los filtros actuales.
+                      </div>
+                    ) : (
+                      filteredQuotes.map((quote) => (
+                        <button
+                          key={quote.id}
+                          type="button"
+                          onClick={() => setSelectedQuoteId(quote.id)}
+                          className={`block w-full rounded-[1.4rem] border p-5 text-left shadow-[0_14px_28px_rgba(15,23,42,0.05)] transition-all duration-200 ${
+                            selectedQuoteId === quote.id
+                              ? "border-[#16384f] bg-[#16384f] text-white"
+                              : "border-black/8 bg-white hover:-translate-y-0.5 hover:border-[#16384f]/18"
+                          }`}
+                        >
+                          <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${selectedQuoteId === quote.id ? "text-white/72" : "text-[#8b8d91]"}`}>
+                            {new Date(quote.createdAt).toLocaleDateString("es-CO")}
+                          </p>
+                          <p className="mt-2 text-lg font-semibold">{quote.company}</p>
+                          <p className={`mt-2 text-sm ${selectedQuoteId === quote.id ? "text-white/78" : "text-[#5d6167]"}`}>
+                            {quote.fullName} · {quote.requestType}
+                          </p>
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${selectedQuoteId === quote.id ? "bg-white/14 text-white" : "bg-[#eef5ff] text-[#075ed8]"}`}>
+                              {getQuoteStatusLabel(quote.status)}
+                            </span>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </aside>
+
+                <div className="space-y-8">
+                  {!selectedQuote ? (
+                    <div className="rounded-[1.75rem] border border-dashed border-black/12 bg-white p-8 text-center text-sm leading-7 text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                      Selecciona una solicitud para ver el detalle completo.
+                    </div>
+                  ) : (
+                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8b8d91]">
+                            Solicitud seleccionada
+                          </p>
+                          <h3 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                            {selectedQuote.company}
+                          </h3>
+                          <p className="mt-2 text-sm text-[#6e7379]">
+                            {new Date(selectedQuote.createdAt).toLocaleString("es-CO")}
+                          </p>
+                        </div>
+
+                        <label className="space-y-2">
+                          <span className="text-sm font-medium text-[#4f545a]">Estado</span>
+                          <select
+                            value={selectedQuote.status}
+                            disabled={isSavingQuoteStatus}
+                            onChange={(event) =>
+                              void handleQuoteStatusChange(
+                                selectedQuote.id,
+                                event.target.value as QuoteStatusValue,
+                              )
+                            }
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                          >
+                            {quoteStatuses.map((status) => (
+                              <option key={status} value={status}>
+                                {getQuoteStatusLabel(status)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+
+                      <dl className="mt-6 grid gap-4 md:grid-cols-2">
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Contacto</dt>
+                          <dd className="mt-1 text-sm font-semibold text-[#1f2328]">{selectedQuote.fullName}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">NIT / Teléfono</dt>
+                          <dd className="mt-1 text-sm font-semibold text-[#1f2328]">
+                            {selectedQuote.nit} · {selectedQuote.phone}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Tipo de solicitud</dt>
+                          <dd className="mt-1 text-sm font-semibold text-[#1f2328]">{selectedQuote.requestType}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Cantidad / entrega</dt>
+                          <dd className="mt-1 text-sm font-semibold text-[#1f2328]">{selectedQuote.quantityAndDeadline}</dd>
+                        </div>
+                        <div className="md:col-span-2">
+                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Producto</dt>
+                          <dd className="mt-1 text-sm leading-7 text-[#1f2328]">{selectedQuote.productDetails}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Proceso</dt>
+                          <dd className="mt-1 flex flex-wrap gap-2">
+                            {selectedQuote.process.map((item) => (
+                              <span key={item} className="rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-semibold text-[#075ed8]">
+                                {item}
+                              </span>
+                            ))}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Condiciones</dt>
+                          <dd className="mt-1 flex flex-wrap gap-2">
+                            {selectedQuote.conditions.map((item) => (
+                              <span key={item} className="rounded-full bg-[#fff1f1] px-3 py-1 text-xs font-semibold text-[#c53b3b]">
+                                {item}
+                              </span>
+                            ))}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
                   )}
                 </div>
               </div>

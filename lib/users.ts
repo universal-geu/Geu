@@ -12,6 +12,7 @@ export type RegisterUserInput = {
   addressLine1?: string;
   addressLine2?: string;
   password: string;
+  division?: DivisionName;
 };
 
 export type PublicUser = {
@@ -64,6 +65,7 @@ export async function registerUser(input: RegisterUserInput) {
       addressLine1,
       addressLine2,
       passwordHash,
+      division: input.division,
     },
   });
 

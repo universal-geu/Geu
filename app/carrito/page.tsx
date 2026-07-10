@@ -5,16 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import CauchosAccountLink from "../components/cauchos-account-link";
 import CauchosCartLink from "../components/cauchos-cart-link";
+import CauchosSearchForm from "../components/cauchos-search-form";
 import { useCart } from "../components/cart-provider";
-
-const cartNavItems = [
-  "Laminas y rollos",
-  "Sellos y empaques",
-  "Mangueras",
-  "Pisos industriales",
-  "Piezas tecnicas",
-  "Fabricacion especial",
-];
 
 const importCartNavItems = [
   "Luces y direccionales",
@@ -78,40 +70,11 @@ function CauchosCartHeader() {
           />
         </Link>
 
-        <form className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner">
-          <input
-            aria-label="Buscar productos de caucho"
-            className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-            placeholder="Buscar laminas, sellos, mangueras, empaques..."
-          />
-          <button
-            type="button"
-            className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
-            aria-label="Buscar"
-          >
-            ⌕
-          </button>
-        </form>
+        <CauchosSearchForm className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner" />
 
         <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
           <CauchosCartLink />
           <CauchosAccountLink className="font-bold hover:text-[#075ed8]" />
-        </div>
-      </div>
-
-      <div className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-[1500px] px-5 md:px-8">
-          <nav className="flex min-h-14 items-stretch justify-between gap-2 overflow-x-auto text-[11px] font-black uppercase tracking-[0.02em] text-slate-800">
-            {cartNavItems.map((item, index) => (
-              <Link
-                key={item}
-                href={index < 6 ? "/cauchos#catalogo-cauchos" : "/cauchos#contacto"}
-                className="flex min-w-max items-center border-b-2 border-transparent px-3 text-center hover:border-[#075ed8] hover:text-[#075ed8]"
-              >
-                {item}
-              </Link>
-            ))}
-          </nav>
         </div>
       </div>
     </header>
