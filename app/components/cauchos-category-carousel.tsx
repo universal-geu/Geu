@@ -8,6 +8,7 @@ type CauchosCategory = {
   title: string;
   image: string;
   count: string;
+  href?: string;
 };
 
 type Props = {
@@ -76,7 +77,7 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
         {categories.map((category) => (
           <Link
             key={category.label}
-            href="#productos"
+            href={category.href ?? "#productos"}
             title={category.title}
             className={
               accent === "red" || accent === "silver"

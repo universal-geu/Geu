@@ -27,18 +27,21 @@ export type AggregateSiteImage = {
 export type SiteImageMinAggregateOutputType = {
   key: string | null
   url: string | null
+  link: string | null
   updatedAt: Date | null
 }
 
 export type SiteImageMaxAggregateOutputType = {
   key: string | null
   url: string | null
+  link: string | null
   updatedAt: Date | null
 }
 
 export type SiteImageCountAggregateOutputType = {
   key: number
   url: number
+  link: number
   updatedAt: number
   _all: number
 }
@@ -47,18 +50,21 @@ export type SiteImageCountAggregateOutputType = {
 export type SiteImageMinAggregateInputType = {
   key?: true
   url?: true
+  link?: true
   updatedAt?: true
 }
 
 export type SiteImageMaxAggregateInputType = {
   key?: true
   url?: true
+  link?: true
   updatedAt?: true
 }
 
 export type SiteImageCountAggregateInputType = {
   key?: true
   url?: true
+  link?: true
   updatedAt?: true
   _all?: true
 }
@@ -138,6 +144,7 @@ export type SiteImageGroupByArgs<ExtArgs extends runtime.Types.Extensions.Intern
 export type SiteImageGroupByOutputType = {
   key: string
   url: string
+  link: string | null
   updatedAt: Date
   _count: SiteImageCountAggregateOutputType | null
   _min: SiteImageMinAggregateOutputType | null
@@ -165,12 +172,14 @@ export type SiteImageWhereInput = {
   NOT?: Prisma.SiteImageWhereInput | Prisma.SiteImageWhereInput[]
   key?: Prisma.StringFilter<"SiteImage"> | string
   url?: Prisma.StringFilter<"SiteImage"> | string
+  link?: Prisma.StringNullableFilter<"SiteImage"> | string | null
   updatedAt?: Prisma.DateTimeFilter<"SiteImage"> | Date | string
 }
 
 export type SiteImageOrderByWithRelationInput = {
   key?: Prisma.SortOrder
   url?: Prisma.SortOrder
+  link?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
@@ -180,12 +189,14 @@ export type SiteImageWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.SiteImageWhereInput[]
   NOT?: Prisma.SiteImageWhereInput | Prisma.SiteImageWhereInput[]
   url?: Prisma.StringFilter<"SiteImage"> | string
+  link?: Prisma.StringNullableFilter<"SiteImage"> | string | null
   updatedAt?: Prisma.DateTimeFilter<"SiteImage"> | Date | string
 }, "key">
 
 export type SiteImageOrderByWithAggregationInput = {
   key?: Prisma.SortOrder
   url?: Prisma.SortOrder
+  link?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.SiteImageCountOrderByAggregateInput
   _max?: Prisma.SiteImageMaxOrderByAggregateInput
@@ -198,66 +209,77 @@ export type SiteImageScalarWhereWithAggregatesInput = {
   NOT?: Prisma.SiteImageScalarWhereWithAggregatesInput | Prisma.SiteImageScalarWhereWithAggregatesInput[]
   key?: Prisma.StringWithAggregatesFilter<"SiteImage"> | string
   url?: Prisma.StringWithAggregatesFilter<"SiteImage"> | string
+  link?: Prisma.StringNullableWithAggregatesFilter<"SiteImage"> | string | null
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"SiteImage"> | Date | string
 }
 
 export type SiteImageCreateInput = {
   key: string
   url: string
+  link?: string | null
   updatedAt?: Date | string
 }
 
 export type SiteImageUncheckedCreateInput = {
   key: string
   url: string
+  link?: string | null
   updatedAt?: Date | string
 }
 
 export type SiteImageUpdateInput = {
   key?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
+  link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type SiteImageUncheckedUpdateInput = {
   key?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
+  link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type SiteImageCreateManyInput = {
   key: string
   url: string
+  link?: string | null
   updatedAt?: Date | string
 }
 
 export type SiteImageUpdateManyMutationInput = {
   key?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
+  link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type SiteImageUncheckedUpdateManyInput = {
   key?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
+  link?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type SiteImageCountOrderByAggregateInput = {
   key?: Prisma.SortOrder
   url?: Prisma.SortOrder
+  link?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type SiteImageMaxOrderByAggregateInput = {
   key?: Prisma.SortOrder
   url?: Prisma.SortOrder
+  link?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type SiteImageMinOrderByAggregateInput = {
   key?: Prisma.SortOrder
   url?: Prisma.SortOrder
+  link?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
@@ -266,28 +288,32 @@ export type SiteImageMinOrderByAggregateInput = {
 export type SiteImageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   key?: boolean
   url?: boolean
+  link?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["siteImage"]>
 
 export type SiteImageSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   key?: boolean
   url?: boolean
+  link?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["siteImage"]>
 
 export type SiteImageSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   key?: boolean
   url?: boolean
+  link?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["siteImage"]>
 
 export type SiteImageSelectScalar = {
   key?: boolean
   url?: boolean
+  link?: boolean
   updatedAt?: boolean
 }
 
-export type SiteImageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"key" | "url" | "updatedAt", ExtArgs["result"]["siteImage"]>
+export type SiteImageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"key" | "url" | "link" | "updatedAt", ExtArgs["result"]["siteImage"]>
 
 export type $SiteImagePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "SiteImage"
@@ -295,6 +321,7 @@ export type $SiteImagePayload<ExtArgs extends runtime.Types.Extensions.InternalA
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     key: string
     url: string
+    link: string | null
     updatedAt: Date
   }, ExtArgs["result"]["siteImage"]>
   composites: {}
@@ -721,6 +748,7 @@ export interface Prisma__SiteImageClient<T, Null = never, ExtArgs extends runtim
 export interface SiteImageFieldRefs {
   readonly key: Prisma.FieldRef<"SiteImage", 'String'>
   readonly url: Prisma.FieldRef<"SiteImage", 'String'>
+  readonly link: Prisma.FieldRef<"SiteImage", 'String'>
   readonly updatedAt: Prisma.FieldRef<"SiteImage", 'DateTime'>
 }
     

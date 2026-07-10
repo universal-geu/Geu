@@ -39,23 +39,19 @@ export default async function RootLayout({
   let currentUser = null;
   let initialCartItems: Awaited<ReturnType<typeof getCartItemsForUser>> = [];
 
-  const devAdmin = session ? getDevAdminUserById(session.userId) : undefined;
-
-  if (devAdmin) {
-    currentUser = devAdmin;
-  } else if (session) {
+  if (session) {
     try {
       currentUser = await getUserById(session.userId);
     } catch (error) {
-      if (
-        !(error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED")
-      ) {
+      if (error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED") {
+        currentUser = getDevAdminUserById(session.userId) ?? null;
+      } else {
         throw error;
       }
     }
   }
 
-  if (currentUser && !devAdmin) {
+  if (currentUser) {
     try {
       initialCartItems = await getCartItemsForUser(currentUser.id);
     } catch (error) {

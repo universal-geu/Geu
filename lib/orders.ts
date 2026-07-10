@@ -375,6 +375,109 @@ export async function getSalesReport(division?: DivisionName): Promise<SalesRepo
   };
 }
 
+export type DashboardMetrics = {
+  todayRevenue: number;
+  todayOrders: number;
+  weekRevenue: number;
+  weekOrders: number;
+  monthRevenue: number;
+  monthOrders: number;
+  newCustomersThisMonth: number;
+  customersThisMonth: number;
+  topCategory: { category: string; quantitySold: number } | null;
+};
+
+export async function getDashboardMetrics(division?: DivisionName): Promise<DashboardMetrics> {
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfToday);
+  const daysSinceMonday = (startOfWeek.getDay() + 6) % 7;
+  startOfWeek.setDate(startOfWeek.getDate() - daysSinceMonday);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [orders, products] = await Promise.all([
+    prisma.order.findMany({
+      where: { status: { not: "CANCELLED" } },
+      include: { items: true },
+    }),
+    prisma.product.findMany({
+      select: { slug: true, division: true, category: true },
+    }),
+  ]);
+
+  const productLookup = new Map(products.map((p) => [p.slug, p]));
+  const matchesDivision = (productSlug: string) =>
+    !division || productLookup.get(productSlug)?.division === division;
+
+  let todayRevenue = 0;
+  let weekRevenue = 0;
+  let monthRevenue = 0;
+  const todayOrderIds = new Set<string>();
+  const weekOrderIds = new Set<string>();
+  const monthOrderIds = new Set<string>();
+  const monthCustomers = new Set<string>();
+  const customerFirstOrder = new Map<string, Date>();
+  const categoryQuantity = new Map<string, number>();
+
+  for (const order of orders) {
+    const matchingItems = order.items.filter((item) => matchesDivision(item.productId));
+    if (matchingItems.length === 0) continue;
+
+    const orderRevenue = matchingItems.reduce((sum, item) => sum + item.lineTotal, 0);
+    const email = order.customerEmail;
+    const existingFirst = customerFirstOrder.get(email);
+    if (!existingFirst || order.createdAt < existingFirst) {
+      customerFirstOrder.set(email, order.createdAt);
+    }
+
+    if (order.createdAt >= startOfToday) {
+      todayRevenue += orderRevenue;
+      todayOrderIds.add(order.id);
+    }
+    if (order.createdAt >= startOfWeek) {
+      weekRevenue += orderRevenue;
+      weekOrderIds.add(order.id);
+    }
+    if (order.createdAt >= startOfMonth) {
+      monthRevenue += orderRevenue;
+      monthOrderIds.add(order.id);
+      monthCustomers.add(email);
+
+      for (const item of matchingItems) {
+        const category = productLookup.get(item.productId)?.category || "Sin categoría";
+        categoryQuantity.set(category, (categoryQuantity.get(category) || 0) + item.quantity);
+      }
+    }
+  }
+
+  const newCustomersThisMonth = Array.from(monthCustomers).filter((email) => {
+    const firstOrderDate = customerFirstOrder.get(email);
+    return firstOrderDate && firstOrderDate >= startOfMonth;
+  }).length;
+
+  const topCategoryEntry = Array.from(categoryQuantity.entries()).sort(
+    (a, b) => b[1] - a[1],
+  )[0];
+
+  return {
+    todayRevenue,
+    todayOrders: todayOrderIds.size,
+    weekRevenue,
+    weekOrders: weekOrderIds.size,
+    monthRevenue,
+    monthOrders: monthOrderIds.size,
+    newCustomersThisMonth,
+    customersThisMonth: monthCustomers.size,
+    topCategory: topCategoryEntry
+      ? { category: topCategoryEntry[0], quantitySold: topCategoryEntry[1] }
+      : null,
+  };
+}
+
 export async function updateOrderShipping(
   orderId: string,
   input: {

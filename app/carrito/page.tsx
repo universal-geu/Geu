@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import CauchosAccountLink from "../components/cauchos-account-link";
 import CauchosCartLink from "../components/cauchos-cart-link";
 import { useCart } from "../components/cart-provider";
 
@@ -94,9 +95,7 @@ function CauchosCartHeader() {
 
         <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
           <CauchosCartLink />
-          <Link href="/login?next=/mi-cuenta" className="font-bold hover:text-[#075ed8]">
-            Mi cuenta
-          </Link>
+          <CauchosAccountLink className="font-bold hover:text-[#075ed8]" />
         </div>
       </div>
 

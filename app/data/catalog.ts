@@ -630,7 +630,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     disponibilidad: "Entrega inmediata",
   },
   {
-    slug: "empaque-brida-vulcanizado",
+    slug: "empaque-de-brida-vulcanizado",
     categoria: "Sellos y empaques",
     subcategoria: "Sellos y empaques",
     categoriaMenor: "Empaques",
@@ -644,7 +644,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     disponibilidad: "Entrega inmediata",
   },
   {
-    slug: "lamina-caucho-nitrilo-5mm",
+    slug: "lamina-de-caucho-nitrilo-5mm",
     categoria: "Laminas y rollos",
     subcategoria: "Laminas y rollos",
     categoriaMenor: "Láminas técnicas",
@@ -658,7 +658,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     disponibilidad: "Disponible por pedido",
   },
   {
-    slug: "rollo-caucho-natural-industrial",
+    slug: "rollo-de-caucho-natural-industrial",
     categoria: "Laminas y rollos",
     subcategoria: "Laminas y rollos",
     categoriaMenor: "Rollos industriales",
@@ -700,7 +700,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     disponibilidad: "Entrega inmediata",
   },
   {
-    slug: "soporte-antivibratorio-motor",
+    slug: "soporte-antivibratorio-para-motor",
     categoria: "Piezas tecnicas",
     subcategoria: "Piezas tecnicas",
     categoriaMenor: "Soportes técnicos",
@@ -714,7 +714,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     disponibilidad: "Recoger en tienda",
   },
   {
-    slug: "rodillo-caucho-industrial",
+    slug: "rodillo-de-caucho-industrial",
     categoria: "Piezas tecnicas",
     subcategoria: "Piezas tecnicas",
     categoriaMenor: "Rodillos técnicos",
@@ -728,7 +728,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     disponibilidad: "Disponible por pedido",
   },
   {
-    slug: "pieza-caucho-a-medida-troquelada",
+    slug: "pieza-de-caucho-troquelada-a-medida",
     categoria: "Fabricacion especial",
     subcategoria: "Fabricacion especial",
     categoriaMenor: "Piezas a medida",
@@ -742,7 +742,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     disponibilidad: "Disponible por pedido",
   },
   {
-    slug: "prototipo-caucho-moldeado",
+    slug: "prototipo-de-caucho-moldeado",
     categoria: "Fabricacion especial",
     subcategoria: "Fabricacion especial",
     categoriaMenor: "Desarrollo a medida",

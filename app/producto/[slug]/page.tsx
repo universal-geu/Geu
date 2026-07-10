@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import AddToCartButton from "../../components/add-to-cart-button";
+import CauchosAccountLink from "../../components/cauchos-account-link";
 import CauchosCartLink from "../../components/cauchos-cart-link";
 import CauchosCategorySidebarMenu from "../../components/cauchos-category-sidebar-menu";
 import CauchosMenuButton from "../../components/cauchos-menu-button";
@@ -248,9 +249,7 @@ function ProductCauchosHeader() {
 
         <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
           <CauchosCartLink />
-          <Link href="/login?next=/mi-cuenta" className="font-bold hover:text-[#075ed8]">
-            Mi cuenta
-          </Link>
+          <CauchosAccountLink className="font-bold hover:text-[#075ed8]" />
         </div>
       </div>
 

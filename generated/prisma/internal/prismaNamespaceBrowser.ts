@@ -203,6 +203,7 @@ export type InventoryMovementScalarFieldEnum = (typeof InventoryMovementScalarFi
 export const SiteImageScalarFieldEnum = {
   key: 'key',
   url: 'url',
+  link: 'link',
   updatedAt: 'updatedAt'
 } as const
 

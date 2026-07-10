@@ -311,7 +311,8 @@ export async function getProducts() {
     });
 
     return products.map(toStoreProduct);
-  } catch {
+  } catch (error) {
+    console.error("getProducts: fallo la consulta a la base de datos, usando catalogo estatico de respaldo", error);
     return getFallbackProducts();
   }
 }

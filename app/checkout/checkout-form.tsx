@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-locations";
+import CauchosHeader from "../components/cauchos-header";
 
 type CheckoutItem = {
   id: string;
@@ -211,10 +212,11 @@ export default function CheckoutForm({
 
   return (
     <main className="min-h-screen bg-[#f5f5f5] text-[#111]">
+      <CauchosHeader />
       {pendingOrder && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 px-6 backdrop-blur-[2px]">
           <div className="w-full max-w-lg rounded-[1.9rem] border border-black/8 bg-white p-7 shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ed8435]">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#075ed8]">
               Pago demo
             </p>
             <h2 className="mt-3 text-3xl font-bold text-[#16384f]">
@@ -257,7 +259,7 @@ export default function CheckoutForm({
                   placeholder="Ingresa el código"
                   autoFocus
                   required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#ed8435]"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
                 />
               </div>
 
@@ -275,7 +277,7 @@ export default function CheckoutForm({
                 <button
                   type="submit"
                   disabled={isConfirmingPayment}
-                  className="flex-1 rounded-xl bg-[#ed8435] px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[#d67024] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="flex-1 rounded-xl bg-[#075ed8] px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[#064fb7] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isConfirmingPayment ? "Validando..." : "Confirmar pago"}
                 </button>
@@ -291,7 +293,7 @@ export default function CheckoutForm({
             className={`rounded-[1.4rem] border px-5 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.16)] backdrop-blur-sm ${
               toast.tone === "success"
                 ? "border-[#1f8b45]/18 bg-[#effaf2] text-[#1f6b39]"
-                : "border-[#ed8435]/18 bg-[#fff6ee] text-[#b85d12]"
+                : "border-[#075ed8]/18 bg-[#eef5ff] text-[#075ed8]"
             }`}
           >
             <div className="flex items-start justify-between gap-4">
@@ -343,7 +345,7 @@ export default function CheckoutForm({
                   value={form.customerName}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#ed8435]"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
                 />
               </div>
 
@@ -355,7 +357,7 @@ export default function CheckoutForm({
                   id="company"
                   value={form.company}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#ed8435]"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
                 />
               </div>
 
@@ -369,7 +371,7 @@ export default function CheckoutForm({
                   value={form.customerEmail}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#ed8435]"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
                 />
               </div>
 
@@ -383,7 +385,7 @@ export default function CheckoutForm({
                   value={form.customerPhone}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#ed8435]"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
                 />
               </div>
 
@@ -396,7 +398,7 @@ export default function CheckoutForm({
                   value={form.department}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition-colors duration-200 focus:border-[#ed8435]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
                 >
                   <option value="">Selecciona un departamento</option>
                   {departamentosColombia.map((department) => (
@@ -423,7 +425,7 @@ export default function CheckoutForm({
                       ? "Busca o escribe tu ciudad"
                       : "Primero selecciona un departamento"
                   }
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#ed8435]"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
                 />
                 <datalist id="checkout-cities">
                   {cityOptions.map((city) => (
@@ -441,7 +443,7 @@ export default function CheckoutForm({
                   value={form.addressLine2}
                   onChange={handleChange}
                   placeholder="Apto, interior, piso..."
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#ed8435]"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
                 />
               </div>
 
@@ -452,7 +454,7 @@ export default function CheckoutForm({
                       type="checkbox"
                       checked={useDifferentAddress}
                       onChange={handleToggleDifferentAddress}
-                      className="mt-1 h-4 w-4 rounded border-slate-300 text-[#ed8435] focus:ring-[#ed8435]"
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-[#075ed8] focus:ring-[#075ed8]"
                     />
                     <div>
                       <p className="text-sm font-semibold text-[#16384f]">
@@ -477,7 +479,7 @@ export default function CheckoutForm({
                   onChange={handleChange}
                   required
                   placeholder="Calle, carrera, barrio o punto de entrega"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#ed8435]"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
                 />
               </div>
 
@@ -491,13 +493,13 @@ export default function CheckoutForm({
                   onChange={handleChange}
                   rows={4}
                   placeholder="Indicaciones especiales para la entrega o la compra"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#ed8435]"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[#075ed8]"
                 />
               </div>
             </div>
 
             {inlineError && (
-              <p className="mt-6 rounded-xl border border-[#ed8435]/20 bg-[#fff6ee] px-4 py-3 text-sm font-medium text-[#b85d12]">
+              <p className="mt-6 rounded-xl border border-[#075ed8]/20 bg-[#eef5ff] px-4 py-3 text-sm font-medium text-[#075ed8]">
                 {inlineError}
               </p>
             )}
@@ -506,7 +508,7 @@ export default function CheckoutForm({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-full bg-[#ed8435] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#d67024] disabled:cursor-not-allowed disabled:opacity-70"
+                className="rounded-full bg-[#075ed8] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#064fb7] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSubmitting ? "Guardando pedido..." : "Crear pedido"}
               </button>
@@ -546,7 +548,7 @@ export default function CheckoutForm({
                       {item.nombre}
                     </p>
                     <p className="mt-1 text-xs text-[#6e7379]">Cantidad: {item.cantidad}</p>
-                    <p className="mt-2 text-sm font-semibold text-[#ed8435]">
+                    <p className="mt-2 text-sm font-semibold text-[#075ed8]">
                       {item.precio}
                     </p>
                   </div>

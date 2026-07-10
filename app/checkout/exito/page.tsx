@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CauchosHeader from "../../components/cauchos-header";
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -9,9 +10,11 @@ export default async function CheckoutSuccessPage({
   const paymentConfirmed = params.pagado === "1";
 
   return (
-    <main className="flex min-h-[calc(100vh-88px)] items-center justify-center bg-[#f5f5f5] px-6 py-16">
-      <section className="w-full max-w-2xl rounded-[2rem] bg-white p-8 text-center shadow-lg shadow-black/10 md:p-10">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ed8435]">
+    <main className="min-h-screen bg-[#f5f5f5]">
+      <CauchosHeader />
+      <section className="mx-auto flex min-h-[calc(100vh-160px)] w-full max-w-2xl items-center justify-center px-6 py-16">
+      <div className="w-full rounded-[2rem] bg-white p-8 text-center shadow-lg shadow-black/10 md:p-10">
+        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#075ed8]">
           {paymentConfirmed ? "Pago confirmado" : "Pedido creado"}
         </p>
         <h1 className="mt-3 text-3xl font-bold text-[#16384f] md:text-4xl">
@@ -37,7 +40,7 @@ export default async function CheckoutSuccessPage({
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
             href="/mi-cuenta"
-            className="rounded-full bg-[#ed8435] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#d67024]"
+            className="rounded-full bg-[#075ed8] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#064fb7]"
           >
             Ver mis pedidos
           </Link>
@@ -48,6 +51,7 @@ export default async function CheckoutSuccessPage({
             Seguir comprando
           </Link>
         </div>
+      </div>
       </section>
     </main>
   );

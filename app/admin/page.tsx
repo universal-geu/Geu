@@ -12,9 +12,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProducts } from "../components/products-provider";
-import { categorias, type Categoria, type ProductoCatalogo } from "../data/catalog";
+import {
+  categorias,
+  cauchosCategorySubcategories,
+  type Categoria,
+  type ProductoCatalogo,
+} from "../data/catalog";
 import type { InventoryMovementSummary } from "@/lib/products";
-import type { SalesReport, ShippingStatus } from "@/lib/orders";
+import type { DashboardMetrics, SalesReport, ShippingStatus } from "@/lib/orders";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
 import { getDivisionFromBrandParam, isServiceDivision, type DivisionName } from "@/lib/divisions";
 
@@ -175,16 +180,6 @@ const paymentStatuses: Array<"PENDING" | "PAID" | "FAILED"> = [
   "PAID",
   "FAILED",
 ];
-const adminMenuItems = [
-  "Productos",
-  "Crear",
-  "Editar",
-  "Inventario",
-  "Pedidos",
-  "Informes",
-  "Catálogo",
-];
-
 type ToastState = {
   tone: "success" | "error";
   message: string;
@@ -593,6 +588,8 @@ export default function AdminPage() {
   >(null);
   const imageDivisionFilter = adminDivision;
   const [siteImages, setSiteImages] = useState<Record<string, string>>({});
+  const [siteImageLinks, setSiteImageLinks] = useState<Record<string, string>>({});
+  const [savingLinkKey, setSavingLinkKey] = useState<string | null>(null);
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(null);
   const [savedImageKey, setSavedImageKey] = useState<string | null>(null);
@@ -628,6 +625,8 @@ export default function AdminPage() {
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [salesReport, setSalesReport] = useState<SalesReport | null>(null);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
+  const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [orderForm, setOrderForm] = useState<OrderEditState>({
     shippingStatus: "PENDING",
@@ -701,6 +700,38 @@ export default function AdminPage() {
       ),
     [adminProducts],
   );
+  const subcategoryOptions = useMemo(() => {
+    const menuGroups = cauchosCategorySubcategories[form.categoria] ?? [];
+    const fromMenu = menuGroups.map((group) => group.name);
+    const fromProducts = adminProducts
+      .filter((product) => product.categoria === form.categoria)
+      .map((product) => product.subcategoria)
+      .filter((value): value is string => Boolean(value));
+
+    return Array.from(new Set([...fromMenu, ...fromProducts]));
+  }, [adminProducts, form.categoria]);
+  const categoriaMenorOptions = useMemo(() => {
+    const menuGroups = cauchosCategorySubcategories[form.categoria] ?? [];
+    const fromMenu =
+      menuGroups.find((group) => group.name === form.subcategoria)?.items ?? [];
+    const fromProducts = adminProducts
+      .filter(
+        (product) =>
+          product.categoria === form.categoria &&
+          product.subcategoria === form.subcategoria,
+      )
+      .map((product) => product.categoriaMenor)
+      .filter((value): value is string => Boolean(value));
+
+    return Array.from(new Set([...fromMenu, ...fromProducts]));
+  }, [adminProducts, form.categoria, form.subcategoria]);
+  const stockAlerts = useMemo(() => {
+    const divisionProducts = adminProducts.filter((product) => product.division === adminDivision);
+    return {
+      lowStock: divisionProducts.filter((product) => product.estadoInventario === "low-stock").length,
+      outOfStock: divisionProducts.filter((product) => product.estadoInventario === "out-of-stock").length,
+    };
+  }, [adminProducts, adminDivision]);
   const filteredProducts = useMemo(() => {
     const search = editSearch.trim().toLowerCase();
 
@@ -792,6 +823,7 @@ export default function AdminPage() {
         setIsAuthenticated(true);
         setAdminName(payload.user.fullName);
         setAdminDivision(payload.user.division);
+        void loadDashboardMetrics();
       } else {
         setIsAuthenticated(false);
         setAdminName("");
@@ -1182,6 +1214,30 @@ export default function AdminPage() {
     setSalesReport(payload.report);
   }
 
+  async function loadDashboardMetrics() {
+    setIsLoadingDashboard(true);
+
+    const response = await fetch("/api/admin/dashboard");
+    const payload = (await response.json()) as {
+      error?: string;
+      metrics?: DashboardMetrics;
+      report?: SalesReport;
+    };
+
+    setIsLoadingDashboard(false);
+
+    if (!response.ok || !payload.metrics || !payload.report) {
+      setToast({
+        tone: "error",
+        message: payload.error || "No fue posible cargar el panel.",
+      });
+      return;
+    }
+
+    setDashboardMetrics(payload.metrics);
+    setSalesReport(payload.report);
+  }
+
   const handleQuickInventoryAdjust = async (
     slug: string,
     quantity: number,
@@ -1260,15 +1316,40 @@ export default function AdminPage() {
     setImageError(null);
     try {
       const response = await fetch("/api/admin/images");
-      const payload = (await response.json()) as { images?: Record<string, string>; error?: string };
+      const payload = (await response.json()) as {
+        images?: Record<string, string>;
+        links?: Record<string, string>;
+        error?: string;
+      };
       if (!response.ok || !payload.images) {
         throw new Error(payload.error || "No fue posible cargar las imágenes.");
       }
       setSiteImages(payload.images);
+      setSiteImageLinks(payload.links || {});
     } catch (error) {
       setImageError(error instanceof Error ? error.message : "No fue posible cargar las imágenes.");
     } finally {
       setIsLoadingImages(false);
+    }
+  };
+
+  const handleSiteImageLinkSave = async (slotKey: string, link: string) => {
+    setSavingLinkKey(slotKey);
+    setImageError(null);
+    try {
+      const response = await fetch("/api/admin/images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: slotKey, link }),
+      });
+      if (!response.ok) {
+        throw new Error("No se pudo guardar el enlace.");
+      }
+      setSiteImageLinks((current) => ({ ...current, [slotKey]: link.trim() }));
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : "No se pudo guardar el enlace.");
+    } finally {
+      setSavingLinkKey(null);
     }
   };
 
@@ -1411,6 +1492,26 @@ export default function AdminPage() {
     );
   }
 
+  const sidebarNavItems = [
+    {
+      key: "dashboard",
+      label: "Dashboard",
+      active: activeTab === null,
+      onClick: () => {
+        setActiveTab(null);
+        void loadDashboardMetrics();
+      },
+    },
+    { key: "create", label: "Crear", active: activeTab === "create", onClick: openCreateView },
+    { key: "edit", label: "Editar", active: activeTab === "edit", onClick: openEditView },
+    ...(!isServiceAdmin
+      ? [{ key: "inventory", label: "Inventario", active: activeTab === "inventory", onClick: openInventoryView }]
+      : []),
+    { key: "orders", label: "Pedidos", active: activeTab === "orders", onClick: openOrdersView },
+    { key: "reports", label: "Informes", active: activeTab === "reports", onClick: openReportsView },
+    { key: "images", label: "Imágenes", active: activeTab === "images", onClick: openImagesView },
+  ];
+
   return (
     <main className="min-h-screen bg-[#f5f5f5] text-[#111]">
       {toast && (
@@ -1442,123 +1543,159 @@ export default function AdminPage() {
         </div>
       )}
 
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-        <div className="border-b border-slate-200 bg-slate-50">
-          <div className="mx-auto flex h-8 max-w-[1500px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8">
-            <div className="hidden gap-3 md:flex">
-              <span>Panel maestro</span>
-              <span className="text-slate-300">|</span>
-              <span>{adminBrand.label}</span>
-              <span className="text-slate-300">|</span>
-              <span>Edición de catálogo</span>
-            </div>
-            <div className="flex w-full justify-between gap-3 md:w-auto md:justify-end">
-              <Link href={adminBrand.contactHref} className="transition-colors duration-200" style={{ color: "inherit" }} onMouseEnter={(event) => { event.currentTarget.style.color = adminBrand.accent; }} onMouseLeave={(event) => { event.currentTarget.style.color = "inherit"; }}>Cotizaciones</Link>
-              <Link href={adminBrand.productsHref} className="transition-colors duration-200" style={{ color: "inherit" }} onMouseEnter={(event) => { event.currentTarget.style.color = adminBrand.accent; }} onMouseLeave={(event) => { event.currentTarget.style.color = "inherit"; }}>Catálogo</Link>
-              <button type="button" onClick={handleLogout} className="font-black transition-colors duration-200" onMouseEnter={(event) => { event.currentTarget.style.color = adminBrand.accent; }} onMouseLeave={(event) => { event.currentTarget.style.color = "inherit"; }}>
-                Cerrar sesión
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto grid min-h-[74px] max-w-[1500px] items-center gap-4 px-5 py-3 md:grid-cols-[260px_1fr_auto] md:px-8">
-          <Link href={adminBrand.siteHref} className="flex shrink-0 items-center">
-            <Image
-              src={adminBrand.logo}
-              alt={adminBrand.logoAlt}
-              width={2518}
-              height={420}
-              priority
-              className="h-auto object-contain"
-              style={{ width: "260px", maxWidth: "100%" }}
-            />
+      <div className="flex min-h-screen">
+        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
+          <Link href={adminBrand.siteHref} className="flex items-center gap-3 border-b border-slate-200 px-5 py-5">
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-black text-white"
+              style={{ backgroundColor: adminBrand.accent }}
+            >
+              {adminBrand.label.charAt(0)}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-black text-[#1f2328]">Panel maestro</span>
+              <span className="block truncate text-xs font-semibold text-[#8b8d91]">{adminBrand.label}</span>
+            </span>
           </Link>
 
-          <form
-            className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner"
-            onSubmit={(event) => {
-              event.preventDefault();
-              openEditView();
-            }}
-          >
-            <input
-              value={editSearch}
-              onChange={(event) => setEditSearch(event.target.value)}
-              aria-label="Buscar productos por nombre, marca o SKU"
-              className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-              placeholder="Buscar productos por nombre, marca o SKU..."
-            />
+          <nav className="flex-1 overflow-y-auto px-3 py-4">
+            <ul className="space-y-1">
+              {sidebarNavItems.map((item) => (
+                <li key={item.key}>
+                  <button
+                    type="button"
+                    onClick={item.onClick}
+                    className={`w-full rounded-lg px-4 py-2.5 text-left text-sm font-bold transition-colors duration-200 ${
+                      item.active ? "text-white" : "text-slate-700 hover:bg-slate-50"
+                    }`}
+                    style={item.active ? { backgroundColor: adminBrand.accent } : undefined}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+              <li>
+                <button
+                  type="button"
+                  onClick={() => router.push(adminBrand.productsHref)}
+                  className="w-full rounded-lg px-4 py-2.5 text-left text-sm font-bold text-slate-700 transition-colors duration-200 hover:bg-slate-50"
+                >
+                  Catálogo
+                </button>
+              </li>
+            </ul>
+          </nav>
+
+          <div className="border-t border-slate-200 p-3">
             <button
-              type="submit"
-              className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
-              aria-label="Buscar"
+              type="button"
+              onClick={handleLogout}
+              className="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-600 transition-colors duration-200 hover:bg-red-100"
             >
-              ⌕
+              Cerrar sesión
             </button>
-          </form>
-
-          <div className="flex items-center justify-between gap-4 text-sm text-slate-700 md:justify-end">
-            {adminName && (
-              <span className="hidden max-w-[190px] truncate font-bold lg:inline">
-                {adminName || adminBrand.sessionLabel}
-              </span>
-            )}
-            <Link
-              href={adminBrand.siteHref}
-              className="rounded-full border bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.06em] transition-colors duration-200"
-              style={{ borderColor: adminBrand.accent, color: adminBrand.accent }}
-              onMouseEnter={(event) => {
-                event.currentTarget.style.backgroundColor = adminBrand.accent;
-                event.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.backgroundColor = "#ffffff";
-                event.currentTarget.style.color = adminBrand.accent;
-              }}
-            >
-              Ver sitio
-            </Link>
           </div>
-        </div>
+        </aside>
 
-        <nav className="border-t border-slate-200 bg-white">
-          <div className="mx-auto flex max-w-[1500px] items-center gap-1 overflow-x-auto px-5 md:px-8">
-            {adminMenuItems
-              .filter((item) => !isServiceAdmin || item !== "Inventario")
-              .map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => {
-                  if (item === "Productos") setActiveTab(null);
-                  if (item === "Crear") openCreateView();
-                  if (item === "Editar") openEditView();
-                  if (item === "Inventario") openInventoryView();
-                  if (item === "Pedidos") openOrdersView();
-                  if (item === "Informes") openReportsView();
-                  if (item === "Catálogo") router.push(adminBrand.productsHref);
-                }}
-                className="flex min-w-max items-center border-b-2 border-transparent px-3 py-3 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700 transition-colors duration-200"
-                onMouseEnter={(event) => {
-                  event.currentTarget.style.borderColor = adminBrand.accent;
-                  event.currentTarget.style.color = adminBrand.accent;
-                }}
-                onMouseLeave={(event) => {
-                  event.currentTarget.style.borderColor = "transparent";
-                  event.currentTarget.style.color = "";
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+            <div className="mx-auto grid min-h-[74px] max-w-[1500px] items-center gap-4 px-5 py-3 md:grid-cols-[auto_1fr_auto] md:px-8">
+              <Link href={adminBrand.siteHref} className="flex shrink-0 items-center md:hidden">
+                <Image
+                  src={adminBrand.logo}
+                  alt={adminBrand.logoAlt}
+                  width={2518}
+                  height={420}
+                  priority
+                  className="h-auto object-contain"
+                  style={{ width: "180px", maxWidth: "100%" }}
+                />
+              </Link>
+
+              <form
+                className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  openEditView();
                 }}
               >
-                {item}
-              </button>
-            ))}
-          </div>
-        </nav>
-      </header>
+                <input
+                  value={editSearch}
+                  onChange={(event) => setEditSearch(event.target.value)}
+                  aria-label="Buscar productos por nombre, marca o SKU"
+                  className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                  placeholder="Buscar productos por nombre, marca o SKU..."
+                />
+                <button
+                  type="submit"
+                  className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
+                  aria-label="Buscar"
+                >
+                  ⌕
+                </button>
+              </form>
 
-      <section className="mx-auto max-w-[1440px] px-6 py-12">
-        <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
+              <div className="flex items-center justify-between gap-4 text-sm text-slate-700 md:justify-end">
+                {adminName && (
+                  <span className="hidden max-w-[190px] truncate font-bold lg:inline">
+                    {adminName || adminBrand.sessionLabel}
+                  </span>
+                )}
+                <Link
+                  href={adminBrand.siteHref}
+                  className="rounded-full border bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.06em] transition-colors duration-200"
+                  style={{ borderColor: adminBrand.accent, color: adminBrand.accent }}
+                  onMouseEnter={(event) => {
+                    event.currentTarget.style.backgroundColor = adminBrand.accent;
+                    event.currentTarget.style.color = "#ffffff";
+                  }}
+                  onMouseLeave={(event) => {
+                    event.currentTarget.style.backgroundColor = "#ffffff";
+                    event.currentTarget.style.color = adminBrand.accent;
+                  }}
+                >
+                  Ver sitio
+                </Link>
+              </div>
+            </div>
+
+            <nav className="border-t border-slate-200 bg-white md:hidden">
+              <div className="mx-auto flex max-w-[1500px] items-center gap-1 overflow-x-auto px-5">
+                {sidebarNavItems.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={item.onClick}
+                    className="flex min-w-max items-center border-b-2 px-3 py-3 text-[11px] font-black uppercase tracking-[0.04em] transition-colors duration-200"
+                    style={{
+                      borderColor: item.active ? adminBrand.accent : "transparent",
+                      color: item.active ? adminBrand.accent : "#334155",
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => router.push(adminBrand.productsHref)}
+                  className="flex min-w-max items-center border-b-2 border-transparent px-3 py-3 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700 transition-colors duration-200"
+                >
+                  Catálogo
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex min-w-max items-center border-b-2 border-transparent px-3 py-3 text-[11px] font-black uppercase tracking-[0.04em] text-red-600 transition-colors duration-200"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            </nav>
+          </header>
+
+          <section className="mx-auto w-full max-w-[1440px] px-6 py-12">
+        {activeTab && (
+          <div className="mb-10">
             <p className="mb-3 text-xs font-medium uppercase tracking-[0.35em] text-[#8b8d91]">
               {adminBrand.eyebrow}
             </p>
@@ -1574,322 +1711,182 @@ export default function AdminPage() {
               </p>
             )}
           </div>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex rounded-full border border-black/10 px-5 py-3 text-sm font-semibold transition-colors duration-200"
-              style={{ color: adminBrand.accent }}
-              onMouseEnter={(event) => {
-                event.currentTarget.style.backgroundColor = adminBrand.accent;
-                event.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.backgroundColor = "transparent";
-                event.currentTarget.style.color = adminBrand.accent;
-              }}
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
+        )}
 
         <div className="space-y-8">
           {!activeTab && (
-            <div className="admin-fade-up overflow-hidden rounded-[2rem] border border-black/8 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              <div className="relative px-6 py-8 md:px-10 md:py-10">
-                <div className="relative mx-auto flex max-w-5xl flex-col items-center text-center">
-                  <p className="text-xs font-semibold uppercase tracking-[0.38em] text-[#8b8d91]">
-                    Flujo de administración
-                  </p>
-                  <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-[-0.05em] text-[#1f2328] md:text-4xl">
-                    Elige el módulo que necesitas
-                  </h2>
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-[#6e7379] md:text-base">
-                    {productCountLabel}. Mantuvimos el panel por módulos para que crear, editar, inventario y envíos se sientan más claros.
-                  </p>
-
-                <div className="mt-8 grid w-full max-w-5xl gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <button
-                    type="button"
-                    onClick={openCreateView}
-                    className={`admin-card-drift relative min-h-[220px] overflow-hidden rounded-[1.6rem] border px-6 py-6 text-left transition-all duration-200 ${
-                      activeTab === "create"
-                        ? "border-[#16384f] bg-[#16384f] text-white shadow-[0_18px_35px_rgba(22,56,79,0.22)]"
-                        : "border-black/8 bg-[#fbfbfa] text-[#1f2328] hover:-translate-y-0.5 hover:border-[#16384f]/18 hover:shadow-[0_16px_30px_rgba(15,23,42,0.08)]"
-                    }`}
-                  >
-                    <span className="flex items-center justify-between gap-4">
-                      <span className="text-sm font-semibold uppercase tracking-[0.18em]">
-                        Crear
-                      </span>
-                      <span
-                        className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 ${
-                          activeTab === "create"
-                            ? "bg-white/14 text-white"
-                            : "bg-[#16384f] text-white"
-                        }`}
-                      >
-                        +
-                      </span>
-                    </span>
-                    <p
-                      className={`mt-4 text-2xl font-semibold tracking-[-0.04em] ${
-                        activeTab === "create" ? "text-white" : "text-[#16384f]"
-                      }`}
-                    >
-                      Crear producto
-                    </p>
-                    <p
-                      className={`mt-3 max-w-[18rem] text-sm leading-6 ${
-                        activeTab === "create" ? "text-white/78" : "text-[#6e7379]"
-                      }`}
-                    >
-                      Carga un producto nuevo con fotos, inventario y precios sin tocar código.
-                    </p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={openEditView}
-                    className={`admin-card-drift relative min-h-[220px] overflow-hidden rounded-[1.6rem] border px-6 py-6 text-left transition-all duration-200 ${
-                      activeTab === "edit"
-                        ? "border-[#16384f] bg-[#16384f] text-white shadow-[0_18px_35px_rgba(22,56,79,0.22)]"
-                        : "border-black/8 bg-[#fbfbfa] text-[#1f2328] hover:-translate-y-0.5 hover:border-[#16384f]/18 hover:shadow-[0_16px_30px_rgba(15,23,42,0.08)]"
-                    }`}
-                  >
-                    <span className="flex items-center justify-between gap-4">
-                      <span className="text-sm font-semibold uppercase tracking-[0.18em]">
-                        Editar
-                      </span>
-                      <span
-                        className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 ${
-                          activeTab === "edit"
-                            ? "bg-white/14 text-white"
-                            : "bg-[#075ed8] text-white"
-                        }`}
-                      >
-                        <svg
-                          aria-hidden="true"
-                          viewBox="0 0 24 24"
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M12 20h9" />
-                          <path d="m16.5 3.5 4 4L7 21l-4 1 1-4Z" />
-                        </svg>
-                      </span>
-                    </span>
-                    <p
-                      className={`mt-4 text-2xl font-semibold tracking-[-0.04em] ${
-                        activeTab === "edit" ? "text-white" : "text-[#16384f]"
-                      }`}
-                    >
-                      Editar productos
-                    </p>
-                    <p
-                      className={`mt-3 max-w-[18rem] text-sm leading-6 ${
-                        activeTab === "edit" ? "text-white/78" : "text-[#6e7379]"
-                      }`}
-                    >
-                      Encuentra un producto rápido y abre solo el editor que vas a modificar.
-                    </p>
-                  </button>
-
-                  {!isServiceAdmin && (
-                    <button
-                      type="button"
-                      onClick={openInventoryView}
-                      className={`admin-card-drift relative min-h-[220px] overflow-hidden rounded-[1.6rem] border px-6 py-6 text-left transition-all duration-200 ${
-                        activeTab === "inventory"
-                          ? "border-[#16384f] bg-[#16384f] text-white shadow-[0_18px_35px_rgba(22,56,79,0.22)]"
-                          : "border-black/8 bg-[#fbfbfa] text-[#1f2328] hover:-translate-y-0.5 hover:border-[#16384f]/18 hover:shadow-[0_16px_30px_rgba(15,23,42,0.08)]"
-                      }`}
-                    >
-                      <span className="flex items-center justify-between gap-4">
-                        <span className="text-sm font-semibold uppercase tracking-[0.18em]">
-                          Inventario
-                        </span>
-                        <span
-                          className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 ${
-                            activeTab === "inventory"
-                              ? "bg-white/14 text-white"
-                              : "bg-[#1f8b45] text-white"
-                          }`}
-                        >
-                          ≡
-                        </span>
-                      </span>
-                      <p
-                        className={`mt-4 text-2xl font-semibold tracking-[-0.04em] ${
-                          activeTab === "inventory" ? "text-white" : "text-[#16384f]"
-                        }`}
-                      >
-                        Inventario
-                      </p>
-                      <p
-                        className={`mt-3 max-w-[18rem] text-sm leading-6 ${
-                          activeTab === "inventory" ? "text-white/78" : "text-[#6e7379]"
-                        }`}
-                      >
-                        Ajusta stock, revisa alertas y controla movimientos recientes del inventario.
-                      </p>
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={openOrdersView}
-                    className={`admin-card-drift relative min-h-[220px] overflow-hidden rounded-[1.6rem] border px-6 py-6 text-left transition-all duration-200 ${
-                      activeTab === "orders"
-                        ? "border-[#16384f] bg-[#16384f] text-white shadow-[0_18px_35px_rgba(22,56,79,0.22)]"
-                        : "border-black/8 bg-[#fbfbfa] text-[#1f2328] hover:-translate-y-0.5 hover:border-[#16384f]/18 hover:shadow-[0_16px_30px_rgba(15,23,42,0.08)]"
-                    }`}
-                  >
-                    <span className="flex items-center justify-between gap-4">
-                      <span className="text-sm font-semibold uppercase tracking-[0.18em]">
-                        Pedidos
-                      </span>
-                      <span
-                        className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 ${
-                          activeTab === "orders"
-                            ? "bg-white/14 text-white"
-                            : "bg-[#6366f1] text-white"
-                        }`}
-                      >
-                        ↗
-                      </span>
-                    </span>
-                    <p
-                      className={`mt-4 text-2xl font-semibold tracking-[-0.04em] ${
-                        activeTab === "orders" ? "text-white" : "text-[#16384f]"
-                      }`}
-                    >
-                      Pedidos y envíos
-                    </p>
-                    <p
-                      className={`mt-3 max-w-[18rem] text-sm leading-6 ${
-                        activeTab === "orders" ? "text-white/78" : "text-[#6e7379]"
-                      }`}
-                    >
-                      Actualiza estados, guía y transportadora para seguir cada pedido.
-                    </p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={openImagesView}
-                    className={`admin-card-drift relative min-h-[220px] overflow-hidden rounded-[1.6rem] border px-6 py-6 text-left transition-all duration-200 ${
-                      activeTab === "images"
-                        ? "border-[#16384f] bg-[#16384f] text-white shadow-[0_18px_35px_rgba(22,56,79,0.22)]"
-                        : "border-black/8 bg-[#fbfbfa] text-[#1f2328] hover:-translate-y-0.5 hover:border-[#16384f]/18 hover:shadow-[0_16px_30px_rgba(15,23,42,0.08)]"
-                    }`}
-                  >
-                    <span className="flex items-center justify-between gap-4">
-                      <span className="text-sm font-semibold uppercase tracking-[0.18em]">
-                        Imágenes
-                      </span>
-                      <span
-                        className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 ${
-                          activeTab === "images"
-                            ? "bg-white/14 text-white"
-                            : "bg-[#e4002b] text-white"
-                        }`}
-                      >
-                        <svg
-                          aria-hidden="true"
-                          viewBox="0 0 24 24"
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <rect x="3" y="3" width="18" height="18" rx="2" />
-                          <circle cx="8.5" cy="8.5" r="1.5" />
-                          <path d="m21 15-5-5L5 21" />
-                        </svg>
-                      </span>
-                    </span>
-                    <p
-                      className={`mt-4 text-2xl font-semibold tracking-[-0.04em] ${
-                        activeTab === "images" ? "text-white" : "text-[#16384f]"
-                      }`}
-                    >
-                      Editar imágenes
-                    </p>
-                    <p
-                      className={`mt-3 max-w-[18rem] text-sm leading-6 ${
-                        activeTab === "images" ? "text-white/78" : "text-[#6e7379]"
-                      }`}
-                    >
-                      Reemplaza el banner principal, promos y fotos del carrusel de categorías.
-                    </p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={openReportsView}
-                    className={`admin-card-drift relative min-h-[220px] overflow-hidden rounded-[1.6rem] border px-6 py-6 text-left transition-all duration-200 ${
-                      activeTab === "reports"
-                        ? "border-[#16384f] bg-[#16384f] text-white shadow-[0_18px_35px_rgba(22,56,79,0.22)]"
-                        : "border-black/8 bg-[#fbfbfa] text-[#1f2328] hover:-translate-y-0.5 hover:border-[#16384f]/18 hover:shadow-[0_16px_30px_rgba(15,23,42,0.08)]"
-                    }`}
-                  >
-                    <span className="flex items-center justify-between gap-4">
-                      <span className="text-sm font-semibold uppercase tracking-[0.18em]">
-                        Informes
-                      </span>
-                      <span
-                        className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 ${
-                          activeTab === "reports"
-                            ? "bg-white/14 text-white"
-                            : "bg-[#0f766e] text-white"
-                        }`}
-                      >
-                        <svg
-                          aria-hidden="true"
-                          viewBox="0 0 24 24"
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M4 19V5" />
-                          <path d="M4 19h16" />
-                          <path d="M8 16v-5" />
-                          <path d="M12 16V8" />
-                          <path d="M16 16v-7" />
-                        </svg>
-                      </span>
-                    </span>
-                    <p
-                      className={`mt-4 text-2xl font-semibold tracking-[-0.04em] ${
-                        activeTab === "reports" ? "text-white" : "text-[#16384f]"
-                      }`}
-                    >
-                      Informes de ventas
-                    </p>
-                    <p
-                      className={`mt-3 max-w-[18rem] text-sm leading-6 ${
-                        activeTab === "reports" ? "text-white/78" : "text-[#6e7379]"
-                      }`}
-                    >
-                      Revisa productos vendidos, más vendidos, ingresos y métricas del catálogo.
-                    </p>
-                  </button>
-                </div>
-
-                </div>
+            <div className="admin-fade-up space-y-8">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8b8d91]">
+                  {adminBrand.eyebrow}
+                </p>
+                <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-[#1f2328] md:text-4xl">
+                  Dashboard
+                </h2>
+                <p className="mt-2 text-sm capitalize text-[#6e7379]">
+                  {new Date().toLocaleDateString("es-CO", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                  {" · "}
+                  {productCountLabel}
+                </p>
               </div>
+
+              {isLoadingDashboard && !dashboardMetrics ? (
+                <p className="text-sm text-[#6e7379]">Cargando métricas...</p>
+              ) : !dashboardMetrics || !salesReport ? (
+                <div className="rounded-[1.75rem] border border-dashed border-black/12 bg-[#fafaf9] p-8 text-center text-sm leading-7 text-[#6e7379]">
+                  Aún no hay datos suficientes para mostrar el dashboard.
+                </div>
+              ) : (
+                <>
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {[
+                      {
+                        label: "Vendido hoy",
+                        value: formatCurrency(dashboardMetrics.todayRevenue),
+                        helper: `${formatNumber(dashboardMetrics.todayOrders)} pedidos hoy`,
+                      },
+                      {
+                        label: "Vendido esta semana",
+                        value: formatCurrency(dashboardMetrics.weekRevenue),
+                        helper: `${formatNumber(dashboardMetrics.weekOrders)} pedidos esta semana`,
+                      },
+                      {
+                        label: "Vendido este mes",
+                        value: formatCurrency(dashboardMetrics.monthRevenue),
+                        helper: `${formatNumber(dashboardMetrics.monthOrders)} pedidos este mes`,
+                      },
+                      {
+                        label: "Pedidos totales",
+                        value: formatNumber(salesReport.totals.orders),
+                        helper: `${formatNumber(salesReport.totals.paidOrders)} pagados`,
+                      },
+                      {
+                        label: "Ticket promedio",
+                        value: formatCurrency(salesReport.totals.averageOrderValue),
+                        helper: "Promedio por pedido",
+                      },
+                      {
+                        label: "Clientes nuevos",
+                        value: formatNumber(dashboardMetrics.newCustomersThisMonth),
+                        helper: "Compradores nuevos este mes",
+                      },
+                      {
+                        label: "Pedidos pendientes",
+                        value: formatNumber(salesReport.totals.pendingOrders),
+                        helper: `${formatNumber(salesReport.totals.cancelledOrders)} cancelados`,
+                      },
+                      {
+                        label: "Alertas de stock",
+                        value: formatNumber(stockAlerts.lowStock + stockAlerts.outOfStock),
+                        helper: `${formatNumber(stockAlerts.outOfStock)} agotados`,
+                      },
+                    ].map((metric) => (
+                      <div
+                        key={metric.label}
+                        className="rounded-[1.5rem] border border-black/8 bg-[#fafaf9] px-5 py-5"
+                      >
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
+                          {metric.label}
+                        </p>
+                        <p
+                          className="mt-3 text-3xl font-semibold tracking-[-0.04em]"
+                          style={{ color: adminBrand.accent }}
+                        >
+                          {metric.value}
+                        </p>
+                        <p className="mt-2 text-sm text-[#6e7379]">{metric.helper}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-[#8b8d91]">
+                      Destacados del mes
+                    </p>
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <div className="rounded-[1.75rem] border border-black/8 bg-[#16384f] p-6 text-white shadow-[0_18px_35px_rgba(22,56,79,0.18)]">
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/58">
+                          Producto más vendido
+                        </p>
+                        {salesReport.topProduct ? (
+                          <>
+                            <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em]">
+                              {salesReport.topProduct.name}
+                            </h3>
+                            <p className="mt-2 text-sm text-white/72">
+                              {formatNumber(salesReport.topProduct.quantitySold)} unidades vendidas
+                            </p>
+                          </>
+                        ) : (
+                          <p className="mt-3 text-sm text-white/72">Aún no hay ventas registradas.</p>
+                        )}
+                      </div>
+
+                      <div className="rounded-[1.75rem] border border-black/8 bg-[#fafaf9] p-6">
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
+                          Categoría más vendida
+                        </p>
+                        {dashboardMetrics.topCategory ? (
+                          <>
+                            <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-[#1f2328]">
+                              {dashboardMetrics.topCategory.category}
+                            </h3>
+                            <p className="mt-2 text-sm text-[#6e7379]">
+                              {formatNumber(dashboardMetrics.topCategory.quantitySold)} unidades este mes
+                            </p>
+                          </>
+                        ) : (
+                          <p className="mt-3 text-sm text-[#6e7379]">Sin ventas este mes todavía.</p>
+                        )}
+                      </div>
+
+                      <div className="rounded-[1.75rem] border border-black/8 bg-[#fafaf9] p-6">
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
+                          Clientes atendidos
+                        </p>
+                        <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-[#1f2328]">
+                          {formatNumber(dashboardMetrics.customersThisMonth)}
+                        </h3>
+                        <p className="mt-2 text-sm text-[#6e7379]">Compradores distintos este mes</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
+                    <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-[#8b8d91]">
+                      Pedidos recientes
+                    </p>
+                    {salesReport.recentOrders.length === 0 ? (
+                      <p className="text-sm text-[#6e7379]">Todavía no hay pedidos registrados.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {salesReport.recentOrders.map((order) => (
+                          <div
+                            key={order.id}
+                            className="flex items-center justify-between gap-4 rounded-xl border border-black/6 px-4 py-3"
+                          >
+                            <div>
+                              <p className="text-sm font-bold text-[#1f2328]">{order.customerName}</p>
+                              <p className="text-xs text-[#8b8d91]">
+                                {new Date(order.createdAt).toLocaleDateString("es-CO")} · {order.totalItems}{" "}
+                                artículo{order.totalItems === 1 ? "" : "s"}
+                              </p>
+                            </div>
+                            <p className="text-sm font-semibold" style={{ color: adminBrand.accent }}>
+                              {formatCurrency(order.subtotal)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -1950,9 +1947,15 @@ export default function AdminPage() {
                       name="subcategoria"
                       value={form.subcategoria}
                       onChange={handleChange}
+                      list="admin-subcategory-options"
                       placeholder="Ej. O-rings, Neopreno, EPDM"
                       className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
                     />
+                    <datalist id="admin-subcategory-options">
+                      {subcategoryOptions.map((subcategoria) => (
+                        <option key={subcategoria} value={subcategoria} />
+                      ))}
+                    </datalist>
                   </label>
 
                   <label className="space-y-2">
@@ -1961,9 +1964,15 @@ export default function AdminPage() {
                       name="categoriaMenor"
                       value={form.categoriaMenor}
                       onChange={handleChange}
+                      list="admin-minor-category-options"
                       placeholder="Ej. Pintura para interior"
                       className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
                     />
+                    <datalist id="admin-minor-category-options">
+                      {categoriaMenorOptions.map((categoriaMenor) => (
+                        <option key={categoriaMenor} value={categoriaMenor} />
+                      ))}
+                    </datalist>
                   </label>
 
                 <label className="space-y-2">
@@ -2442,9 +2451,15 @@ export default function AdminPage() {
                         name="subcategoria"
                         value={form.subcategoria}
                         onChange={handleChange}
+                        list="admin-edit-subcategory-options"
                         placeholder="Ej. O-rings, Neopreno, EPDM"
                         className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
                       />
+                      <datalist id="admin-edit-subcategory-options">
+                        {subcategoryOptions.map((subcategoria) => (
+                          <option key={subcategoria} value={subcategoria} />
+                        ))}
+                      </datalist>
                     </label>
 
                     <label className="space-y-2">
@@ -2453,9 +2468,15 @@ export default function AdminPage() {
                         name="categoriaMenor"
                         value={form.categoriaMenor}
                         onChange={handleChange}
+                        list="admin-edit-minor-category-options"
                         placeholder="Ej. Pintura para interior"
                         className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
                       />
+                      <datalist id="admin-edit-minor-category-options">
+                        {categoriaMenorOptions.map((categoriaMenor) => (
+                          <option key={categoriaMenor} value={categoriaMenor} />
+                        ))}
+                      </datalist>
                     </label>
 
                     <label className="space-y-2">
@@ -3728,6 +3749,31 @@ export default function AdminPage() {
                                   }}
                                 />
                               </label>
+                              {(group === "Ofertas" || group === "Marcas destacadas") && (
+                                <div className="mt-2">
+                                  <label className="mb-1 block text-[10px] font-semibold text-[#8b8d91]">
+                                    Enlace al hacer clic (opcional)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder="/producto/nombre-del-producto"
+                                    value={siteImageLinks[slot.key] ?? ""}
+                                    onChange={(event) =>
+                                      setSiteImageLinks((current) => ({
+                                        ...current,
+                                        [slot.key]: event.target.value,
+                                      }))
+                                    }
+                                    onBlur={(event) =>
+                                      void handleSiteImageLinkSave(slot.key, event.target.value)
+                                    }
+                                    className="w-full rounded-lg border border-black/10 bg-[#fafaf9] px-2.5 py-1.5 text-xs text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                                  />
+                                  {savingLinkKey === slot.key && (
+                                    <p className="mt-1 text-[10px] font-semibold text-[#8b8d91]">Guardando...</p>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
@@ -3740,6 +3786,8 @@ export default function AdminPage() {
           )}
         </div>
       </section>
+        </div>
+      </div>
     </main>
   );
 }
