@@ -15,7 +15,7 @@ import {
   type Disponibilidad,
 } from "../data/catalog";
 import type { StoreProduct } from "@/lib/products";
-import type { DivisionName } from "@/lib/divisions";
+import { DIVISION_BRAND, isServiceDivision, type DivisionName } from "@/lib/divisions";
 
 export type AdminProductInput = {
   sku?: string;
@@ -90,6 +90,7 @@ function createLocalProduct(
   );
   const stock = Math.max(0, Math.round(input.stock));
   const stockMinimo = Math.max(0, Math.round(input.stockMinimo));
+  const isService = isServiceDivision(input.division);
   const baseSlug = slugify(input.nombre) || `producto-${Date.now()}`;
   let slug = existingSlug || baseSlug;
   let suffix = 1;
@@ -121,11 +122,11 @@ function createLocalProduct(
     stock,
     stockMinimo,
     estadoInventario: getInventoryState(stock, stockMinimo),
-    puedeComprar: stock > 0,
+    puedeComprar: isService ? true : stock > 0,
     descuento: formatearDescuento(precioValor, precioAnteriorValor),
-    imagen: input.imagen || "/cauchos-product-sellos.png",
+    imagen: input.imagen || DIVISION_BRAND[input.division].logo,
     imagenesExtra: input.imagenesExtra || [],
-    disponibilidad: stock <= 0 ? "Agotado" : input.disponibilidad,
+    disponibilidad: isService ? input.disponibilidad : stock <= 0 ? "Agotado" : input.disponibilidad,
     descripcion:
       input.descripcion ||
       descripcionProducto({

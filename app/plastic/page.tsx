@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
-import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
+import CauchosHeader from "../components/cauchos-header";
+import CauchosProjectChat from "../components/cauchos-project-chat";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { getProducts } from "@/lib/products";
 
@@ -16,45 +17,6 @@ const navItems = [
   { label: "Plastic", href: "/plastic", active: true },
   { label: "Nosotros", href: "/quienes-somos" },
   { label: "Contacto", href: "#contacto" },
-];
-
-const plasticCategories = [
-  {
-    label: "Perfiles",
-    title: "Perfiles plasticos",
-    image: "/home-plastic.png",
-    count: "32 referencias",
-  },
-  {
-    label: "Materia prima",
-    title: "Materia prima",
-    image: "/home-plastic.png",
-    count: "Resinas y pellets",
-  },
-  {
-    label: "Piezas",
-    title: "Piezas tecnicas",
-    image: "/home-plastic.png",
-    count: "Por plano",
-  },
-  {
-    label: "Extrusion",
-    title: "Extrusion",
-    image: "/home-plastic.png",
-    count: "Produccion continua",
-  },
-  {
-    label: "Corte",
-    title: "Corte y mecanizado",
-    image: "/home-plastic.png",
-    count: "A medida",
-  },
-  {
-    label: "Comercial",
-    title: "Aplicaciones comerciales",
-    image: "/home-plastic.png",
-    count: "Desarrollo",
-  },
 ];
 
 const productLines = [
@@ -76,122 +38,70 @@ const productLines = [
 ];
 
 const plasticOffers = [
-  { title: "Perfiles plasticos", href: "#catalogo-plastic", imageKey: "plastic-oferta-1" },
-  { title: "Materia prima", href: "#catalogo-plastic", imageKey: "plastic-oferta-2" },
+  { title: "Perfiles plasticos", href: "/plastic/categoria/manufactura-metalmecanica-siderurgica-y-textiles", imageKey: "plastic-oferta-1" },
+  { title: "Materia prima", href: "/plastic/categoria/quimico-aseo-y-plasticos", imageKey: "plastic-oferta-2" },
   { title: "Piezas tecnicas", href: "#contacto", imageKey: "plastic-oferta-3" },
   { title: "Desarrollo a medida", href: "#contacto", imageKey: "plastic-oferta-4" },
 ];
 
 const plasticFeatured = [
-  { title: "Perfiles", href: "#catalogo-plastic", imageKey: "plastic-destacada-1" },
-  { title: "Resinas", href: "#catalogo-plastic", imageKey: "plastic-destacada-2" },
-  { title: "Piezas tecnicas", href: "#contacto", imageKey: "plastic-destacada-3" },
-  { title: "Extrusion", href: "#contacto", imageKey: "plastic-destacada-4" },
+  {
+    title: "Perfiles",
+    href: "/plastic",
+    imageKey: "plastic-destacada-1",
+    subtitle: "Perfiles plasticos a medida para vitrinas, guias y sistemas livianos.",
+    ctaLabel: "Ver mas",
+  },
+  {
+    title: "Resinas",
+    href: "/plastic",
+    imageKey: "plastic-destacada-2",
+    subtitle: "Materia prima industrial seleccionada segun tu aplicacion y volumen.",
+    ctaLabel: "Ver mas",
+  },
+  {
+    title: "Piezas tecnicas",
+    href: "#contacto",
+    imageKey: "plastic-destacada-3",
+    subtitle: "Corte, mecanizado y acabado de piezas plasticas para reposicion.",
+    ctaLabel: "Cotizar",
+  },
+  {
+    title: "Extrusion",
+    href: "#contacto",
+    imageKey: "plastic-destacada-4",
+    subtitle: "Desarrollo a medida con procesos de extrusion para tu industria.",
+    ctaLabel: "Cotizar",
+  },
 ];
 
 const specs = ["PVC", "Policarbonato", "Acrilico", "Polietileno", "Nylon", "ABS"];
 
-function PlasticMark() {
-  return (
-    <Image
-      src="/logo-geu-plastic.png"
-      alt="GEU Plastic"
-      width={2000}
-      height={452}
-      priority
-      className="h-auto w-[250px] max-w-full object-contain"
-    />
-  );
-}
-
 export default async function PlasticPage() {
   const siteImages = await getSiteImages();
   const allProducts = await getProducts();
-  const plasticProducts = allProducts.filter((product) => product.division === "Plastic");
+  const plasticCatalog = allProducts.filter((product) => product.division === "Plastic");
+  const plasticFeaturedProducts = plasticCatalog.filter((product) => product.destacado);
+  const plasticProducts = (plasticFeaturedProducts.length > 0 ? plasticFeaturedProducts : plasticCatalog).slice(0, 4);
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-        <div className="border-b border-slate-200 bg-slate-50">
-          <div className="mx-auto flex h-8 max-w-[1500px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8">
-            <div className="hidden gap-3 md:flex">
-              <span>Servicio al cliente 320 88 999 33</span>
-              <span className="text-slate-300">|</span>
-              <span>Plasticos tecnicos</span>
-              <span className="text-slate-300">|</span>
-              <span>Desarrollo industrial</span>
-            </div>
-            <div className="flex w-full justify-between gap-3 md:w-auto md:justify-end">
-              <Link href="#contacto" className="hover:text-slate-950">Cotizaciones</Link>
-              <Link href="#catalogo-plastic" className="hover:text-slate-950">Catalogos</Link>
-              <Link href="/quienes-somos" className="hover:text-slate-950">GEU empresas</Link>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto grid min-h-[74px] max-w-[1500px] items-center gap-4 px-5 py-3 md:grid-cols-[300px_1fr_auto] md:px-8">
-          <Link href="/" className="flex shrink-0 items-center">
-            <PlasticMark />
-          </Link>
-
-          <form className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner">
-            <input
-              aria-label="Buscar soluciones plasticas"
-              className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-              placeholder="Buscar perfiles, resinas, piezas o aplicaciones..."
-            />
-            <button
-              type="button"
-              className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
-              aria-label="Buscar"
-            >
-              ⌕
-            </button>
-          </form>
-
-          <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
-            <Link href="/quienes-somos" className="font-bold hover:text-slate-950">Nosotros</Link>
-            <Link
-              href="#contacto"
-              className="rounded-full border border-slate-300 px-5 py-2 font-black hover:border-slate-500"
-            >
-              Cotizar
-            </Link>
-            <Link href="/login?next=/mi-cuenta&brand=plastic" className="font-bold hover:text-slate-950">Mi cuenta</Link>
-          </div>
-        </div>
-
-        <div className="border-t border-slate-200 bg-white">
-          <nav className="mx-auto flex min-h-14 max-w-[1500px] items-stretch justify-between gap-2 overflow-x-auto px-5 text-[11px] font-black uppercase tracking-[0.02em] text-slate-800 md:px-8">
-            {[
-              "Perfiles plasticos",
-              "Materia prima",
-              "Piezas tecnicas",
-              "Extrusion",
-              "Mecanizado",
-              "Desarrollo a medida",
-              "Aplicaciones",
-              "Contacto",
-            ].map((item, index) => (
-              <Link
-                key={item}
-                href={index === 7 ? "#contacto" : "#catalogo-plastic"}
-                className="flex min-w-max items-center border-b-2 border-transparent px-3 text-center hover:border-[#a3a3a4] hover:text-slate-950"
-              >
-                {item}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </header>
+      <CauchosHeader division="Plastic" />
 
       <section id="catalogo-plastic" className="border-b border-slate-200 bg-white text-slate-900">
-        <div className="mx-auto max-w-[1500px] px-5 py-7 md:px-8">
-          <CauchosCategoryCarousel categories={plasticCategories} accent="silver" />
+        <div className="mx-auto max-w-[1632px] px-5 py-7 md:px-8">
+          <div className="rounded-[10px] border border-slate-200 bg-slate-50 px-6 py-10 text-center">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+              Categorías
+            </p>
+            <p className="mx-auto mt-2 max-w-sm text-sm font-semibold text-slate-500">
+              Estamos organizando las categorías de GEU Plastic. Muy pronto estarán disponibles aquí.
+            </p>
+          </div>
         </div>
 
-        <div className="bg-[#a3a3a4] text-white">
-          <div className="mx-auto flex min-h-14 max-w-[1500px] flex-wrap items-center justify-center gap-4 px-5 py-3 text-center md:px-8">
+        <div className="bg-white text-white">
+          <div className="mx-auto flex min-h-14 max-w-[1632px] flex-wrap items-center justify-center gap-4 bg-[#a3a3a4] px-5 py-3 text-center md:px-8">
             <p className="text-lg font-black tracking-[-0.01em] text-slate-950">
               Plasticos tecnicos para industria y comercio
             </p>
@@ -204,7 +114,7 @@ export default async function PlasticPage() {
           </div>
         </div>
         <div
-          className="mx-auto min-h-[320px] max-w-[1920px] bg-cover bg-center md:min-h-[520px] xl:min-h-[650px]"
+          className="mx-auto min-h-[320px] max-w-[1632px] bg-cover bg-center md:min-h-[520px] xl:min-h-[650px]"
           style={{
             backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0.04), rgba(0,0,0,0.1)), url('${resolveImage("plastic-principal", siteImages)}')`,
           }}
@@ -214,7 +124,7 @@ export default async function PlasticPage() {
       </section>
 
       <section id="lineas-plastic" className="scroll-mt-56 border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-[1500px] px-5 py-12 md:px-8">
+        <div className="mx-auto max-w-[1632px] px-5 py-12 md:px-8">
           <div className="flex flex-wrap items-end justify-between gap-5">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
@@ -273,40 +183,64 @@ export default async function PlasticPage() {
       </section>
 
       <section id="productos" className="scroll-mt-56 border-b border-slate-200 bg-slate-50 text-slate-950">
-        <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-            Productos Plastic
-          </p>
-          <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] md:text-5xl">
-            Fichas de producto listas para cotizar.
-          </h2>
+        <div className="mx-auto max-w-[1632px] px-5 py-12 md:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+                Productos destacados
+              </p>
+              <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] md:text-5xl">
+                Fichas de producto listas para cotizar.
+              </h2>
+              <p className="mt-3 max-w-2xl text-base font-semibold leading-7 text-slate-500">
+                Seleccion tecnica para compras recurrentes, proyectos especiales y desarrollo por aplicacion.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-[0.06em] text-slate-600">
+              {["Entrega inmediata", "Por pedido", "A medida"].map((tag) => (
+                <span key={tag} className="rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
 
           {plasticProducts.length > 0 ? (
             <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {plasticProducts.map((product) => (
+              {plasticProducts.map((product) => {
+                const productImage = product.imagen === "/hero-unipars.jpg" ? "/home-plastic.png" : product.imagen;
+
+                return (
                 <article
                   key={product.slug}
-                  className="group flex min-h-[420px] flex-col overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition hover:-translate-y-1 hover:border-[#6b7280]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)]"
+                  className="group flex min-h-[455px] flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#6b7280]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)]"
                 >
-                  <div
-                    className="relative h-52 overflow-hidden bg-slate-200"
+                  <Link
+                    href={`/producto/${product.slug}`}
+                    className="relative block h-52 overflow-hidden bg-slate-200"
                     style={{
-                      backgroundImage: `linear-gradient(180deg,rgba(2,6,23,0.04),rgba(2,6,23,0.3)),url('${product.imagen}')`,
+                      backgroundImage: `linear-gradient(180deg,rgba(2,6,23,0.04),rgba(2,6,23,0.34)),url('${productImage}')`,
                       backgroundPosition: "center",
                       backgroundSize: "cover",
                     }}
                   >
-                    <span className="absolute left-3 top-3 rounded-[4px] bg-[#6b7280] px-2.5 py-1.5 text-xs font-black text-white shadow-sm">
+                    <span className="absolute left-3 top-3 rounded-[4px] bg-[#6b7280] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(107,114,128,0.24)]">
                       {product.descuento}
                     </span>
-                  </div>
-                  <div className="flex flex-1 flex-col p-6">
+                    <span className="absolute bottom-3 right-3 rounded-full bg-white/92 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#6b7280] shadow-sm">
+                      Técnico
+                    </span>
+                  </Link>
+                  <span className="flex flex-1 flex-col p-6">
                     <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#6b7280]">
                       {product.marca}
                     </span>
-                    <p className="mt-2 min-h-14 text-xl font-black leading-7 text-slate-950">
+                    <Link
+                      href={`/producto/${product.slug}`}
+                      className="mt-2 min-h-14 text-xl font-black leading-7 text-slate-950 hover:text-[#6b7280]"
+                    >
                       {product.nombre}
-                    </p>
+                    </Link>
                     <p className="mt-2 min-h-12 text-sm font-semibold leading-6 text-slate-500">
                       {product.descripcion}
                     </p>
@@ -314,7 +248,7 @@ export default async function PlasticPage() {
                       {product.disponibilidad}
                     </span>
                     <span className="mt-auto border-t border-slate-100 pt-5">
-                      <span className="block text-xs font-bold text-slate-400">
+                      <span className="block text-xs font-bold text-slate-400 line-through decoration-[#6b7280]/50">
                         {product.precioAnterior}
                       </span>
                       <span className="mt-1 block text-2xl font-black tracking-[-0.02em] text-slate-950">
@@ -322,14 +256,15 @@ export default async function PlasticPage() {
                       </span>
                     </span>
                     <Link
-                      href="#contacto"
-                      className="mt-6 inline-flex justify-center rounded-full border border-[#6b7280] bg-white px-4 py-3 text-center text-xs font-black uppercase tracking-[0.08em] text-[#6b7280] transition-colors duration-200 hover:bg-[#6b7280] hover:text-white"
+                      href={`/producto/${product.slug}`}
+                      className="mt-5 inline-flex justify-center rounded-full border border-[#6b7280] bg-white px-4 py-3 text-center text-xs font-black uppercase tracking-[0.08em] text-[#6b7280] transition-colors duration-200 hover:bg-[#6b7280] hover:text-white"
                     >
-                      Cotizar
+                      Ver detalle
                     </Link>
-                  </div>
+                  </span>
                 </article>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="mt-8 text-sm font-semibold text-slate-500">
@@ -339,54 +274,23 @@ export default async function PlasticPage() {
         </div>
       </section>
 
-      <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-[1500px] gap-8 px-5 py-12 md:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-              Produccion y abastecimiento
-            </p>
-            <h2 className="mt-3 text-3xl font-black tracking-[-0.02em] md:text-5xl">
-              Del material correcto a la pieza lista.
-            </h2>
-            <p className="mt-5 text-base font-semibold leading-7 text-slate-500">
-              GEU Plastic acompana seleccion de material, validacion tecnica, compra por volumen y fabricacion de piezas para aplicaciones industriales o comerciales.
-            </p>
-            <div className="mt-7 grid gap-3 sm:grid-cols-2">
-              {["Seleccion de material", "Desarrollo por plano", "Compra recurrente", "Soporte comercial"].map((item) => (
-                <span key={item} className="rounded-[6px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-black text-slate-700">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="relative min-h-[420px] overflow-hidden rounded-[8px] border border-slate-200 shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
-            <Image
-              src={resolveImage("plastic-principal", siteImages)}
-              alt="Materiales plasticos tecnicos GEU Plastic"
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
-            />
-          </div>
-        </div>
-      </section>
-
       <BrandOfferSection
         accent="#6b7280"
         eyebrow="Ofertas Plastic"
         title="Soluciones listas para producir"
-        ctaHref="#catalogo-plastic"
+        ctaHref="/plastic"
         items={plasticOffers}
         siteImages={siteImages}
+        maxWidth="1632px"
       />
 
-      <section id="contacto" className="mx-auto max-w-[1500px] px-5 py-10 md:px-8">
-        <div className="relative overflow-hidden rounded-[8px] border border-slate-300 bg-slate-950 text-white shadow-[0_24px_70px_rgba(15,23,42,0.2)]">
+      <section id="contacto" className="mx-auto max-w-[1632px] px-5 py-10 md:px-8">
+        <div className="relative overflow-hidden rounded-[8px] border border-zinc-300 bg-zinc-900 text-white shadow-[0_24px_70px_rgba(24,24,27,0.2)]">
           <div
             className="absolute inset-0 opacity-90"
             style={{
               background:
-                "linear-gradient(90deg, rgba(2,6,23,0.98) 0%, rgba(15,23,42,0.88) 46%, rgba(163,163,164,0.22) 100%)",
+                "linear-gradient(90deg, rgba(9,9,11,0.98) 0%, rgba(39,39,42,0.88) 46%, rgba(163,163,164,0.22) 100%)",
             }}
           />
           <div className="relative grid gap-7 px-7 py-8 md:grid-cols-[1fr_auto] md:items-center md:px-10 md:py-10">
@@ -401,12 +305,11 @@ export default async function PlasticPage() {
                 Envia tu requerimiento y te ayudamos a aterrizar la solucion tecnica y comercial.
               </p>
             </div>
-            <Link
-              href="mailto:contacto@grupogeu.com"
-              className="inline-flex w-fit items-center justify-center rounded-[4px] border border-[#a3a3a4] bg-[#a3a3a4] px-7 py-4 text-sm font-black uppercase tracking-[0.08em] text-slate-950 shadow-[0_16px_34px_rgba(163,163,164,0.28)] transition hover:border-white hover:bg-white"
-            >
-              Hablar con un experto →
-            </Link>
+            <CauchosProjectChat
+              division="Plastic"
+              triggerLabel="Hablar con un experto →"
+              triggerClassName="inline-flex w-fit items-center justify-center rounded-[4px] border border-[#a3a3a4] bg-[#a3a3a4] px-7 py-4 text-sm font-black uppercase tracking-[0.08em] text-slate-950 transition hover:border-white hover:bg-white"
+            />
           </div>
         </div>
       </section>
@@ -415,18 +318,26 @@ export default async function PlasticPage() {
         title="Nuestras marcas destacadas"
         items={plasticFeatured}
         siteImages={siteImages}
+        maxWidth="1632px"
       />
 
       <BrandClosingBanner
         imageKey="plastic-cierre"
         alt="Cierre GEU Plastic"
         siteImages={siteImages}
+        maxWidth="1632px"
       />
 
       <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-[1500px] gap-8 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:px-8">
+        <div className="mx-auto grid max-w-[1632px] gap-8 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:px-8">
           <div>
-            <PlasticMark />
+            <Image
+              src="/logo-geu-plastic.png"
+              alt="GEU Plastic"
+              width={2000}
+              height={452}
+              className="h-auto w-[250px] max-w-full object-contain"
+            />
             <p className="mt-5 max-w-[280px] text-sm leading-6 text-slate-600">
               Soluciones plasticas tecnicas para empresas, manufactura, comercio y proyectos especiales.
             </p>

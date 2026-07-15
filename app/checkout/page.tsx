@@ -9,23 +9,30 @@ function parsePriceValue(price: string) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
-export default async function CheckoutPage() {
+export default async function CheckoutPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ brand?: string }>;
+}) {
+  const { brand } = await searchParams;
+  const loginRedirect = brand ? `/login?next=/checkout&brand=${brand}` : "/login?next=/checkout";
+  const cartRedirect = brand ? `/carrito?brand=${brand}` : "/carrito";
   const session = await getSessionFromCookies();
 
   if (!session) {
-    redirect("/login?next=/checkout");
+    redirect(loginRedirect);
   }
 
   const user = await getUserById(session.userId);
 
   if (!user) {
-    redirect("/login?next=/checkout");
+    redirect(loginRedirect);
   }
 
   const cartItems = await getCartItemsForUser(user.id);
 
   if (cartItems.length === 0) {
-    redirect("/carrito");
+    redirect(cartRedirect);
   }
 
   const subtotal = cartItems.reduce(

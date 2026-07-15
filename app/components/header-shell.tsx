@@ -38,7 +38,9 @@ export default function HeaderShell({ currentUser }: HeaderShellProps) {
     pathname.startsWith("/import/") ||
     pathname === "/innovation" ||
     pathname === "/energy" ||
+    pathname.startsWith("/energy/") ||
     pathname === "/plastic" ||
+    pathname.startsWith("/plastic/") ||
     Boolean(producto)
   ) {
     return null;

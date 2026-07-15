@@ -320,6 +320,25 @@ export default function CauchosCategorySidebarMenu({
     return null;
   }
 
+  if (division === "Plastic") {
+    return (
+      <div
+        className="absolute inset-x-0 top-full z-40 border-t border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]"
+        style={{ "--brand-accent": accent } as CSSProperties}
+      >
+        <div className="fixed inset-0 -z-10" aria-hidden="true" onClick={close} />
+        <div className="px-8 py-10 text-center">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+            Categorías
+          </p>
+          <p className="mx-auto mt-2 max-w-sm text-sm font-semibold text-slate-500">
+            Estamos organizando las categorías de GEU Plastic. Muy pronto estarán disponibles aquí.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="absolute inset-x-0 top-full z-40 border-t border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]"

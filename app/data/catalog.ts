@@ -384,7 +384,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$239.900",
     precioValor: 189900,
     descuento: "-21%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-luces.jpg",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -396,7 +396,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$198.000",
     precioValor: 154500,
     descuento: "-18%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-luces.jpg",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -408,7 +408,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$329.900",
     precioValor: 267900,
     descuento: "-19%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-luces.jpg",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -420,7 +420,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$279.000",
     precioValor: 221000,
     descuento: "-20%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-luces.jpg",
     disponibilidad: "Recoger en tienda",
   },
   {
@@ -432,7 +432,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$389.000",
     precioValor: 312400,
     descuento: "-20%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-luces.jpg",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -456,7 +456,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$349.000",
     precioValor: 286000,
     descuento: "-18%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/motor-ventilador-axis-compact.png",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -468,7 +468,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$525.000",
     precioValor: 452900,
     descuento: "-14%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/motor-ventilador-axis-compact.png",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -480,7 +480,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$620.000",
     precioValor: 518000,
     descuento: "-16%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/motor-ventilador-axis-compact.png",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -492,7 +492,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$249.000",
     precioValor: 197900,
     descuento: "-21%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/motor-ventilador-axis-compact.png",
     disponibilidad: "Recoger en tienda",
   },
   {
@@ -504,7 +504,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$219.000",
     precioValor: 175500,
     descuento: "-19%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-mecanizado.jpg",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -516,7 +516,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$304.000",
     precioValor: 248000,
     descuento: "-18%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-mecanizado.jpg",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -528,7 +528,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$405.000",
     precioValor: 329000,
     descuento: "-19%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-mecanizado.jpg",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -540,7 +540,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$699.000",
     precioValor: 589000,
     descuento: "-16%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-mecanizado.jpg",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -552,7 +552,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$268.000",
     precioValor: 214700,
     descuento: "-19%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-mecanizado.jpg",
     disponibilidad: "Recoger en tienda",
   },
   {
@@ -564,7 +564,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$479.000",
     precioValor: 394500,
     descuento: "-18%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-inyeccion.jpg",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -576,7 +576,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$569.000",
     precioValor: 459000,
     descuento: "-19%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-inyeccion.jpg",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -588,7 +588,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$749.000",
     precioValor: 619000,
     descuento: "-17%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-inyeccion.jpg",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -600,7 +600,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$349.000",
     precioValor: 281900,
     descuento: "-19%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-inyeccion.jpg",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -612,7 +612,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$248.000",
     precioValor: 198000,
     descuento: "-20%",
-    imagen: "/hero-unipars.jpg",
+    imagen: "/import-product-inyeccion.jpg",
     disponibilidad: "Recoger en tienda",
   },
   {

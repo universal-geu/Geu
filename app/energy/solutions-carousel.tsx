@@ -88,10 +88,10 @@ export default function SolutionsCarousel({ items }: { items: Solution[] }) {
                 className="pointer-events-none object-cover"
               />
             </div>
-            <h3 className={`mt-5 text-xl font-black tracking-[-0.02em] text-slate-950 ${index === 0 ? "pl-5 md:pl-8" : ""}`}>
+            <h3 className="mt-5 text-xl font-black tracking-[-0.02em] text-slate-950">
               {item.title}
             </h3>
-            <p className={`mt-2 text-sm font-medium leading-6 text-slate-500 ${index === 0 ? "pl-5 md:pl-8" : ""}`}>
+            <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
               {item.text}
             </p>
           </div>

@@ -6,7 +6,7 @@ import CauchosSearchForm from "./cauchos-search-form";
 import CauchosCategorySidebarMenu from "./cauchos-category-sidebar-menu";
 import CauchosMenuButton from "./cauchos-menu-button";
 import { CauchosMenuProvider } from "./cauchos-menu-context";
-import { DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
+import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
 
 type Props = {
   division?: DivisionName;
@@ -14,7 +14,7 @@ type Props = {
 
 export default function CauchosHeader({ division = "Cauchos" }: Props) {
   const brand = DIVISION_BRAND[division];
-  const cartAccent = division === "Import" ? "red" : "blue";
+  const cartAccent = CART_ACCENT[division];
   const brandParam = division === "Cauchos" ? undefined : division.toLowerCase();
   const cartHref = brandParam ? `/carrito?brand=${brandParam}` : "/carrito";
 

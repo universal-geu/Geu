@@ -11,7 +11,7 @@ import {
   type ProductoCatalogo,
 } from "@/app/data/catalog";
 import { prisma } from "@/lib/prisma";
-import type { DivisionName } from "@/lib/divisions";
+import { isServiceDivision, type DivisionName } from "@/lib/divisions";
 
 type ProductRecord = {
   id?: string;
@@ -94,7 +94,12 @@ function normalizeStockAvailability(
   availability: string,
   stock: number,
   minimumStock: number,
+  isService: boolean,
 ): Disponibilidad {
+  if (isService) {
+    return normalizeDisponibilidad(availability);
+  }
+
   if (stock <= 0) {
     return "Agotado";
   }
@@ -198,10 +203,12 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
   const categoria = normalizeCategoria(product.category);
   const subcategoria = extractSubcategory(product.compatibility || []);
   const categoriaMenor = extractMinorCategory(product.compatibility || []);
+  const isService = isServiceDivision(product.division);
   const disponibilidad = normalizeStockAvailability(
     product.availability,
     product.stock,
     product.minimumStock,
+    isService,
   );
   const estadoInventario = getInventoryState(product.stock, product.minimumStock);
 
@@ -222,7 +229,7 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
     stock: product.stock,
     stockMinimo: product.minimumStock,
     estadoInventario,
-    puedeComprar: product.stock > 0,
+    puedeComprar: isService ? true : product.stock > 0,
     descuento: formatearDescuento(product.price, product.previousPrice),
     imagen: product.image,
     imagenesExtra: normalizeGalleryImages(product.galleryImages || []),
@@ -380,7 +387,7 @@ export async function createProduct(input: ProductMutationInput) {
       galleryImages: {
         set: imagenesExtra,
       },
-      availability: normalizeStockAvailability(input.disponibilidad, stock, stockMinimo),
+      availability: normalizeStockAvailability(input.disponibilidad, stock, stockMinimo, isServiceDivision(input.division)),
       description:
         input.descripcion?.trim() ||
         descripcionProducto({
@@ -501,7 +508,7 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
       galleryImages: {
         set: imagenesExtra,
       },
-      availability: normalizeStockAvailability(input.disponibilidad, stock, stockMinimo),
+      availability: normalizeStockAvailability(input.disponibilidad, stock, stockMinimo, isServiceDivision(input.division)),
       description:
         input.descripcion?.trim() ||
         descripcionProducto({
