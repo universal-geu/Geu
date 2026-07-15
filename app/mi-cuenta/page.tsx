@@ -2,11 +2,16 @@ import { redirect } from "next/navigation";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrdersForUser } from "@/lib/orders";
 import { getUserById } from "@/lib/users";
+import { getDivisionFromBrandParam } from "@/lib/divisions";
 import AccountProfileForm from "./profile-form";
 
 export const dynamic = "force-dynamic";
 
-export default async function MiCuentaPage() {
+export default async function MiCuentaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ brand?: string }>;
+}) {
   const session = await getSessionFromCookies();
 
   if (!session) {
@@ -20,6 +25,8 @@ export default async function MiCuentaPage() {
   }
 
   const orders = await getOrdersForUser(session.userId);
+  const { brand } = await searchParams;
+  const division = brand ? getDivisionFromBrandParam(brand) : user.division ?? "Cauchos";
 
-  return <AccountProfileForm user={user} orders={orders} />;
+  return <AccountProfileForm user={user} orders={orders} division={division} />;
 }

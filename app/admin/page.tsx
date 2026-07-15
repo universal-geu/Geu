@@ -12,6 +12,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProducts } from "../components/products-provider";
+import CategoryComboBox from "./category-combobox";
 import {
   categorias,
   cauchosCategorySubcategories,
@@ -152,7 +153,7 @@ const initialState: FormState = {
   subcategoria: "",
   categoriaMenor: "",
   nombre: "",
-  marca: "Universal de Cauchos",
+  marca: "",
   precioValor: "",
   precioAnteriorValor: "",
   displayPriceOverride: "",
@@ -168,7 +169,6 @@ const initialState: FormState = {
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 const RECOMMENDED_FILE_SIZE_KB = 500;
 const EXTRA_IMAGE_SLOTS = 3;
-const LOCAL_PRODUCT_IMAGE_FALLBACK = "/cauchos-product-sellos.png";
 const shippingStatuses: ShippingStatus[] = [
   "PENDING",
   "PREPARING",
@@ -722,16 +722,12 @@ export default function AdminPage() {
       adminNotes: orderForm.adminNotes.trim() || null,
     };
   }, [orderForm, selectedOrder]);
-  const categoryOptions = useMemo(
-    () =>
-      Array.from(
-        new Set([
-          ...categorias,
-          ...adminProducts.map((product) => product.categoria).filter(Boolean),
-        ]),
-      ),
-    [adminProducts],
-  );
+  // Only the 8 official industry categories are selectable here — they're the
+  // ones that actually appear in the storefront's category navigation. Legacy
+  // seed products carry older category strings (e.g. "Mangueras", "Sellos y
+  // empaques") that predate this taxonomy and aren't real nav categories, so
+  // they're intentionally excluded from the picker.
+  const categoryOptions = categorias;
   const subcategoryOptions = useMemo(() => {
     const menuGroups = cauchosCategorySubcategories[form.categoria] ?? [];
     const fromMenu = menuGroups.map((group) => group.name);
@@ -941,7 +937,7 @@ export default function AdminPage() {
   const uploadProductImage = async (
     file: File,
     productName: string,
-    fallbackUrl: string | null = LOCAL_PRODUCT_IMAGE_FALLBACK,
+    fallbackUrl: string | null = adminBrand.logo,
   ) => {
     const uploadData = new FormData();
     uploadData.append("file", file);
@@ -996,12 +992,12 @@ export default function AdminPage() {
     let usedImageFallback = false;
     let imageUrl =
       adminProducts.find((product) => product.slug === editingSlug)?.imagen ||
-      LOCAL_PRODUCT_IMAGE_FALLBACK;
+      adminBrand.logo;
 
     try {
       if (selectedImage) {
         const uploadResult = await uploadProductImage(selectedImage, form.nombre);
-        imageUrl = uploadResult.publicUrl || LOCAL_PRODUCT_IMAGE_FALLBACK;
+        imageUrl = uploadResult.publicUrl || adminBrand.logo;
         usedImageFallback = usedImageFallback || uploadResult.usedFallback;
       }
 
@@ -2026,57 +2022,36 @@ export default function AdminPage() {
                     />
                   </label>
 
-                  <label className="space-y-2">
-                    <span className="text-sm font-medium text-[#4f545a]">Crear categoría</span>
-                    <input
-                      name="categoria"
-                      value={form.categoria}
-                      onChange={handleChange}
-                      list="admin-category-options"
-                      placeholder="Ej. Transporte, logística y puertos marítimos"
-                      required
-                      className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                    />
-                    <datalist id="admin-category-options">
-                      {categoryOptions.map((categoria) => (
-                        <option key={categoria} value={categoria} />
-                      ))}
-                    </datalist>
-                  </label>
+                  <CategoryComboBox
+                    label="Crear categoría"
+                    name="categoria"
+                    value={form.categoria}
+                    options={categoryOptions}
+                    placeholder="Ej. Transporte, logística y puertos marítimos"
+                    required
+                    entityName="categoría"
+                    onChange={(value) => setForm((current) => ({ ...current, categoria: value }))}
+                  />
 
-                  <label className="space-y-2">
-                    <span className="text-sm font-medium text-[#4f545a]">Sub categoría</span>
-                    <input
-                      name="subcategoria"
-                      value={form.subcategoria}
-                      onChange={handleChange}
-                      list="admin-subcategory-options"
-                      placeholder="Ej. O-rings, Neopreno, EPDM"
-                      className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                    />
-                    <datalist id="admin-subcategory-options">
-                      {subcategoryOptions.map((subcategoria) => (
-                        <option key={subcategoria} value={subcategoria} />
-                      ))}
-                    </datalist>
-                  </label>
+                  <CategoryComboBox
+                    label="Sub categoría"
+                    name="subcategoria"
+                    value={form.subcategoria}
+                    options={subcategoryOptions}
+                    placeholder="Ej. O-rings, Neopreno, EPDM"
+                    entityName="subcategoría"
+                    onChange={(value) => setForm((current) => ({ ...current, subcategoria: value }))}
+                  />
 
-                  <label className="space-y-2">
-                    <span className="text-sm font-medium text-[#4f545a]">Categoría menor</span>
-                    <input
-                      name="categoriaMenor"
-                      value={form.categoriaMenor}
-                      onChange={handleChange}
-                      list="admin-minor-category-options"
-                      placeholder="Ej. Pintura para interior"
-                      className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                    />
-                    <datalist id="admin-minor-category-options">
-                      {categoriaMenorOptions.map((categoriaMenor) => (
-                        <option key={categoriaMenor} value={categoriaMenor} />
-                      ))}
-                    </datalist>
-                  </label>
+                  <CategoryComboBox
+                    label="Categoría menor"
+                    name="categoriaMenor"
+                    value={form.categoriaMenor}
+                    options={categoriaMenorOptions}
+                    placeholder="Ej. Pintura para interior"
+                    entityName="categoría menor"
+                    onChange={(value) => setForm((current) => ({ ...current, categoriaMenor: value }))}
+                  />
 
                 <label className="space-y-2">
                   <span className="text-sm font-medium text-[#4f545a]">Marca</span>
@@ -2530,57 +2505,36 @@ export default function AdminPage() {
                       />
                     </label>
 
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[#4f545a]">Crear categoría</span>
-                      <input
-                        name="categoria"
-                        value={form.categoria}
-                        onChange={handleChange}
-                        list="admin-edit-category-options"
-                        placeholder="Ej. Transporte, logística y puertos marítimos"
-                        required
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                      />
-                      <datalist id="admin-edit-category-options">
-                        {categoryOptions.map((categoria) => (
-                          <option key={categoria} value={categoria} />
-                        ))}
-                      </datalist>
-                    </label>
+                    <CategoryComboBox
+                      label="Crear categoría"
+                      name="categoria"
+                      value={form.categoria}
+                      options={categoryOptions}
+                      placeholder="Ej. Transporte, logística y puertos marítimos"
+                      required
+                      entityName="categoría"
+                      onChange={(value) => setForm((current) => ({ ...current, categoria: value }))}
+                    />
 
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[#4f545a]">Sub categoría</span>
-                      <input
-                        name="subcategoria"
-                        value={form.subcategoria}
-                        onChange={handleChange}
-                        list="admin-edit-subcategory-options"
-                        placeholder="Ej. O-rings, Neopreno, EPDM"
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                      />
-                      <datalist id="admin-edit-subcategory-options">
-                        {subcategoryOptions.map((subcategoria) => (
-                          <option key={subcategoria} value={subcategoria} />
-                        ))}
-                      </datalist>
-                    </label>
+                    <CategoryComboBox
+                      label="Sub categoría"
+                      name="subcategoria"
+                      value={form.subcategoria}
+                      options={subcategoryOptions}
+                      placeholder="Ej. O-rings, Neopreno, EPDM"
+                      entityName="subcategoría"
+                      onChange={(value) => setForm((current) => ({ ...current, subcategoria: value }))}
+                    />
 
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[#4f545a]">Categoría menor</span>
-                      <input
-                        name="categoriaMenor"
-                        value={form.categoriaMenor}
-                        onChange={handleChange}
-                        list="admin-edit-minor-category-options"
-                        placeholder="Ej. Pintura para interior"
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                      />
-                      <datalist id="admin-edit-minor-category-options">
-                        {categoriaMenorOptions.map((categoriaMenor) => (
-                          <option key={categoriaMenor} value={categoriaMenor} />
-                        ))}
-                      </datalist>
-                    </label>
+                    <CategoryComboBox
+                      label="Categoría menor"
+                      name="categoriaMenor"
+                      value={form.categoriaMenor}
+                      options={categoriaMenorOptions}
+                      placeholder="Ej. Pintura para interior"
+                      entityName="categoría menor"
+                      onChange={(value) => setForm((current) => ({ ...current, categoriaMenor: value }))}
+                    />
 
                     <label className="space-y-2">
                       <span className="text-sm font-medium text-[#4f545a]">Marca</span>

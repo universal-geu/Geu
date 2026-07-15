@@ -3,176 +3,40 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import CauchosAccountLink from "../components/cauchos-account-link";
-import CauchosCartLink from "../components/cauchos-cart-link";
-import CauchosSearchForm from "../components/cauchos-search-form";
+import CauchosHeader from "../components/cauchos-header";
 import { useCart } from "../components/cart-provider";
+import { CART_ACCENT, DIVISION_BRAND, getDivisionFromBrandParam } from "@/lib/divisions";
 
-const importCartNavItems = [
-  "Luces y direccionales",
-  "Motores",
-  "Mecanizados",
-  "Inyeccion y extrusion",
-  "Linea electrica",
-  "Busqueda global",
-  "Logistica",
-  "Rastreo",
-];
+const ACTION_BUTTON_CLASS = {
+  blue: "border-[#075ed8] text-[#075ed8] hover:bg-[#075ed8]",
+  red: "border-[#e31313] text-[#e31313] hover:bg-[#e31313]",
+  gray: "border-[#6b7280] text-[#6b7280] hover:bg-[#6b7280]",
+} as const;
 
-function ImportMark() {
-  return (
-    <span className="inline-flex items-center gap-2 font-[family:var(--font-display)] text-3xl font-black tracking-[0.08em] text-slate-950">
-      <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#e31313] text-xs text-[#e31313]">
-        GE
-      </span>
-      GEU
-      <span className="text-[#e31313]">Import</span>
-    </span>
-  );
-}
-
-function CauchosCartHeader() {
-  return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-      <div className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto flex h-8 max-w-[1500px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8">
-          <div className="hidden gap-3 md:flex">
-            <span>Servicio al cliente 320 88 999 33</span>
-            <span className="text-slate-300">|</span>
-            <span>Ventas empresariales</span>
-            <span className="text-slate-300">|</span>
-            <span>Centro de ayuda</span>
-          </div>
-          <div className="flex w-full justify-between gap-3 md:w-auto md:justify-end">
-            <Link href="/cauchos#contacto" className="hover:text-[#075ed8]">
-              Cotizaciones
-            </Link>
-            <Link href="/cauchos#productos" className="hover:text-[#075ed8]">
-              Catalogos
-            </Link>
-            <Link href="/quienes-somos" className="hover:text-[#075ed8]">
-              GEU empresas
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto grid min-h-[74px] max-w-[1500px] items-center gap-4 px-5 py-3 md:grid-cols-[280px_1fr_auto] md:px-8">
-        <Link href="/cauchos" className="flex shrink-0 items-center">
-          <Image
-            src="/logo-universal-cauchos.png"
-            alt="GEU Universal de Cauchos"
-            width={2518}
-            height={420}
-            priority
-            className="h-auto object-contain"
-            style={{ width: "260px", maxWidth: "100%" }}
-          />
-        </Link>
-
-        <CauchosSearchForm className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner" />
-
-        <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
-          <CauchosCartLink />
-          <CauchosAccountLink className="font-bold hover:text-[#075ed8]" />
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function ImportCartHeader() {
-  return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-      <div className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto flex h-8 max-w-[1500px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8">
-          <div className="hidden gap-3 md:flex">
-            <span>Servicio al cliente 320 88 999 33</span>
-            <span className="text-slate-300">|</span>
-            <span>Importaciones empresariales</span>
-            <span className="text-slate-300">|</span>
-            <span>Centro de ayuda</span>
-          </div>
-          <div className="flex w-full justify-between gap-3 md:w-auto md:justify-end">
-            <Link href="/import#contacto" className="hover:text-[#e31313]">
-              Cotizaciones
-            </Link>
-            <Link href="/import#productos" className="hover:text-[#e31313]">
-              Catalogos
-            </Link>
-            <Link href="/quienes-somos" className="hover:text-[#e31313]">
-              GEU empresas
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto grid min-h-[74px] max-w-[1500px] items-center gap-4 px-5 py-3 md:grid-cols-[300px_1fr_auto] md:px-8">
-        <Link href="/import" className="flex shrink-0 items-center">
-          <ImportMark />
-        </Link>
-
-        <form className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner">
-          <input
-            aria-label="Buscar productos importados"
-            className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-            placeholder="Buscar luces, motores, mecanizados, referencias..."
-          />
-          <button
-            type="button"
-            className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
-            aria-label="Buscar"
-          >
-            ⌕
-          </button>
-        </form>
-
-        <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
-          <CauchosCartLink accent="red" href="/carrito?brand=import" />
-          <Link href="/login?next=/mi-cuenta&brand=import" className="font-bold hover:text-[#e31313]">
-            Mi cuenta
-          </Link>
-        </div>
-      </div>
-
-      <div className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-[1500px] px-5 md:px-8">
-          <nav className="flex min-h-14 items-stretch justify-between gap-2 overflow-x-auto text-[11px] font-black uppercase tracking-[0.02em] text-slate-800">
-            {importCartNavItems.map((item, index) => (
-              <Link
-                key={item}
-                href={index < 6 ? "/import#catalogo-import" : index === 7 ? "/import#rastreo" : "/import#contacto"}
-                className="flex min-w-max items-center border-b-2 border-transparent px-3 text-center hover:border-[#e31313] hover:text-[#e31313]"
-              >
-                {item}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </div>
-    </header>
-  );
-}
+const PRIMARY_BUTTON_CLASS = {
+  blue: "border-[#075ed8] bg-[#075ed8] hover:bg-white hover:text-[#075ed8]",
+  red: "border-[#e31313] bg-[#e31313] hover:bg-white hover:text-[#e31313]",
+  gray: "border-[#6b7280] bg-[#6b7280] hover:bg-white hover:text-[#6b7280]",
+} as const;
 
 export default function CarritoPage() {
   const searchParams = useSearchParams();
   const { items, incrementItem, decrementItem, removeItem, clearCart } =
     useCart();
-  const isImportCart =
-    searchParams.get("brand") === "import" ||
-    items.some((item) => item.imagen.includes("import") || item.imagen.includes("home-import"));
-  const accent = isImportCart ? "#e31313" : "#075ed8";
-  const homeHref = isImportCart ? "/import#productos" : "/cauchos#productos";
-  const actionClasses = isImportCart
-    ? "border-[#e31313] text-[#e31313] hover:bg-[#e31313]"
-    : "border-[#075ed8] text-[#075ed8] hover:bg-[#075ed8]";
-  const primaryClasses = isImportCart
-    ? "border-[#e31313] bg-[#e31313] hover:bg-white hover:text-[#e31313]"
-    : "border-[#075ed8] bg-[#075ed8] hover:bg-white hover:text-[#075ed8]";
+  const brandParam = searchParams.get("brand");
+  const division = getDivisionFromBrandParam(brandParam);
+  const brand = DIVISION_BRAND[division];
+  const isImportCart = division === "Import";
+  const cartAccent = CART_ACCENT[division];
+  const accent = brand.accent;
+  const homeHref = `${brand.basePath}#productos`;
+  const checkoutHref = brandParam ? `/checkout?brand=${brandParam}` : "/checkout";
+  const actionClasses = ACTION_BUTTON_CLASS[cartAccent];
+  const primaryClasses = PRIMARY_BUTTON_CLASS[cartAccent];
 
   return (
     <>
-      {isImportCart ? <ImportCartHeader /> : <CauchosCartHeader />}
+      <CauchosHeader division={division} />
       <main className="min-h-screen bg-slate-50 text-slate-950">
         <section className="mx-auto max-w-[1500px] px-5 py-12 md:px-8">
           <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -237,7 +101,7 @@ export default function CarritoPage() {
                         className="text-[11px] font-black uppercase tracking-[0.12em]"
                         style={{ color: accent }}
                       >
-                        {isImportCart ? "GEU Import" : "Universal de Cauchos"}
+                        {brand.label}
                       </p>
                       <h2 className="mt-2 text-2xl font-black tracking-[-0.02em] text-slate-950">
                         {item.nombre}
@@ -308,7 +172,7 @@ export default function CarritoPage() {
                 </div>
 
                 <Link
-                  href="/checkout"
+                  href={checkoutHref}
                   className={`mt-8 inline-flex w-full items-center justify-center rounded-full border px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white transition-colors duration-200 ${primaryClasses}`}
                 >
                   Continuar compra

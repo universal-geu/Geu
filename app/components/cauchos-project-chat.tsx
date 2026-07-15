@@ -7,6 +7,7 @@ type StepType = "text" | "textarea" | "choice" | "multichoice";
 
 type Step = {
   key: string;
+  label: string;
   bot: string;
   type: StepType;
   options?: string[];
@@ -18,81 +19,132 @@ type Message = {
   text: string;
 };
 
-function buildSteps(brandLabel: string): Step[] {
+function buildSteps(brandLabel: string, division: DivisionName): Step[] {
+  const isImport = division === "Import";
+  const isPlastic = division === "Plastic";
+
   return [
   {
     key: "contacto",
-    bot: `Hola, soy el asistente de ${brandLabel}. Vamos a armar tu evaluacion tecnica. Para empezar, cual es tu nombre y el de tu empresa?`,
+    label: "Cliente / contacto",
+    bot: `Hola, soy el asistente de ${brandLabel}. Vamos a armar tu ${isImport ? "solicitud de importacion" : "evaluacion tecnica"}. Para empezar, cual es tu nombre y el de tu empresa?`,
     type: "text",
     placeholder: "Ej: Karen Dayanis - Ceramica San Lorenzo",
   },
   {
     key: "nitTelefono",
+    label: "NIT / telefono",
     bot: "Perfecto. Compartime el NIT y un telefono de contacto.",
     type: "text",
     placeholder: "Ej: 860513970-1 - 300 000 0000",
   },
   {
     key: "tipoProducto",
-    bot: "Es un producto nuevo o una modificacion de uno existente?",
+    label: "Tipo de solicitud",
+    bot: isImport
+      ? "Es una importacion nueva o una reposicion de una referencia que ya nos compras?"
+      : "Es un producto nuevo o una modificacion de uno existente?",
     type: "choice",
-    options: ["Producto nuevo", "Modificacion"],
+    options: isImport ? ["Importacion nueva", "Reposicion"] : ["Producto nuevo", "Modificacion"],
   },
   {
     key: "producto",
-    bot: "Cuentame del producto: medidas, color y para que se usa.",
+    label: isImport ? "Referencia a importar" : "Producto",
+    bot: isImport
+      ? "Cuentame que necesitas importar: referencia, especificaciones y para que se usa."
+      : isPlastic
+        ? "Cuentame de la pieza o perfil plastico: medidas, material y para que se usa."
+        : "Cuentame del producto: medidas, color y para que se usa.",
     type: "textarea",
-    placeholder: "Ej: Manguera diam. int. 33mm x 37mm d. ext, color negro, uso industrial",
+    placeholder: isImport
+      ? "Ej: Repuestos electronicos automotrices, 500 unidades, uso en linea de ensamble"
+      : isPlastic
+        ? "Ej: Perfil de PVC 40mm x 20mm, transparente, uso en vitrina"
+        : "Ej: Manguera diam. int. 33mm x 37mm d. ext, color negro, uso industrial",
   },
   {
     key: "proceso",
-    bot: "Que proceso de fabricacion necesita? Puedes elegir varios.",
+    label: isImport ? "Modalidad de importacion" : "Proceso solicitado",
+    bot: isImport
+      ? "Que necesitas gestionar en esta importacion? Puedes elegir varias."
+      : "Que proceso de fabricacion necesita? Puedes elegir varios.",
     type: "multichoice",
-    options: [
-      "Vulcanizado",
-      "Inyeccion plastico",
-      "Inyeccion caucho",
-      "Mecanizado",
-      "Mezcla",
-      "Poliuretano",
-      "Extrusion",
-      "Ensamble",
-      "Otro",
-    ],
+    options: isImport
+      ? [
+          "Compra a fabrica en origen",
+          "Consolidacion de carga",
+          "Nacionalizacion y aduana",
+          "Transporte internacional",
+          "Distribucion en Colombia",
+          "Otro",
+        ]
+      : isPlastic
+        ? [
+            "Extrusion",
+            "Inyeccion plastico",
+            "Mecanizado",
+            "Corte y acabado",
+            "Desarrollo de molde",
+            "Ensamble",
+            "Otro",
+          ]
+        : [
+            "Vulcanizado",
+            "Inyeccion plastico",
+            "Inyeccion caucho",
+            "Mecanizado",
+            "Mezcla",
+            "Poliuretano",
+            "Extrusion",
+            "Ensamble",
+            "Otro",
+          ],
   },
   {
     key: "condiciones",
-    bot: "Bajo que condiciones de trabajo va a operar? Puedes elegir varias.",
+    label: isImport ? "Requisitos de la importacion" : "Condiciones de trabajo",
+    bot: isImport
+      ? "Que mas necesitas para esta importacion? Puedes elegir varias."
+      : "Bajo que condiciones de trabajo va a operar? Puedes elegir varias.",
     type: "multichoice",
-    options: [
-      "Hidrocarburos",
-      "Abrasion",
-      "Impacto",
-      "Uso externo",
-      "Presion de trabajo",
-      "Temperatura de trabajo",
-      "Grado alimenticio",
-      "Requisito legal",
-    ],
+    options: isImport
+      ? [
+          "Certificados de origen",
+          "Bodegaje",
+          "Entrega puerta a puerta",
+          "Seguro de carga",
+          "Registro sanitario o tecnico",
+          "Requisito legal",
+        ]
+      : isPlastic
+        ? [
+            "Uso exterior (rayos UV)",
+            "Resistencia quimica",
+            "Grado alimenticio",
+            "Transparencia optica",
+            "Temperatura de trabajo",
+            "Requisito legal",
+          ]
+        : [
+            "Hidrocarburos",
+            "Abrasion",
+            "Impacto",
+            "Uso externo",
+            "Presion de trabajo",
+            "Temperatura de trabajo",
+            "Grado alimenticio",
+            "Requisito legal",
+          ],
   },
   {
     key: "comercial",
+    label: "Cantidad / entrega",
     bot: "Para cerrar: que cantidad necesitas y para cuando?",
     type: "text",
     placeholder: "Ej: 100 mts - Entrega 5 de marzo",
   },
   ];
 }
-
-const STEP_LABELS: Record<string, string> = {
-  contacto: "Cliente / contacto",
-  nitTelefono: "NIT / telefono",
-  tipoProducto: "Tipo de solicitud",
-  producto: "Producto",
-  proceso: "Proceso solicitado",
-  condiciones: "Condiciones de trabajo",
-  comercial: "Cantidad / entrega",
-};
 
 type Props = {
   division?: DivisionName;
@@ -107,7 +159,7 @@ export default function CauchosProjectChat({
 }: Props) {
   const brandLabel = DIVISION_BRAND[division].label;
   const accent = division === "Cauchos" ? "#dd1b44" : DIVISION_BRAND[division].accent;
-  const STEPS = useMemo(() => buildSteps(brandLabel), [brandLabel]);
+  const STEPS = useMemo(() => buildSteps(brandLabel, division), [brandLabel, division]);
   const resolvedTriggerClassName =
     triggerClassName ||
     `inline-flex items-center justify-center rounded-full border border-white bg-white px-8 py-4 text-sm font-black uppercase tracking-[0.08em] shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition hover:opacity-90`;
@@ -214,7 +266,7 @@ export default function CauchosProjectChat({
     }
   };
 
-  const mailBody = STEPS.map((step) => `${STEP_LABELS[step.key]}: ${answers[step.key] ?? ""}`).join("%0D%0A");
+  const mailBody = STEPS.map((step) => `${step.label}: ${answers[step.key] ?? ""}`).join("%0D%0A");
   const mailHref = `mailto:contacto@grupogeu.com?subject=${encodeURIComponent(
     "Solicitud de evaluacion tecnica de producto"
   )}&body=${mailBody}`;
@@ -282,7 +334,7 @@ export default function CauchosProjectChat({
                     {STEPS.map((step) => (
                       <div key={step.key} className="flex flex-col">
                         <dt className="text-[11px] font-black uppercase tracking-[0.04em] text-slate-400">
-                          {STEP_LABELS[step.key]}
+                          {step.label}
                         </dt>
                         <dd className="font-semibold text-slate-800">{answers[step.key]}</dd>
                       </div>

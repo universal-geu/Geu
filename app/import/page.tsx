@@ -60,10 +60,34 @@ const importOffers = [
 ];
 
 const importFeatured = [
-  { title: "Importacion empresarial", href: "/import", imageKey: "import-destacada-1" },
-  { title: "Proveedores verificados", href: "/import", imageKey: "import-destacada-2" },
-  { title: "Logistica y aduana", href: "#contacto", imageKey: "import-destacada-3" },
-  { title: "Abastecimiento recurrente", href: "#contacto", imageKey: "import-destacada-4" },
+  {
+    title: "Importacion empresarial",
+    href: "/import",
+    imageKey: "import-destacada-1",
+    subtitle: "Compras internacionales gestionadas de punta a punta para tu operacion.",
+    ctaLabel: "Ver mas",
+  },
+  {
+    title: "Proveedores verificados",
+    href: "/import",
+    imageKey: "import-destacada-2",
+    subtitle: "Red de fabricantes y distribuidores auditados en origen.",
+    ctaLabel: "Ver mas",
+  },
+  {
+    title: "Logistica y aduana",
+    href: "#contacto",
+    imageKey: "import-destacada-3",
+    subtitle: "Nacionalizacion, trazabilidad y entrega puerta a puerta.",
+    ctaLabel: "Cotizar",
+  },
+  {
+    title: "Abastecimiento recurrente",
+    href: "#contacto",
+    imageKey: "import-destacada-4",
+    subtitle: "Reposicion programada para que nunca te quedes sin inventario.",
+    ctaLabel: "Cotizar",
+  },
 ];
 
 export default async function ImportPage() {
@@ -172,6 +196,9 @@ export default async function ImportPage() {
                     >
                       {product.nombre}
                     </Link>
+                    <p className="mt-2 min-h-12 text-sm font-semibold leading-6 text-slate-500">
+                      {product.descripcion}
+                    </p>
                     <span className="mt-3 inline-flex w-fit rounded-full bg-[#fff0f0] px-3 py-1 text-xs font-black text-slate-600">
                       {product.disponibilidad}
                     </span>

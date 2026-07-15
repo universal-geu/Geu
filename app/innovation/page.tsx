@@ -1,427 +1,358 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
-import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
+import SolutionsCarousel from "../energy/solutions-carousel";
+import CountUpStats from "./count-up-stats";
+import InnovationHeader from "./innovation-header";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
-import { getProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos" },
-  { label: "Import", href: "/import" },
-  { label: "Innovation", href: "/innovation", active: true },
-  { label: "Energy", href: "/energy" },
-  { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/quienes-somos" },
-  { label: "Contacto", href: "#contacto" },
-];
+const heroVideo = "/geu-innovation-hero.mp4";
+const brandBannerImage = "/geu-innovation-brand-banner.png";
+const supportBannerImage = "/geu-innovation-support-banner.png";
 
-const innovationMenu = [
-  "Automatizacion",
-  "Software y data",
-  "Ingenieria",
-  "Prototipos",
-  "Consultoria",
-  "Proyectos",
-  "Servicios",
-  "Contacto",
-];
-
-const innovationCategories = [
+const stovesProject = [
   {
-    label: "Automatizacion",
-    title: "Automatizacion industrial",
-    image: "/innovation-hero-banner.png",
-    count: "Procesos",
+    title: "Encuentro con la comunidad",
+    text: "Visitamos a las familias para entender sus necesidades antes de entregar cada estufa.",
+    image: "/geu-innovation-project-1.png",
   },
   {
-    label: "Software",
-    title: "Software y data",
-    image: "/home-innovation.png",
-    count: "Analitica",
+    title: "Transporte hasta la vereda",
+    text: "Llevamos cada estufa hasta comunidades de dificil acceso en zonas rurales.",
+    image: "/geu-innovation-project-2.png",
   },
   {
-    label: "Ingenieria",
-    title: "Ingenieria y desarrollo",
-    image: "/cauchos-industria-banner.png",
-    count: "A medida",
+    title: "Instalación y capacitación",
+    text: "Instalamos la estufa y capacitamos a la familia en su uso seguro y eficiente.",
+    image: "/geu-innovation-project-3.png",
   },
   {
-    label: "Prototipos",
-    title: "Prototipos tecnicos",
-    image: "/innovation-hero-banner.png",
-    count: "Validacion",
+    title: "Estufa ecoeficiente GEU",
+    text: "Un diseño pensado para reducir el consumo de leña y mejorar la calidad del aire en el hogar.",
+    image: "/geu-innovation-project-4.png",
   },
   {
-    label: "Consultoria",
-    title: "Innovacion abierta",
-    image: "/home-innovation.png",
-    count: "Asesoria",
+    title: "Acompañamiento en sitio",
+    text: "Nuestro equipo resuelve dudas y ajusta la estufa junto a cada familia.",
+    image: "/geu-innovation-project-5.png",
   },
   {
-    label: "Proyectos",
-    title: "Proyectos especiales",
-    image: "/cauchos-industria-banner.png",
-    count: "Cotizacion",
+    title: "Comunidad conectada",
+    text: "Cada entrega fortalece el vínculo entre GEU y las comunidades donde trabajamos.",
+    image: "/geu-innovation-project-6.png",
   },
 ];
 
-const innovationProductsFallback = [
+const manufacturing = [
   {
-    slug: "automatizacion-industrial",
-    marca: "GEU Innovation",
-    nombre: "Automatizacion industrial",
-    descripcion: "Sistemas inteligentes para optimizar lineas, control operativo y productividad.",
-    disponibilidad: "Proyecto por alcance",
-    precio: "Cotizar",
-    precioAnterior: "Diagnostico tecnico",
-    descuento: "Nuevo",
-    imagen: "/innovation-hero-banner.png",
+    title: "Corte y armado del chasis",
+    text: "Cortamos y armamos la estructura base de cada estufa en acero calibre industrial.",
+    image: "/geu-innovation-fabrica-1.jpg",
   },
   {
-    slug: "software-data-intelligence",
-    marca: "GEU Innovation",
-    nombre: "Software y data intelligence",
-    descripcion: "Plataformas para convertir datos de operacion en decisiones claras y medibles.",
-    disponibilidad: "Implementacion modular",
-    precio: "Cotizar",
-    precioAnterior: "Roadmap digital",
-    descuento: "B2B",
-    imagen: "/home-innovation.png",
+    title: "Soldadura estructural",
+    text: "Soldamos cada unión a mano para garantizar resistencia y durabilidad.",
+    image: "/geu-innovation-fabrica-2.jpg",
   },
   {
-    slug: "ingenieria-desarrollo",
-    marca: "GEU Innovation",
-    nombre: "Ingenieria y desarrollo",
-    descripcion: "Diseno, prototipo y validacion de soluciones tecnicas para retos complejos.",
-    disponibilidad: "A medida",
-    precio: "Cotizar",
-    precioAnterior: "Prototipo inicial",
-    descuento: "Lab",
-    imagen: "/cauchos-industria-banner.png",
+    title: "Ensamble de puertas y detalles",
+    text: "Ensamblamos puertas, bisagras y detalles funcionales de cada estufa.",
+    image: "/geu-innovation-fabrica-3.jpg",
   },
   {
-    slug: "consultoria-innovacion",
-    marca: "GEU Innovation",
-    nombre: "Consultoria de innovacion",
-    descripcion: "Acompanamiento para transformar ideas empresariales en planes ejecutables.",
-    disponibilidad: "Agenda disponible",
-    precio: "Cotizar",
-    precioAnterior: "Sesion estrategica",
-    descuento: "Pro",
-    imagen: "/innovation-hero-banner.png",
+    title: "Acabados y pintura",
+    text: "Aplicamos pintura de alta temperatura resistente al uso diario.",
+    image: "/geu-innovation-fabrica-4.jpg",
+  },
+  {
+    title: "Control de calidad",
+    text: "Cada estufa lleva un sello de identificación y pasa control de calidad.",
+    image: "/geu-innovation-fabrica-5.jpg",
+  },
+  {
+    title: "Producto terminado",
+    text: "Estufas listas para ser entregadas a las familias que las necesitan.",
+    image: "/geu-innovation-fabrica-6.jpg",
   },
 ];
 
-const innovationOffers = [
-  { title: "Automatizacion industrial", href: "#contacto", imageKey: "innovation-oferta-1" },
-  { title: "Software y data", href: "#contacto", imageKey: "innovation-oferta-2" },
-  { title: "Ingenieria y desarrollo", href: "#contacto", imageKey: "innovation-oferta-3" },
-  { title: "Consultoria de innovacion", href: "#contacto", imageKey: "innovation-oferta-4" },
+const stovesImpact = [
+  { value: 120, unit: "+", label: "Estufas entregadas" },
+  { value: 480, unit: "+", label: "Personas beneficiadas" },
+  { value: 15, unit: "", label: "Municipios atendidos" },
+  { value: 100, unit: "%", label: "Fabricación artesanal nacional" },
 ];
 
-const innovationFeatured = [
-  { title: "Automatizacion", href: "#contacto", imageKey: "innovation-destacada-1" },
-  { title: "Data intelligence", href: "#contacto", imageKey: "innovation-destacada-2" },
-  { title: "Prototipos tecnicos", href: "#contacto", imageKey: "innovation-destacada-3" },
-  { title: "Innovacion abierta", href: "#contacto", imageKey: "innovation-destacada-4" },
+const solutions = [
+  {
+    title: "Autoservicio 24/7",
+    text: "Tu equipo se sirve solo: bebidas y snacks disponibles a cualquier hora, sin filas ni intermediarios.",
+    image: "/geu-innovation-card-autoservicio.png",
+  },
+  {
+    title: "Pago sin contacto",
+    text: "Cada producto se registra al instante: cobro automático y trazabilidad total del consumo.",
+    image: "/geu-innovation-card-pago.png",
+  },
+  {
+    title: "Asistente GEU",
+    text: "Un asistente siempre listo para reposición, mantenimiento y soporte técnico en sitio.",
+    image: "/geu-innovation-card-asistente.png",
+  },
+  {
+    title: "Espacios colaborativos",
+    text: "Puntos GEU Innovation pensados para integrarse al ritmo de tu oficina o punto de venta.",
+    image: brandBannerImage,
+  },
 ];
 
-function InnovationLogo() {
+function SnowflakeIcon() {
   return (
-    <Image
-      src="/logo-geu-innovation.png"
-      alt="GEU Innovation"
-      width={2000}
-      height={452}
-      priority
-      className="h-auto w-[270px] max-w-full object-contain"
-    />
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+      <path d="M12 2v20M4.5 6.5l15 11M19.5 6.5l-15 11" />
+      <path d="M12 2 9.5 4.5M12 2l2.5 2.5M12 22l-2.5-2.5M12 22l2.5-2.5" />
+    </svg>
   );
 }
 
+function WifiIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+      <path d="M2.5 8.5a15 15 0 0 1 19 0" />
+      <path d="M5.8 12.3a10.5 10.5 0 0 1 12.4 0" />
+      <path d="M9 16a5.5 5.5 0 0 1 6 0" />
+      <circle cx="12" cy="19.5" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3.5 2" />
+    </svg>
+  );
+}
+
+function PeopleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+      <circle cx="17.5" cy="9" r="2.4" />
+      <path d="M15.8 14.2c2.6.5 4.4 2.7 4.4 5.3" />
+    </svg>
+  );
+}
+
+const heroStats = [
+  { icon: SnowflakeIcon, value: "150", unit: "+", label: "Puntos inteligentes instalados" },
+  { icon: WifiIcon, value: "99.2", unit: "%", label: "Disponibilidad del sistema" },
+  { icon: ClockIcon, value: "24/7", unit: "", label: "Autoservicio disponible" },
+  { icon: PeopleIcon, value: "40", unit: "+", label: "Empresas conectadas" },
+];
+
 export default async function InnovationPage() {
   const siteImages = await getSiteImages();
-  const allProducts = await getProducts();
-  const innovationProducts = allProducts.filter((product) => product.division === "Innovation");
-  const displayProducts =
-    innovationProducts.length > 0 ? innovationProducts : innovationProductsFallback;
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-        <div className="border-b border-slate-200 bg-slate-50">
-          <div className="mx-auto flex h-8 max-w-[1500px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8">
-            <div className="hidden gap-3 md:flex">
-              <span>Servicio al cliente 320 88 999 33</span>
-              <span className="text-slate-300">|</span>
-              <span>Innovacion empresarial</span>
-              <span className="text-slate-300">|</span>
-              <span>Centro de ayuda</span>
-            </div>
-            <div className="flex w-full justify-between gap-3 md:w-auto md:justify-end">
-              <Link href="#contacto" className="hover:text-[#0498b4]">Cotizaciones</Link>
-              <Link href="#productos" className="hover:text-[#0498b4]">Catalogos</Link>
-              <Link href="/quienes-somos" className="hover:text-[#0498b4]">GEU empresas</Link>
-            </div>
-          </div>
-        </div>
+    <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
+      <InnovationHeader />
 
-        <div className="mx-auto grid min-h-[74px] max-w-[1500px] items-center gap-4 px-5 py-3 md:grid-cols-[300px_1fr_auto] md:px-8">
-          <Link href="/" className="flex shrink-0 items-center">
-            <InnovationLogo />
-          </Link>
+      <section className="relative isolate flex min-h-screen flex-col overflow-hidden border-b border-white/10">
+        <video
+          src={heroVideo}
+          poster={resolveImage("innovation-principal", siteImages)}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover object-[58%_28%]"
+        />
+        <div className="absolute inset-0 bg-black/38" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.15)_0%,rgba(0,0,0,0.08)_56%,rgba(0,0,0,0.6)_100%)]" />
 
-          <form className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner">
-            <input
-              aria-label="Buscar soluciones de innovacion"
-              className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-              placeholder="Buscar automatizacion, software, data, prototipos..."
-            />
-            <button
-              type="button"
-              className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
-              aria-label="Buscar"
+        <div className="relative z-10 mx-auto flex w-full max-w-[1500px] flex-1 flex-col items-center justify-center px-5 text-center md:px-8">
+          <div className="innovation-hero-intro flex max-w-2xl flex-col items-center">
+            <h1 className="font-[family:var(--font-display)] text-5xl font-black uppercase leading-none tracking-[0.02em] text-white/85 md:text-7xl">
+              Autoservicio inteligente
+            </h1>
+            <Link
+              href="#soluciones"
+              className="mt-8 inline-flex items-center gap-3 rounded-[3px] border border-[#0498b4]/70 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-[#0498b4] hover:bg-[#0498b4] hover:text-black"
             >
-              ⌕
-            </button>
-          </form>
-
-          <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
-            <Link href="/quienes-somos" className="font-bold hover:text-[#0498b4]">Nosotros</Link>
-            <Link href="#contacto" className="font-bold hover:text-[#0498b4]">Asesoria</Link>
-            <Link href="/login?next=/mi-cuenta&brand=innovation" className="font-bold hover:text-[#0498b4]">Mi cuenta</Link>
+              Explorar soluciones <span aria-hidden="true">→</span>
+            </Link>
           </div>
         </div>
 
-        <div className="border-t border-slate-200 bg-white">
-          <div className="mx-auto max-w-[1500px] px-5 md:px-8">
-            <nav className="flex min-h-14 items-stretch justify-between gap-2 overflow-x-auto text-[11px] font-black uppercase tracking-[0.02em] text-slate-800">
-              {innovationMenu.map((item, index) => (
-                <Link
-                  key={item}
-                  href={index < 6 ? "#catalogo-innovation" : "#contacto"}
-                  className="flex min-w-max items-center border-b-2 border-transparent px-3 text-center hover:border-[#0498b4] hover:text-[#0498b4]"
-                >
-                  {item}
-                </Link>
-              ))}
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      <section id="catalogo-innovation" className="border-b border-slate-200 bg-white text-slate-900">
-        <div className="mx-auto max-w-[1500px] px-5 py-7 md:px-8">
-          <CauchosCategoryCarousel categories={innovationCategories} />
-        </div>
-        <div className="text-white" style={{ backgroundColor: "#0498b4" }}>
-          <div className="mx-auto flex min-h-14 max-w-[1500px] flex-wrap items-center justify-center gap-4 px-5 py-3 text-center md:px-8">
-            <p className="text-lg font-black tracking-[-0.01em]">
-              Innovacion empresarial y proyectos a medida
-            </p>
-            <span className="rounded bg-white px-3 py-1 text-sm font-black text-[#0498b4]">
-              Asesoria tecnica
-            </span>
-            <span className="text-sm font-bold text-white/86">
-              Automatizacion, software, data, prototipos y transformacion operativa.
-            </span>
-          </div>
-        </div>
-        <div className="bg-slate-950">
-          <div
-            className="mx-auto min-h-[260px] max-w-[1920px] bg-cover bg-center md:min-h-[420px] xl:min-h-[560px]"
-            style={{
-              backgroundImage: `linear-gradient(90deg, rgba(4,152,180,0.18), rgba(2,6,23,0.08)), url('${resolveImage("innovation-principal", siteImages)}')`,
-            }}
-            aria-label="Innovacion empresarial para cada industria"
-            role="img"
-          />
-        </div>
-      </section>
-
-      <section id="productos" className="scroll-mt-56 border-b border-slate-200 bg-slate-50 text-slate-950">
-        <div className="mx-auto max-w-[1500px] px-5 py-12 md:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-5">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">
-                Soluciones destacadas
-              </p>
-              <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] md:text-5xl">
-                Innovation para compra empresarial
-              </h2>
-              <p className="mt-3 max-w-2xl text-base font-semibold leading-7 text-slate-500">
-                Seleccion de servicios para empresas que necesitan disenar, automatizar, medir y mejorar procesos.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-[0.06em] text-slate-600">
-              {["Diagnostico", "Por proyecto", "A medida"].map((tag) => (
-                <span key={tag} className="rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {displayProducts.map((product) => (
-              <article
-                key={product.slug}
-                className="group flex min-h-[455px] flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#0498b4]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)]"
-              >
-                <Link
-                  href="#contacto"
-                  className="relative block h-52 overflow-hidden bg-slate-200"
-                  style={{
-                    backgroundImage: `linear-gradient(180deg,rgba(2,6,23,0.04),rgba(2,6,23,0.34)),url('${product.imagen}')`,
-                    backgroundPosition: "center",
-                    backgroundSize: "cover",
-                  }}
-                >
-                  <span className="absolute left-3 top-3 rounded-[4px] bg-[#0498b4] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(4,152,180,0.24)]">
-                    {product.descuento}
-                  </span>
-                  <span className="absolute bottom-3 right-3 rounded-full bg-white/92 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#0498b4] shadow-sm">
-                    Innovation
-                  </span>
-                </Link>
-                <span className="flex flex-1 flex-col p-6">
-                  <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#0498b4]">
-                    {product.marca}
-                  </span>
-                  <Link
-                    href="#contacto"
-                    className="mt-2 min-h-14 text-xl font-black leading-7 text-slate-950 hover:text-[#0498b4]"
-                  >
-                    {product.nombre}
-                  </Link>
-                  <p className="mt-2 min-h-12 text-sm font-semibold leading-6 text-slate-500">
-                    {product.descripcion}
+        <div className="relative z-10 border-t border-white/10 bg-black/55 backdrop-blur-sm">
+          <div className="mx-auto grid max-w-[1500px] grid-cols-4 gap-x-6 gap-y-8 px-5 py-7 max-[560px]:grid-cols-2 md:px-8">
+            {heroStats.map((stat) => (
+              <div key={stat.label} className="flex items-center gap-3">
+                <stat.icon />
+                <div>
+                  <p className="font-[family:var(--font-display)] text-2xl font-black leading-none text-white md:text-3xl">
+                    {stat.value}
+                    <span className="text-sm font-black uppercase text-white/70">{stat.unit}</span>
                   </p>
-                  <span className="mt-3 inline-flex w-fit rounded-full bg-[#e8f7fa] px-3 py-1 text-xs font-black text-slate-600">
-                    {product.disponibilidad}
-                  </span>
-                  <span className="mt-auto border-t border-slate-100 pt-5">
-                    <span className="block text-xs font-bold text-slate-400">
-                      {product.precioAnterior}
-                    </span>
-                    <span className="mt-1 block text-2xl font-black tracking-[-0.02em] text-slate-950">
-                      {product.precio}
-                    </span>
-                  </span>
-                  <Link
-                    href="#contacto"
-                    className="mt-6 inline-flex justify-center rounded-full border border-[#0498b4] bg-white px-4 py-3 text-center text-xs font-black uppercase tracking-[0.08em] text-[#0498b4] transition-colors duration-200 hover:bg-[#0498b4] hover:text-white"
-                  >
-                    Solicitar asesoria
-                  </Link>
-                  <Link
-                    href="#contacto"
-                    className="mt-3 inline-flex justify-center rounded-full border border-[#0498b4] bg-white px-4 py-2 text-center text-xs font-black uppercase tracking-[0.08em] text-[#0498b4] transition-colors duration-200 hover:bg-[#0498b4] hover:text-white"
-                  >
-                    Ver detalle
-                  </Link>
-                </span>
-              </article>
+                  <p className="mt-1.5 max-w-[10rem] text-[10px] font-bold uppercase leading-tight tracking-[0.06em] text-white/60">
+                    {stat.label}
+                  </p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
+
+        <div className="pointer-events-none absolute bottom-[7.5rem] left-5 hidden flex-col items-center gap-3 md:left-8 lg:flex">
+          <span className="h-8 w-px bg-white/30" />
+          <span className="h-1.5 w-1.5 rounded-full border border-[#0498b4]" />
+          <span className="[writing-mode:vertical-rl] text-[9px] font-black uppercase tracking-[0.3em] text-white/45">
+            Scroll
+          </span>
+        </div>
       </section>
 
-      <BrandOfferSection
-        accent="#0498b4"
-        eyebrow="Ofertas Innovation"
-        title="Soluciones listas para transformar"
-        ctaHref="#contacto"
-        items={innovationOffers}
-        siteImages={siteImages}
-      />
+      <section id="soluciones" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
+        <div className="py-14">
+          <h2 className="mx-auto max-w-xl px-5 text-center text-3xl font-black tracking-[-0.02em] md:px-8 md:text-4xl">
+            Diseñamos puntos inteligentes a la medida de tu espacio.
+          </h2>
+          <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
+            <SolutionsCarousel items={solutions} />
+          </div>
+        </div>
+      </section>
 
-      <section id="contacto" className="mx-auto max-w-[1500px] px-5 pb-8 md:px-8">
-        <div className="relative overflow-hidden rounded-[10px] border border-white/10 bg-[#071225] shadow-[0_24px_70px_rgba(7,18,37,0.22)]">
-          <span className="absolute inset-y-0 left-0 w-1.5 bg-[#0498b4]" aria-hidden="true" />
-          <span
-            className="absolute inset-0 opacity-80"
-            aria-hidden="true"
-            style={{
-              background:
-                "radial-gradient(circle at 78% 18%, rgba(4,152,180,0.34), transparent 34%), linear-gradient(135deg, rgba(255,255,255,0.1), transparent 34%)",
-            }}
+      <section id="sistema" className="relative overflow-hidden border-b border-white/10 bg-black">
+        <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
+          <Image
+            src={supportBannerImage}
+            alt="Asistente GEU Innovation junto a un punto inteligente, listo para dar soporte"
+            fill
+            sizes="100vw"
+            className="object-cover"
           />
-          <div className="relative grid gap-6 px-8 py-10 md:grid-cols-[1fr_auto] md:items-center md:px-10">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-[#8de9f6]">
-                Necesitas una solucion innovadora?
-              </p>
-              <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] text-white md:text-4xl">
-                Hablemos de tu proyecto
-              </h2>
-              <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-white/74">
-                Nuestro equipo puede ayudarte a convertir una idea, necesidad tecnica o proceso manual en una solucion clara.
-              </p>
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.02)_26%,rgba(0,0,0,0.02)_66%,rgba(0,0,0,0.78)_100%)]" />
+
+          <div className="absolute inset-0 flex items-center pb-24 md:pb-28">
+            <div className="mx-auto w-full max-w-[1500px] px-5 md:px-8">
+              <div className="max-w-md">
+                <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">
+                  Activa tu punto GEU <span className="h-px w-10 bg-[#0498b4]" />
+                </p>
+                <h2 className="mt-3 font-[family:var(--font-display)] text-2xl font-black leading-[1.05] tracking-[-0.02em] text-white md:text-4xl">
+                  Un sistema que se adapta a tu operación.
+                </h2>
+                <p className="mt-3 hidden max-w-sm text-sm font-semibold leading-6 text-white/80 md:block">
+                  Simula, cotiza y activa un punto de autoservicio inteligente con la ayuda de nuestro equipo GEU Innovation.
+                </p>
+                <Link
+                  href="#contacto"
+                  className="mt-4 inline-flex items-center gap-3 rounded-[3px] border border-[#0498b4]/70 px-5 py-3 text-[11px] font-black uppercase tracking-[0.12em] text-[#0498b4] hover:bg-[#0498b4] hover:text-black md:px-6 md:py-3.5 md:text-[12px]"
+                >
+                  Comenzar ahora <span aria-hidden="true">→</span>
+                </Link>
+              </div>
             </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="proyectos" className="border-b border-white/10 bg-white text-slate-950">
+        <div className="mx-auto max-w-[1500px] px-5 py-24 md:px-8 md:py-32">
+          <h2 className="text-center text-5xl font-black tracking-[-0.02em] md:text-7xl">
+            Nuestros proyectos en el país
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-center text-base font-semibold leading-7 text-slate-500 md:text-xl">
+            Llevamos soluciones GEU Innovation a comunidades de todo el territorio nacional.
+          </p>
+        </div>
+      </section>
+
+      <section id="proyecto-estufas" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
+        <div className="py-14">
+          <div className="mx-auto max-w-[1500px] px-5 md:px-8">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">
+              Proyecto GEU
+            </p>
+            <h2 className="mt-2 max-w-2xl text-3xl font-black tracking-[-0.02em] md:text-4xl">
+              Estufas ecoeficientes para hogares rurales
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
+              Diseñamos, entregamos e instalamos estufas ecoeficientes en comunidades rurales, acompañando a cada familia con capacitación y seguimiento en sitio.
+            </p>
+          </div>
+          <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
+            <SolutionsCarousel items={stovesProject} />
+          </div>
+        </div>
+      </section>
+
+      <section className="overflow-hidden border-b border-white/10 bg-black">
+        <div className="relative mx-auto aspect-video w-full max-w-[1920px]">
+          <video
+            src="/geu-innovation-fabrica-video.mp4"
+            poster="/geu-innovation-fabrica-video.png"
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_35%,rgba(0,0,0,0.05)_65%,rgba(0,0,0,0.55)_100%)]" />
+          <div className="absolute inset-0 flex items-center justify-center px-6">
+            <div className="w-full max-w-[1500px]">
+              <CountUpStats items={stovesImpact} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="fabricacion" className="border-b border-white/10 bg-white text-slate-950">
+        <div className="py-14">
+          <div className="mx-auto max-w-[1500px] px-5 md:px-8">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">
+              Fabricación GEU
+            </p>
+            <h2 className="mt-2 max-w-2xl text-3xl font-black tracking-[-0.02em] md:text-4xl">
+              Así fabricamos nuestras estufas
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
+              Cada estufa se corta, suelda, arma y pinta a mano en nuestro taller antes de salir hacia una familia.
+            </p>
+          </div>
+          <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
+            <SolutionsCarousel items={manufacturing} />
+          </div>
+        </div>
+      </section>
+
+      <section id="contacto" className="overflow-hidden bg-black">
+        <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
+          <Image
+            src="/geu-innovation-project-6.png"
+            alt="Familia y equipo GEU reunidos junto a la estufa instalada, con vista a las montañas"
+            fill
+            sizes="100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/25" />
+          <div className="absolute inset-0 flex items-center justify-center">
             <Link
               href="mailto:innovation@geu.com.co"
-              className="inline-flex items-center justify-center rounded-full border border-white/70 bg-white px-8 py-4 text-sm font-black uppercase tracking-[0.08em] text-[#071225] shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition hover:border-[#0498b4] hover:bg-[#0498b4] hover:text-white"
+              className="inline-flex items-center gap-3 rounded-[3px] border border-white bg-white px-8 py-4 text-[12px] font-black uppercase tracking-[0.12em] text-[#071225] shadow-[0_12px_30px_rgba(0,0,0,0.25)] hover:bg-[#0498b4] hover:text-white"
             >
-              Hablar con un experto →
+              Contacto <span aria-hidden="true">→</span>
             </Link>
           </div>
         </div>
       </section>
 
-      <BrandFeaturedSection
-        title="Nuestras marcas destacadas"
-        items={innovationFeatured}
-        siteImages={siteImages}
-      />
-
-      <BrandClosingBanner
-        imageKey="innovation-cierre"
-        alt="Cierre GEU Innovation"
-        siteImages={siteImages}
-      />
-
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-[1500px] gap-8 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:px-8">
-          <div>
-            <InnovationLogo />
-            <p className="mt-5 max-w-[260px] text-sm leading-6 text-slate-600">
-              Construimos empresas que transforman industrias y generan valor para un futuro mejor.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Enlaces rapidos</h3>
-            <div className="mt-4 grid gap-2 text-sm font-bold text-slate-500">
-              {navItems.slice(0, 5).map((item) => (
-                <Link key={item.label} href={item.href} className="hover:text-[#0498b4]">
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Innovation</h3>
-            <div className="mt-4 grid gap-2 text-sm font-bold text-slate-500">
-              {["Soluciones", "Proyectos", "Automatizacion", "Software", "Cotizacion"].map((item) => (
-                <span key={item}>{item}</span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Certificaciones</h3>
-            <div className="mt-5 flex gap-3">
-              {["ISO 9001", "ISO 14001", "ISO 45001"].map((item) => (
-                <span key={item} className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-center text-[10px] font-black text-slate-600">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

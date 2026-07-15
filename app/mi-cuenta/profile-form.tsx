@@ -250,12 +250,14 @@ function OrderProgressTimeline({ order }: { order: AccountOrder }) {
 export default function AccountProfileForm({
   user,
   orders,
+  division: divisionProp,
 }: {
   user: AccountUser;
   orders: AccountOrder[];
+  division?: DivisionName;
 }) {
   const router = useRouter();
-  const division = user.division ?? "Cauchos";
+  const division = divisionProp ?? user.division ?? "Cauchos";
   const brand = DIVISION_BRAND[division];
   const [activePanel, setActivePanel] = useState<AccountPanel>("summary");
   const [showFullOrderHistory, setShowFullOrderHistory] = useState(false);
@@ -397,7 +399,7 @@ export default function AccountProfileForm({
     >
       <CauchosHeader division={division} />
       <div className="flex min-h-screen items-stretch">
-        <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
+        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
           <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--brand-accent)] text-sm font-black text-white">
               C
@@ -455,14 +457,14 @@ export default function AccountProfileForm({
                 {item.label}
               </button>
             ))}
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.06em] text-red-600"
-            >
-              Cerrar sesión
-            </button>
           </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="fixed bottom-5 right-5 z-[70] rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.06em] text-red-600 shadow-[0_10px_25px_rgba(15,23,42,0.16)] md:hidden"
+          >
+            Cerrar sesión
+          </button>
       {toast && (
         <div className="fixed right-5 top-5 z-[80] w-[min(92vw,380px)]">
           <div

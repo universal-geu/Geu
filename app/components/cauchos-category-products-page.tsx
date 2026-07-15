@@ -7,7 +7,7 @@ import { cauchosCategorySubcategories, categorias, slugify } from "../data/catal
 import CauchosAddToCartButton from "./cauchos-add-to-cart-button";
 import CauchosHeader from "./cauchos-header";
 import { useProducts } from "./products-provider";
-import { DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
+import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
 
 type Props = {
   segments?: string[];
@@ -26,15 +26,15 @@ const CATEGORY_BANNER: Record<DivisionName, { src: string; alt: string }> = {
   Import: { src: "/geu-import-main-banner.png", alt: "GEU Import" },
   Innovation: { src: "/cauchos-category-banner.jpg", alt: "GEU Innovation" },
   Energy: { src: "/cauchos-category-banner.jpg", alt: "GEU Energy" },
-  Plastic: { src: "/cauchos-category-banner.jpg", alt: "GEU Plastic" },
+  Plastic: { src: "/geu-plastic-main-banner.png", alt: "GEU Plastic" },
 };
 
-const FALLBACK_PRODUCT_IMAGE: Record<DivisionName, string> = {
+export const FALLBACK_PRODUCT_IMAGE: Record<DivisionName, string> = {
   Cauchos: "/home-cauchos.png",
   Import: "/home-import.png",
   Innovation: "/home-cauchos.png",
   Energy: "/home-cauchos.png",
-  Plastic: "/home-cauchos.png",
+  Plastic: "/home-plastic.png",
 };
 
 function humanizeSegment(value?: string) {
@@ -52,7 +52,7 @@ export default function CauchosCategoryProductsPage({
 }: Props) {
   const { products } = useProducts();
   const brand = DIVISION_BRAND[division];
-  const cartAccent = division === "Import" ? "red" : "blue";
+  const cartAccent = CART_ACCENT[division];
   const [subcategorySlug, minorSlug] = segments;
   const [selectedBrand, setSelectedBrand] = useState("Todas");
   const [selectedAvailability, setSelectedAvailability] = useState("Todas");

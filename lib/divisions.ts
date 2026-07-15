@@ -78,6 +78,14 @@ export const DIVISION_BRAND: Record<DivisionName, DivisionBrand> = {
   },
 };
 
+export const CART_ACCENT: Record<DivisionName, "blue" | "red" | "gray"> = {
+  Cauchos: "blue",
+  Import: "red",
+  Innovation: "blue",
+  Energy: "blue",
+  Plastic: "gray",
+};
+
 export function getDivisionFromBrandParam(brand: string | null | undefined): DivisionName {
   switch ((brand || "").toLowerCase()) {
     case "import":

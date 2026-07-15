@@ -1,91 +1,41 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import SolutionsCarousel from "./solutions-carousel";
+import EnergyHeader from "./energy-header";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
-import { getProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
-const heroImage = "/geu-energy-hero-field.png";
 const heroVideo = "/geu-energy-hero-field.mp4";
 const orbitStatsImage = "/geu-energy-orbit-stats.png";
 const engineeringImage = "/geu-energy-engineering.png";
 const impactImage = "/geu-energy-impact.png";
 const gusImage = "/geu-energy-gus-home.png";
-const windImage = "/geu-energy-wind-field.png";
 const projectHouseImage = "/geu-energy-project-house.png";
 const projectHouseVideo = "/geu-energy-project-house.mp4";
 
-const navItems = [
-  { label: "Soluciones", href: "#soluciones" },
-  { label: "Servicios", href: "#productos" },
-  { label: "Proyectos", href: "#proyectos" },
-  { label: "Diseña tu sistema", href: "#sistema" },
-  { label: "Catálogos", href: "#contacto" },
-  { label: "Nosotros", href: "/quienes-somos" },
-  { label: "Contacto", href: "#contacto" },
-];
-
 const solutions = [
   {
-    title: "Energía solar",
-    text: "Sistemas fotovoltaicos para empresas, industrias y proyectos comerciales.",
-    image: heroImage,
+    title: "Monoposte",
+    text: "Un solo poste central por línea de módulos, ideal para terrenos con buena capacidad portante.",
+    image: "/energy-estructura-monoposte.jpg",
   },
   {
-    title: "Energía eólica",
-    text: "Soluciones que aprovechan el viento para complementar la generación limpia.",
-    image: windImage,
+    title: "Biposte",
+    text: "Dos hileras de postes que reparten mejor la carga, pensado para configuraciones más grandes.",
+    image: "/energy-estructura-biposte.jpg",
   },
   {
-    title: "Gestión inteligente",
-    text: "Monitoreo, control y optimización para mejorar el rendimiento energético.",
-    image: orbitStatsImage,
+    title: "Chinese hat",
+    text: "Estructura tipo carpa con paneles a dos aguas desde una cumbrera central.",
+    image: "/energy-estructura-chinesehat.jpg",
   },
   {
-    title: "Almacenamiento de energía",
-    text: "Baterías y sistemas de respaldo para asegurar continuidad energética las 24 horas.",
-    image: impactImage,
-  },
-  {
-    title: "Mantenimiento y monitoreo",
-    text: "Seguimiento remoto y mantenimiento preventivo para maximizar el rendimiento de tu sistema.",
-    image: engineeringImage,
-  },
-  {
-    title: "Movilidad eléctrica",
-    text: "Estaciones de carga y soluciones energéticas para flotas y vehículos eléctricos.",
-    image: gusImage,
+    title: "Carport",
+    text: "Cubierta solar para parqueaderos: genera energía y da sombra al mismo tiempo.",
+    image: "/energy-estructura-carport.jpg",
   },
 ];
-
-const energyOffers = [
-  { title: "Energia solar", href: "#soluciones", imageKey: "energy-oferta-1" },
-  { title: "Energia eolica", href: "#soluciones", imageKey: "energy-oferta-2" },
-  { title: "Ingenieria energetica", href: "#sistema", imageKey: "energy-oferta-3" },
-  { title: "Impacto y monitoreo", href: "#proyectos", imageKey: "energy-oferta-4" },
-];
-
-const energyFeatured = [
-  { title: "Sistemas solares", href: "#soluciones", imageKey: "energy-destacada-1" },
-  { title: "Campo eolico", href: "#soluciones", imageKey: "energy-destacada-2" },
-  { title: "Ingenieria", href: "#sistema", imageKey: "energy-destacada-3" },
-  { title: "Impacto", href: "#proyectos", imageKey: "energy-destacada-4" },
-];
-
-function EnergyMark() {
-  return (
-    <Image
-      src="/logo-geu-energy.png"
-      alt="GEU Energy"
-      width={2000}
-      height={452}
-      priority
-      className="h-auto w-[245px] max-w-full object-contain"
-    />
-  );
-}
 
 function BoltIcon() {
   return (
@@ -125,31 +75,6 @@ function PeopleIcon() {
   );
 }
 
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-3.4-3.4" />
-    </svg>
-  );
-}
-
-function MenuIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-      <path d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
-}
-
 const heroStats = [
   { icon: BoltIcon, value: "120", unit: "MW", label: "Capacidad instalada" },
   { icon: ClipboardCheckIcon, value: "350", unit: "+", label: "Proyectos ejecutados" },
@@ -175,34 +100,10 @@ const systemSteps = [
 
 export default async function EnergyPage() {
   const siteImages = await getSiteImages();
-  const allProducts = await getProducts();
-  const energyProducts = allProducts.filter((product) => product.division === "Energy");
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/85 backdrop-blur-md">
-        <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-5 md:px-8">
-          <Link href="/" className="shrink-0">
-            <EnergyMark />
-          </Link>
-          <nav className="hidden items-center gap-7 text-[11px] font-black uppercase tracking-[0.08em] text-white/85 lg:flex">
-            {navItems.map((item) => (
-              <Link key={item.label} href={item.href} className="inline-flex items-center gap-1 border-b border-transparent py-2 hover:border-[#f5a623] hover:text-[#f5a623]">
-                {item.label}
-                {item.label === "Soluciones" && <ChevronDownIcon />}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-5 text-white">
-            <button type="button" aria-label="Buscar" className="hover:text-[#f5a623]">
-              <SearchIcon />
-            </button>
-            <button type="button" aria-label="Abrir menú" className="hover:text-[#f5a623]">
-              <MenuIcon />
-            </button>
-          </div>
-        </div>
-      </header>
+      <EnergyHeader />
 
       <section className="relative isolate flex min-h-screen flex-col overflow-hidden border-b border-white/10">
         <video
@@ -296,88 +197,11 @@ export default async function EnergyPage() {
           <h2 className="mx-auto max-w-xl px-5 text-center text-3xl font-black tracking-[-0.02em] md:px-8 md:text-4xl">
             Diseñamos soluciones a la medida de tus necesidades.
           </h2>
-          <div className="mt-10">
+          <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
             <SolutionsCarousel items={solutions} />
           </div>
         </div>
       </section>
-
-      <section id="productos" className="scroll-mt-56 border-b border-white/10 bg-[#050505] text-white">
-        <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#ffd400]">
-            Servicios Energy
-          </p>
-          <h2 className="mt-2 font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-5xl">
-            Proyectos energeticos a la medida.
-          </h2>
-
-          {energyProducts.length > 0 ? (
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {energyProducts.map((product) => (
-                <article
-                  key={product.slug}
-                  className="group flex min-h-[420px] flex-col overflow-hidden rounded-[10px] border border-white/10 bg-black/40 shadow-[0_14px_36px_rgba(0,0,0,0.3)] transition duration-300 hover:-translate-y-1 hover:border-[#ffd400]/50"
-                >
-                  <div
-                    className="relative h-52 overflow-hidden bg-white/5"
-                    style={{
-                      backgroundImage: `linear-gradient(180deg,rgba(0,0,0,0.04),rgba(0,0,0,0.5)),url('${product.imagen}')`,
-                      backgroundPosition: "center",
-                      backgroundSize: "cover",
-                    }}
-                  >
-                    <span className="absolute left-3 top-3 rounded-[4px] bg-[#ffd400] px-2.5 py-1.5 text-xs font-black text-black shadow-sm">
-                      {product.descuento}
-                    </span>
-                  </div>
-                  <div className="flex flex-1 flex-col p-6">
-                    <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#ffd400]">
-                      {product.marca}
-                    </span>
-                    <p className="mt-2 min-h-14 text-xl font-black leading-7 text-white">
-                      {product.nombre}
-                    </p>
-                    <p className="mt-2 min-h-12 text-sm font-semibold leading-6 text-white/65">
-                      {product.descripcion}
-                    </p>
-                    <span className="mt-3 inline-flex w-fit rounded-full bg-white/10 px-3 py-1 text-xs font-black text-white/80">
-                      {product.disponibilidad}
-                    </span>
-                    <span className="mt-auto border-t border-white/10 pt-5">
-                      <span className="block text-xs font-bold text-white/50">
-                        {product.precioAnterior}
-                      </span>
-                      <span className="mt-1 block text-2xl font-black tracking-[-0.02em] text-white">
-                        {product.precio}
-                      </span>
-                    </span>
-                    <Link
-                      href="#contacto"
-                      className="mt-6 inline-flex justify-center rounded-full border border-[#ffd400] bg-transparent px-4 py-3 text-center text-xs font-black uppercase tracking-[0.08em] text-[#ffd400] transition-colors duration-200 hover:bg-[#ffd400] hover:text-black"
-                    >
-                      Solicitar asesoria
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-8 text-sm font-semibold text-white/60">
-              Pronto publicaremos aqui nuestros proyectos y servicios energeticos.
-            </p>
-          )}
-        </div>
-      </section>
-
-      <BrandOfferSection
-        accent="#ffd400"
-        eyebrow="Ofertas Energy"
-        title="Soluciones listas para activar"
-        ctaHref="#soluciones"
-        items={energyOffers}
-        siteImages={siteImages}
-        surface="dark"
-      />
 
       <section id="proyectos" className="relative overflow-hidden border-b border-white/10 bg-black">
         <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
@@ -454,18 +278,6 @@ export default async function EnergyPage() {
         </div>
       </section>
 
-      <BrandFeaturedSection
-        title="Nuestras marcas destacadas"
-        items={energyFeatured}
-        siteImages={siteImages}
-        surface="dark"
-      />
-
-      <BrandClosingBanner
-        imageKey="energy-cierre"
-        alt="Cierre GEU Energy"
-        siteImages={siteImages}
-      />
     </main>
   );
 }

@@ -37,7 +37,7 @@ export default function CauchosAccountLink({ className, brand }: Props) {
 
   if (user) {
     return (
-      <Link href={user.role === "ADMIN" ? `/admin${brandQuery}` : "/mi-cuenta"} className={className}>
+      <Link href={user.role === "ADMIN" ? `/admin${brandQuery}` : `/mi-cuenta${brandQuery}`} className={className}>
         Mi cuenta
       </Link>
     );

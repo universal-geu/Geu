@@ -6,6 +6,12 @@ type PromoItem = {
   title: string;
   href: string;
   imageKey: string;
+  /** Optional overlay copy rendered as real HTML on top of the image (used
+   * when the background photo has no text baked into it), instead of relying
+   * on a designed image that already contains the title/description/CTA. */
+  subtitle?: string;
+  ctaLabel?: string;
+  accent?: string;
 };
 
 type OfferSectionProps = {
@@ -125,7 +131,7 @@ export function BrandFeaturedSection({
               key={item.title}
               href={item.href}
               aria-label={item.title}
-              className={cardClass}
+              className={`relative ${cardClass}`}
             >
               <Image
                 src={resolveImage(item.imageKey, siteImages)}
@@ -135,6 +141,24 @@ export function BrandFeaturedSection({
                 sizes={compact ? "(min-width: 640px) 50vw, 100vw" : "(min-width: 1024px) 50vw, 100vw"}
                 className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
               />
+              {item.subtitle && (
+                <div className="absolute inset-0 flex flex-col justify-center gap-2 bg-gradient-to-r from-black/78 via-black/35 to-transparent px-6 text-left sm:px-8">
+                  <h3 className="max-w-[16ch] text-lg font-black uppercase leading-tight tracking-[-0.01em] text-white sm:text-xl">
+                    {item.title}
+                  </h3>
+                  <p className="max-w-[26ch] text-xs font-medium leading-5 text-white/80 sm:text-sm">
+                    {item.subtitle}
+                  </p>
+                  {item.ctaLabel && (
+                    <span
+                      className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.04em] text-white"
+                      style={{ backgroundColor: item.accent ?? "#e31313" }}
+                    >
+                      {item.ctaLabel} →
+                    </span>
+                  )}
+                </div>
+              )}
             </Link>
           ))}
         </div>

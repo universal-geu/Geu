@@ -41,9 +41,11 @@ body {
   font-family: var(--font-sans);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 button,
@@ -1172,4 +1174,26 @@ html.geu-light-mode .geu-theme-page > section:not(:first-of-type) input {
   .cauchos-offer-card::after {
     animation: none;
   }
+
+  .innovation-hero-intro {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+@keyframes innovationHeroIntro {
+  0% {
+    opacity: 0;
+    transform: translateY(56px) scale(0.96);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.innovation-hero-intro {
+  opacity: 0;
+  animation: innovationHeroIntro 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
 }
