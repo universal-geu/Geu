@@ -280,6 +280,8 @@ type AdminQuote = {
   process: string[];
   conditions: string[];
   quantityAndDeadline: string;
+  details?: Record<string, string> | null;
+  adminNotes?: string | null;
   status: QuoteStatusValue;
   createdAt: string | Date;
 };
@@ -731,6 +733,7 @@ export default function AdminPage() {
     updateProduct,
     removeProduct,
     adjustInventory,
+    refreshProducts,
   } = useProducts();
   const adminProducts = useMemo(
     () => allAdminProducts.filter((product) => product.division === adminDivision),
@@ -787,6 +790,9 @@ export default function AdminPage() {
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const [quoteStatusFilter, setQuoteStatusFilter] = useState<"all" | QuoteStatusValue>("all");
   const [isSavingQuoteStatus, setIsSavingQuoteStatus] = useState(false);
+  const [quoteNotesDraft, setQuoteNotesDraft] = useState("");
+  const [prevSelectedQuoteId, setPrevSelectedQuoteId] = useState<string | null>(null);
+  const [isSavingQuoteNotes, setIsSavingQuoteNotes] = useState(false);
   const [salesReport, setSalesReport] = useState<SalesReport | null>(null);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
@@ -940,6 +946,11 @@ export default function AdminPage() {
 
   const selectedQuote = quotes.find((quote) => quote.id === selectedQuoteId) ?? null;
 
+  if (selectedQuoteId !== prevSelectedQuoteId) {
+    setPrevSelectedQuoteId(selectedQuoteId);
+    setQuoteNotesDraft(selectedQuote?.adminNotes || "");
+  }
+
   const productCountLabel = `${adminProducts.length} producto${adminProducts.length === 1 ? "" : "s"} en catálogo`;
 
   useEffect(() => {
@@ -996,6 +1007,7 @@ export default function AdminPage() {
         setAdminName(payload.user.fullName);
         setAdminDivision(payload.user.division);
         void loadDashboardMetrics();
+        void loadQuotes();
       } else {
         setIsAuthenticated(false);
         setAdminName("");
@@ -1237,10 +1249,19 @@ export default function AdminPage() {
       setIsSavingProduct(false);
 
       if (!result.ok) {
-        setRequestError(result.message);
+        const isStaleProduct = result.message.includes("No encontramos el producto");
+        const message = isStaleProduct
+          ? "Este producto ya no existe en el catálogo (puede que lo hayan renombrado o eliminado). Actualizamos la lista, ábrelo de nuevo si sigue existiendo."
+          : result.message;
+
+        if (isStaleProduct) {
+          void refreshProducts();
+        }
+
+        setRequestError(message);
         setToast({
           tone: "error",
-          message: result.message,
+          message,
         });
         return;
       }
@@ -1458,6 +1479,32 @@ export default function AdminPage() {
       current.map((quote) => (quote.id === id ? { ...quote, status } : quote)),
     );
     setToast({ tone: "success", message: "Cotización actualizada correctamente." });
+  }
+
+  async function handleSaveQuoteNotes(id: string) {
+    setIsSavingQuoteNotes(true);
+
+    const response = await fetch(`/api/quotes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ adminNotes: quoteNotesDraft }),
+    });
+    const payload = (await response.json()) as { error?: string; quote?: AdminQuote };
+
+    setIsSavingQuoteNotes(false);
+
+    if (!response.ok || !payload.quote) {
+      setToast({
+        tone: "error",
+        message: payload.error || "No fue posible guardar la respuesta.",
+      });
+      return;
+    }
+
+    setQuotes((current) =>
+      current.map((quote) => (quote.id === id ? { ...quote, adminNotes: payload.quote!.adminNotes } : quote)),
+    );
+    setToast({ tone: "success", message: "Respuesta guardada. El cliente ya puede verla." });
   }
 
   async function loadSalesReport() {
@@ -1774,6 +1821,8 @@ export default function AdminPage() {
     );
   }
 
+  const pendingQuotesCount = quotes.filter((quote) => quote.status === "NEW").length;
+
   const sidebarNavItems = [
     {
       key: "dashboard",
@@ -1790,7 +1839,7 @@ export default function AdminPage() {
       ? [{ key: "inventory", label: "Inventario", active: activeTab === "inventory", onClick: openInventoryView }]
       : []),
     { key: "orders", label: "Pedidos", active: activeTab === "orders", onClick: openOrdersView },
-    { key: "quotes", label: "Cotizaciones", active: activeTab === "quotes", onClick: openQuotesView },
+    { key: "quotes", label: "Cotizaciones", active: activeTab === "quotes", onClick: openQuotesView, count: pendingQuotesCount },
     { key: "reports", label: "Informes", active: activeTab === "reports", onClick: openReportsView },
     { key: "images", label: "Imágenes", active: activeTab === "images", onClick: openImagesView },
   ];
@@ -1848,12 +1897,21 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={item.onClick}
-                    className={`w-full rounded-lg px-4 py-2.5 text-left text-sm font-bold transition-colors duration-200 ${
+                    className={`flex w-full items-center justify-between gap-2 rounded-lg px-4 py-2.5 text-left text-sm font-bold transition-colors duration-200 ${
                       item.active ? "text-white" : "text-slate-700 hover:bg-slate-50"
                     }`}
                     style={item.active ? { backgroundColor: adminBrand.accent } : undefined}
                   >
-                    {item.label}
+                    <span>{item.label}</span>
+                    {"count" in item && Boolean(item.count) && (
+                      <span
+                        className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-black ${
+                          item.active ? "bg-white/20 text-white" : "bg-[#fff1f1] text-[#c53b3b]"
+                        }`}
+                      >
+                        {item.count}
+                      </span>
+                    )}
                   </button>
                 </li>
               ))}
@@ -1949,13 +2007,18 @@ export default function AdminPage() {
                     key={item.key}
                     type="button"
                     onClick={item.onClick}
-                    className="flex min-w-max items-center border-b-2 px-3 py-3 text-[11px] font-black uppercase tracking-[0.04em] transition-colors duration-200"
+                    className="flex min-w-max items-center gap-1.5 border-b-2 px-3 py-3 text-[11px] font-black uppercase tracking-[0.04em] transition-colors duration-200"
                     style={{
                       borderColor: item.active ? adminBrand.accent : "transparent",
                       color: item.active ? adminBrand.accent : "#334155",
                     }}
                   >
-                    {item.label}
+                    <span>{item.label}</span>
+                    {"count" in item && Boolean(item.count) && (
+                      <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#fff1f1] px-1 text-[10px] font-black text-[#c53b3b]">
+                        {item.count}
+                      </span>
+                    )}
                   </button>
                 ))}
                 <button
@@ -3736,86 +3799,126 @@ export default function AdminPage() {
                       Selecciona una solicitud para ver el detalle completo.
                     </div>
                   ) : (
-                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)] md:p-8">
                       <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8b8d91]">
-                            Solicitud seleccionada
-                          </p>
-                          <h3 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h3 className="text-3xl font-bold tracking-[-0.04em] text-[#16384f]">
                             {selectedQuote.company}
                           </h3>
-                          <p className="mt-2 text-sm text-[#6e7379]">
-                            {new Date(selectedQuote.createdAt).toLocaleString("es-CO")}
-                          </p>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.04em] ${
+                              selectedQuote.status === "CLOSED"
+                                ? "bg-[#effaf2] text-[#1f6b39]"
+                                : selectedQuote.status === "CONTACTED"
+                                  ? "bg-[#eef5ff] text-[#075ed8]"
+                                  : "bg-[#fff4e5] text-[#a15c00]"
+                            }`}
+                          >
+                            {getQuoteStatusLabel(selectedQuote.status)}
+                          </span>
                         </div>
 
-                        <label className="space-y-2">
-                          <span className="text-sm font-medium text-[#4f545a]">Estado</span>
-                          <select
-                            value={selectedQuote.status}
-                            disabled={isSavingQuoteStatus}
-                            onChange={(event) =>
-                              void handleQuoteStatusChange(
-                                selectedQuote.id,
-                                event.target.value as QuoteStatusValue,
-                              )
-                            }
-                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
-                          >
-                            {quoteStatuses.map((status) => (
-                              <option key={status} value={status}>
-                                {getQuoteStatusLabel(status)}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
+                        <select
+                          value={selectedQuote.status}
+                          disabled={isSavingQuoteStatus}
+                          onChange={(event) =>
+                            void handleQuoteStatusChange(
+                              selectedQuote.id,
+                              event.target.value as QuoteStatusValue,
+                            )
+                          }
+                          className="rounded-full border border-black/10 bg-[#fafaf9] px-4 py-2 text-xs font-semibold text-[#4f545a] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        >
+                          {quoteStatuses.map((status) => (
+                            <option key={status} value={status}>
+                              Marcar como {getQuoteStatusLabel(status)}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
-                      <dl className="mt-6 grid gap-4 md:grid-cols-2">
-                        <div>
-                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Contacto</dt>
-                          <dd className="mt-1 text-sm font-semibold text-[#1f2328]">{selectedQuote.fullName}</dd>
+                      <p className="mt-2 text-sm text-[#8b8d91]">
+                        {selectedQuote.fullName} · {selectedQuote.requestType} ·{" "}
+                        {new Date(selectedQuote.createdAt).toLocaleString("es-CO")}
+                      </p>
+
+                      <p className="mt-6 text-base leading-7 text-[#1f2328]">{selectedQuote.productDetails}</p>
+
+                      {(selectedQuote.process.length > 0 || selectedQuote.conditions.length > 0) && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {selectedQuote.process.map((item) => (
+                            <span key={item} className="rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-semibold text-[#075ed8]">
+                              {item}
+                            </span>
+                          ))}
+                          {selectedQuote.conditions.map((item) => (
+                            <span key={item} className="rounded-full bg-[#fff1f1] px-3 py-1 text-xs font-semibold text-[#c53b3b]">
+                              {item}
+                            </span>
+                          ))}
                         </div>
-                        <div>
-                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">NIT / Teléfono</dt>
-                          <dd className="mt-1 text-sm font-semibold text-[#1f2328]">
-                            {selectedQuote.nit} · {selectedQuote.phone}
+                      )}
+
+                      <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-2 border-t border-black/6 pt-5 text-sm">
+                        <div className="flex items-baseline gap-1.5">
+                          <dt className="font-semibold text-[#8b8d91]">NIT / Tel.</dt>
+                          <dd className="font-semibold text-[#1f2328]">
+                            {selectedQuote.nit || "—"} · {selectedQuote.phone || "—"}
                           </dd>
                         </div>
-                        <div>
-                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Tipo de solicitud</dt>
-                          <dd className="mt-1 text-sm font-semibold text-[#1f2328]">{selectedQuote.requestType}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Cantidad / entrega</dt>
-                          <dd className="mt-1 text-sm font-semibold text-[#1f2328]">{selectedQuote.quantityAndDeadline}</dd>
-                        </div>
-                        <div className="md:col-span-2">
-                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Producto</dt>
-                          <dd className="mt-1 text-sm leading-7 text-[#1f2328]">{selectedQuote.productDetails}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Proceso</dt>
-                          <dd className="mt-1 flex flex-wrap gap-2">
-                            {selectedQuote.process.map((item) => (
-                              <span key={item} className="rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-semibold text-[#075ed8]">
-                                {item}
-                              </span>
-                            ))}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">Condiciones</dt>
-                          <dd className="mt-1 flex flex-wrap gap-2">
-                            {selectedQuote.conditions.map((item) => (
-                              <span key={item} className="rounded-full bg-[#fff1f1] px-3 py-1 text-xs font-semibold text-[#c53b3b]">
-                                {item}
-                              </span>
-                            ))}
-                          </dd>
+                        <div className="flex items-baseline gap-1.5">
+                          <dt className="font-semibold text-[#8b8d91]">Cantidad / entrega</dt>
+                          <dd className="font-semibold text-[#1f2328]">{selectedQuote.quantityAndDeadline || "—"}</dd>
                         </div>
                       </dl>
+
+                      {selectedQuote.details && Object.keys(selectedQuote.details).length > 0 && (
+                        <details className="mt-5 border-t border-black/6 pt-5">
+                          <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91] hover:text-[#075ed8]">
+                            Ver todos los campos del formulario
+                          </summary>
+                          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                            {Object.entries(selectedQuote.details)
+                              .filter(([, value]) => value?.trim())
+                              .map(([label, value]) => (
+                                <div key={label}>
+                                  <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                                    {label}
+                                  </dt>
+                                  <dd className="mt-0.5 text-sm font-semibold text-[#1f2328]">{value}</dd>
+                                </div>
+                              ))}
+                          </dl>
+                        </details>
+                      )}
+
+                      <div className="mt-6 border-l-4 border-[#075ed8]/30 pl-5">
+                        <label className="block space-y-2">
+                          <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
+                            Respuesta para el cliente
+                          </span>
+                          <textarea
+                            value={quoteNotesDraft}
+                            onChange={(event) => setQuoteNotesDraft(event.target.value)}
+                            rows={3}
+                            placeholder="Ej. Ya revisamos tu solicitud, te contactamos por WhatsApp con la cotización el jueves..."
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                          />
+                        </label>
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+                          <p className="text-xs text-[#8b8d91]">
+                            El cliente ve este texto en la pestaña &quot;Cotizaciones&quot; de su cuenta.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => void handleSaveQuoteNotes(selectedQuote.id)}
+                            disabled={isSavingQuoteNotes}
+                            className="inline-flex rounded-full bg-[#16384f] px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#0f2a3b] disabled:cursor-not-allowed disabled:opacity-70"
+                          >
+                            {isSavingQuoteNotes ? "Guardando..." : "Guardar respuesta"}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

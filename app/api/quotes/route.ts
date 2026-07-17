@@ -1,4 +1,5 @@
 import { requireAdminUser } from "@/lib/admin";
+import { getSessionFromCookies } from "@/lib/auth";
 import { createQuote, getQuotesForDivision } from "@/lib/quotes";
 import { DIVISIONS, type DivisionName } from "@/lib/divisions";
 
@@ -48,9 +49,13 @@ export async function POST(request: Request) {
       process?: string[];
       conditions?: string[];
       quantityAndDeadline?: string;
+      details?: Record<string, string>;
     };
 
+    const session = await getSessionFromCookies();
+
     const quote = await createQuote({
+      userId: session?.userId,
       fullName: body.fullName || "",
       company: body.company || "",
       nit: body.nit || "",
@@ -61,6 +66,7 @@ export async function POST(request: Request) {
       process: body.process || [],
       conditions: body.conditions || [],
       quantityAndDeadline: body.quantityAndDeadline || "",
+      details: body.details,
     });
 
     return Response.json({

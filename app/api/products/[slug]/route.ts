@@ -33,7 +33,9 @@ export async function PATCH(
       error instanceof Error &&
       (error.message === "UNAUTHORIZED" || error.message === "FORBIDDEN")
         ? 401
-        : 500;
+        : error instanceof Error && error.message === "PRODUCT_NOT_FOUND"
+          ? 404
+          : 500;
 
     return Response.json({ error: message }, { status });
   }

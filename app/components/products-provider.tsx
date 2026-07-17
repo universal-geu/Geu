@@ -60,6 +60,7 @@ type ProductsContextValue = {
     quantity: number,
     note?: string,
   ) => Promise<{ ok: true } | { ok: false; message: string }>;
+  refreshProducts: () => Promise<void>;
 };
 
 const ProductsContext = createContext<ProductsContextValue | null>(null);
@@ -362,6 +363,15 @@ export function ProductsProvider({
       });
 
       return { ok: true };
+    },
+    refreshProducts: async () => {
+      const response = await fetch("/api/products");
+      if (!response.ok) return;
+
+      const payload = (await response.json()) as { products?: StoreProduct[] };
+      if (payload.products) {
+        setProducts(payload.products);
+      }
     },
   };
 

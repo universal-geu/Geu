@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrdersForUser } from "@/lib/orders";
+import { getQuotesForUser } from "@/lib/quotes";
 import { getUserById } from "@/lib/users";
 import { getDivisionFromBrandParam } from "@/lib/divisions";
 import AccountProfileForm from "./profile-form";
@@ -25,8 +26,9 @@ export default async function MiCuentaPage({
   }
 
   const orders = await getOrdersForUser(session.userId);
+  const quotes = await getQuotesForUser(session.userId);
   const { brand } = await searchParams;
   const division = brand ? getDivisionFromBrandParam(brand) : user.division ?? "Cauchos";
 
-  return <AccountProfileForm user={user} orders={orders} division={division} />;
+  return <AccountProfileForm user={user} orders={orders} quotes={quotes} division={division} />;
 }

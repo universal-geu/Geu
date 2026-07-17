@@ -1181,6 +1181,7 @@ export type SiteImageScalarFieldEnum = (typeof SiteImageScalarFieldEnum)[keyof t
 
 export const QuoteScalarFieldEnum = {
   id: 'id',
+  userId: 'userId',
   fullName: 'fullName',
   company: 'company',
   nit: 'nit',
@@ -1191,6 +1192,8 @@ export const QuoteScalarFieldEnum = {
   process: 'process',
   conditions: 'conditions',
   quantityAndDeadline: 'quantityAndDeadline',
+  details: 'details',
+  adminNotes: 'adminNotes',
   status: 'status',
   createdAt: 'createdAt'
 } as const
