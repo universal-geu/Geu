@@ -12,7 +12,7 @@ import {
 } from "../data/catalog";
 import { useProducts } from "./products-provider";
 import { useCauchosMenu } from "./cauchos-menu-context";
-import CauchosProjectChat from "./cauchos-project-chat";
+import CauchosTechnicalForm from "./cauchos-technical-form";
 import { useSiteImages } from "./use-site-images";
 import { resolveImage } from "@/lib/image-slots";
 import type { DivisionName } from "@/lib/divisions";
@@ -456,7 +456,7 @@ export default function CauchosCategorySidebarMenu({
               })}
 
               {division === "Cauchos" && (
-                <CauchosProjectChat
+                <CauchosTechnicalForm
                   triggerClassName="flex shrink-0 flex-col items-center gap-2 text-center"
                   triggerLabel={
                     <>

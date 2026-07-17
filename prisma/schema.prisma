@@ -99,6 +99,7 @@ model User {
   division     Division?
   cartItems    CartItem[]
   orders       Order[]
+  quotes       Quote[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
@@ -180,6 +181,8 @@ model SiteImage {
 
 model Quote {
   id                  String      @id @default(cuid())
+  userId              String?
+  user                User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   fullName            String
   company             String
   nit                 String
@@ -190,6 +193,8 @@ model Quote {
   process             String[]
   conditions          String[]
   quantityAndDeadline String
+  details             Json?
+  adminNotes          String?
   status              QuoteStatus @default(NEW)
   createdAt           DateTime    @default(now())
 }

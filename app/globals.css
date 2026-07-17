@@ -1026,6 +1026,29 @@ html.geu-light-mode .geu-theme-page > section:not(:first-of-type) input {
   }
 }
 
+@keyframes geuMarqueeScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.geu-marquee-track {
+  animation: geuMarqueeScroll 26s linear infinite;
+}
+
+.geu-marquee-btn:hover .geu-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .geu-marquee-track {
+    animation: none;
+  }
+}
+
 .cauchos-offer-card {
   animation: cauchosOfferIn 620ms ease both;
   transition:

@@ -1,5 +1,5 @@
 import { requireAdminUser } from "@/lib/admin";
-import { updateQuoteStatus } from "@/lib/quotes";
+import { updateQuoteAdminNotes, updateQuoteStatus } from "@/lib/quotes";
 
 export async function PATCH(
   request: Request,
@@ -11,13 +11,16 @@ export async function PATCH(
     const { id } = await params;
     const body = (await request.json()) as {
       status?: "NEW" | "CONTACTED" | "CLOSED";
+      adminNotes?: string;
     };
 
-    if (!id || !body.status) {
-      return Response.json({ error: "Cotización y estado son obligatorios." }, { status: 400 });
+    if (!id || (!body.status && body.adminNotes === undefined)) {
+      return Response.json({ error: "Cotización y un cambio son obligatorios." }, { status: 400 });
     }
 
-    const quote = await updateQuoteStatus(id, body.status);
+    const quote = body.status
+      ? await updateQuoteStatus(id, body.status)
+      : await updateQuoteAdminNotes(id, body.adminNotes ?? "");
 
     return Response.json({ quote, message: "Cotización actualizada correctamente." });
   } catch (error) {

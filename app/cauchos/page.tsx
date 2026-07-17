@@ -8,7 +8,7 @@ import CauchosSearchForm from "../components/cauchos-search-form";
 import CauchosCategorySidebarMenu from "../components/cauchos-category-sidebar-menu";
 import CauchosMenuButton from "../components/cauchos-menu-button";
 import { CauchosMenuProvider } from "../components/cauchos-menu-context";
-import CauchosProjectChat from "../components/cauchos-project-chat";
+import CauchosTechnicalForm from "../components/cauchos-technical-form";
 import HeroVideo from "../components/hero-video";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
@@ -194,16 +194,31 @@ export default async function CauchosPage() {
         <div className="mx-auto max-w-[1632px] px-5 py-7 md:px-8">
           <CauchosCategoryCarousel categories={cauchosCategories} />
         </div>
-        <div className="bg-white">
-          <div
-            className="mx-auto flex w-full items-center justify-center bg-[#dd1b44] px-5 py-7 text-center md:px-8"
-            style={{ maxWidth: "1632px" }}
-          >
-            <CauchosProjectChat
-              triggerLabel="Diseña tu pieza →"
-              triggerClassName="asesoria-tecnica-btn inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-white px-10 py-4 text-base font-black uppercase leading-none tracking-[0.06em] text-[#dd1b44] shadow-[0_12px_30px_rgba(0,0,0,0.28)] transition hover:scale-105 hover:bg-[#fdecf0]"
-            />
-          </div>
+        <div className="mx-auto w-full overflow-hidden bg-[#dd1b44]" style={{ maxWidth: "1632px" }}>
+          <CauchosTechnicalForm
+            triggerLabel={
+              <>
+                <span className="sr-only">Diseña tu pieza</span>
+                <span aria-hidden="true" className="geu-marquee-track flex w-max items-center">
+                  {[0, 1].map((groupIndex) => (
+                    <span key={groupIndex} className="flex items-center">
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <span
+                          key={i}
+                          className="flex items-center whitespace-nowrap px-5 text-xs font-black uppercase tracking-[0.14em] text-white"
+                        >
+                          Diseña tu pieza
+                          <span className="ml-2">→</span>
+                          <span className="ml-5 text-white/45">✦</span>
+                        </span>
+                      ))}
+                    </span>
+                  ))}
+                </span>
+              </>
+            }
+            triggerClassName="geu-marquee-btn block w-full cursor-pointer overflow-hidden py-2.5 text-left"
+          />
         </div>
         <div className="bg-white">
           {isVideoUrl(resolveImage("banner-principal", siteImages)) ? (
@@ -383,7 +398,7 @@ export default async function CauchosPage() {
                 Cuentanos que necesitas y nuestro asistente arma contigo la evaluacion tecnica para tu producto.
               </p>
             </div>
-            <CauchosProjectChat
+            <CauchosTechnicalForm
               triggerClassName="inline-flex items-center justify-center rounded-full border border-white/80 bg-white px-8 py-4 text-sm font-black uppercase tracking-[0.08em] text-[#075ed8] shadow-[0_12px_30px_rgba(0,0,0,0.22)] transition hover:bg-blue-50"
             />
           </div>

@@ -47,6 +47,18 @@ type AccountOrder = {
   }>;
 };
 
+type AccountQuote = {
+  id: string;
+  status: "NEW" | "CONTACTED" | "CLOSED";
+  requestType: string;
+  productDetails: string;
+  process: string[];
+  conditions: string[];
+  quantityAndDeadline: string;
+  adminNotes: string | null;
+  createdAt: Date;
+};
+
 type ToastState = {
   tone: "success" | "error";
   message: string;
@@ -65,7 +77,13 @@ type FormState = {
   confirmPassword: string;
 };
 
-type AccountPanel = "summary" | "details" | "orders";
+type AccountPanel = "summary" | "details" | "orders" | "quotes";
+
+const QUOTE_STATUS_LABEL: Record<AccountQuote["status"], string> = {
+  NEW: "Recibida",
+  CONTACTED: "En contacto",
+  CLOSED: "Cerrada",
+};
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-CO", {
@@ -250,10 +268,12 @@ function OrderProgressTimeline({ order }: { order: AccountOrder }) {
 export default function AccountProfileForm({
   user,
   orders,
+  quotes,
   division: divisionProp,
 }: {
   user: AccountUser;
   orders: AccountOrder[];
+  quotes: AccountQuote[];
   division?: DivisionName;
 }) {
   const router = useRouter();
@@ -386,10 +406,11 @@ export default function AccountProfileForm({
     router.refresh();
   };
 
-  const accountNavItems: { key: AccountPanel; label: string }[] = [
+  const accountNavItems: { key: AccountPanel; label: string; count?: number }[] = [
     { key: "summary", label: "Resumen" },
     { key: "details", label: "Datos" },
-    { key: "orders", label: "Pedidos" },
+    { key: "orders", label: "Pedidos", count: orders.length },
+    { key: "quotes", label: "Cotizaciones", count: quotes.length },
   ];
 
   return (
@@ -417,13 +438,24 @@ export default function AccountProfileForm({
                   <button
                     type="button"
                     onClick={() => setActivePanel(item.key)}
-                    className={`w-full rounded-lg px-4 py-2.5 text-left text-sm font-bold transition-colors duration-200 ${
+                    className={`flex w-full items-center justify-between gap-2 rounded-lg px-4 py-2.5 text-left text-sm font-bold transition-colors duration-200 ${
                       activePanel === item.key
                         ? "bg-[var(--brand-accent)] text-white"
                         : "text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    {item.label}
+                    <span>{item.label}</span>
+                    {Boolean(item.count) && (
+                      <span
+                        className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-black ${
+                          activePanel === item.key
+                            ? "bg-white/20 text-white"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {item.count}
+                      </span>
+                    )}
                   </button>
                 </li>
               ))}
@@ -455,6 +487,7 @@ export default function AccountProfileForm({
                 }`}
               >
                 {item.label}
+                {Boolean(item.count) && ` (${item.count})`}
               </button>
             ))}
           </div>
@@ -950,6 +983,101 @@ export default function AccountProfileForm({
               ))}
             </div>
           )}
+          </section>
+        )}
+
+        {activePanel === "quotes" && (
+          <section className="rounded-[2rem] bg-white p-8 shadow-lg shadow-black/10 md:p-10">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
+                  Mis cotizaciones
+                </p>
+                <h2 className="mt-2 text-3xl font-bold text-[#16384f] md:text-4xl">
+                  Solicitudes de evaluación técnica
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+                  Aquí verás las solicitudes que envíes desde &quot;Diseña tu pieza&quot; y la
+                  respuesta de nuestro equipo cuando la revisen.
+                </p>
+              </div>
+            </div>
+
+            {quotes.length === 0 ? (
+              <div className="mt-6 rounded-[1.5rem] border border-dashed border-black/12 bg-[#fafaf9] p-8 text-center text-sm leading-7 text-[#6e7379]">
+                Aún no has enviado ninguna solicitud. Usa &quot;Diseña tu pieza&quot; para pedir una
+                evaluación técnica y la verás aquí.
+              </div>
+            ) : (
+              <div className="mt-6 space-y-5">
+                {quotes.map((quote) => (
+                  <article
+                    key={quote.id}
+                    className="rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-6"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
+                          {new Date(quote.createdAt).toLocaleString("es-CO")}
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-[#1f2328]">
+                          {quote.requestType || "Solicitud de evaluación técnica"}
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          quote.status === "CLOSED"
+                            ? "bg-[#effaf2] text-[#1f6b39]"
+                            : quote.status === "CONTACTED"
+                              ? "bg-[#eef5ff] text-[#075ed8]"
+                              : "bg-[#fff4e5] text-[#a15c00]"
+                        }`}
+                      >
+                        {QUOTE_STATUS_LABEL[quote.status]}
+                      </span>
+                    </div>
+
+                    <p className="mt-4 text-sm leading-7 text-[#5d6167]">{quote.productDetails}</p>
+
+                    {(quote.process.length > 0 || quote.conditions.length > 0) && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {quote.process.map((item) => (
+                          <span
+                            key={item}
+                            className="rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-semibold text-[#075ed8]"
+                          >
+                            {item}
+                          </span>
+                        ))}
+                        {quote.conditions.map((item) => (
+                          <span
+                            key={item}
+                            className="rounded-full bg-[#fff1f1] px-3 py-1 text-xs font-semibold text-[#c53b3b]"
+                          >
+                            {item}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {quote.quantityAndDeadline && (
+                      <p className="mt-3 text-sm font-semibold text-[#16384f]">
+                        Cantidad: {quote.quantityAndDeadline}
+                      </p>
+                    )}
+
+                    {quote.adminNotes && (
+                      <div className="mt-5 rounded-[1.1rem] border border-black/8 bg-white px-4 py-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
+                          Respuesta de GEU
+                        </p>
+                        <p className="mt-2 text-sm leading-7 text-[#5d6167]">{quote.adminNotes}</p>
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
         )}
       </section>

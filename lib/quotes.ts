@@ -5,6 +5,7 @@ import { emailLayout, sendEmail } from "@/lib/email";
 export type QuoteStatus = "NEW" | "CONTACTED" | "CLOSED";
 
 export type CreateQuoteInput = {
+  userId?: string;
   fullName: string;
   company: string;
   nit: string;
@@ -15,6 +16,7 @@ export type CreateQuoteInput = {
   process: string[];
   conditions: string[];
   quantityAndDeadline: string;
+  details?: Record<string, string>;
 };
 
 export async function createQuote(input: CreateQuoteInput) {
@@ -28,6 +30,7 @@ export async function createQuote(input: CreateQuoteInput) {
 
   const quote = await prisma.quote.create({
     data: {
+      userId: input.userId,
       fullName: input.fullName,
       company: input.company,
       nit: input.nit,
@@ -38,8 +41,17 @@ export async function createQuote(input: CreateQuoteInput) {
       process: input.process,
       conditions: input.conditions,
       quantityAndDeadline: input.quantityAndDeadline,
+      details: input.details,
     },
   });
+
+  const detailsRows = Object.entries(input.details || {})
+    .filter(([, value]) => value?.trim())
+    .map(
+      ([label, value]) =>
+        `<tr><td style="padding: 6px 0; font-weight: 700;">${label}</td><td style="padding: 6px 0;">${value}</td></tr>`,
+    )
+    .join("");
 
   void sendEmail({
     to: DIVISION_ADMIN_EMAILS[input.division],
@@ -58,6 +70,7 @@ export async function createQuote(input: CreateQuoteInput) {
           <tr><td style="padding: 6px 0; font-weight: 700;">Proceso</td><td style="padding: 6px 0;">${input.process.join(", ")}</td></tr>
           <tr><td style="padding: 6px 0; font-weight: 700;">Condiciones</td><td style="padding: 6px 0;">${input.conditions.join(", ")}</td></tr>
           <tr><td style="padding: 6px 0; font-weight: 700;">Cantidad / entrega</td><td style="padding: 6px 0;">${input.quantityAndDeadline}</td></tr>
+          ${detailsRows}
         </table>
       `,
       input.division,
@@ -78,6 +91,17 @@ export async function getQuotesForDivision(division: DivisionName) {
   });
 }
 
+export async function getQuotesForUser(userId: string) {
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  return prisma.quote.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function updateQuoteStatus(id: string, status: QuoteStatus) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
@@ -89,4 +113,17 @@ export async function updateQuoteStatus(id: string, status: QuoteStatus) {
   }
 
   return prisma.quote.update({ where: { id }, data: { status } });
+}
+
+export async function updateQuoteAdminNotes(id: string, adminNotes: string) {
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  const quote = await prisma.quote.findUnique({ where: { id } });
+  if (!quote) {
+    throw new Error("QUOTE_NOT_FOUND");
+  }
+
+  return prisma.quote.update({ where: { id }, data: { adminNotes: adminNotes.trim() || null } });
 }
