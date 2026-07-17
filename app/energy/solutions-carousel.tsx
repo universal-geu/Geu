@@ -76,7 +76,7 @@ export default function SolutionsCarousel({ items }: { items: Solution[] }) {
         onPointerLeave={handlePointerUp}
         className="flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto pb-4 active:cursor-grabbing [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {items.map((item, index) => (
+        {items.map((item) => (
           <div key={item.title} className="flex w-80 shrink-0 snap-start flex-col select-none sm:w-96 lg:w-[440px]">
             <div className="relative aspect-square w-full bg-slate-900">
               <Image

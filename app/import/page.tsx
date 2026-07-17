@@ -7,7 +7,7 @@ import CauchosProjectChat from "../components/cauchos-project-chat";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { getProducts } from "@/lib/products";
-import { categorias, slugify } from "../data/catalog";
+import { importCategorias, slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -22,38 +22,16 @@ const navItems = [
   { label: "Contacto", href: "#contacto" },
 ];
 
-const CATEGORY_IMAGES: Record<string, string> = {
-  "Alimentos, Farmacéuticos y cosméticos": "/subcategorias/alimentos.jpg",
-  Agroindustria: "/subcategorias/agroindustria.jpg",
-  "Petróleo, minería, gas, energías renovables y petroquímica": "/subcategorias/petroleo.jpg",
-  "Químico, aseo y plásticos": "/subcategorias/quimico.jpg",
-  "Construcción, infraestructura, obra civil, cemento y agregados": "/subcategorias/construccion.jpg",
-  "Transporte, logística y puertos marítimos": "/subcategorias/transporte.jpg",
-  "Manufactura, metalmecánica, siderúrgica y textiles": "/subcategorias/manufactura.jpg",
-  "Ferretería y otros": "/subcategorias/ferreteria.jpg",
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  "Alimentos, Farmacéuticos y cosméticos": "Alimentos",
-  Agroindustria: "Agroindustria",
-  "Petróleo, minería, gas, energías renovables y petroquímica": "Petróleo",
-  "Químico, aseo y plásticos": "Químico",
-  "Construcción, infraestructura, obra civil, cemento y agregados": "Construcción",
-  "Transporte, logística y puertos marítimos": "Transporte",
-  "Manufactura, metalmecánica, siderúrgica y textiles": "Manufactura",
-  "Ferretería y otros": "Ferretería",
-};
-
-const importCategories = categorias.map((title) => ({
-  label: CATEGORY_LABELS[title] ?? title,
+const importCategories = importCategorias.map((title) => ({
+  label: title,
   title,
-  image: CATEGORY_IMAGES[title] ?? "/home-import.png",
+  image: "/home-import.png",
   count: "Ver productos",
   href: `/import/categoria/${slugify(title)}`,
 }));
 
 const importOffers = [
-  { title: "Repuestos importados", href: "/import/categoria/transporte-logistica-y-puertos-maritimos", imageKey: "import-oferta-1" },
+  { title: "Repuestos importados", href: "/import/categoria/autopartes", imageKey: "import-oferta-1" },
   { title: "Abastecimiento global", href: "/import", imageKey: "import-oferta-2" },
   { title: "Logistica internacional", href: "#contacto", imageKey: "import-oferta-3" },
   { title: "Compras por pedido", href: "#contacto", imageKey: "import-oferta-4" },

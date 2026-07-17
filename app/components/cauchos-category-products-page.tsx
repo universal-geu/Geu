@@ -3,10 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, type CSSProperties } from "react";
-import { cauchosCategorySubcategories, categorias, slugify } from "../data/catalog";
+import { cauchosCategorySubcategories, getCategoriasForDivision, slugify } from "../data/catalog";
 import CauchosAddToCartButton from "./cauchos-add-to-cart-button";
 import CauchosHeader from "./cauchos-header";
 import { useProducts } from "./products-provider";
+import { useSiteImages } from "./use-site-images";
+import { resolveImage } from "@/lib/image-slots";
 import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
 
 type Props = {
@@ -51,6 +53,7 @@ export default function CauchosCategoryProductsPage({
   division = "Cauchos",
 }: Props) {
   const { products } = useProducts();
+  const siteImages = useSiteImages();
   const brand = DIVISION_BRAND[division];
   const cartAccent = CART_ACCENT[division];
   const [subcategorySlug, minorSlug] = segments;
@@ -99,8 +102,8 @@ export default function CauchosCategoryProductsPage({
   }, [division, isSearchMode, minorSlug, products, subcategorySlug, trimmedSearchQuery]);
 
   const matchedDepartment = useMemo(
-    () => categorias.find((title) => slugify(title) === subcategorySlug),
-    [subcategorySlug],
+    () => getCategoriasForDivision(division).find((title) => slugify(title) === subcategorySlug),
+    [division, subcategorySlug],
   );
   const placeholderGroups = useMemo(() => {
     if (minorSlug || !matchedDepartment) return [];
@@ -128,14 +131,17 @@ export default function CauchosCategoryProductsPage({
 
     if (bySubcategory.size < 2) return [];
 
-    return Array.from(bySubcategory.entries()).map(([name, count]) => ({
-      name,
-      count,
-      image: menuGroups.find((group) => group.name === name)?.image ?? null,
-      href: `${brand.basePath}/categoria/${slugify(name)}`,
-      active: slugify(name) === subcategorySlug,
-    }));
-  }, [brand.basePath, division, isSearchMode, minorSlug, products, resolvedDepartment, subcategorySlug]);
+    return Array.from(bySubcategory.entries()).map(([name, count]) => {
+      const imageKey = menuGroups.find((group) => group.name === name)?.imageKey;
+      return {
+        name,
+        count,
+        image: imageKey ? resolveImage(imageKey, siteImages) : null,
+        href: `${brand.basePath}/categoria/${slugify(name)}`,
+        active: slugify(name) === subcategorySlug,
+      };
+    });
+  }, [brand.basePath, division, isSearchMode, minorSlug, products, resolvedDepartment, siteImages, subcategorySlug]);
 
   const brands = useMemo(
     () => [
@@ -651,7 +657,13 @@ export default function CauchosCategoryProductsPage({
                   {placeholderGroups.map((group) => (
                     <div key={group.name} className="flex w-24 shrink-0 flex-col items-center gap-2 text-center">
                       <span className="relative block h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-slate-50">
-                        <Image src={group.image} alt={group.name} fill sizes="80px" className="object-cover" />
+                        <Image
+                          src={resolveImage(group.imageKey, siteImages)}
+                          alt={group.name}
+                          fill
+                          sizes="80px"
+                          className="object-cover"
+                        />
                       </span>
                       <span className="text-xs font-bold leading-tight text-slate-800">{group.name}</span>
                     </div>

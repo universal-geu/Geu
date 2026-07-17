@@ -28,53 +28,53 @@ const navItems = [
   { label: "Contacto", href: "#contacto" },
 ];
 
-const cauchosCategories = [
+const cauchosCategoriesBase = [
   {
     label: "Alimentos",
     title: "Alimentos, Farmacéuticos y cosméticos",
-    image: "/subcategorias/alimentos.jpg",
+    imageKey: "categoria-alimentos",
     count: "Ver productos",
   },
   {
     label: "Agroindustria",
     title: "Agroindustria",
-    image: "/subcategorias/agroindustria.jpg",
+    imageKey: "categoria-agroindustria",
     count: "Ver productos",
   },
   {
     label: "Petróleo",
     title: "Petróleo, minería, gas, energías renovables y petroquímica",
-    image: "/subcategorias/petroleo.jpg",
+    imageKey: "categoria-petroleo",
     count: "Ver productos",
   },
   {
     label: "Químico",
     title: "Químico, aseo y plásticos",
-    image: "/subcategorias/quimico.jpg",
+    imageKey: "categoria-quimico",
     count: "Ver productos",
   },
   {
     label: "Construcción",
     title: "Construcción, infraestructura, obra civil, cemento y agregados",
-    image: "/subcategorias/construccion.jpg",
+    imageKey: "categoria-construccion",
     count: "Ver productos",
   },
   {
     label: "Transporte",
     title: "Transporte, logística y puertos marítimos",
-    image: "/subcategorias/transporte.jpg",
+    imageKey: "categoria-transporte",
     count: "Ver productos",
   },
   {
     label: "Manufactura",
     title: "Manufactura, metalmecánica, siderúrgica y textiles",
-    image: "/subcategorias/manufactura.jpg",
+    imageKey: "categoria-manufactura",
     count: "Ver productos",
   },
   {
     label: "Ferretería",
     title: "Ferretería y otros",
-    image: "/subcategorias/ferreteria.jpg",
+    imageKey: "categoria-ferreteria",
     count: "Ver productos",
   },
 ].map((category) => ({
@@ -131,6 +131,10 @@ const featuredBrands = [
 export default async function CauchosPage() {
   const siteImages = await getSiteImages();
   const siteImageLinks = await getSiteImageLinks();
+  const cauchosCategories = cauchosCategoriesBase.map((category) => ({
+    ...category,
+    image: resolveImage(category.imageKey, siteImages),
+  }));
   const allProducts = await getProducts();
   const cauchosCatalog = allProducts.filter((product) => product.division === "Cauchos");
   const cauchosFeatured = cauchosCatalog.filter((product) => product.destacado);
@@ -190,17 +194,14 @@ export default async function CauchosPage() {
         <div className="mx-auto max-w-[1632px] px-5 py-7 md:px-8">
           <CauchosCategoryCarousel categories={cauchosCategories} />
         </div>
-        <div className="bg-white text-white">
+        <div className="bg-white">
           <div
-            className="mx-auto flex min-h-14 w-full flex-wrap items-center justify-center gap-4 bg-[#dd1b44] px-5 py-3 text-center md:px-8"
+            className="mx-auto flex w-full items-center justify-center bg-[#dd1b44] px-5 py-7 text-center md:px-8"
             style={{ maxWidth: "1632px" }}
           >
-            <p className="text-lg font-black tracking-[-0.01em]">
-              Hablemos de tu proyecto
-            </p>
             <CauchosProjectChat
-              triggerLabel="Asesoria tecnica"
-              triggerClassName="asesoria-tecnica-btn rounded bg-white px-3 py-1 text-sm font-black text-[#dd1b44] transition hover:bg-[#fdecf0]"
+              triggerLabel="Diseña tu pieza →"
+              triggerClassName="asesoria-tecnica-btn inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-white px-10 py-4 text-base font-black uppercase leading-none tracking-[0.06em] text-[#dd1b44] shadow-[0_12px_30px_rgba(0,0,0,0.28)] transition hover:scale-105 hover:bg-[#fdecf0]"
             />
           </div>
         </div>

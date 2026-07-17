@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -32,19 +33,39 @@ const accentClasses = {
 };
 
 export default function CauchosCategoryCarousel({ categories, accent = "blue" }: Props) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const tone = accentClasses[accent];
   const [canScroll, setCanScroll] = useState(false);
+  const [visibleWidth, setVisibleWidth] = useState<number | null>(null);
 
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
+    const container = containerRef.current;
+    const scroller = scrollerRef.current;
+    if (!container || !scroller) return;
 
-    const checkOverflow = () => setCanScroll(el.scrollWidth > el.clientWidth + 1);
-    checkOverflow();
+    // Clamp the row to a width that fits only whole cards, so the last
+    // one is either fully visible or fully hidden until scrolled — never
+    // sliced in half at the edge (which reads as a layout bug).
+    const recompute = () => {
+      const firstCard = scroller.children[0] as HTMLElement | undefined;
+      if (!firstCard) return;
 
-    const observer = new ResizeObserver(checkOverflow);
-    observer.observe(el);
+      const cardWidth = firstCard.getBoundingClientRect().width;
+      const gap = parseFloat(getComputedStyle(scroller).columnGap || "0");
+      const available = container.clientWidth;
+      if (cardWidth <= 0 || available <= 0) return;
+
+      const wholeCount = Math.max(1, Math.floor((available + gap) / (cardWidth + gap)));
+      const width = wholeCount * (cardWidth + gap) - gap;
+      setVisibleWidth(width);
+      setCanScroll(scroller.scrollWidth > width + 1);
+    };
+
+    recompute();
+
+    const observer = new ResizeObserver(recompute);
+    observer.observe(container);
     return () => observer.disconnect();
   }, [categories]);
 
@@ -56,7 +77,7 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
   };
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       {canScroll && (
         <button
           type="button"
@@ -70,7 +91,8 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
 
       <div
         ref={scrollerRef}
-        className={`flex overflow-x-auto scroll-smooth px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+        style={visibleWidth ? { maxWidth: visibleWidth } : undefined}
+        className={`mx-auto flex snap-x snap-mandatory overflow-x-auto scroll-smooth px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
           accent === "red" ? "gap-7 py-2" : "gap-2 py-1"
         }`}
       >
@@ -81,8 +103,8 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
             title={category.title}
             className={
               accent === "red" || accent === "silver"
-                ? "group grid min-w-[150px] justify-items-center gap-3 px-2 py-2 text-center transition hover:-translate-y-1 md:min-w-[165px]"
-                : `group grid min-h-[156px] min-w-[180px] grid-rows-[5rem_2.5rem_1rem] justify-items-center gap-2 rounded-[4px] border border-slate-200 bg-slate-50 px-3 py-3 text-center shadow-sm transition hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_42px_rgba(15,23,42,0.12)] md:min-h-[166px] md:min-w-[189px] md:grid-rows-[5.5rem_2.5rem_1rem] xl:min-w-[189px] ${tone.card}`
+                ? "group grid grid-cols-1 min-w-[150px] shrink-0 snap-start justify-items-center gap-3 px-2 py-2 text-center transition hover:-translate-y-1 md:min-w-[165px]"
+                : `group grid grid-cols-1 min-h-[156px] w-[210px] shrink-0 snap-start grid-rows-[5rem_auto_1rem] justify-items-center gap-2 rounded-[4px] border border-slate-200 bg-slate-50 px-3 py-3 text-center shadow-sm transition hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_42px_rgba(15,23,42,0.12)] md:min-h-[166px] md:w-[228px] md:grid-rows-[5.5rem_auto_1rem] ${tone.card}`
             }
           >
             <span
@@ -94,14 +116,16 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
                   : "relative block h-20 w-20 self-start overflow-hidden rounded-full border-4 border-white bg-slate-200 shadow-[0_0_0_2px_rgba(15,23,42,0.12)] md:h-[5.5rem] md:w-[5.5rem]"
               }
             >
-              <img
+              <Image
                 src={category.image}
                 alt=""
-                className="h-full w-full object-cover"
+                fill
+                sizes="(min-width: 768px) 112px, 96px"
+                className="object-cover"
               />
             </span>
-            <span className={`${accent === "red" || accent === "silver" ? "min-h-9" : ""} flex max-w-full items-center justify-center text-sm font-black leading-tight text-slate-950`}>
-              {category.label}
+            <span className={`${accent === "red" || accent === "silver" ? "min-h-9" : ""} block w-full min-w-0 break-words text-[13px] font-black leading-tight text-slate-950`}>
+              {category.title}
             </span>
             <span className="block self-start text-xs font-bold leading-none text-slate-500">
               {category.count}

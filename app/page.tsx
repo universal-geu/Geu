@@ -46,22 +46,42 @@ export default function Home() {
         padding: 0,
       }}
     >
-      <Link
-        href="/quienes-somos"
-        className="geu-entry-about"
+      <div
         style={{
           position: "absolute",
           top: "clamp(1.2rem, 4.7vh, 2.1rem)",
           right: "clamp(1rem, 2vw, 1.9rem)",
           zIndex: 4,
-          color: "#0b419a",
-          fontSize: "clamp(0.72rem, 0.86vw, 0.9rem)",
-          fontWeight: 700,
-          lineHeight: 1,
+          display: "flex",
+          alignItems: "center",
+          gap: "clamp(0.9rem, 1.6vw, 1.5rem)",
         }}
       >
-        Nosotros
-      </Link>
+        <Link
+          href="/login"
+          className="geu-entry-login"
+          style={{
+            color: "#0b419a",
+            fontSize: "clamp(0.72rem, 0.86vw, 0.9rem)",
+            fontWeight: 700,
+            lineHeight: 1,
+          }}
+        >
+          Iniciar sesión
+        </Link>
+        <Link
+          href="/quienes-somos"
+          className="geu-entry-about"
+          style={{
+            color: "#0b419a",
+            fontSize: "clamp(0.72rem, 0.86vw, 0.9rem)",
+            fontWeight: 700,
+            lineHeight: 1,
+          }}
+        >
+          Nosotros
+        </Link>
+      </div>
 
       <header
         className="geu-entry-brand"

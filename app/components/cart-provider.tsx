@@ -82,6 +82,9 @@ export function CartProvider({
 
   useEffect(() => {
     if (currentUserId) {
+      // Re-sync with the server-provided cart on login or whenever
+      // `initialItems` is refreshed, mirroring the guest branch below.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setItems(normalizeCartItems(initialItems));
       setHasLoadedGuestCart(true);
       return;

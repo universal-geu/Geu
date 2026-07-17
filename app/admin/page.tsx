@@ -14,10 +14,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useProducts } from "../components/products-provider";
 import CategoryComboBox from "./category-combobox";
 import {
-  categorias,
   cauchosCategorySubcategories,
+  getCategoriasForDivision,
   type Categoria,
   type ProductoCatalogo,
+  type ProductoEspecificacion,
 } from "../data/catalog";
 import type { InventoryMovementSummary } from "@/lib/products";
 import type { DashboardMetrics, SalesReport, ShippingStatus } from "@/lib/orders";
@@ -140,6 +141,7 @@ type FormState = {
   stock: string;
   stockMinimo: string;
   disponibilidad: ProductoCatalogo["disponibilidad"];
+  descripcion: string;
   aplicacion: string;
   compatibilidad: string;
   garantia: string;
@@ -161,14 +163,49 @@ const initialState: FormState = {
   stock: "0",
   stockMinimo: "0",
   disponibilidad: "Entrega inmediata",
+  descripcion: "",
   aplicacion: "",
   compatibilidad: "",
   garantia: "Garantía técnica según aplicación y condiciones de uso.",
 };
 
+type TechnicalSpecFormItem = {
+  id: string;
+  etiqueta: string;
+  valor: string;
+};
+
+function createTechnicalSpecItem(
+  spec?: Partial<ProductoEspecificacion>,
+): TechnicalSpecFormItem {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    etiqueta: spec?.etiqueta || "",
+    valor: spec?.valor || "",
+  };
+}
+
+function normalizeTechnicalSpecFormItems(
+  items: TechnicalSpecFormItem[],
+): ProductoEspecificacion[] {
+  return items
+    .map((item) => ({
+      etiqueta: item.etiqueta.trim(),
+      valor: item.valor.trim(),
+    }))
+    .filter((item) => item.etiqueta && item.valor);
+}
+
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 const RECOMMENDED_FILE_SIZE_KB = 500;
 const EXTRA_IMAGE_SLOTS = 3;
+
+// Matches categoria/subcategoria values ignoring case and stray whitespace,
+// so a product saved as "ferretería y otros" still surfaces its subcategoría
+// and categoría menor suggestions when the field later reads "Ferretería y otros".
+function normalizeMatchKey(value: string | null | undefined) {
+  return (value ?? "").trim().toLowerCase();
+}
 const shippingStatuses: ShippingStatus[] = [
   "PENDING",
   "PREPARING",
@@ -585,6 +622,95 @@ function ProductImageSelector({
   );
 }
 
+function TechnicalSpecsEditor({
+  items,
+  onChange,
+}: {
+  items: TechnicalSpecFormItem[];
+  onChange: (items: TechnicalSpecFormItem[]) => void;
+}) {
+  const updateItem = (id: string, field: "etiqueta" | "valor", value: string) => {
+    onChange(items.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
+  };
+
+  const removeItem = (id: string) => {
+    onChange(items.filter((item) => item.id !== id));
+  };
+
+  const addItem = () => {
+    onChange([...items, createTechnicalSpecItem()]);
+  };
+
+  return (
+    <div className="md:col-span-2 rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-[#4f545a]">Ficha técnica del producto</p>
+          <p className="mt-2 text-xs leading-6 text-[#6e7379]">
+            Agrega solo las especificaciones que apliquen para este producto. Puedes dejar pocas o muchas.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={addItem}
+          className="inline-flex rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+        >
+          Agregar especificación
+        </button>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        {items.length === 0 && (
+          <div className="rounded-[1.2rem] border border-dashed border-black/12 bg-white px-4 py-5 text-sm text-[#6e7379]">
+            Aún no hay especificaciones. Agrega las filas que necesites para esta categoría.
+          </div>
+        )}
+
+        {items.map((item, index) => (
+          <div
+            key={item.id}
+            className="grid gap-3 rounded-[1.2rem] border border-black/8 bg-white p-4 md:grid-cols-[220px_minmax(0,1fr)_auto]"
+          >
+            <label className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                Etiqueta
+              </span>
+              <input
+                value={item.etiqueta}
+                onChange={(event) => updateItem(item.id, "etiqueta", event.target.value)}
+                placeholder={index === 0 ? "Ej. Material" : "Nombre del dato"}
+                className="w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                Valor
+              </span>
+              <input
+                value={item.valor}
+                onChange={(event) => updateItem(item.id, "valor", event.target.value)}
+                placeholder="Escribe la especificación"
+                className="w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+              />
+            </label>
+
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={() => removeItem(item.id)}
+                className="inline-flex rounded-full border border-black/10 px-4 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+              >
+                Quitar
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function splitCommaSeparatedValues(value: string) {
   return value
     .split(",")
@@ -617,6 +743,7 @@ export default function AdminPage() {
   const [siteImages, setSiteImages] = useState<Record<string, string>>({});
   const [siteImageLinks, setSiteImageLinks] = useState<Record<string, string>>({});
   const [savingLinkKey, setSavingLinkKey] = useState<string | null>(null);
+  const [selectedImageGroup, setSelectedImageGroup] = useState<string | null>(null);
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(null);
   const [savedImageKey, setSavedImageKey] = useState<string | null>(null);
@@ -637,6 +764,11 @@ export default function AdminPage() {
   );
   const [primaryImageIndex, setPrimaryImageIndex] = useState(0);
   const [fileInputKey, setFileInputKey] = useState(0);
+  const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
+  const [existingPdfUrl, setExistingPdfUrl] = useState<string | null>(null);
+  const [technicalSpecs, setTechnicalSpecs] = useState<TechnicalSpecFormItem[]>([
+    createTechnicalSpecItem({ etiqueta: "Observaciones" }),
+  ]);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [requestError, setRequestError] = useState("");
@@ -722,31 +854,35 @@ export default function AdminPage() {
       adminNotes: orderForm.adminNotes.trim() || null,
     };
   }, [orderForm, selectedOrder]);
-  // Only the 8 official industry categories are selectable here — they're the
-  // ones that actually appear in the storefront's category navigation. Legacy
-  // seed products carry older category strings (e.g. "Mangueras", "Sellos y
-  // empaques") that predate this taxonomy and aren't real nav categories, so
-  // they're intentionally excluded from the picker.
-  const categoryOptions = categorias;
+  // Only this division's official categories are selectable here — they're
+  // the ones that actually appear in the storefront's category navigation.
+  // Legacy seed products carry older category strings (e.g. "Mangueras",
+  // "Sellos y empaques") that predate this taxonomy and aren't real nav
+  // categories, so they're intentionally excluded from the picker.
+  const categoryOptions = useMemo(() => getCategoriasForDivision(adminDivision), [adminDivision]);
   const subcategoryOptions = useMemo(() => {
+    const normalizedCategoria = normalizeMatchKey(form.categoria);
     const menuGroups = cauchosCategorySubcategories[form.categoria] ?? [];
     const fromMenu = menuGroups.map((group) => group.name);
     const fromProducts = adminProducts
-      .filter((product) => product.categoria === form.categoria)
+      .filter((product) => normalizeMatchKey(product.categoria) === normalizedCategoria)
       .map((product) => product.subcategoria)
       .filter((value): value is string => Boolean(value));
 
     return Array.from(new Set([...fromMenu, ...fromProducts]));
   }, [adminProducts, form.categoria]);
   const categoriaMenorOptions = useMemo(() => {
+    const normalizedCategoria = normalizeMatchKey(form.categoria);
+    const normalizedSubcategoria = normalizeMatchKey(form.subcategoria);
     const menuGroups = cauchosCategorySubcategories[form.categoria] ?? [];
     const fromMenu =
-      menuGroups.find((group) => group.name === form.subcategoria)?.items ?? [];
+      menuGroups.find((group) => normalizeMatchKey(group.name) === normalizedSubcategoria)
+        ?.items ?? [];
     const fromProducts = adminProducts
       .filter(
         (product) =>
-          product.categoria === form.categoria &&
-          product.subcategoria === form.subcategoria,
+          normalizeMatchKey(product.categoria) === normalizedCategoria &&
+          normalizeMatchKey(product.subcategoria) === normalizedSubcategoria,
       )
       .map((product) => product.categoriaMenor)
       .filter((value): value is string => Boolean(value));
@@ -888,7 +1024,7 @@ export default function AdminPage() {
   }, [isAuthenticated, isCheckingSession, router, searchParams]);
 
   const handleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
@@ -972,6 +1108,28 @@ export default function AdminPage() {
     };
   };
 
+  const uploadPdf = async (file: File, productName: string) => {
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+    uploadData.append("productName", productName);
+
+    const uploadResponse = await fetch("/api/uploads", {
+      method: "POST",
+      body: uploadData,
+    });
+
+    const uploadPayload = (await uploadResponse.json()) as {
+      error?: string;
+      publicUrl?: string;
+    };
+
+    if (!uploadResponse.ok || !uploadPayload.publicUrl) {
+      throw new Error(uploadPayload.error || "No fue posible subir la ficha técnica.");
+    }
+
+    return uploadPayload.publicUrl;
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSavingProduct(true);
@@ -993,12 +1151,17 @@ export default function AdminPage() {
     let imageUrl =
       adminProducts.find((product) => product.slug === editingSlug)?.imagen ||
       adminBrand.logo;
+    let fichaTecnicaUrl = existingPdfUrl || undefined;
 
     try {
       if (selectedImage) {
         const uploadResult = await uploadProductImage(selectedImage, form.nombre);
         imageUrl = uploadResult.publicUrl || adminBrand.logo;
         usedImageFallback = usedImageFallback || uploadResult.usedFallback;
+      }
+
+      if (selectedPdf) {
+        fichaTecnicaUrl = await uploadPdf(selectedPdf, form.nombre);
       }
 
       const currentExtraImages =
@@ -1060,9 +1223,12 @@ export default function AdminPage() {
         imagen: nextPrimaryImage,
         imagenesExtra: reorderedExtraImages.slice(0, EXTRA_IMAGE_SLOTS),
         disponibilidad: isServiceAdmin ? "Disponible por pedido" : form.disponibilidad,
+        descripcion: form.descripcion,
         aplicacion: form.aplicacion,
         compatibilidad: splitCommaSeparatedValues(form.compatibilidad),
         garantia: form.garantia,
+        fichaTecnicaUrl,
+        especificacionesTecnicas: normalizeTechnicalSpecFormItems(technicalSpecs),
       };
       const result = editingSlug
         ? await updateProduct(editingSlug, payload)
@@ -1084,6 +1250,9 @@ export default function AdminPage() {
       setSelectedExtraImages(Array.from({ length: EXTRA_IMAGE_SLOTS }, () => null));
       setPrimaryImageIndex(0);
       setFileInputKey((current) => current + 1);
+      setSelectedPdf(null);
+      setExistingPdfUrl(null);
+      setTechnicalSpecs([createTechnicalSpecItem({ etiqueta: "Observaciones" })]);
       setEditingSlug(null);
       setActiveTab(null);
       setSaved(true);
@@ -1132,6 +1301,7 @@ export default function AdminPage() {
       stock: String(product.stock ?? 0),
       stockMinimo: String(product.stockMinimo ?? 0),
       disponibilidad: product.disponibilidad,
+      descripcion: product.descripcion || "",
       aplicacion: product.aplicacion || "",
       compatibilidad: (product.compatibilidad || []).join(", "),
       garantia: product.garantia || "",
@@ -1143,6 +1313,13 @@ export default function AdminPage() {
     setPrimaryImageIndex(0);
     setRequestError("");
     setFileInputKey((current) => current + 1);
+    setSelectedPdf(null);
+    setExistingPdfUrl(product.fichaTecnicaUrl || null);
+    setTechnicalSpecs(
+      (product.especificacionesTecnicas || []).length > 0
+        ? (product.especificacionesTecnicas || []).map((item) => createTechnicalSpecItem(item))
+        : [createTechnicalSpecItem({ etiqueta: "Observaciones" })],
+    );
   };
 
   const handleResetForm = () => {
@@ -1157,6 +1334,9 @@ export default function AdminPage() {
     setOrderSearch("");
     setOrderShippingFilter("all");
     setActiveTab(null);
+    setSelectedPdf(null);
+    setExistingPdfUrl(null);
+    setTechnicalSpecs([createTechnicalSpecItem({ etiqueta: "Observaciones" })]);
   };
 
   const handleDeleteProduct = async (slug: string) => {
@@ -1360,6 +1540,9 @@ export default function AdminPage() {
     setEditingSlug(null);
     setRequestError("");
     setFileInputKey((current) => current + 1);
+    setSelectedPdf(null);
+    setExistingPdfUrl(null);
+    setTechnicalSpecs([createTechnicalSpecItem({ etiqueta: "Observaciones" })]);
     setActiveTab("create");
   };
 
@@ -1457,6 +1640,7 @@ export default function AdminPage() {
     setPrimaryImageIndex(0);
     setEditingSlug(null);
     setActiveTab("images");
+    setSelectedImageGroup(null);
     void loadSiteImages();
   };
 
@@ -2244,6 +2428,20 @@ export default function AdminPage() {
                   description="Puedes escoger cuál de las imágenes será la principal del producto."
                 />
 
+                <TechnicalSpecsEditor items={technicalSpecs} onChange={setTechnicalSpecs} />
+
+                <label className="space-y-2 md:col-span-2">
+                  <span className="text-sm font-medium text-[#4f545a]">Descripción</span>
+                  <textarea
+                    name="descripcion"
+                    value={form.descripcion}
+                    onChange={handleChange}
+                    rows={4}
+                    placeholder="Describe el producto, su uso principal y el beneficio para el cliente."
+                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm leading-7 text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                  />
+                </label>
+
                 {!isServiceAdmin && (
                   <label className="space-y-2 md:col-span-2">
                     <span className="text-sm font-medium text-[#4f545a]">Disponibilidad</span>
@@ -2260,6 +2458,28 @@ export default function AdminPage() {
                       ))}
                     </select>
                   </label>
+                )}
+              </div>
+
+              <div className="mt-6 space-y-2">
+                <span className="text-sm font-medium text-[#4f545a]">Ficha técnica (PDF)</span>
+                <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-black/15 bg-[#fafaf9] px-4 py-3 transition-colors hover:border-[#075ed8]/50">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#075ed8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                  <span className="text-sm text-[#4f545a]">
+                    {selectedPdf ? selectedPdf.name : "Sube acá tu ficha técnica"}
+                  </span>
+                  <input
+                    key={`pdf-${fileInputKey}`}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => setSelectedPdf(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+                {existingPdfUrl && !selectedPdf && (
+                  <a href={existingPdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#075ed8] underline">
+                    Ver ficha técnica actual
+                  </a>
                 )}
               </div>
 
@@ -2723,6 +2943,20 @@ export default function AdminPage() {
                       description="La imagen marcada como principal será la que verá primero el cliente."
                     />
 
+                    <TechnicalSpecsEditor items={technicalSpecs} onChange={setTechnicalSpecs} />
+
+                    <label className="space-y-2 md:col-span-2">
+                      <span className="text-sm font-medium text-[#4f545a]">Descripción</span>
+                      <textarea
+                        name="descripcion"
+                        value={form.descripcion}
+                        onChange={handleChange}
+                        rows={4}
+                        placeholder="Describe el producto, su uso principal y el beneficio para el cliente."
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm leading-7 text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                      />
+                    </label>
+
                     {!isServiceAdmin && (
                       <label className="space-y-2 md:col-span-2">
                         <span className="text-sm font-medium text-[#4f545a]">Disponibilidad</span>
@@ -2739,6 +2973,28 @@ export default function AdminPage() {
                           ))}
                         </select>
                       </label>
+                    )}
+                  </div>
+
+                  <div className="mt-6 space-y-2">
+                    <span className="text-sm font-medium text-[#4f545a]">Ficha técnica (PDF)</span>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-black/15 bg-[#fafaf9] px-4 py-3 transition-colors hover:border-[#075ed8]/50">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#075ed8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                      <span className="text-sm text-[#4f545a]">
+                        {selectedPdf ? selectedPdf.name : "Sube acá tu ficha técnica"}
+                      </span>
+                      <input
+                        key={`pdf-edit-${fileInputKey}`}
+                        type="file"
+                        accept="application/pdf"
+                        className="hidden"
+                        onChange={(e) => setSelectedPdf(e.target.files?.[0] ?? null)}
+                      />
+                    </label>
+                    {existingPdfUrl && !selectedPdf && (
+                      <a href={existingPdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#075ed8] underline">
+                        Ver ficha técnica actual
+                      </a>
                     )}
                   </div>
 
@@ -3895,21 +4151,68 @@ export default function AdminPage() {
 
               {isLoadingImages ? (
                 <p className="text-sm text-[#6e7379]">Cargando imágenes...</p>
+              ) : !selectedImageGroup ? (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {Array.from(
+                    new Set(
+                      IMAGE_SLOTS.filter(
+                        (slot) => slot.division === imageDivisionFilter,
+                      ).map((slot) => slot.group),
+                    ),
+                  ).map((group) => {
+                    const groupSlots = IMAGE_SLOTS.filter(
+                      (slot) => slot.group === group && slot.division === imageDivisionFilter,
+                    );
+                    const previewSrc = siteImages[groupSlots[0]?.key] ?? groupSlots[0]?.defaultSrc;
+
+                    return (
+                      <button
+                        key={group}
+                        type="button"
+                        onClick={() => setSelectedImageGroup(group)}
+                        className="flex items-center gap-4 overflow-hidden rounded-[1.2rem] border border-black/8 bg-white p-4 text-left shadow-sm transition-colors duration-200 hover:border-[#075ed8] hover:bg-[#f5f9ff]"
+                      >
+                        <span className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#f0f2f4]">
+                          {previewSrc && !isVideoUrl(previewSrc) && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={previewSrc}
+                              alt=""
+                              className="absolute inset-0 h-full w-full object-cover"
+                            />
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-[#1f2328]">
+                            {group}
+                          </span>
+                          <span className="mt-0.5 block text-xs font-semibold text-[#8b8d91]">
+                            {groupSlots.length} {groupSlots.length === 1 ? "imagen" : "imágenes"}
+                          </span>
+                        </span>
+                        <span aria-hidden="true" className="shrink-0 text-xl text-[#8b8d91]">
+                          ›
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               ) : (
-                Array.from(
-                  new Set(
-                    IMAGE_SLOTS.filter(
-                      (slot) => slot.division === imageDivisionFilter,
-                    ).map((slot) => slot.group),
-                  ),
-                ).map((group) => (
-                  <div key={group} className="mb-8 last:mb-0">
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedImageGroup(null)}
+                    className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#075ed8] hover:underline"
+                  >
+                    <span aria-hidden="true">‹</span> Volver a categorías
+                  </button>
+                  <div className="mb-8 last:mb-0">
                     <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">
-                      {group}
+                      {selectedImageGroup}
                     </h3>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {IMAGE_SLOTS.filter(
-                        (slot) => slot.group === group && slot.division === imageDivisionFilter,
+                        (slot) => slot.group === selectedImageGroup && slot.division === imageDivisionFilter,
                       ).map((slot) => {
                         const currentSrc = siteImages[slot.key] ?? slot.defaultSrc;
                         const isUploading = uploadingImageKey === slot.key;
@@ -3988,7 +4291,7 @@ export default function AdminPage() {
                                   }}
                                 />
                               </label>
-                              {(group === "Ofertas" || group === "Marcas destacadas") && (
+                              {(selectedImageGroup === "Ofertas" || selectedImageGroup === "Marcas destacadas") && (
                                 <div className="mt-2">
                                   <label className="mb-1 block text-[10px] font-semibold text-[#8b8d91]">
                                     Enlace al hacer clic (opcional)
@@ -4019,7 +4322,7 @@ export default function AdminPage() {
                       })}
                     </div>
                   </div>
-                ))
+                </div>
               )}
             </div>
           )}

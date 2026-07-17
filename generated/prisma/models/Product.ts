@@ -60,6 +60,7 @@ export type ProductMinAggregateOutputType = {
   description: string | null
   application: string | null
   warranty: string | null
+  technicalSheetUrl: string | null
   featured: boolean | null
   active: boolean | null
   createdAt: Date | null
@@ -86,6 +87,7 @@ export type ProductMaxAggregateOutputType = {
   description: string | null
   application: string | null
   warranty: string | null
+  technicalSheetUrl: string | null
   featured: boolean | null
   active: boolean | null
   createdAt: Date | null
@@ -115,6 +117,8 @@ export type ProductCountAggregateOutputType = {
   application: number
   compatibility: number
   warranty: number
+  technicalSheetUrl: number
+  technicalSpecs: number
   featured: number
   active: number
   createdAt: number
@@ -157,6 +161,7 @@ export type ProductMinAggregateInputType = {
   description?: true
   application?: true
   warranty?: true
+  technicalSheetUrl?: true
   featured?: true
   active?: true
   createdAt?: true
@@ -183,6 +188,7 @@ export type ProductMaxAggregateInputType = {
   description?: true
   application?: true
   warranty?: true
+  technicalSheetUrl?: true
   featured?: true
   active?: true
   createdAt?: true
@@ -212,6 +218,8 @@ export type ProductCountAggregateInputType = {
   application?: true
   compatibility?: true
   warranty?: true
+  technicalSheetUrl?: true
+  technicalSpecs?: true
   featured?: true
   active?: true
   createdAt?: true
@@ -328,6 +336,8 @@ export type ProductGroupByOutputType = {
   application: string | null
   compatibility: string[]
   warranty: string | null
+  technicalSheetUrl: string | null
+  technicalSpecs: runtime.JsonValue | null
   featured: boolean
   active: boolean
   createdAt: Date
@@ -380,6 +390,8 @@ export type ProductWhereInput = {
   application?: Prisma.StringNullableFilter<"Product"> | string | null
   compatibility?: Prisma.StringNullableListFilter<"Product">
   warranty?: Prisma.StringNullableFilter<"Product"> | string | null
+  technicalSheetUrl?: Prisma.StringNullableFilter<"Product"> | string | null
+  technicalSpecs?: Prisma.JsonNullableFilter<"Product">
   featured?: Prisma.BoolFilter<"Product"> | boolean
   active?: Prisma.BoolFilter<"Product"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Product"> | Date | string
@@ -410,6 +422,8 @@ export type ProductOrderByWithRelationInput = {
   application?: Prisma.SortOrderInput | Prisma.SortOrder
   compatibility?: Prisma.SortOrder
   warranty?: Prisma.SortOrderInput | Prisma.SortOrder
+  technicalSheetUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  technicalSpecs?: Prisma.SortOrderInput | Prisma.SortOrder
   featured?: Prisma.SortOrder
   active?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -443,6 +457,8 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   application?: Prisma.StringNullableFilter<"Product"> | string | null
   compatibility?: Prisma.StringNullableListFilter<"Product">
   warranty?: Prisma.StringNullableFilter<"Product"> | string | null
+  technicalSheetUrl?: Prisma.StringNullableFilter<"Product"> | string | null
+  technicalSpecs?: Prisma.JsonNullableFilter<"Product">
   featured?: Prisma.BoolFilter<"Product"> | boolean
   active?: Prisma.BoolFilter<"Product"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Product"> | Date | string
@@ -473,6 +489,8 @@ export type ProductOrderByWithAggregationInput = {
   application?: Prisma.SortOrderInput | Prisma.SortOrder
   compatibility?: Prisma.SortOrder
   warranty?: Prisma.SortOrderInput | Prisma.SortOrder
+  technicalSheetUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  technicalSpecs?: Prisma.SortOrderInput | Prisma.SortOrder
   featured?: Prisma.SortOrder
   active?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -510,6 +528,8 @@ export type ProductScalarWhereWithAggregatesInput = {
   application?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   compatibility?: Prisma.StringNullableListFilter<"Product">
   warranty?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  technicalSheetUrl?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  technicalSpecs?: Prisma.JsonNullableWithAggregatesFilter<"Product">
   featured?: Prisma.BoolWithAggregatesFilter<"Product"> | boolean
   active?: Prisma.BoolWithAggregatesFilter<"Product"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Product"> | Date | string
@@ -539,6 +559,8 @@ export type ProductCreateInput = {
   application?: string | null
   compatibility?: Prisma.ProductCreatecompatibilityInput | string[]
   warranty?: string | null
+  technicalSheetUrl?: string | null
+  technicalSpecs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   featured?: boolean
   active?: boolean
   createdAt?: Date | string
@@ -569,6 +591,8 @@ export type ProductUncheckedCreateInput = {
   application?: string | null
   compatibility?: Prisma.ProductCreatecompatibilityInput | string[]
   warranty?: string | null
+  technicalSheetUrl?: string | null
+  technicalSpecs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   featured?: boolean
   active?: boolean
   createdAt?: Date | string
@@ -599,6 +623,8 @@ export type ProductUpdateInput = {
   application?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   compatibility?: Prisma.ProductUpdatecompatibilityInput | string[]
   warranty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSheetUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSpecs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   featured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -629,6 +655,8 @@ export type ProductUncheckedUpdateInput = {
   application?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   compatibility?: Prisma.ProductUpdatecompatibilityInput | string[]
   warranty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSheetUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSpecs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   featured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -659,6 +687,8 @@ export type ProductCreateManyInput = {
   application?: string | null
   compatibility?: Prisma.ProductCreatecompatibilityInput | string[]
   warranty?: string | null
+  technicalSheetUrl?: string | null
+  technicalSpecs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   featured?: boolean
   active?: boolean
   createdAt?: Date | string
@@ -688,6 +718,8 @@ export type ProductUpdateManyMutationInput = {
   application?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   compatibility?: Prisma.ProductUpdatecompatibilityInput | string[]
   warranty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSheetUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSpecs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   featured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -717,6 +749,8 @@ export type ProductUncheckedUpdateManyInput = {
   application?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   compatibility?: Prisma.ProductUpdatecompatibilityInput | string[]
   warranty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSheetUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSpecs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   featured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -754,6 +788,8 @@ export type ProductCountOrderByAggregateInput = {
   application?: Prisma.SortOrder
   compatibility?: Prisma.SortOrder
   warranty?: Prisma.SortOrder
+  technicalSheetUrl?: Prisma.SortOrder
+  technicalSpecs?: Prisma.SortOrder
   featured?: Prisma.SortOrder
   active?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -787,6 +823,7 @@ export type ProductMaxOrderByAggregateInput = {
   description?: Prisma.SortOrder
   application?: Prisma.SortOrder
   warranty?: Prisma.SortOrder
+  technicalSheetUrl?: Prisma.SortOrder
   featured?: Prisma.SortOrder
   active?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -813,6 +850,7 @@ export type ProductMinOrderByAggregateInput = {
   description?: Prisma.SortOrder
   application?: Prisma.SortOrder
   warranty?: Prisma.SortOrder
+  technicalSheetUrl?: Prisma.SortOrder
   featured?: Prisma.SortOrder
   active?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -923,6 +961,8 @@ export type ProductCreateWithoutInventoryMovementsInput = {
   application?: string | null
   compatibility?: Prisma.ProductCreatecompatibilityInput | string[]
   warranty?: string | null
+  technicalSheetUrl?: string | null
+  technicalSpecs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   featured?: boolean
   active?: boolean
   createdAt?: Date | string
@@ -952,6 +992,8 @@ export type ProductUncheckedCreateWithoutInventoryMovementsInput = {
   application?: string | null
   compatibility?: Prisma.ProductCreatecompatibilityInput | string[]
   warranty?: string | null
+  technicalSheetUrl?: string | null
+  technicalSpecs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   featured?: boolean
   active?: boolean
   createdAt?: Date | string
@@ -997,6 +1039,8 @@ export type ProductUpdateWithoutInventoryMovementsInput = {
   application?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   compatibility?: Prisma.ProductUpdatecompatibilityInput | string[]
   warranty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSheetUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSpecs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   featured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1026,6 +1070,8 @@ export type ProductUncheckedUpdateWithoutInventoryMovementsInput = {
   application?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   compatibility?: Prisma.ProductUpdatecompatibilityInput | string[]
   warranty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSheetUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  technicalSpecs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   featured?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1086,6 +1132,8 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   application?: boolean
   compatibility?: boolean
   warranty?: boolean
+  technicalSheetUrl?: boolean
+  technicalSpecs?: boolean
   featured?: boolean
   active?: boolean
   createdAt?: boolean
@@ -1117,6 +1165,8 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   application?: boolean
   compatibility?: boolean
   warranty?: boolean
+  technicalSheetUrl?: boolean
+  technicalSpecs?: boolean
   featured?: boolean
   active?: boolean
   createdAt?: boolean
@@ -1146,6 +1196,8 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   application?: boolean
   compatibility?: boolean
   warranty?: boolean
+  technicalSheetUrl?: boolean
+  technicalSpecs?: boolean
   featured?: boolean
   active?: boolean
   createdAt?: boolean
@@ -1175,13 +1227,15 @@ export type ProductSelectScalar = {
   application?: boolean
   compatibility?: boolean
   warranty?: boolean
+  technicalSheetUrl?: boolean
+  technicalSpecs?: boolean
   featured?: boolean
   active?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "sku" | "oemReference" | "alternativeReferences" | "category" | "name" | "brand" | "division" | "price" | "previousPrice" | "displayPriceOverride" | "displaySecondaryLabel" | "stock" | "minimumStock" | "image" | "galleryImages" | "availability" | "description" | "application" | "compatibility" | "warranty" | "featured" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "sku" | "oemReference" | "alternativeReferences" | "category" | "name" | "brand" | "division" | "price" | "previousPrice" | "displayPriceOverride" | "displaySecondaryLabel" | "stock" | "minimumStock" | "image" | "galleryImages" | "availability" | "description" | "application" | "compatibility" | "warranty" | "technicalSheetUrl" | "technicalSpecs" | "featured" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   inventoryMovements?: boolean | Prisma.Product$inventoryMovementsArgs<ExtArgs>
   _count?: boolean | Prisma.ProductCountOutputTypeDefaultArgs<ExtArgs>
@@ -1217,6 +1271,8 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     application: string | null
     compatibility: string[]
     warranty: string | null
+    technicalSheetUrl: string | null
+    technicalSpecs: runtime.JsonValue | null
     featured: boolean
     active: boolean
     createdAt: Date
@@ -1667,6 +1723,8 @@ export interface ProductFieldRefs {
   readonly application: Prisma.FieldRef<"Product", 'String'>
   readonly compatibility: Prisma.FieldRef<"Product", 'String[]'>
   readonly warranty: Prisma.FieldRef<"Product", 'String'>
+  readonly technicalSheetUrl: Prisma.FieldRef<"Product", 'String'>
+  readonly technicalSpecs: Prisma.FieldRef<"Product", 'Json'>
   readonly featured: Prisma.FieldRef<"Product", 'Boolean'>
   readonly active: Prisma.FieldRef<"Product", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Product", 'DateTime'>

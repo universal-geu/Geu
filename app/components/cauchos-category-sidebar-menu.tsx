@@ -2,13 +2,20 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { cauchosCategorySubcategories, categoriasData, categorias, slugify } from "../data/catalog";
+import { useMemo, useState, type CSSProperties } from "react";
+import {
+  cauchosCategorySubcategories,
+  categoriasData,
+  importCategoriasData,
+  getCategoriasForDivision,
+  slugify,
+} from "../data/catalog";
 import { useProducts } from "./products-provider";
 import { useCauchosMenu } from "./cauchos-menu-context";
+import CauchosProjectChat from "./cauchos-project-chat";
+import { useSiteImages } from "./use-site-images";
+import { resolveImage } from "@/lib/image-slots";
 import type { DivisionName } from "@/lib/divisions";
-
-const fallbackDepartments = [...categorias];
 
 function CupIcon() {
   return (
@@ -171,6 +178,15 @@ function BoxIcon() {
   );
 }
 
+function PencilRulerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m14.5 3.5 6 6L8 22l-6.5 1L2.5 16.5Z" />
+      <path d="M12 6 18 12M4.5 19.5 7 22M2 21l1-1" />
+    </svg>
+  );
+}
+
 function ThreadIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -223,7 +239,7 @@ const SUBCATEGORY_ICONS: Record<string, () => React.JSX.Element> = {
 };
 
 const DEPARTMENT_COLORS: Record<string, string> = Object.fromEntries(
-  categoriasData.map((item) => [item.nombre, item.color]),
+  [...categoriasData, ...importCategoriasData].map((item) => [item.nombre, item.color]),
 );
 
 type Props = {
@@ -239,10 +255,13 @@ export default function CauchosCategorySidebarMenu({
 }: Props) {
   const { products } = useProducts();
   const { isOpen, close } = useCauchosMenu();
+  const siteImages = useSiteImages();
   const cauchosBasePath = basePath || "/cauchos";
   const [activeDept, setActiveDept] = useState<string | null>(null);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
   const menuData = useMemo(() => {
+    const fallbackDepartments = getCategoriasForDivision(division);
     const cauchosProducts = products.filter((product) => product.division === division);
     const departmentMap = new Map<string, Map<string, typeof cauchosProducts>>();
 
@@ -285,13 +304,13 @@ export default function CauchosCategorySidebarMenu({
       const groupHref = `${cauchosBasePath}/categoria/${slugify(title)}`;
       return groups.map((group) => ({
         name: group.name,
-        image: group.image as string | null,
+        image: resolveImage(group.imageKey, siteImages),
         groupHref,
         itemLinks: group.items.map((label) => ({ label, href: groupHref })),
       }));
     };
 
-    // Only the 8 official industry categories are shown, in order, each
+    // Only this division's official categories are shown, in order, each
     // populated with whatever products already carry that category, or with
     // placeholder subcategory groups until real products are assigned.
     return fallbackDepartments.map((title) => {
@@ -303,18 +322,19 @@ export default function CauchosCategorySidebarMenu({
 
       return { title, subcategories };
     });
-  }, [products, cauchosBasePath, division]);
+  }, [products, cauchosBasePath, division, siteImages]);
 
   const active = menuData.find((department) => department.title === activeDept) ?? null;
 
   // Match homecenter.com.co: the panel opens with the first department's
   // content already showing, rather than staying blank until the user
   // hovers something.
-  useEffect(() => {
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setActiveDept(menuData[0]?.title ?? null);
     }
-  }, [isOpen, menuData]);
+  }
 
   if (!isOpen) {
     return null;
@@ -434,6 +454,22 @@ export default function CauchosCategorySidebarMenu({
                   </Link>
                 );
               })}
+
+              {division === "Cauchos" && (
+                <CauchosProjectChat
+                  triggerClassName="flex shrink-0 flex-col items-center gap-2 text-center"
+                  triggerLabel={
+                    <>
+                      <span className="asesoria-tecnica-btn relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[#dd1b44] bg-[#dd1b44]/10 text-[#dd1b44]">
+                        <PencilRulerIcon />
+                      </span>
+                      <span className="max-w-[96px] text-xs font-bold leading-tight text-[#dd1b44]">
+                        Diseña tu pieza
+                      </span>
+                    </>
+                  }
+                />
+              )}
             </div>
 
             <div

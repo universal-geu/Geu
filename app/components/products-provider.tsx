@@ -171,6 +171,9 @@ export function ProductsProvider({
       );
 
       if (localOnlyProducts.length > 0) {
+        // Merge products cached in localStorage (created while the
+        // database was unreachable) with the server-provided list.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProducts([...localOnlyProducts, ...initialProducts]);
       } else {
         window.localStorage.removeItem(LOCAL_PRODUCTS_KEY);

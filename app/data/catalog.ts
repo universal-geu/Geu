@@ -46,293 +46,86 @@ export const categoriasData = [
 export type Categoria = string;
 export const categorias: string[] = categoriasData.map((item) => item.nombre);
 
-// Placeholder subcategory groups for the Cauchos category menu, shown until
-// real products are assigned to each of the 8 industry categories from the
-// admin panel. Each official category name is itself a list of sub-sectors
-// (e.g. "Alimentos, Farmacéuticos y cosméticos"), so each of those parts
-// becomes its own subcategory column, matching the "column of grouped
-// links" layout used by homecenter.com.co's category flyout.
+// Import's own category taxonomy (auto parts / industrial import lines) —
+// unrelated to Cauchos's 8 industry-sector categories above. Each entry is
+// already a single, specific product line, so unlike Cauchos there's no
+// further sub-sector breakdown via cauchosCategorySubcategories.
+export const importCategoriasData = [
+  { nombre: "Láminas de caucho", color: "#2f9e44", icono: "▭" },
+  { nombre: "Empaquetaduras", color: "#1971c2", icono: "◆" },
+  { nombre: "Plásticos de Ingeniería", color: "#5c940d", icono: "⬡" },
+  { nombre: "Acoples OPW", color: "#e8590c", icono: "⬤" },
+  { nombre: "Acoples Hidráulicos", color: "#0c8599", icono: "⬢" },
+  { nombre: "Mangueras Hidráulicas", color: "#c92a2a", icono: "▶" },
+  { nombre: "Mangueras Industriales", color: "#495057", icono: "▶" },
+  { nombre: "Mangueras en PVC", color: "#7048e8", icono: "▶" },
+  { nombre: "Mangueras en caucho y lona", color: "#862e9c", icono: "▶" },
+  { nombre: "Línea Neumática", color: "#1864ab", icono: "◈" },
+  { nombre: "Aislamientos Térmicos", color: "#e67700", icono: "▲" },
+  { nombre: "Mercado Persa", color: "#868e96", icono: "✦" },
+  { nombre: "Autopartes", color: "#c92a2a", icono: "⚙" },
+] as const;
+export const importCategorias: string[] = importCategoriasData.map((item) => item.nombre);
+
+export function getCategoriasForDivision(division: DivisionName): string[] {
+  return division === "Import" ? importCategorias : categorias;
+}
+
+export function getCategoriasDataForDivision(division: DivisionName) {
+  return division === "Import" ? importCategoriasData : categoriasData;
+}
+
+// Real sub-sector groupings for the Cauchos category menu (e.g. "Alimentos,
+// Farmacéuticos y cosméticos" breaks into its own 3 sectors). The `items`
+// lists start empty rather than seeded with invented product names — they
+// populate automatically from real product data (see
+// cauchos-category-sidebar-menu.tsx and cauchos-category-products-page.tsx)
+// as products are added from the admin panel.
 export const cauchosCategorySubcategories: Record<
   string,
-  { name: string; image: string; items: string[] }[]
+  { name: string; imageKey: string; items: string[] }[]
 > = {
   "Alimentos, Farmacéuticos y cosméticos": [
-    {
-      name: "Alimentos",
-      image: "/subcategorias/alimentos.jpg",
-      items: [
-        "Empaques para envases alimenticios",
-        "Mangueras para líquidos alimenticios",
-        "Sellos herméticos para alimentos",
-        "Bandas transportadoras para alimentos",
-      ],
-    },
-    {
-      name: "Farmacéuticos",
-      image: "/subcategorias/farmaceuticos.jpg",
-      items: [
-        "O-rings grado farmacéutico",
-        "Mangueras para laboratorio",
-        "Sellos para dosificadores",
-        "Diafragmas farmacéuticos",
-      ],
-    },
-    {
-      name: "Cosméticos",
-      image: "/subcategorias/cosmeticos.jpg",
-      items: [
-        "Empaques para envases cosméticos",
-        "Válvulas para dispensadores",
-        "Sellos para frascos",
-        "Membranas dosificadoras",
-      ],
-    },
+    { name: "Alimentos", imageKey: "subcategoria-alimentos", items: [] },
+    { name: "Farmacéuticos", imageKey: "subcategoria-farmaceuticos", items: [] },
+    { name: "Cosméticos", imageKey: "subcategoria-cosmeticos", items: [] },
   ],
   Agroindustria: [
-    {
-      name: "Agroindustria",
-      image: "/subcategorias/agroindustria.jpg",
-      items: [
-        "Mangueras de riego",
-        "Mangueras para fumigación",
-        "Empaques para tractores",
-        "Retenes para maquinaria agrícola",
-        "Correas trapezoidales",
-        "Rodillos de caucho",
-      ],
-    },
+    { name: "Agroindustria", imageKey: "subcategoria-agroindustria", items: [] },
   ],
   "Petróleo, minería, gas, energías renovables y petroquímica": [
-    {
-      name: "Petróleo",
-      image: "/subcategorias/petroleo.jpg",
-      items: [
-        "Mangueras para petróleo",
-        "Empaques para válvulas de crudo",
-        "Juntas para bridas",
-        "Protectores de tubería",
-      ],
-    },
-    {
-      name: "Minería",
-      image: "/subcategorias/mineria.jpg",
-      items: [
-        "Rodillos de caucho para minería",
-        "Bandas transportadoras mineras",
-        "Revestimientos antidesgaste",
-        "Mangueras de succión",
-      ],
-    },
-    {
-      name: "Gas",
-      image: "/subcategorias/gas.jpg",
-      items: [
-        "Mangueras para gas",
-        "O-rings resistentes a gas",
-        "Sellos para reguladores",
-        "Empaques para compresores",
-      ],
-    },
-    {
-      name: "Energías renovables",
-      image: "/subcategorias/energias-renovables.jpg",
-      items: [
-        "Sellos para paneles solares",
-        "Juntas para turbinas eólicas",
-        "Amortiguadores técnicos",
-        "Empaques para inversores",
-      ],
-    },
-    {
-      name: "Petroquímica",
-      image: "/subcategorias/petroquimica.jpg",
-      items: [
-        "Mangueras químicas",
-        "O-rings de vitón",
-        "Juntas resistentes a solventes",
-        "Empaques anticorrosivos",
-      ],
-    },
+    { name: "Petróleo", imageKey: "subcategoria-petroleo", items: [] },
+    { name: "Minería", imageKey: "subcategoria-mineria", items: [] },
+    { name: "Gas", imageKey: "subcategoria-gas", items: [] },
+    { name: "Energías renovables", imageKey: "subcategoria-energias-renovables", items: [] },
+    { name: "Petroquímica", imageKey: "subcategoria-petroquimica", items: [] },
   ],
   "Químico, aseo y plásticos": [
-    {
-      name: "Químico",
-      image: "/subcategorias/quimico.jpg",
-      items: [
-        "Mangueras resistentes a ácidos",
-        "Empaques químicos",
-        "O-rings de vitón",
-        "Juntas resistentes a solventes",
-      ],
-    },
-    {
-      name: "Aseo",
-      image: "/subcategorias/aseo.jpg",
-      items: [
-        "Escobillas técnicas",
-        "Mangueras de limpieza",
-        "Guantes resistentes a químicos",
-        "Bandas para lavado industrial",
-      ],
-    },
-    {
-      name: "Plásticos",
-      image: "/subcategorias/plasticos.jpg",
-      items: [
-        "Rodillos para extrusión",
-        "Bandas para líneas de producción",
-        "Piezas técnicas moldeadas",
-        "Sellos para moldes",
-      ],
-    },
+    { name: "Químico", imageKey: "subcategoria-quimico", items: [] },
+    { name: "Aseo", imageKey: "subcategoria-aseo", items: [] },
+    { name: "Plásticos", imageKey: "subcategoria-plasticos", items: [] },
   ],
   "Construcción, infraestructura, obra civil, cemento y agregados": [
-    {
-      name: "Construcción",
-      image: "/subcategorias/construccion.jpg",
-      items: [
-        "Juntas de dilatación",
-        "Sellos impermeabilizantes",
-        "Empaques para tuberías",
-        "Bandas antivibratorias",
-      ],
-    },
-    {
-      name: "Infraestructura",
-      image: "/subcategorias/infraestructura.jpg",
-      items: [
-        "Apoyos de neopreno",
-        "Placas antivibratorias",
-        "Juntas de puente",
-        "Sellos para alcantarillado",
-      ],
-    },
-    {
-      name: "Obra civil",
-      image: "/subcategorias/obra-civil.jpg",
-      items: [
-        "Mangueras para concreto",
-        "Mangueras de succión",
-        "Mangueras para bombeo",
-        "Topes de caucho",
-      ],
-    },
-    {
-      name: "Cemento",
-      image: "/subcategorias/cemento.jpg",
-      items: [
-        "Bandas transportadoras para cemento",
-        "Mangueras para polvo",
-        "Sellos para silos",
-        "Fajas de descarga",
-      ],
-    },
-    {
-      name: "Agregados",
-      image: "/subcategorias/agregados.jpg",
-      items: [
-        "Rodillos para maquinaria",
-        "Orugas de caucho",
-        "Fajas transportadoras",
-        "Revestimientos antidesgaste",
-      ],
-    },
+    { name: "Construcción", imageKey: "subcategoria-construccion", items: [] },
+    { name: "Infraestructura", imageKey: "subcategoria-infraestructura", items: [] },
+    { name: "Obra civil", imageKey: "subcategoria-obra-civil", items: [] },
+    { name: "Cemento", imageKey: "subcategoria-cemento", items: [] },
+    { name: "Agregados", imageKey: "subcategoria-agregados", items: [] },
   ],
   "Transporte, logística y puertos marítimos": [
-    {
-      name: "Transporte",
-      image: "/subcategorias/transporte.jpg",
-      items: [
-        "Mangueras para combustibles",
-        "Sellos para vehículos de carga",
-        "Empaques para contenedores",
-        "Burletes",
-      ],
-    },
-    {
-      name: "Logística",
-      image: "/subcategorias/logistica.jpg",
-      items: [
-        "Bandas transportadoras",
-        "Bandas modulares",
-        "Rodillos de transporte",
-        "Topes de carga",
-      ],
-    },
-    {
-      name: "Puertos marítimos",
-      image: "/subcategorias/puertos-maritimos.jpg",
-      items: [
-        "Defensas para muelles",
-        "Parachoques industriales",
-        "Topes de atraque",
-        "Mangueras de carga y descarga",
-      ],
-    },
+    { name: "Transporte", imageKey: "subcategoria-transporte", items: [] },
+    { name: "Logística", imageKey: "subcategoria-logistica", items: [] },
+    { name: "Puertos marítimos", imageKey: "subcategoria-puertos-maritimos", items: [] },
   ],
   "Manufactura, metalmecánica, siderúrgica y textiles": [
-    {
-      name: "Manufactura",
-      image: "/subcategorias/manufactura.jpg",
-      items: [
-        "Bandas de transmisión",
-        "Sellos técnicos para maquinaria",
-        "Piezas moldeadas",
-        "Amortiguadores industriales",
-      ],
-    },
-    {
-      name: "Metalmecánica",
-      image: "/subcategorias/metalmecanica.jpg",
-      items: [
-        "Retenes",
-        "O-rings",
-        "Empaques para prensas",
-        "Recubrimientos de rodillos",
-      ],
-    },
-    {
-      name: "Siderúrgica",
-      image: "/subcategorias/siderurgica.jpg",
-      items: [
-        "Bandas resistentes a altas temperaturas",
-        "Mangueras para hornos",
-        "Sellos térmicos",
-        "Piezas antidesgaste",
-      ],
-    },
-    {
-      name: "Textiles",
-      image: "/subcategorias/textiles.jpg",
-      items: [
-        "Telas recubiertas de caucho",
-        "Bandas textiles",
-        "Lonas industriales",
-        "Correas para telares",
-      ],
-    },
+    { name: "Manufactura", imageKey: "subcategoria-manufactura", items: [] },
+    { name: "Metalmecánica", imageKey: "subcategoria-metalmecanica", items: [] },
+    { name: "Siderúrgica", imageKey: "subcategoria-siderurgica", items: [] },
+    { name: "Textiles", imageKey: "subcategoria-textiles", items: [] },
   ],
   "Ferretería y otros": [
-    {
-      name: "Ferretería",
-      image: "/subcategorias/ferreteria.jpg",
-      items: [
-        "O-rings estándar",
-        "Empaques planos",
-        "Juntas universales",
-        "Mangueras multiuso",
-      ],
-    },
-    {
-      name: "Otros",
-      image: "/subcategorias/otros.jpg",
-      items: [
-        "Topes de puerta",
-        "Bases antideslizantes",
-        "Protectores de esquina",
-        "Repuestos varios",
-      ],
-    },
+    { name: "Ferretería", imageKey: "subcategoria-ferreteria", items: [] },
+    { name: "Otros", imageKey: "subcategoria-otros", items: [] },
   ],
 };
 export const disponibilidades = [
@@ -342,6 +135,11 @@ export const disponibilidades = [
   "Agotado",
 ] as const;
 export type Disponibilidad = (typeof disponibilidades)[number];
+
+export type ProductoEspecificacion = {
+  etiqueta: string;
+  valor: string;
+};
 
 export type ProductoCatalogo = {
   slug: string;
@@ -371,6 +169,8 @@ export type ProductoCatalogo = {
   aplicacion?: string;
   compatibilidad?: string[];
   garantia?: string;
+  fichaTecnicaUrl?: string;
+  especificacionesTecnicas?: ProductoEspecificacion[];
   destacado?: boolean;
 };
 
