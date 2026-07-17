@@ -9,6 +9,7 @@ import {
   type Categoria,
   type Disponibilidad,
   type ProductoCatalogo,
+  type ProductoEspecificacion,
 } from "@/app/data/catalog";
 import { prisma } from "@/lib/prisma";
 import { isServiceDivision, type DivisionName } from "@/lib/divisions";
@@ -36,6 +37,8 @@ type ProductRecord = {
   application?: string | null;
   compatibility?: string[] | null;
   warranty?: string | null;
+  technicalSheetUrl?: string | null;
+  technicalSpecs?: unknown;
   featured: boolean;
 };
 
@@ -79,7 +82,26 @@ export type ProductMutationInput = {
   aplicacion?: string;
   compatibilidad?: string[];
   garantia?: string;
+  fichaTecnicaUrl?: string;
+  especificacionesTecnicas?: ProductoEspecificacion[];
 };
+
+function normalizeTechnicalSpecs(specs: unknown): ProductoEspecificacion[] {
+  if (!Array.isArray(specs)) return [];
+
+  return specs
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+
+      const etiqueta =
+        "etiqueta" in item && typeof item.etiqueta === "string" ? item.etiqueta.trim() : "";
+      const valor = "valor" in item && typeof item.valor === "string" ? item.valor.trim() : "";
+
+      if (!etiqueta || !valor) return null;
+      return { etiqueta, valor };
+    })
+    .filter((item): item is ProductoEspecificacion => Boolean(item));
+}
 
 function createSkuFromName(name: string) {
   return (
@@ -252,6 +274,8 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
         !value.toLowerCase().startsWith("categoría menor:"),
     ),
     garantia: product.warranty?.trim() || "1 año de garantía del fabricante",
+    fichaTecnicaUrl: product.technicalSheetUrl || undefined,
+    especificacionesTecnicas: normalizeTechnicalSpecs(product.technicalSpecs),
     destacado: product.featured,
   };
 }
@@ -404,6 +428,8 @@ export async function createProduct(input: ProductMutationInput) {
         ),
       },
       warranty: input.garantia?.trim() || "1 año de garantía del fabricante",
+      technicalSheetUrl: input.fichaTecnicaUrl?.trim() || null,
+      technicalSpecs: normalizeTechnicalSpecs(input.especificacionesTecnicas),
       featured: false,
       active: true,
       inventoryMovements: {
@@ -525,6 +551,8 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
         ),
       },
       warranty: input.garantia?.trim() || "1 año de garantía del fabricante",
+      technicalSheetUrl: input.fichaTecnicaUrl?.trim() || existing.technicalSheetUrl || null,
+      technicalSpecs: normalizeTechnicalSpecs(input.especificacionesTecnicas),
       inventoryMovements:
         stockDelta !== 0
           ? {

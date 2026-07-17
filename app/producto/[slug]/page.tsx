@@ -275,41 +275,16 @@ export default function ProductoDetallePage() {
     producto.imagen === "/hero-unipars.jpg"
       ? FALLBACK_PRODUCT_IMAGE[productDivision]
       : producto.imagen;
-  const fichaTecnica = [
-    {
-      etiqueta: "Observaciones",
-      valor:
-        "La imagen de este producto es de referencia visual y puede variar levemente frente a la versión final entregada.",
-    },
-    {
-      etiqueta: "Material",
-      valor: "Aleación técnica de alta resistencia",
-    },
-    {
-      etiqueta: "Categoría",
-      valor: producto.categoria,
-    },
-    {
-      etiqueta: "Marca",
-      valor: producto.marca,
-    },
-    {
-      etiqueta: "Disponibilidad",
-      valor: producto.disponibilidad,
-    },
-    {
-      etiqueta: "Garantía",
-      valor: "1 año de garantía del fabricante",
-    },
-    {
-      etiqueta: "Aplicación",
-      valor: "Uso técnico, industrial y de reposición especializada",
-    },
-    {
-      etiqueta: "Origen",
-      valor: "Importado",
-    },
-  ];
+  const fichaTecnica =
+    producto.especificacionesTecnicas && producto.especificacionesTecnicas.length > 0
+      ? producto.especificacionesTecnicas
+      : [
+          { etiqueta: "Categoría", valor: producto.categoria },
+          { etiqueta: "Marca", valor: producto.marca },
+          { etiqueta: "Disponibilidad", valor: producto.disponibilidad },
+          ...(producto.garantia ? [{ etiqueta: "Garantía", valor: producto.garantia }] : []),
+          ...(producto.aplicacion ? [{ etiqueta: "Aplicación", valor: producto.aplicacion }] : []),
+        ];
 
   return (
     <>
@@ -337,6 +312,31 @@ export default function ProductoDetallePage() {
               images={galleryImages.map((image) => (image === "/hero-unipars.jpg" ? FALLBACK_PRODUCT_IMAGE[productDivision] : image))}
               accent={cartAccent}
             />
+
+            {producto.descripcion && (
+              <div className={`mt-6 overflow-hidden rounded-[1.2rem] border ${isRed ? "border-slate-200" : "border-black/8"}`}>
+                <div className={`flex items-center justify-between border-b px-6 py-4 ${isRed ? "border-slate-200 bg-[#f8f8f7]" : "border-black/8 bg-[#f8f8f7]"}`}>
+                  <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[#33373d]">
+                    Descripción
+                  </h2>
+                </div>
+                <div className="bg-white px-6 py-5">
+                  <p className="whitespace-pre-line text-lg leading-8 text-[#22262b]">
+                    {producto.descripcion}
+                  </p>
+                  {producto.fichaTecnicaUrl && (
+                    <a
+                      href={producto.fichaTecnicaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`mt-5 inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-black uppercase tracking-[0.06em] transition-colors duration-200 ${OUTLINE_BUTTON_CLASS[cartAccent]}`}
+                    >
+                      Descargar ficha técnica (PDF)
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className={`mt-6 overflow-hidden rounded-[1.2rem] border ${isRed ? "border-slate-200" : "border-black/8"}`}>
               <div className={`flex items-center justify-between border-b px-6 py-4 ${isRed ? "border-slate-200 bg-[#f8f8f7]" : "border-black/8 bg-[#f8f8f7]"}`}>

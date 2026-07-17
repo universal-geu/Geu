@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
 
 type StepType = "text" | "textarea" | "choice" | "multichoice";
@@ -148,7 +148,7 @@ function buildSteps(brandLabel: string, division: DivisionName): Step[] {
 
 type Props = {
   division?: DivisionName;
-  triggerLabel?: string;
+  triggerLabel?: ReactNode;
   triggerClassName?: string;
 };
 
