@@ -16,6 +16,7 @@ import {
 } from "../data/catalog";
 import type { StoreProduct } from "@/lib/products";
 import { DIVISION_BRAND, isServiceDivision, type DivisionName } from "@/lib/divisions";
+import type { ProductoCategoriaAdicional } from "../data/catalog";
 
 export type AdminProductInput = {
   sku?: string;
@@ -24,6 +25,7 @@ export type AdminProductInput = {
   categoria: string;
   subcategoria?: string;
   categoriaMenor?: string;
+  categoriasAdicionales?: ProductoCategoriaAdicional[];
   nombre: string;
   marca: string;
   division: DivisionName;
@@ -112,6 +114,7 @@ function createLocalProduct(
     categoria: input.categoria,
     subcategoria: input.subcategoria?.trim() || undefined,
     categoriaMenor: input.categoriaMenor?.trim() || undefined,
+    categoriasAdicionales: input.categoriasAdicionales || [],
     nombre: input.nombre.trim(),
     marca: input.marca.trim(),
     division: input.division,

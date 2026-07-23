@@ -20,6 +20,7 @@ import { useSiteTexts } from "./use-site-texts";
 import { resolveImage } from "@/lib/image-slots";
 import { resolveText, categoryLabelKey } from "@/lib/text-slots";
 import type { DivisionName } from "@/lib/divisions";
+import { expandProductCategoryViews } from "@/lib/product-category-views";
 
 function CupIcon() {
   return (
@@ -268,7 +269,7 @@ export default function CauchosCategorySidebarMenu({
 
   const menuData = useMemo(() => {
     const fallbackDepartments = getCategoriasForDivision(division);
-    const cauchosProducts = products.filter((product) => product.division === division);
+    const cauchosProducts = expandProductCategoryViews(products, division);
     const departmentMap = new Map<string, Map<string, typeof cauchosProducts>>();
 
     cauchosProducts.forEach((product) => {

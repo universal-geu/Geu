@@ -20,7 +20,7 @@ import {
   type ProductoCatalogo,
   type ProductoEspecificacion,
 } from "../data/catalog";
-import type { InventoryMovementSummary } from "@/lib/products";
+import type { InventoryMovementSummary, StoreProduct } from "@/lib/products";
 import type { DashboardMetrics, SalesReport, ShippingStatus } from "@/lib/orders";
 import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
@@ -141,6 +141,24 @@ const disponibilidades: ProductoCatalogo["disponibilidad"][] = [
   "Recoger en tienda",
 ];
 
+type AdditionalCategoryFormItem = {
+  id: string;
+  categoria: string;
+  subcategoria: string;
+  categoriaMenor: string;
+};
+
+function createAdditionalCategoryItem(
+  entry?: Partial<Omit<AdditionalCategoryFormItem, "id">>,
+): AdditionalCategoryFormItem {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    categoria: entry?.categoria || "",
+    subcategoria: entry?.subcategoria || "",
+    categoriaMenor: entry?.categoriaMenor || "",
+  };
+}
+
 type FormState = {
   sku: string;
   oemReferencia: string;
@@ -148,6 +166,7 @@ type FormState = {
   categoria: string;
   subcategoria: string;
   categoriaMenor: string;
+  categoriasAdicionales: AdditionalCategoryFormItem[];
   nombre: string;
   marca: string;
   precioValor: string;
@@ -170,6 +189,7 @@ const initialState: FormState = {
   categoria: "",
   subcategoria: "",
   categoriaMenor: "",
+  categoriasAdicionales: [],
   nombre: "",
   marca: "",
   precioValor: "",
@@ -729,6 +749,144 @@ function TechnicalSpecsEditor({
                 type="button"
                 onClick={() => removeItem(item.id)}
                 className="inline-flex rounded-full border border-black/10 px-4 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+              >
+                Quitar
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function getSubcategoryOptionsFor(categoria: string, adminProducts: StoreProduct[]) {
+  const normalizedCategoria = normalizeMatchKey(categoria);
+  const menuGroups = cauchosCategorySubcategories[categoria] ?? [];
+  const fromMenu = menuGroups.map((group) => group.name);
+  const fromProducts = adminProducts
+    .filter((product) => normalizeMatchKey(product.categoria) === normalizedCategoria)
+    .map((product) => product.subcategoria)
+    .filter((value): value is string => Boolean(value));
+
+  return Array.from(new Set([...fromMenu, ...fromProducts]));
+}
+
+function getCategoriaMenorOptionsFor(
+  categoria: string,
+  subcategoria: string,
+  adminProducts: StoreProduct[],
+) {
+  const normalizedCategoria = normalizeMatchKey(categoria);
+  const normalizedSubcategoria = normalizeMatchKey(subcategoria);
+  const menuGroups = cauchosCategorySubcategories[categoria] ?? [];
+  const fromMenu =
+    menuGroups.find((group) => normalizeMatchKey(group.name) === normalizedSubcategoria)?.items ?? [];
+  const fromProducts = adminProducts
+    .filter(
+      (product) =>
+        normalizeMatchKey(product.categoria) === normalizedCategoria &&
+        normalizeMatchKey(product.subcategoria) === normalizedSubcategoria,
+    )
+    .map((product) => product.categoriaMenor)
+    .filter((value): value is string => Boolean(value));
+
+  return Array.from(new Set([...fromMenu, ...fromProducts]));
+}
+
+function AdditionalCategoriesEditor({
+  items,
+  categoryOptions,
+  adminProducts,
+  strictCategory,
+  onChange,
+}: {
+  items: AdditionalCategoryFormItem[];
+  categoryOptions: string[];
+  adminProducts: StoreProduct[];
+  strictCategory: boolean;
+  onChange: (items: AdditionalCategoryFormItem[]) => void;
+}) {
+  const updateItem = (id: string, patch: Partial<Omit<AdditionalCategoryFormItem, "id">>) => {
+    onChange(items.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  };
+
+  const removeItem = (id: string) => {
+    onChange(items.filter((item) => item.id !== id));
+  };
+
+  const addItem = () => {
+    onChange([...items, createAdditionalCategoryItem()]);
+  };
+
+  return (
+    <div className="md:col-span-2 rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-[#4f545a]">Este producto también aplica para otra categoría</p>
+          <p className="mt-2 text-xs leading-6 text-[#6e7379]">
+            Agrega categorías adicionales para que este mismo producto aparezca al navegar por ellas, sin duplicarlo.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={addItem}
+          className="inline-flex rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+        >
+          Agregar a otra categoría
+        </button>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        {items.length === 0 && (
+          <div className="rounded-[1.2rem] border border-dashed border-black/12 bg-white px-4 py-5 text-sm text-[#6e7379]">
+            Este producto solo aparece en su categoría principal.
+          </div>
+        )}
+
+        {items.map((item) => (
+          <div key={item.id} className="rounded-[1.2rem] border border-black/8 bg-white p-4">
+            <div className="grid gap-3 md:grid-cols-3">
+              <CategoryComboBox
+                label="Categoría"
+                name={`categoriaAdicional-${item.id}`}
+                value={item.categoria}
+                options={categoryOptions}
+                entityName="categoría"
+                strict={strictCategory}
+                onChange={(value) =>
+                  updateItem(item.id, { categoria: value, subcategoria: "", categoriaMenor: "" })
+                }
+              />
+
+              {!strictCategory && (
+                <>
+                  <CategoryComboBox
+                    label="Sub categoría"
+                    name={`subcategoriaAdicional-${item.id}`}
+                    value={item.subcategoria}
+                    options={getSubcategoryOptionsFor(item.categoria, adminProducts)}
+                    entityName="subcategoría"
+                    onChange={(value) => updateItem(item.id, { subcategoria: value, categoriaMenor: "" })}
+                  />
+
+                  <CategoryComboBox
+                    label="Categoría menor"
+                    name={`categoriaMenorAdicional-${item.id}`}
+                    value={item.categoriaMenor}
+                    options={getCategoriaMenorOptionsFor(item.categoria, item.subcategoria, adminProducts)}
+                    entityName="categoría menor"
+                    onChange={(value) => updateItem(item.id, { categoriaMenor: value })}
+                  />
+                </>
+              )}
+            </div>
+
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => removeItem(item.id)}
+                className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
               >
                 Quitar
               </button>
@@ -1570,6 +1728,13 @@ export default function AdminPage() {
         categoria: form.categoria,
         subcategoria: form.subcategoria,
         categoriaMenor: form.categoriaMenor,
+        categoriasAdicionales: form.categoriasAdicionales
+          .filter((item) => item.categoria.trim())
+          .map((item) => ({
+            categoria: item.categoria.trim(),
+            subcategoria: item.subcategoria.trim() || undefined,
+            categoriaMenor: item.categoriaMenor.trim() || undefined,
+          })),
         nombre: form.nombre,
         marca: form.marca,
         division: adminDivision,
@@ -1662,6 +1827,9 @@ export default function AdminPage() {
       categoria: product.categoria,
       subcategoria: product.subcategoria || "",
       categoriaMenor: product.categoriaMenor || "",
+      categoriasAdicionales: (product.categoriasAdicionales || []).map((entry) =>
+        createAdditionalCategoryItem(entry),
+      ),
       nombre: product.nombre,
       marca: product.marca,
       precioValor: String(product.precioValor),
@@ -3094,6 +3262,14 @@ export default function AdminPage() {
                     </>
                   )}
 
+                  <AdditionalCategoriesEditor
+                    items={form.categoriasAdicionales}
+                    categoryOptions={categoryOptions}
+                    adminProducts={adminProducts}
+                    strictCategory={adminDivision === "Import" || adminDivision === "Plastic"}
+                    onChange={(items) => setForm((current) => ({ ...current, categoriasAdicionales: items }))}
+                  />
+
                 <label className="space-y-2">
                   <span className="text-sm font-medium text-[#4f545a]">Marca</span>
                   <input
@@ -3617,6 +3793,14 @@ export default function AdminPage() {
                         />
                       </>
                     )}
+
+                    <AdditionalCategoriesEditor
+                      items={form.categoriasAdicionales}
+                      categoryOptions={categoryOptions}
+                      adminProducts={adminProducts}
+                      strictCategory={adminDivision === "Import" || adminDivision === "Plastic"}
+                      onChange={(items) => setForm((current) => ({ ...current, categoriasAdicionales: items }))}
+                    />
 
                     <label className="space-y-2">
                       <span className="text-sm font-medium text-[#4f545a]">Marca</span>

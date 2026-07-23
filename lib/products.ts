@@ -9,6 +9,7 @@ import {
   type Categoria,
   type Disponibilidad,
   type ProductoCatalogo,
+  type ProductoCategoriaAdicional,
   type ProductoEspecificacion,
 } from "@/app/data/catalog";
 import { prisma } from "@/lib/prisma";
@@ -66,6 +67,7 @@ export type ProductMutationInput = {
   categoria: string;
   subcategoria?: string;
   categoriaMenor?: string;
+  categoriasAdicionales?: ProductoCategoriaAdicional[];
   nombre: string;
   marca: string;
   division: DivisionName;
@@ -192,17 +194,63 @@ function extractMinorCategory(values: Array<string | null | undefined>) {
     .trim();
 }
 
+const ADDITIONAL_CATEGORIES_PREFIX = "categorías adicionales:";
+
+function getAdditionalCategoriesMarker(entries: ProductoCategoriaAdicional[]) {
+  return `Categorías adicionales: ${JSON.stringify(entries)}`;
+}
+
+function extractAdditionalCategories(
+  values: Array<string | null | undefined>,
+): ProductoCategoriaAdicional[] {
+  const marker = normalizeTextList(values).find((value) =>
+    value.toLowerCase().startsWith(ADDITIONAL_CATEGORIES_PREFIX),
+  );
+  if (!marker) return [];
+
+  try {
+    const parsed = JSON.parse(marker.slice(marker.indexOf(":") + 1).trim());
+    if (!Array.isArray(parsed)) return [];
+
+    const result: ProductoCategoriaAdicional[] = [];
+
+    for (const item of parsed) {
+      if (!item || typeof item !== "object") continue;
+      const categoria =
+        "categoria" in item && typeof item.categoria === "string" ? item.categoria.trim() : "";
+      if (!categoria) continue;
+
+      const subcategoria =
+        "subcategoria" in item && typeof item.subcategoria === "string"
+          ? item.subcategoria.trim() || undefined
+          : undefined;
+      const categoriaMenor =
+        "categoriaMenor" in item && typeof item.categoriaMenor === "string"
+          ? item.categoriaMenor.trim() || undefined
+          : undefined;
+
+      result.push({ categoria, subcategoria, categoriaMenor });
+    }
+
+    return result;
+  } catch {
+    return [];
+  }
+}
+
 function normalizeCompatibilityList(
   values: Array<string | null | undefined>,
   subcategoria?: string,
   categoriaMenor?: string,
+  categoriasAdicionales?: ProductoCategoriaAdicional[],
 ) {
-  const withoutSubcategory = normalizeTextList(values).filter(
+  const withoutMarkers = normalizeTextList(values).filter(
     (value) =>
       !value.toLowerCase().startsWith("subcategoría:") &&
-      !value.toLowerCase().startsWith("categoría menor:"),
+      !value.toLowerCase().startsWith("categoría menor:") &&
+      !value.toLowerCase().startsWith(ADDITIONAL_CATEGORIES_PREFIX),
   );
-  const nextValues = [...withoutSubcategory];
+  const nextValues = [...withoutMarkers];
 
   if (subcategoria?.trim()) {
     nextValues.push(getSubcategoryMarker(subcategoria));
@@ -210,6 +258,18 @@ function normalizeCompatibilityList(
 
   if (categoriaMenor?.trim()) {
     nextValues.push(getMinorCategoryMarker(categoriaMenor));
+  }
+
+  const validAdditionalCategories = (categoriasAdicionales || [])
+    .map((entry) => ({
+      categoria: entry.categoria?.trim() || "",
+      subcategoria: entry.subcategoria?.trim() || undefined,
+      categoriaMenor: entry.categoriaMenor?.trim() || undefined,
+    }))
+    .filter((entry) => entry.categoria);
+
+  if (validAdditionalCategories.length > 0) {
+    nextValues.push(getAdditionalCategoriesMarker(validAdditionalCategories));
   }
 
   return nextValues;
@@ -258,6 +318,7 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
     disponibilidad,
     subcategoria,
     categoriaMenor,
+    categoriasAdicionales: extractAdditionalCategories(product.compatibility || []),
     descripcion:
       product.description ||
       descripcionProducto({
@@ -271,7 +332,8 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
     compatibilidad: normalizeTextList(product.compatibility || []).filter(
       (value) =>
         !value.toLowerCase().startsWith("subcategoría:") &&
-        !value.toLowerCase().startsWith("categoría menor:"),
+        !value.toLowerCase().startsWith("categoría menor:") &&
+        !value.toLowerCase().startsWith(ADDITIONAL_CATEGORIES_PREFIX),
     ),
     garantia: product.warranty?.trim() || "1 año de garantía del fabricante",
     fichaTecnicaUrl: product.technicalSheetUrl || undefined,
@@ -425,6 +487,7 @@ export async function createProduct(input: ProductMutationInput) {
           input.compatibilidad || [],
           input.subcategoria,
           input.categoriaMenor,
+          input.categoriasAdicionales,
         ),
       },
       warranty: input.garantia?.trim() || "1 año de garantía del fabricante",
@@ -548,6 +611,7 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
           input.compatibilidad || [],
           input.subcategoria,
           input.categoriaMenor,
+          input.categoriasAdicionales,
         ),
       },
       warranty: input.garantia?.trim() || "1 año de garantía del fabricante",

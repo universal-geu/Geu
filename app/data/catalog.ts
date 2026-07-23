@@ -160,6 +160,12 @@ export type ProductoEspecificacion = {
   valor: string;
 };
 
+export type ProductoCategoriaAdicional = {
+  categoria: string;
+  subcategoria?: string;
+  categoriaMenor?: string;
+};
+
 export type ProductoCatalogo = {
   slug: string;
   sku?: string;
@@ -184,6 +190,7 @@ export type ProductoCatalogo = {
   disponibilidad: Disponibilidad;
   subcategoria?: string;
   categoriaMenor?: string;
+  categoriasAdicionales?: ProductoCategoriaAdicional[];
   descripcion?: string;
   aplicacion?: string;
   compatibilidad?: string[];
