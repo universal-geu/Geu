@@ -2,7 +2,7 @@ export const DIVISIONS = ["Cauchos", "Import", "Innovation", "Energy", "Plastic"
 
 export type DivisionName = (typeof DIVISIONS)[number];
 
-const SERVICE_DIVISIONS: readonly DivisionName[] = ["Innovation", "Energy", "Plastic"];
+const SERVICE_DIVISIONS: readonly DivisionName[] = ["Innovation", "Energy"];
 
 export function isServiceDivision(division: DivisionName) {
   return SERVICE_DIVISIONS.includes(division);

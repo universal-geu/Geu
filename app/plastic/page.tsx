@@ -1,10 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
+import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
+import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import CauchosHeader from "../components/cauchos-header";
 import CauchosProjectChat from "../components/cauchos-project-chat";
-import { getSiteImages, resolveImage } from "@/lib/site-images";
+import HeroVideo from "../components/hero-video";
+import SiteFooter from "../components/site-footer";
+import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
+import { isVideoUrl } from "@/lib/image-slots";
+import { getSiteTexts, resolveText } from "@/lib/site-texts";
 import { getProducts } from "@/lib/products";
+import { plasticCategorias, slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +22,7 @@ const navItems = [
   { label: "Innovation", href: "/innovation" },
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic", active: true },
-  { label: "Nosotros", href: "/quienes-somos" },
+  { label: "Nosotros", href: "/plastic/nosotros" },
   { label: "Contacto", href: "#contacto" },
 ];
 
@@ -24,24 +31,27 @@ const productLines = [
     title: "Perfiles transparentes",
     text: "Soluciones para vitrinas, protecciones, guias, divisiones y sistemas livianos.",
     tag: "Extrusion",
+    imageKey: "plastic-linea-perfiles",
   },
   {
     title: "Pellets y resinas",
     text: "Materia prima para produccion industrial con seleccion segun aplicacion y volumen.",
     tag: "Materia prima",
+    imageKey: "plastic-linea-resinas",
   },
   {
     title: "Piezas bajo plano",
     text: "Corte, mecanizado y acabado de piezas plasticas para reposicion o desarrollo.",
     tag: "Tecnico",
+    imageKey: "plastic-linea-piezas",
   },
 ];
 
 const plasticOffers = [
-  { title: "Perfiles plasticos", href: "/plastic/categoria/manufactura-metalmecanica-siderurgica-y-textiles", imageKey: "plastic-oferta-1" },
-  { title: "Materia prima", href: "/plastic/categoria/quimico-aseo-y-plasticos", imageKey: "plastic-oferta-2" },
-  { title: "Piezas tecnicas", href: "#contacto", imageKey: "plastic-oferta-3" },
-  { title: "Desarrollo a medida", href: "#contacto", imageKey: "plastic-oferta-4" },
+  { title: "Extrusion PVC Rigido", href: "/plastic/categoria/extrusion-en-pvc-rigido", imageKey: "plastic-oferta-1" },
+  { title: "Extrusion PVC Flexible", href: "/plastic/categoria/extrusion-en-pvc-flexible", imageKey: "plastic-oferta-2" },
+  { title: "Perfileria para construccion", href: "/plastic/categoria/perfileria-para-construccion", imageKey: "plastic-oferta-3" },
+  { title: "Perfileria para carroceria", href: "/plastic/categoria/perfileria-para-carroceria", imageKey: "plastic-oferta-4" },
 ];
 
 const plasticFeatured = [
@@ -49,40 +59,68 @@ const plasticFeatured = [
     title: "Perfiles",
     href: "/plastic",
     imageKey: "plastic-destacada-1",
-    subtitle: "Perfiles plasticos a medida para vitrinas, guias y sistemas livianos.",
-    ctaLabel: "Ver mas",
   },
   {
     title: "Resinas",
     href: "/plastic",
     imageKey: "plastic-destacada-2",
-    subtitle: "Materia prima industrial seleccionada segun tu aplicacion y volumen.",
-    ctaLabel: "Ver mas",
   },
   {
     title: "Piezas tecnicas",
     href: "#contacto",
     imageKey: "plastic-destacada-3",
-    subtitle: "Corte, mecanizado y acabado de piezas plasticas para reposicion.",
-    ctaLabel: "Cotizar",
   },
   {
     title: "Extrusion",
     href: "#contacto",
     imageKey: "plastic-destacada-4",
-    subtitle: "Desarrollo a medida con procesos de extrusion para tu industria.",
-    ctaLabel: "Cotizar",
   },
 ];
 
 const specs = ["PVC", "Policarbonato", "Acrilico", "Polietileno", "Nylon", "ABS"];
 
+const PLASTIC_CATEGORY_IMAGE_KEYS: Record<string, string> = {
+  "Extrusión en PVC Rígido": "plastic-categoria-pvc-rigido",
+  "Extrusión en PVC Flexible": "plastic-categoria-pvc-flexible",
+  "Desarrollo de empaques magnéticos": "plastic-categoria-empaques-magneticos",
+  "Desarrollo de cintas magnéticas": "plastic-categoria-cintas-magneticas",
+  "Procesos de ensamble de puertas y encimeras": "plastic-categoria-ensamble-puertas-encimeras",
+  "Perfilería para hidroponía": "plastic-categoria-perfileria-hidroponia",
+  "Perfilería para construcción": "plastic-categoria-perfileria-construccion",
+  "Perfilería para carrocería": "plastic-categoria-perfileria-carroceria",
+};
+
+const plasticCategoriesBase = plasticCategorias.map((title) => ({
+  label: title,
+  title,
+  imageKey: PLASTIC_CATEGORY_IMAGE_KEYS[title] ?? "plastic-categoria-pvc-rigido",
+  count: "Ver productos",
+  href: `/plastic/categoria/${slugify(title)}`,
+}));
+
 export default async function PlasticPage() {
   const siteImages = await getSiteImages();
+  const siteImageLinks = await getSiteImageLinks();
+  const siteTexts = await getSiteTexts();
+  const t = (key: string) => resolveText(key, siteTexts);
   const allProducts = await getProducts();
   const plasticCatalog = allProducts.filter((product) => product.division === "Plastic");
   const plasticFeaturedProducts = plasticCatalog.filter((product) => product.destacado);
   const plasticProducts = (plasticFeaturedProducts.length > 0 ? plasticFeaturedProducts : plasticCatalog).slice(0, 4);
+  const plasticCategories = plasticCategoriesBase.map((category) => ({
+    ...category,
+    image: resolveImage(category.imageKey, siteImages),
+  }));
+  const plasticOffersResolved = plasticOffers.map((offer) => ({
+    ...offer,
+    title: t(offer.imageKey),
+    href: resolveLink(offer.imageKey, siteImageLinks, offer.href),
+  }));
+  const plasticFeaturedResolved = plasticFeatured.map((item) => ({
+    ...item,
+    title: t(item.imageKey),
+    href: resolveLink(item.imageKey, siteImageLinks, item.href),
+  }));
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
@@ -90,37 +128,59 @@ export default async function PlasticPage() {
 
       <section id="catalogo-plastic" className="border-b border-slate-200 bg-white text-slate-900">
         <div className="mx-auto max-w-[1632px] px-5 py-7 md:px-8">
-          <div className="rounded-[10px] border border-slate-200 bg-slate-50 px-6 py-10 text-center">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-              Categorías
-            </p>
-            <p className="mx-auto mt-2 max-w-sm text-sm font-semibold text-slate-500">
-              Estamos organizando las categorías de GEU Plastic. Muy pronto estarán disponibles aquí.
-            </p>
-          </div>
+          <CauchosCategoryCarousel categories={plasticCategories} accent="silver" />
         </div>
 
-        <div className="bg-white text-white">
-          <div className="mx-auto flex min-h-14 max-w-[1632px] flex-wrap items-center justify-center gap-4 bg-[#a3a3a4] px-5 py-3 text-center md:px-8">
-            <p className="text-lg font-black tracking-[-0.01em] text-slate-950">
-              Plasticos tecnicos para industria y comercio
-            </p>
-            <span className="rounded bg-white px-3 py-1 text-sm font-black text-slate-800">
-              Desarrollo a medida
-            </span>
-            <span className="text-sm font-bold text-slate-950/72">
-              Perfiles, piezas, materias primas y soluciones transformadas.
-            </span>
-          </div>
+        <div className="mx-auto w-full overflow-hidden bg-[#6b7280]" style={{ maxWidth: "1632px" }}>
+          <CauchosProjectChat
+            division="Plastic"
+            triggerLabel={
+              <>
+                <span className="sr-only">¿Qué necesitas producir?</span>
+                <span aria-hidden="true" className="geu-marquee-track flex w-max items-center">
+                  {[0, 1].map((groupIndex) => (
+                    <span key={groupIndex} className="flex items-center">
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <span
+                          key={i}
+                          className="flex items-center whitespace-nowrap px-5 text-xs font-black uppercase tracking-[0.14em] text-white"
+                        >
+                          ¿Qué necesitas producir?
+                          <span className="ml-2">→</span>
+                          <span className="ml-5 text-white/45">✦</span>
+                        </span>
+                      ))}
+                    </span>
+                  ))}
+                </span>
+              </>
+            }
+            triggerClassName="geu-marquee-btn block w-full cursor-pointer overflow-hidden py-2.5 text-left"
+          />
         </div>
-        <div
-          className="mx-auto min-h-[320px] max-w-[1632px] bg-cover bg-center md:min-h-[520px] xl:min-h-[650px]"
-          style={{
-            backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0.04), rgba(0,0,0,0.1)), url('${resolveImage("plastic-principal", siteImages)}')`,
-          }}
-          aria-label="GEU Plastic, perfiles en PVC de alta calidad para todas las industrias"
-          role="img"
-        />
+        <div className="bg-white">
+          {isVideoUrl(resolveImage("plastic-principal", siteImages)) ? (
+            <HeroVideo
+              src={resolveImage("plastic-principal", siteImages)}
+              className="mx-auto h-auto w-full object-contain"
+              style={{ maxWidth: "1632px" }}
+            />
+          ) : (
+            <div
+              className="relative mx-auto aspect-[8/3] w-full overflow-hidden bg-slate-950"
+              style={{ maxWidth: "1632px" }}
+            >
+              <Image
+                src={resolveImage("plastic-principal", siteImages)}
+                alt="GEU Plastic, perfiles en PVC de alta calidad para todas las industrias"
+                fill
+                priority
+                sizes="(min-width: 1632px) 1632px, 100vw"
+                className="object-cover object-center"
+              />
+            </div>
+          )}
+        </div>
       </section>
 
       <section id="lineas-plastic" className="scroll-mt-56 border-b border-slate-200 bg-slate-50">
@@ -128,13 +188,13 @@ export default async function PlasticPage() {
           <div className="flex flex-wrap items-end justify-between gap-5">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                Lineas Plastic
+                {t("plastic-lineas-eyebrow")}
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] md:text-5xl">
-                Materiales y piezas para producir mejor.
+                {t("plastic-lineas-titulo")}
               </h2>
               <p className="mt-3 max-w-2xl text-base font-semibold leading-7 text-slate-500">
-                Un catalogo pensado para compras tecnicas, abastecimiento empresarial y desarrollos por aplicacion.
+                {t("plastic-lineas-subtitulo")}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-[0.06em] text-slate-600">
@@ -154,8 +214,8 @@ export default async function PlasticPage() {
               >
                 <div className="relative h-56 overflow-hidden bg-slate-200">
                   <Image
-                    src="/home-plastic.png"
-                    alt=""
+                    src={resolveImage(item.imageKey, siteImages)}
+                    alt={item.title}
                     fill
                     sizes="(min-width: 768px) 33vw, 100vw"
                     className="object-cover transition duration-500 group-hover:scale-105"
@@ -187,13 +247,13 @@ export default async function PlasticPage() {
           <div className="flex flex-wrap items-end justify-between gap-5">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                Productos destacados
+                {t("plastic-productos-eyebrow")}
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] md:text-5xl">
-                Fichas de producto listas para cotizar.
+                {t("plastic-productos-titulo")}
               </h2>
               <p className="mt-3 max-w-2xl text-base font-semibold leading-7 text-slate-500">
-                Seleccion tecnica para compras recurrentes, proyectos especiales y desarrollo por aplicacion.
+                {t("plastic-productos-subtitulo")}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-[0.06em] text-slate-600">
@@ -255,9 +315,16 @@ export default async function PlasticPage() {
                         {product.precio}
                       </span>
                     </span>
+                    <CauchosAddToCartButton
+                      id={product.slug}
+                      nombre={product.nombre}
+                      precio={product.precio}
+                      imagen={productImage}
+                      accent="gray"
+                    />
                     <Link
                       href={`/producto/${product.slug}`}
-                      className="mt-5 inline-flex justify-center rounded-full border border-[#6b7280] bg-white px-4 py-3 text-center text-xs font-black uppercase tracking-[0.08em] text-[#6b7280] transition-colors duration-200 hover:bg-[#6b7280] hover:text-white"
+                      className="mt-3 inline-flex justify-center rounded-full px-4 py-2 text-center text-xs font-black uppercase tracking-[0.08em] text-slate-500 hover:bg-slate-100 hover:text-[#6b7280]"
                     >
                       Ver detalle
                     </Link>
@@ -276,10 +343,10 @@ export default async function PlasticPage() {
 
       <BrandOfferSection
         accent="#6b7280"
-        eyebrow="Ofertas Plastic"
-        title="Soluciones listas para producir"
+        eyebrow={t("plastic-ofertas-eyebrow")}
+        title={t("plastic-ofertas-titulo")}
         ctaHref="/plastic"
-        items={plasticOffers}
+        items={plasticOffersResolved}
         siteImages={siteImages}
         maxWidth="1632px"
       />
@@ -296,13 +363,13 @@ export default async function PlasticPage() {
           <div className="relative grid gap-7 px-7 py-8 md:grid-cols-[1fr_auto] md:items-center md:px-10 md:py-10">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-white/62">
-                Tienes un proyecto plastico?
+                {t("plastic-contacto-eyebrow")}
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] text-white md:text-4xl">
-                Revisemos material, medidas y cantidades.
+                {t("plastic-contacto-titulo")}
               </h2>
               <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-white/74">
-                Envia tu requerimiento y te ayudamos a aterrizar la solucion tecnica y comercial.
+                {t("plastic-contacto-subtitulo")}
               </p>
             </div>
             <CauchosProjectChat
@@ -314,9 +381,19 @@ export default async function PlasticPage() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-[1632px] px-5 pb-10 md:px-8">
+        <Image
+          src={resolveImage("plastic-marcas-promo", siteImages)}
+          alt="Promociones y marcas GEU Plastic"
+          width={2048}
+          height={768}
+          className="h-auto w-full rounded-[10px] border border-slate-200 shadow-[0_18px_44px_rgba(15,23,42,0.12)]"
+        />
+      </section>
+
       <BrandFeaturedSection
-        title="Nuestras marcas destacadas"
-        items={plasticFeatured}
+        title={t("plastic-marcas-titulo")}
+        items={plasticFeaturedResolved}
         siteImages={siteImages}
         maxWidth="1632px"
       />
@@ -328,50 +405,25 @@ export default async function PlasticPage() {
         maxWidth="1632px"
       />
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-[1632px] gap-8 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:px-8">
-          <div>
-            <Image
-              src="/logo-geu-plastic.png"
-              alt="GEU Plastic"
-              width={2000}
-              height={452}
-              className="h-auto w-[250px] max-w-full object-contain"
-            />
-            <p className="mt-5 max-w-[280px] text-sm leading-6 text-slate-600">
-              Soluciones plasticas tecnicas para empresas, manufactura, comercio y proyectos especiales.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Enlaces rapidos</h3>
-            <div className="mt-4 grid gap-2 text-sm font-bold text-slate-500">
-              {navItems.slice(0, 6).map((item) => (
-                <Link key={item.label} href={item.href} className={item.active ? "text-slate-950" : "hover:text-slate-950"}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Servicios</h3>
-            <div className="mt-4 grid gap-2 text-sm font-bold text-slate-500">
-              {["Perfiles", "Resinas", "Piezas", "Extrusion", "Mecanizado"].map((item) => (
-                <span key={item}>{item}</span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Materiales</h3>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {specs.slice(0, 4).map((item) => (
-                <span key={item} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-center text-[10px] font-black text-slate-600">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter
+        logoSrc="/logo-geu-plastic.png"
+        logoAlt="GEU Plastic"
+        tagline={t("footer-plastic-tagline")}
+        navItems={navItems}
+        accent="#111827"
+        siteTexts={siteTexts}
+        columns={[
+          {
+            title: t("footer-plastic-col3-title"),
+            items: t("footer-plastic-col3-items").split(",").map((s) => s.trim()).filter(Boolean),
+          },
+          {
+            title: t("footer-plastic-col4-title"),
+            items: t("footer-plastic-col4-items").split(",").map((s) => s.trim()).filter(Boolean),
+            style: "chips",
+          },
+        ]}
+      />
     </main>
   );
 }

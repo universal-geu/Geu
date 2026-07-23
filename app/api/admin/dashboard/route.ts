@@ -37,7 +37,7 @@ function createEmptyReport(): SalesReport {
 
 export async function GET() {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUser("dashboard");
     const [metrics, report] = await Promise.all([
       getDashboardMetrics(admin.division),
       getSalesReport(admin.division),

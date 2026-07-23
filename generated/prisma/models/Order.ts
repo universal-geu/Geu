@@ -28,11 +28,13 @@ export type AggregateOrder = {
 
 export type OrderAvgAggregateOutputType = {
   subtotal: number | null
+  shippingCost: number | null
   totalItems: number | null
 }
 
 export type OrderSumAggregateOutputType = {
   subtotal: number | null
+  shippingCost: number | null
   totalItems: number | null
 }
 
@@ -58,6 +60,7 @@ export type OrderMinAggregateOutputType = {
   shippedAt: Date | null
   deliveredAt: Date | null
   subtotal: number | null
+  shippingCost: number | null
   totalItems: number | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -85,6 +88,7 @@ export type OrderMaxAggregateOutputType = {
   shippedAt: Date | null
   deliveredAt: Date | null
   subtotal: number | null
+  shippingCost: number | null
   totalItems: number | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -112,6 +116,7 @@ export type OrderCountAggregateOutputType = {
   shippedAt: number
   deliveredAt: number
   subtotal: number
+  shippingCost: number
   totalItems: number
   createdAt: number
   updatedAt: number
@@ -121,11 +126,13 @@ export type OrderCountAggregateOutputType = {
 
 export type OrderAvgAggregateInputType = {
   subtotal?: true
+  shippingCost?: true
   totalItems?: true
 }
 
 export type OrderSumAggregateInputType = {
   subtotal?: true
+  shippingCost?: true
   totalItems?: true
 }
 
@@ -151,6 +158,7 @@ export type OrderMinAggregateInputType = {
   shippedAt?: true
   deliveredAt?: true
   subtotal?: true
+  shippingCost?: true
   totalItems?: true
   createdAt?: true
   updatedAt?: true
@@ -178,6 +186,7 @@ export type OrderMaxAggregateInputType = {
   shippedAt?: true
   deliveredAt?: true
   subtotal?: true
+  shippingCost?: true
   totalItems?: true
   createdAt?: true
   updatedAt?: true
@@ -205,6 +214,7 @@ export type OrderCountAggregateInputType = {
   shippedAt?: true
   deliveredAt?: true
   subtotal?: true
+  shippingCost?: true
   totalItems?: true
   createdAt?: true
   updatedAt?: true
@@ -319,6 +329,7 @@ export type OrderGroupByOutputType = {
   shippedAt: Date | null
   deliveredAt: Date | null
   subtotal: number
+  shippingCost: number
   totalItems: number
   createdAt: Date
   updatedAt: Date
@@ -369,6 +380,7 @@ export type OrderWhereInput = {
   shippedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   subtotal?: Prisma.IntFilter<"Order"> | number
+  shippingCost?: Prisma.IntFilter<"Order"> | number
   totalItems?: Prisma.IntFilter<"Order"> | number
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
@@ -398,6 +410,7 @@ export type OrderOrderByWithRelationInput = {
   shippedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   subtotal?: Prisma.SortOrder
+  shippingCost?: Prisma.SortOrder
   totalItems?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -430,6 +443,7 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   shippedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   subtotal?: Prisma.IntFilter<"Order"> | number
+  shippingCost?: Prisma.IntFilter<"Order"> | number
   totalItems?: Prisma.IntFilter<"Order"> | number
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
@@ -459,6 +473,7 @@ export type OrderOrderByWithAggregationInput = {
   shippedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   subtotal?: Prisma.SortOrder
+  shippingCost?: Prisma.SortOrder
   totalItems?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -494,6 +509,7 @@ export type OrderScalarWhereWithAggregatesInput = {
   shippedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   subtotal?: Prisma.IntWithAggregatesFilter<"Order"> | number
+  shippingCost?: Prisma.IntWithAggregatesFilter<"Order"> | number
   totalItems?: Prisma.IntWithAggregatesFilter<"Order"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Order"> | Date | string
@@ -520,6 +536,7 @@ export type OrderCreateInput = {
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
+  shippingCost?: number
   totalItems: number
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -549,6 +566,7 @@ export type OrderUncheckedCreateInput = {
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
+  shippingCost?: number
   totalItems: number
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -576,6 +594,7 @@ export type OrderUpdateInput = {
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
+  shippingCost?: Prisma.IntFieldUpdateOperationsInput | number
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -605,6 +624,7 @@ export type OrderUncheckedUpdateInput = {
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
+  shippingCost?: Prisma.IntFieldUpdateOperationsInput | number
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -633,6 +653,7 @@ export type OrderCreateManyInput = {
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
+  shippingCost?: number
   totalItems: number
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -659,6 +680,7 @@ export type OrderUpdateManyMutationInput = {
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
+  shippingCost?: Prisma.IntFieldUpdateOperationsInput | number
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -686,6 +708,7 @@ export type OrderUncheckedUpdateManyInput = {
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
+  shippingCost?: Prisma.IntFieldUpdateOperationsInput | number
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -723,6 +746,7 @@ export type OrderCountOrderByAggregateInput = {
   shippedAt?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
+  shippingCost?: Prisma.SortOrder
   totalItems?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -730,6 +754,7 @@ export type OrderCountOrderByAggregateInput = {
 
 export type OrderAvgOrderByAggregateInput = {
   subtotal?: Prisma.SortOrder
+  shippingCost?: Prisma.SortOrder
   totalItems?: Prisma.SortOrder
 }
 
@@ -755,6 +780,7 @@ export type OrderMaxOrderByAggregateInput = {
   shippedAt?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
+  shippingCost?: Prisma.SortOrder
   totalItems?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -782,6 +808,7 @@ export type OrderMinOrderByAggregateInput = {
   shippedAt?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
+  shippingCost?: Prisma.SortOrder
   totalItems?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -789,6 +816,7 @@ export type OrderMinOrderByAggregateInput = {
 
 export type OrderSumOrderByAggregateInput = {
   subtotal?: Prisma.SortOrder
+  shippingCost?: Prisma.SortOrder
   totalItems?: Prisma.SortOrder
 }
 
@@ -890,6 +918,7 @@ export type OrderCreateWithoutUserInput = {
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
+  shippingCost?: number
   totalItems: number
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -917,6 +946,7 @@ export type OrderUncheckedCreateWithoutUserInput = {
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
+  shippingCost?: number
   totalItems: number
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -974,6 +1004,7 @@ export type OrderScalarWhereInput = {
   shippedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   subtotal?: Prisma.IntFilter<"Order"> | number
+  shippingCost?: Prisma.IntFilter<"Order"> | number
   totalItems?: Prisma.IntFilter<"Order"> | number
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
@@ -1000,6 +1031,7 @@ export type OrderCreateWithoutItemsInput = {
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
+  shippingCost?: number
   totalItems: number
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1028,6 +1060,7 @@ export type OrderUncheckedCreateWithoutItemsInput = {
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
+  shippingCost?: number
   totalItems: number
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1070,6 +1103,7 @@ export type OrderUpdateWithoutItemsInput = {
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
+  shippingCost?: Prisma.IntFieldUpdateOperationsInput | number
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1098,6 +1132,7 @@ export type OrderUncheckedUpdateWithoutItemsInput = {
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
+  shippingCost?: Prisma.IntFieldUpdateOperationsInput | number
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1124,6 +1159,7 @@ export type OrderCreateManyUserInput = {
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
+  shippingCost?: number
   totalItems: number
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1150,6 +1186,7 @@ export type OrderUpdateWithoutUserInput = {
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
+  shippingCost?: Prisma.IntFieldUpdateOperationsInput | number
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1177,6 +1214,7 @@ export type OrderUncheckedUpdateWithoutUserInput = {
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
+  shippingCost?: Prisma.IntFieldUpdateOperationsInput | number
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1204,6 +1242,7 @@ export type OrderUncheckedUpdateManyWithoutUserInput = {
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
+  shippingCost?: Prisma.IntFieldUpdateOperationsInput | number
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1262,6 +1301,7 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   shippedAt?: boolean
   deliveredAt?: boolean
   subtotal?: boolean
+  shippingCost?: boolean
   totalItems?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1292,6 +1332,7 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   shippedAt?: boolean
   deliveredAt?: boolean
   subtotal?: boolean
+  shippingCost?: boolean
   totalItems?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1320,6 +1361,7 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   shippedAt?: boolean
   deliveredAt?: boolean
   subtotal?: boolean
+  shippingCost?: boolean
   totalItems?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1348,12 +1390,13 @@ export type OrderSelectScalar = {
   shippedAt?: boolean
   deliveredAt?: boolean
   subtotal?: boolean
+  shippingCost?: boolean
   totalItems?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "paymentStatus" | "shippingStatus" | "division" | "customerName" | "customerEmail" | "customerPhone" | "company" | "department" | "city" | "addressLine1" | "addressLine2" | "notes" | "carrier" | "trackingNumber" | "adminNotes" | "shippedAt" | "deliveredAt" | "subtotal" | "totalItems" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "paymentStatus" | "shippingStatus" | "division" | "customerName" | "customerEmail" | "customerPhone" | "company" | "department" | "city" | "addressLine1" | "addressLine2" | "notes" | "carrier" | "trackingNumber" | "adminNotes" | "shippedAt" | "deliveredAt" | "subtotal" | "shippingCost" | "totalItems" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
 export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   items?: boolean | Prisma.Order$itemsArgs<ExtArgs>
@@ -1394,6 +1437,7 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     shippedAt: Date | null
     deliveredAt: Date | null
     subtotal: number
+    shippingCost: number
     totalItems: number
     createdAt: Date
     updatedAt: Date
@@ -1843,6 +1887,7 @@ export interface OrderFieldRefs {
   readonly shippedAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly deliveredAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly subtotal: Prisma.FieldRef<"Order", 'Int'>
+  readonly shippingCost: Prisma.FieldRef<"Order", 'Int'>
   readonly totalItems: Prisma.FieldRef<"Order", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Order", 'DateTime'>

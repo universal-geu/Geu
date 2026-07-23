@@ -2,16 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
-import CauchosAccountLink from "../components/cauchos-account-link";
-import CauchosCartLink from "../components/cauchos-cart-link";
-import CauchosSearchForm from "../components/cauchos-search-form";
-import CauchosCategorySidebarMenu from "../components/cauchos-category-sidebar-menu";
-import CauchosMenuButton from "../components/cauchos-menu-button";
-import { CauchosMenuProvider } from "../components/cauchos-menu-context";
+import CauchosHeader from "../components/cauchos-header";
 import CauchosTechnicalForm from "../components/cauchos-technical-form";
 import HeroVideo from "../components/hero-video";
+import { BrandFeaturedSection } from "../components/brand-promo-sections";
+import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
+import { getSiteTexts, resolveText } from "@/lib/site-texts";
 import { getProducts } from "@/lib/products";
 import { slugify } from "../data/catalog";
 
@@ -24,7 +22,7 @@ const navItems = [
   { label: "Innovation", href: "/innovation" },
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/quienes-somos" },
+  { label: "Nosotros", href: "/cauchos/nosotros" },
   { label: "Contacto", href: "#contacto" },
 ];
 
@@ -131,6 +129,8 @@ const featuredBrands = [
 export default async function CauchosPage() {
   const siteImages = await getSiteImages();
   const siteImageLinks = await getSiteImageLinks();
+  const siteTexts = await getSiteTexts();
+  const t = (key: string) => resolveText(key, siteTexts);
   const cauchosCategories = cauchosCategoriesBase.map((category) => ({
     ...category,
     image: resolveImage(category.imageKey, siteImages),
@@ -139,56 +139,14 @@ export default async function CauchosPage() {
   const cauchosCatalog = allProducts.filter((product) => product.division === "Cauchos");
   const cauchosFeatured = cauchosCatalog.filter((product) => product.destacado);
   const cauchosProducts = (cauchosFeatured.length > 0 ? cauchosFeatured : cauchosCatalog).slice(0, 4);
+  const featuredBrandsResolved = featuredBrands.map((brand) => ({
+    ...brand,
+    href: resolveLink(brand.imageKey, siteImageLinks, brand.href),
+  }));
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
-      <CauchosMenuProvider>
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-        <div className="border-b border-slate-200 bg-slate-50">
-          <div className="mx-auto flex h-8 max-w-[1632px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8">
-            <div className="hidden gap-3 md:flex">
-              <span>Servicio al cliente 320 88 999 33</span>
-              <span className="text-slate-300">|</span>
-              <span>Ventas empresariales</span>
-              <span className="text-slate-300">|</span>
-              <span>Centro de ayuda</span>
-            </div>
-            <div className="flex w-full justify-between gap-3 md:w-auto md:justify-end">
-              <Link href="#contacto" className="hover:text-[#075ed8]">Cotizaciones</Link>
-              <Link href="#productos" className="hover:text-[#075ed8]">Catalogos</Link>
-              <Link href="/quienes-somos" className="hover:text-[#075ed8]">GEU empresas</Link>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-auto grid min-h-[74px] max-w-[1632px] items-center gap-4 px-5 py-3 md:grid-cols-[260px_1fr_auto] md:px-8">
-          <Link href="/cauchos" className="flex shrink-0 items-center">
-            <Image
-              src="/logo-universal-cauchos.png"
-              alt="GEU Universal de Cauchos"
-              width={2518}
-              height={420}
-              priority
-              className="h-auto object-contain"
-              style={{ width: "260px", maxWidth: "100%" }}
-            />
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <CauchosMenuButton />
-            <CauchosSearchForm className="flex min-h-11 flex-1 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner" />
-          </div>
-
-          <div className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end">
-            <Link href="/quienes-somos" className="font-bold hover:text-[#075ed8]">Nosotros</Link>
-            <CauchosCartLink />
-            <CauchosAccountLink className="font-bold hover:text-[#075ed8]" />
-          </div>
-        </div>
-
-        <CauchosCategorySidebarMenu />
-      </header>
-      </CauchosMenuProvider>
+      <CauchosHeader division="Cauchos" />
 
       <section id="catalogo-cauchos" className="border-b border-slate-200 bg-white text-slate-900">
         <div className="mx-auto max-w-[1632px] px-5 py-7 md:px-8">
@@ -247,13 +205,13 @@ export default async function CauchosPage() {
               <div className="flex flex-wrap items-end justify-between gap-5">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.16em] text-[#075ed8]">
-                    Productos destacados
+                    {t("cauchos-productos-eyebrow")}
                   </p>
                   <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] md:text-5xl">
-                    Cauchos para compra empresarial
+                    {t("cauchos-productos-titulo")}
                   </h2>
                   <p className="mt-3 max-w-2xl text-base font-semibold leading-7 text-slate-500">
-                    Seleccion industrial para compras recurrentes, proyectos especiales y reposicion tecnica.
+                    {t("cauchos-productos-subtitulo")}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-[0.06em] text-slate-600">
@@ -340,10 +298,10 @@ export default async function CauchosPage() {
           <div className="mb-7 flex flex-wrap items-end justify-between gap-5">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[#075ed8]">
-                Ofertas especiales
+                {t("cauchos-ofertas-eyebrow")}
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] md:text-5xl">
-                Soluciones listas para tu operacion
+                {t("cauchos-ofertas-titulo")}
               </h2>
             </div>
             <Link
@@ -359,12 +317,12 @@ export default async function CauchosPage() {
               <Link
                 key={offer.title}
                 href={resolveLink(offer.imageKey, siteImageLinks, offer.href)}
-                aria-label={offer.title}
+                aria-label={t(offer.imageKey)}
                 className="cauchos-offer-card group relative block aspect-[9/16] min-h-[430px] overflow-hidden rounded-[10px] border border-slate-200 bg-[#071225] shadow-[0_16px_40px_rgba(15,23,42,0.14)]"
               >
                 <Image
                   src={resolveImage(offer.imageKey, siteImages)}
-                  alt={offer.title}
+                  alt={t(offer.imageKey)}
                   fill
                   sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
                   className="cauchos-offer-image object-cover transition duration-500 group-hover:scale-[1.025]"
@@ -389,13 +347,13 @@ export default async function CauchosPage() {
           <div className="relative grid gap-6 px-8 py-10 md:grid-cols-[1fr_auto] md:items-center md:px-10">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.18em] text-white/80">
-                Necesitas una solucion en caucho?
+                {t("cauchos-contacto-eyebrow")}
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] text-white md:text-4xl">
-                Hablemos de tu proyecto
+                {t("cauchos-contacto-titulo")}
               </h2>
               <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-white/80">
-                Cuentanos que necesitas y nuestro asistente arma contigo la evaluacion tecnica para tu producto.
+                {t("cauchos-contacto-subtitulo")}
               </p>
             </div>
             <CauchosTechnicalForm
@@ -427,77 +385,34 @@ export default async function CauchosPage() {
         </div>
       </section>
 
-      <section className="border-t border-slate-200 bg-[#f5f5f5] text-slate-950">
-        <div className="mx-auto max-w-[1632px] px-5 py-7 md:px-8">
-          <h2 className="text-center text-xl font-black tracking-[-0.02em] text-slate-900">
-            Nuestras marcas destacadas
-          </h2>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {featuredBrands.map((brand) => (
-              <Link
-                key={brand.title}
-                href={resolveLink(brand.imageKey, siteImageLinks, brand.href)}
-                aria-label={brand.title}
-                className="group block aspect-[18/5] overflow-hidden rounded-[4px] bg-[#071225] shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.12)]"
-              >
-                <Image
-                  src={resolveImage(brand.imageKey, siteImages)}
-                  alt={brand.title}
-                  width={900}
-                  height={250}
-                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-                />
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+      <BrandFeaturedSection
+        title={t("cauchos-marcas-titulo")}
+        items={featuredBrandsResolved}
+        siteImages={siteImages}
+        compact
+        maxWidth="1632px"
+      />
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-[1632px] gap-8 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:px-8">
-          <div>
-            <Image
-              src="/logo-universal-cauchos.png"
-              alt="GEU Universal de Cauchos"
-              width={2518}
-              height={420}
-              className="h-auto w-[260px] rounded-[2px] bg-white p-2"
-            />
-            <p className="mt-5 max-w-[260px] text-sm leading-6 text-slate-600">
-              Construimos empresas que transforman industrias y generan valor para un futuro mejor.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Enlaces rapidos</h3>
-            <div className="mt-4 grid gap-2 text-sm font-bold text-slate-500">
-              {navItems.slice(0, 5).map((item) => (
-                <Link key={item.label} href={item.href} className="hover:text-[#075ed8]">
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Cauchos</h3>
-            <div className="mt-4 grid gap-2 text-sm font-bold text-slate-500">
-              {["Soluciones", "Productos", "Industrias", "Catalogos", "Cotizacion"].map((item) => (
-                <span key={item}>{item}</span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Certificaciones</h3>
-            <div className="mt-5 flex gap-3">
-              {["ISO 9001", "ISO 14001", "ISO 45001"].map((item) => (
-                <span key={item} className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-center text-[10px] font-black text-slate-600">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter
+        logoSrc="/logo-universal-cauchos.png"
+        logoAlt="GEU Universal de Cauchos"
+        logoWidth={260}
+        tagline={t("footer-cauchos-tagline")}
+        navItems={navItems}
+        accent="#075ed8"
+        siteTexts={siteTexts}
+        columns={[
+          {
+            title: t("footer-cauchos-col3-title"),
+            items: t("footer-cauchos-col3-items").split(",").map((s) => s.trim()).filter(Boolean),
+          },
+          {
+            title: t("footer-cauchos-col4-title"),
+            items: t("footer-cauchos-col4-items").split(",").map((s) => s.trim()).filter(Boolean),
+            style: "badges",
+          },
+        ]}
+      />
     </main>
   );
 }

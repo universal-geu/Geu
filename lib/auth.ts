@@ -22,6 +22,8 @@ export type DevAdminUser = {
   addressLine2: null;
   role: "ADMIN";
   division: DivisionName;
+  permissions: string[];
+  active: true;
   createdAt: Date;
 };
 
@@ -38,8 +40,10 @@ export const DEV_ADMIN_USERS: Record<DivisionName, DevAdminUser> = Object.fromEn
       city: null,
       addressLine1: null,
       addressLine2: null,
-      role: "ADMIN",
+      role: "ADMIN" as const,
       division,
+      permissions: [] as string[],
+      active: true as const,
       createdAt: new Date(0),
     },
   ]),

@@ -284,7 +284,10 @@ export default function CauchosCategoryProductsPage({
     </label>
   );
 
-  const banner = CATEGORY_BANNER[division];
+  const banner =
+    division === "Import"
+      ? { src: resolveImage("import-cierre", siteImages), alt: "GEU Import" }
+      : CATEGORY_BANNER[division];
   const fallbackProductImage = FALLBACK_PRODUCT_IMAGE[division];
 
   return (
@@ -295,13 +298,13 @@ export default function CauchosCategoryProductsPage({
       <CauchosHeader division={division} />
 
       <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-[1632px] px-5 pb-3 pt-5 md:px-8">
+        <div className="mx-auto max-w-[1632px] overflow-hidden rounded-[8px] px-5 pb-3 pt-5 md:px-8">
           <Image
             src={banner.src}
             alt={banner.alt}
             width={1920}
             height={217}
-            className="h-auto w-full object-contain"
+            className="h-[118px] w-full rounded-[8px] object-cover md:h-[150px]"
             priority
           />
         </div>

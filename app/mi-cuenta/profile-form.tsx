@@ -38,6 +38,7 @@ type AccountOrder = {
   deliveredAt: Date | null;
   totalItems: number;
   subtotal: number;
+  shippingCost: number;
   createdAt: Date;
   items: Array<{
     id: string;
@@ -892,7 +893,7 @@ export default function AccountProfileForm({
                         {order.trackingNumber || "Sin guía"}
                       </span>
                       <span className="text-lg font-semibold text-[var(--brand-accent)]">
-                        {formatCurrency(order.subtotal)}
+                        {formatCurrency(order.subtotal + order.shippingCost)}
                       </span>
                     </div>
                   </button>

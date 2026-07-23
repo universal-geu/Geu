@@ -145,6 +145,22 @@ export function CartProvider({
       addItem: (item: Omit<CartItem, "cantidad"> & { cantidad?: number }) => {
         const normalizedId = normalizeCartId(item.id);
         const quantityToAdd = Math.max(1, Math.trunc(item.cantidad ?? 1));
+        const applyLocally = () => {
+          setItems((current) => {
+            const existing = current.find((entry) => entry.id === normalizedId);
+            if (existing) {
+              return current.map((entry) =>
+                entry.id === normalizedId
+                  ? { ...entry, cantidad: entry.cantidad + quantityToAdd }
+                  : entry,
+              );
+            }
+            return [
+              ...current,
+              { ...item, id: normalizedId, cantidad: quantityToAdd },
+            ];
+          });
+        };
 
         if (currentUserId) {
           void (async () => {
@@ -159,6 +175,12 @@ export function CartProvider({
                 cantidad: quantityToAdd,
               }),
             });
+            // The session may have expired since this page loaded; fall back
+            // to the guest cart instead of silently dropping the item.
+            if (response.status === 401) {
+              applyLocally();
+              return;
+            }
             if (!response.ok) return;
             const payload = (await response.json()) as { items?: CartItem[] };
             if (payload.items) {
@@ -168,23 +190,19 @@ export function CartProvider({
           return;
         }
 
-        setItems((current) => {
-          const existing = current.find((entry) => entry.id === normalizedId);
-          if (existing) {
-            return current.map((entry) =>
-              entry.id === normalizedId
-                ? { ...entry, cantidad: entry.cantidad + quantityToAdd }
-                : entry,
-            );
-          }
-          return [
-            ...current,
-            { ...item, id: normalizedId, cantidad: quantityToAdd },
-          ];
-        });
+        applyLocally();
       },
       incrementItem: (id: string) => {
         const normalizedId = normalizeCartId(id);
+        const applyLocally = () => {
+          setItems((current) =>
+            current.map((item) =>
+              item.id === normalizedId
+                ? { ...item, cantidad: item.cantidad + 1 }
+                : item,
+            ),
+          );
+        };
 
         if (currentUserId) {
           void (async () => {
@@ -195,6 +213,10 @@ export function CartProvider({
               },
               body: JSON.stringify({ action: "increment" }),
             });
+            if (response.status === 401) {
+              applyLocally();
+              return;
+            }
             if (!response.ok) return;
             const payload = (await response.json()) as { items?: CartItem[] };
             if (payload.items) {
@@ -204,16 +226,19 @@ export function CartProvider({
           return;
         }
 
-        setItems((current) =>
-          current.map((item) =>
-            item.id === normalizedId
-              ? { ...item, cantidad: item.cantidad + 1 }
-              : item,
-          ),
-        );
+        applyLocally();
       },
       decrementItem: (id: string) => {
         const normalizedId = normalizeCartId(id);
+        const applyLocally = () => {
+          setItems((current) =>
+            current.flatMap((item) => {
+              if (item.id !== normalizedId) return [item];
+              if (item.cantidad <= 1) return [];
+              return [{ ...item, cantidad: item.cantidad - 1 }];
+            }),
+          );
+        };
 
         if (currentUserId) {
           void (async () => {
@@ -224,6 +249,10 @@ export function CartProvider({
               },
               body: JSON.stringify({ action: "decrement" }),
             });
+            if (response.status === 401) {
+              applyLocally();
+              return;
+            }
             if (!response.ok) return;
             const payload = (await response.json()) as { items?: CartItem[] };
             if (payload.items) {
@@ -233,22 +262,25 @@ export function CartProvider({
           return;
         }
 
-        setItems((current) =>
-          current.flatMap((item) => {
-            if (item.id !== normalizedId) return [item];
-            if (item.cantidad <= 1) return [];
-            return [{ ...item, cantidad: item.cantidad - 1 }];
-          }),
-        );
+        applyLocally();
       },
       removeItem: (id: string) => {
         const normalizedId = normalizeCartId(id);
+        const applyLocally = () => {
+          setItems((current) =>
+            current.filter((item) => item.id !== normalizedId),
+          );
+        };
 
         if (currentUserId) {
           void (async () => {
             const response = await fetch(`/api/cart/${normalizedId}`, {
               method: "DELETE",
             });
+            if (response.status === 401) {
+              applyLocally();
+              return;
+            }
             if (!response.ok) return;
             const payload = (await response.json()) as { items?: CartItem[] };
             if (payload.items) {
@@ -258,9 +290,7 @@ export function CartProvider({
           return;
         }
 
-        setItems((current) =>
-          current.filter((item) => item.id !== normalizedId),
-        );
+        applyLocally();
       },
       clearCart: () => {
         if (currentUserId) {
@@ -268,7 +298,7 @@ export function CartProvider({
             const response = await fetch("/api/cart", {
               method: "DELETE",
             });
-            if (!response.ok) return;
+            if (!response.ok && response.status !== 401) return;
             setItems([]);
           })();
           return;

@@ -389,18 +389,12 @@ export default function ProductoDetallePage() {
                   Código {producto.sku || producto.slug.toUpperCase().replace(/-/g, "")}
                 </p>
               </div>
-
-              <button className={`text-sm font-black uppercase tracking-[0.08em] transition-colors duration-200 ${accentTextClass} hover:text-slate-950`}>
-                Guardar
-              </button>
             </div>
 
             <div className="flex items-center gap-3 border-y border-slate-100 py-4">
               <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-black ${isRed ? "bg-[#e31313] text-white" : "bg-[#eef5ff] text-slate-600"}`}>
                 {producto.disponibilidad}
               </span>
-              <span className="text-xs font-bold text-slate-400">★★★★★</span>
-              <span className="text-xs font-bold text-slate-500">0.0 (0)</span>
             </div>
 
             <div>
@@ -463,9 +457,6 @@ export default function ProductoDetallePage() {
                 )}
                 <li>Componente pensado para rendimiento estable y mantenimiento ágil.</li>
               </ul>
-              <button className={`mt-5 text-sm font-black uppercase tracking-[0.06em] transition-colors duration-200 ${accentTextClass} hover:text-slate-950`}>
-                Ver más especificaciones
-              </button>
             </div>
           </div>
         </div>

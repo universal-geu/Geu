@@ -3,7 +3,7 @@ import { requireAdminUser } from "@/lib/admin";
 
 export async function GET() {
   try {
-    await requireAdminUser();
+    await requireAdminUser("inventory");
     const movements = await getRecentInventoryMovements();
 
     return Response.json({ movements });

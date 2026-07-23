@@ -5,10 +5,12 @@ import { CartProvider } from "./components/cart-provider";
 import { ProductsProvider } from "./components/products-provider";
 import HeaderShell from "./components/header-shell";
 import SupportChat from "./components/support-chat";
+import WhatsAppFloatButton from "./components/whatsapp-float-button";
 import { getProducts } from "@/lib/products";
 import { getDevAdminUserById, getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import { getCartItemsForUser } from "@/lib/cart";
+import { getWhatsAppNumber } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +37,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const initialProducts = await getProducts();
+  const whatsappNumber = await getWhatsAppNumber();
   const session = await getSessionFromCookies();
   let currentUser = null;
   let initialCartItems: Awaited<ReturnType<typeof getCartItemsForUser>> = [];
@@ -87,6 +90,7 @@ export default async function RootLayout({
             />
             {children}
             <SupportChat />
+            <WhatsAppFloatButton whatsappNumber={whatsappNumber} />
           </CartProvider>
         </ProductsProvider>
       </body>

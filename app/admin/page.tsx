@@ -24,7 +24,14 @@ import type { InventoryMovementSummary } from "@/lib/products";
 import type { DashboardMetrics, SalesReport, ShippingStatus } from "@/lib/orders";
 import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
+import { TEXT_SLOTS } from "@/lib/text-slots";
 import { getDivisionFromBrandParam, isServiceDivision, type DivisionName } from "@/lib/divisions";
+import {
+  ADMIN_TOOL_KEYS,
+  ADMIN_TOOL_LABELS,
+  hasAdminPermission,
+  type AdminToolKey,
+} from "@/lib/admin-permissions";
 
 type AdminBrandConfig = {
   label: string;
@@ -119,6 +126,15 @@ const ADMIN_BRAND_CONFIG: Record<DivisionName, AdminBrandConfig> = {
   },
 };
 
+function hexToRgb(hex: string): string {
+  const normalized = hex.replace("#", "");
+  const value = normalized.length === 3 ? normalized.split("").map((char) => char + char).join("") : normalized;
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
+}
+
 const disponibilidades: ProductoCatalogo["disponibilidad"][] = [
   "Entrega inmediata",
   "Disponible por pedido",
@@ -151,7 +167,7 @@ const initialState: FormState = {
   sku: "",
   oemReferencia: "",
   referenciasAlternas: "",
-  categoria: "Ferretería y otros",
+  categoria: "",
   subcategoria: "",
   categoriaMenor: "",
   nombre: "",
@@ -243,6 +259,7 @@ type AdminOrder = {
   deliveredAt: string | Date | null;
   totalItems: number;
   subtotal: number;
+  shippingCost: number;
   createdAt: string | Date;
   user: {
     id: string;
@@ -288,6 +305,16 @@ type AdminQuote = {
 
 const quoteStatuses: QuoteStatusValue[] = ["NEW", "CONTACTED", "CLOSED"];
 
+type TeamAccount = {
+  id: string;
+  fullName: string;
+  email: string;
+  division: DivisionName | null;
+  permissions: string[];
+  active: boolean;
+  createdAt: string | Date;
+};
+
 function getQuoteStatusLabel(status: QuoteStatusValue) {
   if (status === "CONTACTED") return "Contactado";
   if (status === "CLOSED") return "Cerrado";
@@ -312,7 +339,7 @@ function getInventoryTone(
   if (status === "low-stock") {
     return {
       label: "Stock bajo",
-      className: "bg-[#eef5ff] text-[#075ed8]",
+      className: "bg-[var(--admin-accent-soft)] text-[var(--admin-accent)]",
     };
   }
 
@@ -477,7 +504,7 @@ function AdminOrderProgress({ order }: { order: AdminOrder }) {
           <div className="pointer-events-none absolute left-[12.5%] right-[12.5%] top-6 z-0">
             <span className="block h-[6px] rounded-full bg-[#d9dde4] shadow-[inset_0_1px_2px_rgba(15,23,42,0.08)]" />
             <span
-              className="absolute left-0 top-0 h-[6px] rounded-full bg-gradient-to-r from-[#075ed8] to-[#5aa2ff] shadow-[0_6px_16px_rgba(7,94,216,0.25)] transition-all duration-300"
+              className="absolute left-0 top-0 h-[6px] rounded-full bg-gradient-to-r from-[var(--admin-accent)] to-[var(--admin-accent-light)] shadow-[0_6px_16px_rgba(var(--admin-accent-rgb),0.25)] transition-all duration-300"
               style={{
                 width:
                   activeStep < 0
@@ -500,9 +527,9 @@ function AdminOrderProgress({ order }: { order: AdminOrder }) {
                   <span
                     className={`relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border ${
                       isCompleted
-                        ? "border-[#075ed8] bg-[#075ed8] text-white"
+                        ? "border-[var(--admin-accent)] bg-[var(--admin-accent)] text-white"
                         : "border-black/10 bg-[#f8f8f7] text-[#8b8d91]"
-                    } ${isCurrent ? "shadow-[0_10px_24px_rgba(7,94,216,0.2)]" : ""}`}
+                    } ${isCurrent ? "shadow-[0_10px_24px_rgba(var(--admin-accent-rgb),0.2)]" : ""}`}
                   >
                     {step.icon}
                   </span>
@@ -515,7 +542,7 @@ function AdminOrderProgress({ order }: { order: AdminOrder }) {
                       {step.label}
                     </p>
                     {isCurrent && (
-                      <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-[#075ed8]">
+                      <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-[var(--admin-accent)]">
                         Actual
                       </p>
                     )}
@@ -584,7 +611,7 @@ function ProductImageSelector({
                 {item.image ? (
                   <div className="relative p-2">
                     {primaryImageIndex === index && hasImage && (
-                      <div className="absolute right-4 top-4 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-[#075ed8] text-white shadow-[0_10px_20px_rgba(7,94,216,0.28)]">
+                      <div className="absolute right-4 top-4 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--admin-accent)] text-white shadow-[0_10px_20px_rgba(var(--admin-accent-rgb),0.28)]">
                         <svg
                           aria-hidden="true"
                           viewBox="0 0 20 20"
@@ -681,7 +708,7 @@ function TechnicalSpecsEditor({
                 value={item.etiqueta}
                 onChange={(event) => updateItem(item.id, "etiqueta", event.target.value)}
                 placeholder={index === 0 ? "Ej. Material" : "Nombre del dato"}
-                className="w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                className="w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
               />
             </label>
 
@@ -693,7 +720,7 @@ function TechnicalSpecsEditor({
                 value={item.valor}
                 onChange={(event) => updateItem(item.id, "valor", event.target.value)}
                 placeholder="Escribe la especificación"
-                className="w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                className="w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
               />
             </label>
 
@@ -720,6 +747,263 @@ function splitCommaSeparatedValues(value: string) {
     .filter(Boolean);
 }
 
+function SidebarIconShell({ children }: { children: React.ReactNode }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[18px] w-[18px] shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {children}
+    </svg>
+  );
+}
+
+function DashboardIcon() {
+  return (
+    <SidebarIconShell>
+      <rect x="3" y="3" width="7" height="9" rx="1.4" />
+      <rect x="14" y="3" width="7" height="5" rx="1.4" />
+      <rect x="14" y="12" width="7" height="9" rx="1.4" />
+      <rect x="3" y="16" width="7" height="5" rx="1.4" />
+    </SidebarIconShell>
+  );
+}
+
+function CreateIcon() {
+  return (
+    <SidebarIconShell>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v8M8 12h8" />
+    </SidebarIconShell>
+  );
+}
+
+function EditIcon() {
+  return (
+    <SidebarIconShell>
+      <path d="M14.7 4.3a2.1 2.1 0 0 1 3 3L8.5 16.5 4 18l1.5-4.5Z" />
+    </SidebarIconShell>
+  );
+}
+
+function InventoryIcon() {
+  return (
+    <SidebarIconShell>
+      <path d="M3 8 12 4l9 4-9 4-9-4Z" />
+      <path d="M3 8v8l9 4 9-4V8M12 12v9" />
+    </SidebarIconShell>
+  );
+}
+
+function OrdersIcon() {
+  return (
+    <SidebarIconShell>
+      <path d="M6 2h12l1 5H5Z" />
+      <path d="M4 7h16l-1.2 12.2A2 2 0 0 1 16.8 21H7.2a2 2 0 0 1-2-1.8Z" />
+      <path d="M9 11a3 3 0 0 0 6 0" />
+    </SidebarIconShell>
+  );
+}
+
+function QuotesIcon() {
+  return (
+    <SidebarIconShell>
+      <path d="M4 5h16v11H8l-4 4Z" />
+      <path d="M8 9h8M8 12h5" />
+    </SidebarIconShell>
+  );
+}
+
+function ReportsIcon() {
+  return (
+    <SidebarIconShell>
+      <path d="M4 20V10M11 20V4M18 20v-7" />
+      <path d="M2 20h20" />
+    </SidebarIconShell>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <SidebarIconShell>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M3 12h2.2M18.8 12H21M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" />
+    </SidebarIconShell>
+  );
+}
+
+function AccountsIcon() {
+  return (
+    <SidebarIconShell>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+      <circle cx="17.5" cy="9" r="2.4" />
+      <path d="M15.8 14.3c2.6.5 4.4 2.6 4.4 5.2" />
+    </SidebarIconShell>
+  );
+}
+
+function CatalogIcon() {
+  return (
+    <SidebarIconShell>
+      <path d="M5 4h11a2 2 0 0 1 2 2v14l-7.5-4L5 20Z" />
+    </SidebarIconShell>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <SidebarIconShell>
+      <path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3" />
+      <path d="M15 16l4-4-4-4" />
+      <path d="M19 12H9" />
+    </SidebarIconShell>
+  );
+}
+
+function ImagesSubIcon() {
+  return (
+    <SidebarIconShell>
+      <rect x="3" y="4.5" width="18" height="15" rx="2" />
+      <circle cx="8.5" cy="10" r="1.6" />
+      <path d="m4 17 5-4.5 3.5 3L17 11l3.5 4.5" />
+    </SidebarIconShell>
+  );
+}
+
+function TextsSubIcon() {
+  return (
+    <SidebarIconShell>
+      <path d="M5 4h14M5 9h14M5 14h9M5 19h6" />
+    </SidebarIconShell>
+  );
+}
+
+function WhatsAppSubIcon() {
+  return (
+    <SidebarIconShell>
+      <path d="M4 20l1.4-4.1A8 8 0 1 1 8.9 19Z" />
+      <path d="M8.6 8.8c-.2.9.4 2.2 1.4 3.2s2.3 1.6 3.2 1.4" />
+    </SidebarIconShell>
+  );
+}
+
+const SETTINGS_SUB_ICONS: Record<"images" | "texts" | "whatsapp", () => React.JSX.Element> = {
+  images: ImagesSubIcon,
+  texts: TextsSubIcon,
+  whatsapp: WhatsAppSubIcon,
+};
+
+function DashboardMetricIconShell({ children }: { children: React.ReactNode }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {children}
+    </svg>
+  );
+}
+
+function DashboardMetricRevenueIcon() {
+  return (
+    <DashboardMetricIconShell>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v10M9.5 9.3c0-1.2 1.1-2 2.5-2s2.5.7 2.5 1.8c0 2.4-5 1.2-5 3.6 0 1.1 1.1 1.8 2.5 1.8s2.5-.8 2.5-2" />
+    </DashboardMetricIconShell>
+  );
+}
+
+function DashboardMetricOrdersIcon() {
+  return (
+    <DashboardMetricIconShell>
+      <path d="M6 2h12l1 5H5Z" />
+      <path d="M4 7h16l-1.2 12.2A2 2 0 0 1 16.8 21H7.2a2 2 0 0 1-2-1.8Z" />
+    </DashboardMetricIconShell>
+  );
+}
+
+function DashboardMetricTicketIcon() {
+  return (
+    <DashboardMetricIconShell>
+      <path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a1.6 1.6 0 0 0 0 3.2V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.8a1.6 1.6 0 0 0 0-3.2Z" />
+    </DashboardMetricIconShell>
+  );
+}
+
+function DashboardMetricCustomersIcon() {
+  return (
+    <DashboardMetricIconShell>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+      <circle cx="17.5" cy="9" r="2.4" />
+      <path d="M15.8 14.3c2.6.5 4.4 2.6 4.4 5.2" />
+    </DashboardMetricIconShell>
+  );
+}
+
+function DashboardMetricClockIcon() {
+  return (
+    <DashboardMetricIconShell>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3.2 1.8" />
+    </DashboardMetricIconShell>
+  );
+}
+
+function DashboardMetricAlertIcon() {
+  return (
+    <DashboardMetricIconShell>
+      <path d="M12 3 2 20h20Z" />
+      <path d="M12 10v4" />
+      <circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none" />
+    </DashboardMetricIconShell>
+  );
+}
+
+function DashboardTrophyIcon() {
+  return (
+    <DashboardMetricIconShell>
+      <path d="M7 4h10v4a5 5 0 0 1-10 0Z" />
+      <path d="M7 5H4v1a4 4 0 0 0 3.5 4M17 5h3v1a4 4 0 0 1-3.5 4" />
+      <path d="M12 13v3M9 20h6M10 17h4v3h-4Z" />
+    </DashboardMetricIconShell>
+  );
+}
+
+function DashboardTagIcon() {
+  return (
+    <DashboardMetricIconShell>
+      <path d="M3 11.5V5a2 2 0 0 1 2-2h6.5L21 12.5 12.5 21 3 11.5Z" />
+      <circle cx="7.5" cy="7.5" r="1.3" />
+    </DashboardMetricIconShell>
+  );
+}
+
+const SIDEBAR_ICONS: Partial<Record<AdminToolKey | "dashboard", () => React.JSX.Element>> = {
+  dashboard: DashboardIcon,
+  create: CreateIcon,
+  edit: EditIcon,
+  inventory: InventoryIcon,
+  orders: OrdersIcon,
+  quotes: QuotesIcon,
+  reports: ReportsIcon,
+  settings: SettingsIcon,
+  accounts: AccountsIcon,
+};
+
 export default function AdminPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -740,7 +1024,15 @@ export default function AdminPage() {
     [allAdminProducts, adminDivision],
   );
   const [activeTab, setActiveTab] = useState<
-    "create" | "edit" | "inventory" | "orders" | "quotes" | "reports" | "images" | null
+    | "create"
+    | "edit"
+    | "inventory"
+    | "orders"
+    | "quotes"
+    | "reports"
+    | "settings"
+    | "accounts"
+    | null
   >(null);
   const imageDivisionFilter = adminDivision;
   const [siteImages, setSiteImages] = useState<Record<string, string>>({});
@@ -751,6 +1043,19 @@ export default function AdminPage() {
   const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(null);
   const [savedImageKey, setSavedImageKey] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settingsSaved, setSettingsSaved] = useState(false);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [siteTextsAdmin, setSiteTextsAdmin] = useState<Record<string, string>>({});
+  const [isLoadingTexts, setIsLoadingTexts] = useState(false);
+  const [textsError, setTextsError] = useState<string | null>(null);
+  const [savingTextKey, setSavingTextKey] = useState<string | null>(null);
+  const [savedTextKey, setSavedTextKey] = useState<string | null>(null);
+  const [selectedTextGroup, setSelectedTextGroup] = useState<string | null>(null);
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const [settingsSection, setSettingsSection] = useState<"images" | "texts" | "whatsapp" | null>(null);
   const [editSearch, setEditSearch] = useState("");
   const [editCategoryFilter, setEditCategoryFilter] = useState<"Todas" | Categoria>("Todas");
   const [inventoryStatusFilter, setInventoryStatusFilter] = useState<
@@ -780,6 +1085,18 @@ export default function AdminPage() {
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [adminName, setAdminName] = useState("");
+  const [adminPermissions, setAdminPermissions] = useState<string[]>([]);
+  const [teamAccounts, setTeamAccounts] = useState<TeamAccount[]>([]);
+  const [isLoadingTeam, setIsLoadingTeam] = useState(false);
+  const [teamError, setTeamError] = useState("");
+  const [newAccountForm, setNewAccountForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    permissions: [] as AdminToolKey[],
+  });
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [savingAccountId, setSavingAccountId] = useState<string | null>(null);
   const [inventoryAdjustments, setInventoryAdjustments] = useState<Record<string, string>>({});
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovementSummary[]>([]);
   const [isLoadingInventory, setIsLoadingInventory] = useState(false);
@@ -865,6 +1182,10 @@ export default function AdminPage() {
   // Legacy seed products carry older category strings (e.g. "Mangueras",
   // "Sellos y empaques") that predate this taxonomy and aren't real nav
   // categories, so they're intentionally excluded from the picker.
+  const assignableToolKeys = useMemo(
+    () => ADMIN_TOOL_KEYS.filter((key) => key !== "inventory" || !isServiceAdmin),
+    [isServiceAdmin],
+  );
   const categoryOptions = useMemo(() => getCategoriasForDivision(adminDivision), [adminDivision]);
   const subcategoryOptions = useMemo(() => {
     const normalizedCategoria = normalizeMatchKey(form.categoria);
@@ -996,18 +1317,46 @@ export default function AdminPage() {
 
       const payload = (await response.json()) as {
         user?: {
+          id: string;
           fullName: string;
           role: "CUSTOMER" | "ADMIN";
           division?: DivisionName | null;
+          permissions?: string[];
         };
       };
 
       if (payload.user?.role === "ADMIN" && payload.user.division) {
+        const permissions = payload.user.permissions ?? [];
         setIsAuthenticated(true);
         setAdminName(payload.user.fullName);
         setAdminDivision(payload.user.division);
-        void loadDashboardMetrics();
-        void loadQuotes();
+        setAdminPermissions(permissions);
+
+        const canAccess = (tool: AdminToolKey) => hasAdminPermission(permissions, tool);
+
+        if (canAccess("dashboard")) {
+          void loadDashboardMetrics();
+        } else {
+          const fallback: Array<[AdminToolKey, () => void]> = [
+            ["create", openCreateView],
+            ["edit", openEditView],
+            ...(isServiceDivision(payload.user.division)
+              ? []
+              : ([["inventory", openInventoryView]] as Array<[AdminToolKey, () => void]>)),
+            ["orders", openOrdersView],
+            ["quotes", openQuotesView],
+            ["reports", openReportsView],
+            ["images", () => openSettingsSection("images")],
+            ["settings", () => openSettingsSection("texts")],
+            ["accounts", openAccountsView],
+          ];
+          const firstAllowed = fallback.find(([tool]) => canAccess(tool));
+          firstAllowed?.[1]();
+        }
+
+        if (canAccess("quotes")) {
+          void loadQuotes();
+        }
       } else {
         setIsAuthenticated(false);
         setAdminName("");
@@ -1266,7 +1615,7 @@ export default function AdminPage() {
         return;
       }
 
-      setForm(initialState);
+      setForm({ ...initialState, categoria: categoryOptions[0] ?? "" });
       setSelectedImage(null);
       setSelectedExtraImages(Array.from({ length: EXTRA_IMAGE_SLOTS }, () => null));
       setPrimaryImageIndex(0);
@@ -1344,7 +1693,7 @@ export default function AdminPage() {
   };
 
   const handleResetForm = () => {
-    setForm(initialState);
+    setForm({ ...initialState, categoria: categoryOptions[0] ?? "" });
     setSelectedImage(null);
     setSelectedExtraImages(Array.from({ length: EXTRA_IMAGE_SLOTS }, () => null));
     setPrimaryImageIndex(0);
@@ -1580,7 +1929,7 @@ export default function AdminPage() {
   };
 
   const openCreateView = () => {
-    setForm(initialState);
+    setForm({ ...initialState, categoria: categoryOptions[0] ?? "" });
     setSelectedImage(null);
     setSelectedExtraImages(Array.from({ length: EXTRA_IMAGE_SLOTS }, () => null));
     setPrimaryImageIndex(0);
@@ -1681,14 +2030,278 @@ export default function AdminPage() {
     }
   };
 
-  const openImagesView = () => {
+  const loadSiteSettings = async () => {
+    setIsLoadingSettings(true);
+    setSettingsError(null);
+    try {
+      const response = await fetch("/api/admin/settings");
+      const payload = (await response.json()) as { whatsappNumber?: string; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "No fue posible cargar la configuración.");
+      }
+      setWhatsappNumber(payload.whatsappNumber ?? "");
+    } catch (error) {
+      setSettingsError(
+        error instanceof Error ? error.message : "No fue posible cargar la configuración.",
+      );
+    } finally {
+      setIsLoadingSettings(false);
+    }
+  };
+
+  const handleSaveWhatsAppNumber = async () => {
+    setIsSavingSettings(true);
+    setSettingsSaved(false);
+    setSettingsError(null);
+    try {
+      const response = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ whatsappNumber }),
+      });
+      const payload = (await response.json()) as { whatsappNumber?: string; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo guardar el número.");
+      }
+      setWhatsappNumber(payload.whatsappNumber ?? "");
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 2000);
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : "No se pudo guardar el número.");
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  const loadSiteTexts = async () => {
+    setIsLoadingTexts(true);
+    setTextsError(null);
+    try {
+      const response = await fetch("/api/admin/texts");
+      const payload = (await response.json()) as { texts?: Record<string, string>; error?: string };
+      if (!response.ok || !payload.texts) {
+        throw new Error(payload.error || "No fue posible cargar los textos.");
+      }
+      setSiteTextsAdmin(payload.texts);
+    } catch (error) {
+      setTextsError(error instanceof Error ? error.message : "No fue posible cargar los textos.");
+    } finally {
+      setIsLoadingTexts(false);
+    }
+  };
+
+  const handleSaveText = async (key: string, value: string) => {
+    setSavingTextKey(key);
+    setTextsError(null);
+    try {
+      const response = await fetch("/api/admin/texts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, value }),
+      });
+      const payload = (await response.json()) as { value?: string; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo guardar el texto.");
+      }
+      setSiteTextsAdmin((current) => ({ ...current, [key]: payload.value ?? value }));
+      setSavedTextKey(key);
+      setTimeout(() => setSavedTextKey((current) => (current === key ? null : current)), 1500);
+    } catch (error) {
+      setTextsError(error instanceof Error ? error.message : "No se pudo guardar el texto.");
+    } finally {
+      setSavingTextKey(null);
+    }
+  };
+
+  const openSettingsSection = (section: "images" | "texts" | "whatsapp") => {
     setSelectedImage(null);
     setRequestError("");
     setPrimaryImageIndex(0);
     setEditingSlug(null);
-    setActiveTab("images");
+    setActiveTab("settings");
+    setIsSettingsMenuOpen(true);
+    setSettingsSection(section);
     setSelectedImageGroup(null);
-    void loadSiteImages();
+    setSelectedTextGroup(null);
+    if (section === "images") void loadSiteImages();
+    if (section === "texts") void loadSiteTexts();
+    if (section === "whatsapp") void loadSiteSettings();
+  };
+
+  const openSettingsView = () => {
+    if (canAccessTool("images")) {
+      openSettingsSection("images");
+    } else {
+      openSettingsSection("texts");
+    }
+  };
+
+  const loadTeamAccounts = async () => {
+    setIsLoadingTeam(true);
+    setTeamError("");
+    try {
+      const response = await fetch("/api/admin/team");
+      const payload = (await response.json()) as {
+        accounts?: TeamAccount[];
+        error?: string;
+      };
+
+      if (!response.ok || !payload.accounts) {
+        throw new Error(payload.error || "No fue posible cargar las cuentas.");
+      }
+
+      setTeamAccounts(payload.accounts);
+    } catch (error) {
+      setTeamError(
+        error instanceof Error ? error.message : "No fue posible cargar las cuentas.",
+      );
+    } finally {
+      setIsLoadingTeam(false);
+    }
+  };
+
+  const openAccountsView = () => {
+    setSelectedImage(null);
+    setRequestError("");
+    setPrimaryImageIndex(0);
+    setEditingSlug(null);
+    setActiveTab("accounts");
+    void loadTeamAccounts();
+  };
+
+  const toggleNewAccountPermission = (tool: AdminToolKey) => {
+    setNewAccountForm((current) => ({
+      ...current,
+      permissions: current.permissions.includes(tool)
+        ? current.permissions.filter((item) => item !== tool)
+        : [...current.permissions, tool],
+    }));
+  };
+
+  const handleCreateAccount = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsCreatingAccount(true);
+    setTeamError("");
+
+    try {
+      const response = await fetch("/api/admin/team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAccountForm),
+      });
+      const payload = (await response.json()) as {
+        account?: TeamAccount;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.account) {
+        throw new Error(payload.error || "No fue posible crear la cuenta.");
+      }
+
+      setTeamAccounts((current) => [...current, payload.account!]);
+      setNewAccountForm({ fullName: "", email: "", password: "", permissions: [] });
+      setToast({ tone: "success", message: "Cuenta creada correctamente." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No fue posible crear la cuenta.";
+      setTeamError(message);
+      setToast({ tone: "error", message });
+    } finally {
+      setIsCreatingAccount(false);
+    }
+  };
+
+  const handleToggleAccountPermission = async (account: TeamAccount, tool: AdminToolKey) => {
+    const nextPermissions = account.permissions.includes(tool)
+      ? account.permissions.filter((item) => item !== tool)
+      : [...account.permissions, tool];
+
+    setSavingAccountId(account.id);
+    try {
+      const response = await fetch(`/api/admin/team/${account.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ permissions: nextPermissions }),
+      });
+      const payload = (await response.json()) as {
+        account?: TeamAccount;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.account) {
+        throw new Error(payload.error || "No fue posible actualizar los permisos.");
+      }
+
+      setTeamAccounts((current) =>
+        current.map((item) => (item.id === account.id ? payload.account! : item)),
+      );
+    } catch (error) {
+      setToast({
+        tone: "error",
+        message: error instanceof Error ? error.message : "No fue posible actualizar los permisos.",
+      });
+    } finally {
+      setSavingAccountId(null);
+    }
+  };
+
+  const handleToggleAccountActive = async (account: TeamAccount) => {
+    setSavingAccountId(account.id);
+    try {
+      const response = await fetch(`/api/admin/team/${account.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !account.active }),
+      });
+      const payload = (await response.json()) as {
+        account?: TeamAccount;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.account) {
+        throw new Error(payload.error || "No fue posible actualizar la cuenta.");
+      }
+
+      setTeamAccounts((current) =>
+        current.map((item) => (item.id === account.id ? payload.account! : item)),
+      );
+      setToast({
+        tone: "success",
+        message: payload.account.active ? "Cuenta activada." : "Cuenta desactivada.",
+      });
+    } catch (error) {
+      setToast({
+        tone: "error",
+        message: error instanceof Error ? error.message : "No fue posible actualizar la cuenta.",
+      });
+    } finally {
+      setSavingAccountId(null);
+    }
+  };
+
+  const handleDeleteAccount = async (account: TeamAccount) => {
+    if (!window.confirm(`¿Eliminar la cuenta de ${account.fullName}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    setSavingAccountId(account.id);
+    try {
+      const response = await fetch(`/api/admin/team/${account.id}`, { method: "DELETE" });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error || "No fue posible eliminar la cuenta.");
+      }
+
+      setTeamAccounts((current) => current.filter((item) => item.id !== account.id));
+      setToast({ tone: "success", message: "Cuenta eliminada correctamente." });
+    } catch (error) {
+      setToast({
+        tone: "error",
+        message: error instanceof Error ? error.message : "No fue posible eliminar la cuenta.",
+      });
+    } finally {
+      setSavingAccountId(null);
+    }
   };
 
   const handleSiteImageUpload = async (slotKey: string, file: File) => {
@@ -1792,7 +2405,7 @@ export default function AdminPage() {
       <main className="min-h-screen bg-[#f5f5f5] text-[#111]">
         <section className="mx-auto flex max-w-[1440px] px-6 py-16">
           <div className="mx-auto w-full max-w-md rounded-[2rem] border border-black/8 bg-white p-8 text-center shadow-[0_16px_35px_rgba(15,23,42,0.05)]">
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#075ed8]">
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--admin-accent)]">
               Administrador
             </p>
             <p className="mt-4 text-sm text-[#6e7379]">
@@ -1809,7 +2422,7 @@ export default function AdminPage() {
       <main className="min-h-screen bg-[#f5f5f5] text-[#111]">
         <section className="mx-auto flex max-w-[1440px] px-6 py-16">
           <div className="mx-auto w-full max-w-md rounded-[2rem] border border-black/8 bg-white p-8 text-center shadow-[0_16px_35px_rgba(15,23,42,0.05)]">
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#075ed8]">
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--admin-accent)]">
               Administrador
             </p>
             <p className="mt-4 text-sm leading-7 text-[#6e7379]">
@@ -1823,36 +2436,98 @@ export default function AdminPage() {
 
   const pendingQuotesCount = quotes.filter((quote) => quote.status === "NEW").length;
 
-  const sidebarNavItems = [
-    {
-      key: "dashboard",
-      label: "Dashboard",
-      active: activeTab === null,
-      onClick: () => {
-        setActiveTab(null);
-        void loadDashboardMetrics();
+  const canAccessTool = (tool: AdminToolKey) => hasAdminPermission(adminPermissions, tool);
+
+  const sidebarNavItems = (
+    [
+      {
+        key: "dashboard",
+        label: "Dashboard",
+        active: activeTab === null,
+        onClick: () => {
+          setActiveTab(null);
+          void loadDashboardMetrics();
+        },
       },
-    },
-    { key: "create", label: "Crear", active: activeTab === "create", onClick: openCreateView },
-    { key: "edit", label: "Editar", active: activeTab === "edit", onClick: openEditView },
-    ...(!isServiceAdmin
-      ? [{ key: "inventory", label: "Inventario", active: activeTab === "inventory", onClick: openInventoryView }]
-      : []),
-    { key: "orders", label: "Pedidos", active: activeTab === "orders", onClick: openOrdersView },
-    { key: "quotes", label: "Cotizaciones", active: activeTab === "quotes", onClick: openQuotesView, count: pendingQuotesCount },
-    { key: "reports", label: "Informes", active: activeTab === "reports", onClick: openReportsView },
-    { key: "images", label: "Imágenes", active: activeTab === "images", onClick: openImagesView },
-  ];
+      { key: "create", label: "Crear", active: activeTab === "create", onClick: openCreateView },
+      { key: "edit", label: "Editar", active: activeTab === "edit", onClick: openEditView },
+      ...(!isServiceAdmin
+        ? [{ key: "inventory", label: "Inventario", active: activeTab === "inventory", onClick: openInventoryView }]
+        : []),
+      { key: "orders", label: "Pedidos", active: activeTab === "orders", onClick: openOrdersView },
+      { key: "quotes", label: "Cotizaciones", active: activeTab === "quotes", onClick: openQuotesView, count: pendingQuotesCount },
+      { key: "reports", label: "Informes", active: activeTab === "reports", onClick: openReportsView },
+      {
+        key: "settings",
+        label: "Configuración",
+        active: activeTab === "settings",
+        onClick: openSettingsView,
+      },
+      { key: "accounts", label: "Cuentas", active: activeTab === "accounts", onClick: openAccountsView },
+    ] as Array<{
+      key: AdminToolKey;
+      label: string;
+      active: boolean;
+      onClick: () => void;
+      count?: number;
+    }>
+  ).filter((item) =>
+    item.key === "settings"
+      ? canAccessTool("settings") || canAccessTool("images")
+      : canAccessTool(item.key),
+  );
+
+  const settingsSubItems = (
+    [
+      canAccessTool("images")
+        ? {
+            key: "images" as const,
+            label: "Imágenes",
+            active: activeTab === "settings" && settingsSection === "images",
+            onClick: () => openSettingsSection("images"),
+          }
+        : null,
+      canAccessTool("settings")
+        ? {
+            key: "texts" as const,
+            label: "Textos",
+            active: activeTab === "settings" && settingsSection === "texts",
+            onClick: () => openSettingsSection("texts"),
+          }
+        : null,
+      canAccessTool("settings")
+        ? {
+            key: "whatsapp" as const,
+            label: "WhatsApp",
+            active: activeTab === "settings" && settingsSection === "whatsapp",
+            onClick: () => openSettingsSection("whatsapp"),
+          }
+        : null,
+    ] as const
+  ).filter((item): item is NonNullable<typeof item> => item !== null);
+
+  const adminAccentRgb = hexToRgb(adminBrand.accent);
 
   return (
-    <main className="min-h-screen bg-[#f5f5f5] text-[#111]">
+    <main
+      className="min-h-screen bg-[#f5f5f5] text-[#111]"
+      style={
+        {
+          "--admin-accent": adminBrand.accent,
+          "--admin-accent-hover": adminBrand.accentHover,
+          "--admin-accent-rgb": adminAccentRgb,
+          "--admin-accent-soft": `rgba(${adminAccentRgb}, 0.08)`,
+          "--admin-accent-light": `rgba(${adminAccentRgb}, 0.55)`,
+        } as React.CSSProperties
+      }
+    >
       {toast && (
         <div className="fixed right-5 top-5 z-[80] w-[min(92vw,380px)]">
           <div
             className={`rounded-[1.4rem] border px-5 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.16)] backdrop-blur-sm ${
               toast.tone === "success"
                 ? "border-[#1f8b45]/18 bg-[#effaf2] text-[#1f6b39]"
-                : "border-[#075ed8]/18 bg-[#eef5ff] text-[#075ed8]"
+                : "border-[var(--admin-accent)]/18 bg-[var(--admin-accent-soft)] text-[var(--admin-accent)]"
             }`}
           >
             <div className="flex items-start justify-between gap-4">
@@ -1879,7 +2554,7 @@ export default function AdminPage() {
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
           <Link href={adminBrand.siteHref} className="flex items-center gap-3 border-b border-slate-200 px-5 py-5">
             <span
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-black text-white"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]"
               style={{ backgroundColor: adminBrand.accent }}
             >
               {adminBrand.label.charAt(0)}
@@ -1892,35 +2567,97 @@ export default function AdminPage() {
 
           <nav className="flex-1 overflow-y-auto px-3 py-4">
             <ul className="space-y-1">
-              {sidebarNavItems.map((item) => (
-                <li key={item.key}>
-                  <button
-                    type="button"
-                    onClick={item.onClick}
-                    className={`flex w-full items-center justify-between gap-2 rounded-lg px-4 py-2.5 text-left text-sm font-bold transition-colors duration-200 ${
-                      item.active ? "text-white" : "text-slate-700 hover:bg-slate-50"
-                    }`}
-                    style={item.active ? { backgroundColor: adminBrand.accent } : undefined}
-                  >
-                    <span>{item.label}</span>
-                    {"count" in item && Boolean(item.count) && (
-                      <span
-                        className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-black ${
-                          item.active ? "bg-white/20 text-white" : "bg-[#fff1f1] text-[#c53b3b]"
+              {sidebarNavItems.map((item) => {
+                const Icon = SIDEBAR_ICONS[item.key];
+
+                if (item.key === "settings") {
+                  return (
+                    <li key={item.key}>
+                      <button
+                        type="button"
+                        onClick={() => setIsSettingsMenuOpen((value) => !value)}
+                        className={`flex w-full items-center justify-between gap-2 rounded-xl px-4 py-2.5 text-left text-sm font-bold transition-colors duration-200 ${
+                          item.active
+                            ? "text-white shadow-[0_10px_22px_-6px_rgba(var(--admin-accent-rgb),0.55)]"
+                            : "text-slate-700 hover:bg-[var(--admin-accent-soft)] hover:text-[var(--admin-accent)]"
                         }`}
+                        style={item.active ? { backgroundColor: adminBrand.accent } : undefined}
                       >
-                        {item.count}
+                        <span className="flex items-center gap-2.5">
+                          {Icon && <Icon />}
+                          {item.label}
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className={`text-xs transition-transform duration-200 ${isSettingsMenuOpen ? "rotate-180" : ""}`}
+                        >
+                          ▾
+                        </span>
+                      </button>
+                      {isSettingsMenuOpen && (
+                        <ul className="mt-1 space-y-0.5 border-l border-slate-200 pl-3">
+                          {settingsSubItems.map((subItem) => {
+                            const SubIcon = SETTINGS_SUB_ICONS[subItem.key];
+                            return (
+                              <li key={subItem.key}>
+                                <button
+                                  type="button"
+                                  onClick={subItem.onClick}
+                                  className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors duration-200 ${
+                                    subItem.active
+                                      ? "bg-[var(--admin-accent-soft)]"
+                                      : "text-slate-600 hover:bg-slate-50"
+                                  }`}
+                                  style={subItem.active ? { color: adminBrand.accent } : undefined}
+                                >
+                                  <SubIcon />
+                                  {subItem.label}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                }
+
+                return (
+                  <li key={item.key}>
+                    <button
+                      type="button"
+                      onClick={item.onClick}
+                      className={`flex w-full items-center justify-between gap-2 rounded-xl px-4 py-2.5 text-left text-sm font-bold transition-colors duration-200 ${
+                        item.active
+                          ? "text-white shadow-[0_10px_22px_-6px_rgba(var(--admin-accent-rgb),0.55)]"
+                          : "text-slate-700 hover:bg-[var(--admin-accent-soft)] hover:text-[var(--admin-accent)]"
+                      }`}
+                      style={item.active ? { backgroundColor: adminBrand.accent } : undefined}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        {Icon && <Icon />}
+                        {item.label}
                       </span>
-                    )}
-                  </button>
-                </li>
-              ))}
+                      {"count" in item && Boolean(item.count) && (
+                        <span
+                          className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-black ${
+                            item.active ? "bg-white/20 text-white" : "bg-[#fff1f1] text-[#c53b3b]"
+                          }`}
+                        >
+                          {item.count}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
               <li>
                 <button
                   type="button"
                   onClick={() => router.push(adminBrand.productsHref)}
-                  className="w-full rounded-lg px-4 py-2.5 text-left text-sm font-bold text-slate-700 transition-colors duration-200 hover:bg-slate-50"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-4 py-2.5 text-left text-sm font-bold text-slate-700 transition-colors duration-200 hover:bg-[var(--admin-accent-soft)] hover:text-[var(--admin-accent)]"
                 >
+                  <CatalogIcon />
                   Catálogo
                 </button>
               </li>
@@ -1931,8 +2668,9 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={handleLogout}
-              className="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-600 transition-colors duration-200 hover:bg-red-100"
+              className="flex w-full items-center gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-left text-sm font-bold text-red-600 transition-colors duration-200 hover:bg-red-100"
             >
+              <LogoutIcon />
               Cerrar sesión
             </button>
           </div>
@@ -1954,7 +2692,7 @@ export default function AdminPage() {
               </Link>
 
               <form
-                className="flex min-h-11 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner"
+                className="flex min-h-11 overflow-hidden rounded-full border border-slate-300 bg-white transition-shadow duration-200 focus-within:border-[var(--admin-accent)] focus-within:shadow-[0_0_0_3px_rgba(var(--admin-accent-rgb),0.14)]"
                 onSubmit={(event) => {
                   event.preventDefault();
                   openEditView();
@@ -1964,22 +2702,33 @@ export default function AdminPage() {
                   value={editSearch}
                   onChange={(event) => setEditSearch(event.target.value)}
                   aria-label="Buscar productos por nombre, marca o SKU"
-                  className="min-w-0 flex-1 px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                  className="min-w-0 flex-1 px-5 text-sm text-slate-700 outline-none placeholder:text-slate-400"
                   placeholder="Buscar productos por nombre, marca o SKU..."
                 />
                 <button
                   type="submit"
-                  className="flex w-14 items-center justify-center border-l border-slate-200 text-xl text-slate-800"
+                  className="flex w-12 shrink-0 items-center justify-center text-slate-500 transition-colors duration-200 hover:text-[var(--admin-accent)]"
                   aria-label="Buscar"
                 >
-                  ⌕
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.4-3.4" />
+                  </svg>
                 </button>
               </form>
 
               <div className="flex items-center justify-between gap-4 text-sm text-slate-700 md:justify-end">
                 {adminName && (
-                  <span className="hidden max-w-[190px] truncate font-bold lg:inline">
-                    {adminName || adminBrand.sessionLabel}
+                  <span className="hidden items-center gap-2.5 lg:flex">
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black text-white"
+                      style={{ backgroundColor: adminBrand.accent }}
+                    >
+                      {adminName.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="max-w-[160px] truncate font-bold">
+                      {adminName || adminBrand.sessionLabel}
+                    </span>
                   </span>
                 )}
                 <Link
@@ -2095,50 +2844,66 @@ export default function AdminPage() {
                         label: "Vendido hoy",
                         value: formatCurrency(dashboardMetrics.todayRevenue),
                         helper: `${formatNumber(dashboardMetrics.todayOrders)} pedidos hoy`,
+                        Icon: DashboardMetricRevenueIcon,
                       },
                       {
                         label: "Vendido esta semana",
                         value: formatCurrency(dashboardMetrics.weekRevenue),
                         helper: `${formatNumber(dashboardMetrics.weekOrders)} pedidos esta semana`,
+                        Icon: DashboardMetricRevenueIcon,
                       },
                       {
                         label: "Vendido este mes",
                         value: formatCurrency(dashboardMetrics.monthRevenue),
                         helper: `${formatNumber(dashboardMetrics.monthOrders)} pedidos este mes`,
+                        Icon: DashboardMetricRevenueIcon,
                       },
                       {
                         label: "Pedidos totales",
                         value: formatNumber(salesReport.totals.orders),
                         helper: `${formatNumber(salesReport.totals.paidOrders)} pagados`,
+                        Icon: DashboardMetricOrdersIcon,
                       },
                       {
                         label: "Ticket promedio",
                         value: formatCurrency(salesReport.totals.averageOrderValue),
                         helper: "Promedio por pedido",
+                        Icon: DashboardMetricTicketIcon,
                       },
                       {
                         label: "Clientes nuevos",
                         value: formatNumber(dashboardMetrics.newCustomersThisMonth),
                         helper: "Compradores nuevos este mes",
+                        Icon: DashboardMetricCustomersIcon,
                       },
                       {
                         label: "Pedidos pendientes",
                         value: formatNumber(salesReport.totals.pendingOrders),
                         helper: `${formatNumber(salesReport.totals.cancelledOrders)} cancelados`,
+                        Icon: DashboardMetricClockIcon,
                       },
                       {
                         label: "Alertas de stock",
                         value: formatNumber(stockAlerts.lowStock + stockAlerts.outOfStock),
                         helper: `${formatNumber(stockAlerts.outOfStock)} agotados`,
+                        Icon: DashboardMetricAlertIcon,
                       },
                     ].map((metric) => (
                       <div
                         key={metric.label}
-                        className="rounded-[1.5rem] border border-black/8 bg-[#fafaf9] px-5 py-5"
+                        className="rounded-[1.5rem] border border-black/8 bg-[#fafaf9] px-5 py-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] transition-shadow duration-200 hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)]"
                       >
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
-                          {metric.label}
-                        </p>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
+                            {metric.label}
+                          </p>
+                          <span
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                            style={{ backgroundColor: `rgba(${adminAccentRgb}, 0.1)`, color: adminBrand.accent }}
+                          >
+                            <metric.Icon />
+                          </span>
+                        </div>
                         <p
                           className="mt-3 text-3xl font-semibold tracking-[-0.04em]"
                           style={{ color: adminBrand.accent }}
@@ -2155,10 +2920,18 @@ export default function AdminPage() {
                       Destacados del mes
                     </p>
                     <div className="grid gap-4 md:grid-cols-3">
-                      <div className="rounded-[1.75rem] border border-black/8 bg-[#16384f] p-6 text-white shadow-[0_18px_35px_rgba(22,56,79,0.18)]">
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/58">
-                          Producto más vendido
-                        </p>
+                      <div
+                        className="rounded-[1.75rem] border border-black/8 p-6 text-white shadow-[0_18px_35px_rgba(15,23,42,0.18)]"
+                        style={{ backgroundColor: adminBrand.accent }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+                            Producto más vendido
+                          </p>
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15">
+                            <DashboardTrophyIcon />
+                          </span>
+                        </div>
                         {salesReport.topProduct ? (
                           <>
                             <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em]">
@@ -2173,10 +2946,18 @@ export default function AdminPage() {
                         )}
                       </div>
 
-                      <div className="rounded-[1.75rem] border border-black/8 bg-[#fafaf9] p-6">
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
-                          Categoría más vendida
-                        </p>
+                      <div className="rounded-[1.75rem] border border-black/8 bg-[#fafaf9] p-6 shadow-[0_2px_10px_rgba(15,23,42,0.03)] transition-shadow duration-200 hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)]">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
+                            Categoría más vendida
+                          </p>
+                          <span
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                            style={{ backgroundColor: `rgba(${adminAccentRgb}, 0.1)`, color: adminBrand.accent }}
+                          >
+                            <DashboardTagIcon />
+                          </span>
+                        </div>
                         {dashboardMetrics.topCategory ? (
                           <>
                             <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-[#1f2328]">
@@ -2191,10 +2972,18 @@ export default function AdminPage() {
                         )}
                       </div>
 
-                      <div className="rounded-[1.75rem] border border-black/8 bg-[#fafaf9] p-6">
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
-                          Clientes atendidos
-                        </p>
+                      <div className="rounded-[1.75rem] border border-black/8 bg-[#fafaf9] p-6 shadow-[0_2px_10px_rgba(15,23,42,0.03)] transition-shadow duration-200 hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)]">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
+                            Clientes atendidos
+                          </p>
+                          <span
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                            style={{ backgroundColor: `rgba(${adminAccentRgb}, 0.1)`, color: adminBrand.accent }}
+                          >
+                            <DashboardMetricCustomersIcon />
+                          </span>
+                        </div>
                         <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-[#1f2328]">
                           {formatNumber(dashboardMetrics.customersThisMonth)}
                         </h3>
@@ -2265,40 +3054,45 @@ export default function AdminPage() {
                       value={form.sku}
                       onChange={handleChange}
                       placeholder="Ej. FAROLA001"
-                      className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                      className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                     />
                   </label>
 
                   <CategoryComboBox
-                    label="Crear categoría"
+                    label={adminDivision === "Import" || adminDivision === "Plastic" ? "Categoría" : "Crear categoría"}
                     name="categoria"
                     value={form.categoria}
                     options={categoryOptions}
                     placeholder="Ej. Transporte, logística y puertos marítimos"
                     required
                     entityName="categoría"
+                    strict={adminDivision === "Import" || adminDivision === "Plastic"}
                     onChange={(value) => setForm((current) => ({ ...current, categoria: value }))}
                   />
 
-                  <CategoryComboBox
-                    label="Sub categoría"
-                    name="subcategoria"
-                    value={form.subcategoria}
-                    options={subcategoryOptions}
-                    placeholder="Ej. O-rings, Neopreno, EPDM"
-                    entityName="subcategoría"
-                    onChange={(value) => setForm((current) => ({ ...current, subcategoria: value }))}
-                  />
+                  {adminDivision !== "Import" && adminDivision !== "Plastic" && (
+                    <>
+                      <CategoryComboBox
+                        label="Sub categoría"
+                        name="subcategoria"
+                        value={form.subcategoria}
+                        options={subcategoryOptions}
+                        placeholder="Ej. O-rings, Neopreno, EPDM"
+                        entityName="subcategoría"
+                        onChange={(value) => setForm((current) => ({ ...current, subcategoria: value }))}
+                      />
 
-                  <CategoryComboBox
-                    label="Categoría menor"
-                    name="categoriaMenor"
-                    value={form.categoriaMenor}
-                    options={categoriaMenorOptions}
-                    placeholder="Ej. Pintura para interior"
-                    entityName="categoría menor"
-                    onChange={(value) => setForm((current) => ({ ...current, categoriaMenor: value }))}
-                  />
+                      <CategoryComboBox
+                        label="Categoría menor"
+                        name="categoriaMenor"
+                        value={form.categoriaMenor}
+                        options={categoriaMenorOptions}
+                        placeholder="Ej. Pintura para interior"
+                        entityName="categoría menor"
+                        onChange={(value) => setForm((current) => ({ ...current, categoriaMenor: value }))}
+                      />
+                    </>
+                  )}
 
                 <label className="space-y-2">
                   <span className="text-sm font-medium text-[#4f545a]">Marca</span>
@@ -2307,7 +3101,7 @@ export default function AdminPage() {
                     value={form.marca}
                     onChange={handleChange}
                     required
-                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                   />
                 </label>
 
@@ -2318,7 +3112,7 @@ export default function AdminPage() {
                     value={form.nombre}
                     onChange={handleChange}
                     required
-                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                   />
                 </label>
 
@@ -2332,7 +3126,7 @@ export default function AdminPage() {
                         onChange={handleChange}
                         placeholder="Ej. Cotizar"
                         required
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
 
@@ -2343,7 +3137,7 @@ export default function AdminPage() {
                         value={form.displaySecondaryLabel}
                         onChange={handleChange}
                         placeholder="Ej. Diagnóstico técnico"
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
                   </>
@@ -2358,7 +3152,7 @@ export default function AdminPage() {
                         value={form.precioValor}
                         onChange={handleChange}
                         required
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
 
@@ -2370,7 +3164,7 @@ export default function AdminPage() {
                         min="0"
                         value={form.stock}
                         onChange={handleChange}
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
 
@@ -2383,7 +3177,7 @@ export default function AdminPage() {
                         value={form.precioAnteriorValor}
                         onChange={handleChange}
                         required
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
 
@@ -2395,7 +3189,7 @@ export default function AdminPage() {
                         min="0"
                         value={form.stockMinimo}
                         onChange={handleChange}
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
                   </>
@@ -2501,7 +3295,7 @@ export default function AdminPage() {
                     onChange={handleChange}
                     rows={4}
                     placeholder="Describe el producto, su uso principal y el beneficio para el cliente."
-                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm leading-7 text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                    className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm leading-7 text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                   />
                 </label>
 
@@ -2512,7 +3306,7 @@ export default function AdminPage() {
                       name="disponibilidad"
                       value={form.disponibilidad}
                       onChange={handleChange}
-                      className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                      className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                     >
                       {disponibilidades.map((item) => (
                         <option key={item} value={item}>
@@ -2526,8 +3320,8 @@ export default function AdminPage() {
 
               <div className="mt-6 space-y-2">
                 <span className="text-sm font-medium text-[#4f545a]">Ficha técnica (PDF)</span>
-                <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-black/15 bg-[#fafaf9] px-4 py-3 transition-colors hover:border-[#075ed8]/50">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#075ed8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-black/15 bg-[#fafaf9] px-4 py-3 transition-colors hover:border-[var(--admin-accent)]/50">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--admin-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                   <span className="text-sm text-[#4f545a]">
                     {selectedPdf ? selectedPdf.name : "Sube acá tu ficha técnica"}
                   </span>
@@ -2540,7 +3334,7 @@ export default function AdminPage() {
                   />
                 </label>
                 {existingPdfUrl && !selectedPdf && (
-                  <a href={existingPdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#075ed8] underline">
+                  <a href={existingPdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--admin-accent)] underline">
                     Ver ficha técnica actual
                   </a>
                 )}
@@ -2548,14 +3342,14 @@ export default function AdminPage() {
 
               <div className="mt-8 flex flex-wrap gap-3">
                 {requestError && (
-                  <p className="w-full rounded-2xl border border-[#075ed8]/20 bg-[#eef5ff] px-4 py-3 text-sm font-medium text-[#075ed8]">
+                  <p className="w-full rounded-2xl border border-[var(--admin-accent)]/20 bg-[var(--admin-accent-soft)] px-4 py-3 text-sm font-medium text-[var(--admin-accent)]">
                     {requestError}
                   </p>
                 )}
                 <button
                   type="submit"
                   disabled={isSavingProduct}
-                  className="inline-flex rounded-full bg-[#075ed8] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#064fb7]"
+                  className="inline-flex rounded-full bg-[var(--admin-accent)] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[var(--admin-accent-hover)]"
                 >
                   {isSavingProduct ? "Guardando..." : "Crear producto"}
                 </button>
@@ -2640,7 +3434,7 @@ export default function AdminPage() {
                         value={editSearch}
                         onChange={(event) => setEditSearch(event.target.value)}
                         placeholder="Ej: sello, Universal de Cauchos, manguera..."
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
 
@@ -2663,7 +3457,7 @@ export default function AdminPage() {
                           }`}
                         >
                         <div className="relative">
-                          <span className="absolute left-4 top-4 z-10 rounded-lg bg-[#075ed8] px-3 py-1 text-sm font-semibold text-white">
+                          <span className="absolute left-4 top-4 z-10 rounded-lg bg-[var(--admin-accent)] px-3 py-1 text-sm font-semibold text-white">
                             {product.descuento}
                           </span>
                           <Image
@@ -2719,7 +3513,7 @@ export default function AdminPage() {
                             <p className="text-sm text-[#a0a3a8] line-through">
                               {product.precioAnterior}
                             </p>
-                            <p className="text-3xl font-semibold tracking-[-0.03em] text-[#075ed8]">
+                            <p className="text-3xl font-semibold tracking-[-0.03em] text-[var(--admin-accent)]">
                               {product.precio}
                             </p>
                           </div>
@@ -2784,40 +3578,45 @@ export default function AdminPage() {
                         value={form.sku}
                         onChange={handleChange}
                         placeholder="Ej. FAROLA001"
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
 
                     <CategoryComboBox
-                      label="Crear categoría"
+                      label={adminDivision === "Import" || adminDivision === "Plastic" ? "Categoría" : "Crear categoría"}
                       name="categoria"
                       value={form.categoria}
                       options={categoryOptions}
                       placeholder="Ej. Transporte, logística y puertos marítimos"
                       required
                       entityName="categoría"
+                      strict={adminDivision === "Import" || adminDivision === "Plastic"}
                       onChange={(value) => setForm((current) => ({ ...current, categoria: value }))}
                     />
 
-                    <CategoryComboBox
-                      label="Sub categoría"
-                      name="subcategoria"
-                      value={form.subcategoria}
-                      options={subcategoryOptions}
-                      placeholder="Ej. O-rings, Neopreno, EPDM"
-                      entityName="subcategoría"
-                      onChange={(value) => setForm((current) => ({ ...current, subcategoria: value }))}
-                    />
+                    {adminDivision !== "Import" && adminDivision !== "Plastic" && (
+                      <>
+                        <CategoryComboBox
+                          label="Sub categoría"
+                          name="subcategoria"
+                          value={form.subcategoria}
+                          options={subcategoryOptions}
+                          placeholder="Ej. O-rings, Neopreno, EPDM"
+                          entityName="subcategoría"
+                          onChange={(value) => setForm((current) => ({ ...current, subcategoria: value }))}
+                        />
 
-                    <CategoryComboBox
-                      label="Categoría menor"
-                      name="categoriaMenor"
-                      value={form.categoriaMenor}
-                      options={categoriaMenorOptions}
-                      placeholder="Ej. Pintura para interior"
-                      entityName="categoría menor"
-                      onChange={(value) => setForm((current) => ({ ...current, categoriaMenor: value }))}
-                    />
+                        <CategoryComboBox
+                          label="Categoría menor"
+                          name="categoriaMenor"
+                          value={form.categoriaMenor}
+                          options={categoriaMenorOptions}
+                          placeholder="Ej. Pintura para interior"
+                          entityName="categoría menor"
+                          onChange={(value) => setForm((current) => ({ ...current, categoriaMenor: value }))}
+                        />
+                      </>
+                    )}
 
                     <label className="space-y-2">
                       <span className="text-sm font-medium text-[#4f545a]">Marca</span>
@@ -2826,7 +3625,7 @@ export default function AdminPage() {
                         value={form.marca}
                         onChange={handleChange}
                         required
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
 
@@ -2837,7 +3636,7 @@ export default function AdminPage() {
                         value={form.nombre}
                         onChange={handleChange}
                         required
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
 
@@ -2851,7 +3650,7 @@ export default function AdminPage() {
                             onChange={handleChange}
                             placeholder="Ej. Cotizar"
                             required
-                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                           />
                         </label>
 
@@ -2862,7 +3661,7 @@ export default function AdminPage() {
                             value={form.displaySecondaryLabel}
                             onChange={handleChange}
                             placeholder="Ej. Diagnóstico técnico"
-                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                           />
                         </label>
                       </>
@@ -2877,7 +3676,7 @@ export default function AdminPage() {
                             value={form.precioValor}
                             onChange={handleChange}
                             required
-                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                           />
                         </label>
 
@@ -2889,7 +3688,7 @@ export default function AdminPage() {
                             min="0"
                             value={form.stock}
                             onChange={handleChange}
-                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                           />
                         </label>
 
@@ -2902,7 +3701,7 @@ export default function AdminPage() {
                             value={form.precioAnteriorValor}
                             onChange={handleChange}
                             required
-                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                           />
                         </label>
 
@@ -2914,7 +3713,7 @@ export default function AdminPage() {
                             min="0"
                             value={form.stockMinimo}
                             onChange={handleChange}
-                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                           />
                         </label>
                       </>
@@ -3016,7 +3815,7 @@ export default function AdminPage() {
                         onChange={handleChange}
                         rows={4}
                         placeholder="Describe el producto, su uso principal y el beneficio para el cliente."
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm leading-7 text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm leading-7 text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
 
@@ -3027,7 +3826,7 @@ export default function AdminPage() {
                           name="disponibilidad"
                           value={form.disponibilidad}
                           onChange={handleChange}
-                          className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                          className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                         >
                           {disponibilidades.map((item) => (
                             <option key={item} value={item}>
@@ -3041,8 +3840,8 @@ export default function AdminPage() {
 
                   <div className="mt-6 space-y-2">
                     <span className="text-sm font-medium text-[#4f545a]">Ficha técnica (PDF)</span>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-black/15 bg-[#fafaf9] px-4 py-3 transition-colors hover:border-[#075ed8]/50">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#075ed8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-black/15 bg-[#fafaf9] px-4 py-3 transition-colors hover:border-[var(--admin-accent)]/50">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--admin-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
                       <span className="text-sm text-[#4f545a]">
                         {selectedPdf ? selectedPdf.name : "Sube acá tu ficha técnica"}
                       </span>
@@ -3055,7 +3854,7 @@ export default function AdminPage() {
                       />
                     </label>
                     {existingPdfUrl && !selectedPdf && (
-                      <a href={existingPdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#075ed8] underline">
+                      <a href={existingPdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--admin-accent)] underline">
                         Ver ficha técnica actual
                       </a>
                     )}
@@ -3063,14 +3862,14 @@ export default function AdminPage() {
 
                   <div className="mt-8 flex flex-wrap gap-3">
                     {requestError && (
-                      <p className="w-full rounded-2xl border border-[#075ed8]/20 bg-[#eef5ff] px-4 py-3 text-sm font-medium text-[#075ed8]">
+                      <p className="w-full rounded-2xl border border-[var(--admin-accent)]/20 bg-[var(--admin-accent-soft)] px-4 py-3 text-sm font-medium text-[var(--admin-accent)]">
                         {requestError}
                       </p>
                     )}
                     <button
                       type="submit"
                       disabled={isSavingProduct}
-                      className="inline-flex rounded-full bg-[#075ed8] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#064fb7]"
+                      className="inline-flex rounded-full bg-[var(--admin-accent)] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[var(--admin-accent-hover)]"
                     >
                       {isSavingProduct ? "Guardando..." : "Guardar cambios"}
                     </button>
@@ -3149,7 +3948,7 @@ export default function AdminPage() {
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
                             {metric.label}
                           </p>
-                          <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[#075ed8]">
+                          <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--admin-accent)]">
                             {metric.value}
                           </p>
                           <p className="mt-2 text-sm text-[#6e7379]">{metric.helper}</p>
@@ -3240,7 +4039,7 @@ export default function AdminPage() {
                                       </p>
                                     </div>
                                     <div className="text-right text-sm">
-                                      <p className="font-semibold text-[#075ed8]">
+                                      <p className="font-semibold text-[var(--admin-accent)]">
                                         {formatNumber(product.quantitySold)} vendidos
                                       </p>
                                       <p className="mt-1 text-[#6e7379]">
@@ -3284,7 +4083,7 @@ export default function AdminPage() {
                                     {formatNumber(category.quantitySold)} unidades
                                   </p>
                                 </div>
-                                <p className="text-sm font-semibold text-[#075ed8]">
+                                <p className="text-sm font-semibold text-[var(--admin-accent)]">
                                   {formatCurrency(category.revenue)}
                                 </p>
                               </div>
@@ -3319,7 +4118,7 @@ export default function AdminPage() {
                                     </p>
                                   </div>
                                   <div className="text-right">
-                                    <span className="rounded-full border border-[#075ed8]/18 bg-[#eef5ff] px-3 py-1 text-xs font-semibold text-[#075ed8]">
+                                    <span className="rounded-full border border-[var(--admin-accent)]/18 bg-[var(--admin-accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--admin-accent)]">
                                       {getPaymentStatusLabel(order.paymentStatus)}
                                     </span>
                                     <p className="mt-3 text-sm font-semibold text-[#16384f]">
@@ -3373,7 +4172,7 @@ export default function AdminPage() {
                         value={orderSearch}
                         onChange={(event) => setOrderSearch(event.target.value)}
                         placeholder="Ej: cm..., Brandon, 12345..."
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
 
@@ -3445,7 +4244,7 @@ export default function AdminPage() {
                             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${selectedOrderId === order.id ? "bg-white/14 text-white" : "bg-[#effaf2] text-[#1f6b39]"}`}>
                               {getShippingStatusLabel(order.shippingStatus)}
                             </span>
-                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${selectedOrderId === order.id ? "bg-white/14 text-white" : "bg-[#eef5ff] text-[#075ed8]"}`}>
+                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${selectedOrderId === order.id ? "bg-white/14 text-white" : "bg-[var(--admin-accent-soft)] text-[var(--admin-accent)]"}`}>
                               {getPaymentStatusLabel(order.paymentStatus)}
                             </span>
                           </div>
@@ -3484,7 +4283,7 @@ export default function AdminPage() {
                             <span className="rounded-full bg-[#16384f] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white">
                               {selectedOrderPreview.status}
                             </span>
-                            <span className="rounded-full border border-[#075ed8]/18 bg-[#eef5ff] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#075ed8]">
+                            <span className="rounded-full border border-[var(--admin-accent)]/18 bg-[var(--admin-accent-soft)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--admin-accent)]">
                               {getPaymentStatusLabel(selectedOrderPreview.paymentStatus)}
                             </span>
                             <span className="rounded-full border border-[#1f8b45]/18 bg-[#effaf2] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#1f6b39]">
@@ -3538,7 +4337,7 @@ export default function AdminPage() {
                                       <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#8b8d91]">
                                         Subtotal
                                       </p>
-                                      <p className="mt-1 text-sm font-semibold text-[#075ed8]">
+                                      <p className="mt-1 text-sm font-semibold text-[var(--admin-accent)]">
                                         {formatCurrency(item.lineTotal)}
                                       </p>
                                     </div>
@@ -3553,8 +4352,12 @@ export default function AdminPage() {
                               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
                                 Total del pedido
                               </p>
-                              <p className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[#075ed8]">
-                                {formatCurrency(selectedOrderPreview.subtotal)}
+                              <p className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--admin-accent)]">
+                                {formatCurrency(selectedOrderPreview.subtotal + selectedOrderPreview.shippingCost)}
+                              </p>
+                              <p className="mt-2 text-xs text-[#6e7379]">
+                                Subtotal {formatCurrency(selectedOrderPreview.subtotal)} + envío{" "}
+                                {formatCurrency(selectedOrderPreview.shippingCost)}
                               </p>
                             </div>
                             <div className="rounded-[1.4rem] border border-black/8 bg-[#fafaf9] px-5 py-4">
@@ -3587,7 +4390,7 @@ export default function AdminPage() {
                               name="shippingStatus"
                               value={orderForm.shippingStatus}
                               onChange={handleOrderFieldChange}
-                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                             >
                               {shippingStatuses.map((status) => (
                                 <option key={status} value={status}>
@@ -3603,7 +4406,7 @@ export default function AdminPage() {
                               name="paymentStatus"
                               value={orderForm.paymentStatus}
                               onChange={handleOrderFieldChange}
-                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                             >
                               {paymentStatuses.map((status) => (
                                 <option key={status} value={status}>
@@ -3620,7 +4423,7 @@ export default function AdminPage() {
                               value={orderForm.carrier}
                               onChange={handleOrderFieldChange}
                               placeholder="Ej. Coordinadora, Servientrega..."
-                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                             />
                           </label>
 
@@ -3631,7 +4434,7 @@ export default function AdminPage() {
                               value={orderForm.trackingNumber}
                               onChange={handleOrderFieldChange}
                               placeholder="Ej. 123456789"
-                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                             />
                           </label>
 
@@ -3643,7 +4446,7 @@ export default function AdminPage() {
                               onChange={handleOrderFieldChange}
                               rows={4}
                               placeholder="Ej. Sale hoy en la tarde, cliente pidió entregar en portería..."
-                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                             />
                           </label>
                         </div>
@@ -3690,10 +4493,11 @@ export default function AdminPage() {
 
                         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-black/8 pt-4 text-sm">
                           <span className="text-[#6e7379]">
-                            {selectedOrder.totalItems} producto{selectedOrder.totalItems === 1 ? "" : "s"}
+                            {selectedOrder.totalItems} producto{selectedOrder.totalItems === 1 ? "" : "s"} + envío{" "}
+                            {formatCurrency(selectedOrder.shippingCost)}
                           </span>
-                          <span className="text-lg font-semibold text-[#075ed8]">
-                            {formatCurrency(selectedOrder.subtotal)}
+                          <span className="text-lg font-semibold text-[var(--admin-accent)]">
+                            {formatCurrency(selectedOrder.subtotal + selectedOrder.shippingCost)}
                           </span>
                         </div>
                       </div>
@@ -3783,7 +4587,7 @@ export default function AdminPage() {
                             {quote.fullName} · {quote.requestType}
                           </p>
                           <div className="mt-4 flex flex-wrap gap-2">
-                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${selectedQuoteId === quote.id ? "bg-white/14 text-white" : "bg-[#eef5ff] text-[#075ed8]"}`}>
+                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${selectedQuoteId === quote.id ? "bg-white/14 text-white" : "bg-[var(--admin-accent-soft)] text-[var(--admin-accent)]"}`}>
                               {getQuoteStatusLabel(quote.status)}
                             </span>
                           </div>
@@ -3810,7 +4614,7 @@ export default function AdminPage() {
                               selectedQuote.status === "CLOSED"
                                 ? "bg-[#effaf2] text-[#1f6b39]"
                                 : selectedQuote.status === "CONTACTED"
-                                  ? "bg-[#eef5ff] text-[#075ed8]"
+                                  ? "bg-[var(--admin-accent-soft)] text-[var(--admin-accent)]"
                                   : "bg-[#fff4e5] text-[#a15c00]"
                             }`}
                           >
@@ -3827,7 +4631,7 @@ export default function AdminPage() {
                               event.target.value as QuoteStatusValue,
                             )
                           }
-                          className="rounded-full border border-black/10 bg-[#fafaf9] px-4 py-2 text-xs font-semibold text-[#4f545a] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                          className="rounded-full border border-black/10 bg-[#fafaf9] px-4 py-2 text-xs font-semibold text-[#4f545a] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                         >
                           {quoteStatuses.map((status) => (
                             <option key={status} value={status}>
@@ -3847,7 +4651,7 @@ export default function AdminPage() {
                       {(selectedQuote.process.length > 0 || selectedQuote.conditions.length > 0) && (
                         <div className="mt-4 flex flex-wrap gap-2">
                           {selectedQuote.process.map((item) => (
-                            <span key={item} className="rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-semibold text-[#075ed8]">
+                            <span key={item} className="rounded-full bg-[var(--admin-accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--admin-accent)]">
                               {item}
                             </span>
                           ))}
@@ -3874,7 +4678,7 @@ export default function AdminPage() {
 
                       {selectedQuote.details && Object.keys(selectedQuote.details).length > 0 && (
                         <details className="mt-5 border-t border-black/6 pt-5">
-                          <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91] hover:text-[#075ed8]">
+                          <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91] hover:text-[var(--admin-accent)]">
                             Ver todos los campos del formulario
                           </summary>
                           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -3892,7 +4696,7 @@ export default function AdminPage() {
                         </details>
                       )}
 
-                      <div className="mt-6 border-l-4 border-[#075ed8]/30 pl-5">
+                      <div className="mt-6 border-l-4 border-[var(--admin-accent)]/30 pl-5">
                         <label className="block space-y-2">
                           <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
                             Respuesta para el cliente
@@ -3902,7 +4706,7 @@ export default function AdminPage() {
                             onChange={(event) => setQuoteNotesDraft(event.target.value)}
                             rows={3}
                             placeholder="Ej. Ya revisamos tu solicitud, te contactamos por WhatsApp con la cotización el jueves..."
-                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                           />
                         </label>
                         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
@@ -3987,7 +4791,7 @@ export default function AdminPage() {
                         value={editSearch}
                         onChange={(event) => setEditSearch(event.target.value)}
                         placeholder="Ej: sello, Universal de Cauchos, CAUCHO001..."
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
 
@@ -4012,8 +4816,8 @@ export default function AdminPage() {
                         onClick={() => setInventoryStatusFilter("low-stock")}
                         className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
                           inventoryStatusFilter === "low-stock"
-                            ? "bg-[#075ed8] text-white"
-                            : "border border-[#075ed8]/20 bg-[#eef5ff] text-[#075ed8] hover:bg-[#dbeafe]"
+                            ? "bg-[var(--admin-accent)] text-white"
+                            : "border border-[var(--admin-accent)]/20 bg-[var(--admin-accent-soft)] text-[var(--admin-accent)] hover:bg-[#dbeafe]"
                         }`}
                       >
                         Solo stock bajo
@@ -4093,7 +4897,7 @@ export default function AdminPage() {
                                     }))
                                   }
                                   placeholder="+5 o -2"
-                                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                                 />
                               </div>
                             </div>
@@ -4134,7 +4938,7 @@ export default function AdminPage() {
                                   "Salida rápida de una unidad",
                                 )
                               }
-                              className="inline-flex rounded-full border border-[#075ed8]/20 bg-[#eef5ff] px-5 py-3 text-sm font-semibold text-[#075ed8] transition-colors duration-200 hover:bg-[#dbeafe]"
+                              className="inline-flex rounded-full border border-[var(--admin-accent)]/20 bg-[var(--admin-accent-soft)] px-5 py-3 text-sm font-semibold text-[var(--admin-accent)] transition-colors duration-200 hover:bg-[#dbeafe]"
                             >
                               -1 unidad
                             </button>
@@ -4193,7 +4997,7 @@ export default function AdminPage() {
                                 </p>
                               </div>
                               <div className="text-right">
-                                <p className={`text-sm font-semibold ${movement.quantity >= 0 ? "text-[#1f6b39]" : "text-[#075ed8]"}`}>
+                                <p className={`text-sm font-semibold ${movement.quantity >= 0 ? "text-[#1f6b39]" : "text-[var(--admin-accent)]"}`}>
                                   {movement.quantity > 0 ? `+${movement.quantity}` : movement.quantity}
                                 </p>
                                 <p className="mt-1 text-xs text-[#6e7379]">
@@ -4217,7 +5021,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === "images" && (
+          {activeTab === "settings" && settingsSection === "images" && canAccessTool("images") && (
             <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
               <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
                 <div>
@@ -4273,7 +5077,7 @@ export default function AdminPage() {
                         key={group}
                         type="button"
                         onClick={() => setSelectedImageGroup(group)}
-                        className="flex items-center gap-4 overflow-hidden rounded-[1.2rem] border border-black/8 bg-white p-4 text-left shadow-sm transition-colors duration-200 hover:border-[#075ed8] hover:bg-[#f5f9ff]"
+                        className="flex items-center gap-4 overflow-hidden rounded-[1.2rem] border border-black/8 bg-white p-4 text-left shadow-sm transition-colors duration-200 hover:border-[var(--admin-accent)] hover:bg-[#f5f9ff]"
                       >
                         <span className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#f0f2f4]">
                           {previewSrc && !isVideoUrl(previewSrc) && (
@@ -4305,7 +5109,7 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedImageGroup(null)}
-                    className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#075ed8] hover:underline"
+                    className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--admin-accent)] hover:underline"
                   >
                     <span aria-hidden="true">‹</span> Volver a categorías
                   </button>
@@ -4378,7 +5182,7 @@ export default function AdminPage() {
                                 className={`mt-2 flex cursor-pointer items-center justify-center gap-1.5 rounded-full py-2 text-xs font-semibold transition-colors ${
                                   isSaved
                                     ? "bg-[#effaf2] text-[#1f6b39]"
-                                    : "bg-[#075ed8] text-white hover:bg-[#054eb3]"
+                                    : "bg-[var(--admin-accent)] text-white hover:bg-[#054eb3]"
                                 } ${isUploading ? "pointer-events-none opacity-60" : ""}`}
                               >
                                 {isSaved ? "✓ Guardado" : isUploading ? "Subiendo..." : "Cambiar imagen o video"}
@@ -4412,7 +5216,7 @@ export default function AdminPage() {
                                     onBlur={(event) =>
                                       void handleSiteImageLinkSave(slot.key, event.target.value)
                                     }
-                                    className="w-full rounded-lg border border-black/10 bg-[#fafaf9] px-2.5 py-1.5 text-xs text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+                                    className="w-full rounded-lg border border-black/10 bg-[#fafaf9] px-2.5 py-1.5 text-xs text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                                   />
                                   {savingLinkKey === slot.key && (
                                     <p className="mt-1 text-[10px] font-semibold text-[#8b8d91]">Guardando...</p>
@@ -4425,6 +5229,386 @@ export default function AdminPage() {
                       })}
                     </div>
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "settings" && settingsSection === "texts" && canAccessTool("settings") && (
+            <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
+              <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
+                    Contenido del sitio
+                  </p>
+                  <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                    Textos del sitio
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
+                    Títulos, párrafos y botones de la página. Los cambios se guardan al salir del campo.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void loadSiteTexts()}
+                  className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                >
+                  Recargar
+                </button>
+              </div>
+
+              <div>
+                {textsError && (
+                  <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                    {textsError}
+                  </p>
+                )}
+
+                {isLoadingTexts ? (
+                  <p className="text-sm text-[#6e7379]">Cargando textos...</p>
+                ) : !selectedTextGroup ? (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {Array.from(
+                      new Set(
+                        TEXT_SLOTS.filter(
+                          (slot) => slot.division === adminDivision || slot.division === "Global",
+                        ).map((slot) => slot.group),
+                      ),
+                    ).map((group) => {
+                      const groupSlots = TEXT_SLOTS.filter(
+                        (slot) =>
+                          slot.group === group &&
+                          (slot.division === adminDivision || slot.division === "Global"),
+                      );
+
+                      return (
+                        <button
+                          key={group}
+                          type="button"
+                          onClick={() => setSelectedTextGroup(group)}
+                          className="flex items-center justify-between gap-3 rounded-[1.2rem] border border-black/8 bg-white p-4 text-left shadow-sm transition-colors duration-200 hover:border-[var(--admin-accent)] hover:bg-[#f5f9ff]"
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold text-[#1f2328]">
+                              {group}
+                            </span>
+                            <span className="mt-0.5 block text-xs font-semibold text-[#8b8d91]">
+                              {groupSlots.length} {groupSlots.length === 1 ? "campo" : "campos"}
+                            </span>
+                          </span>
+                          <span aria-hidden="true" className="shrink-0 text-xl text-[#8b8d91]">
+                            ›
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTextGroup(null)}
+                      className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--admin-accent)] hover:underline"
+                    >
+                      <span aria-hidden="true">‹</span> Volver a grupos
+                    </button>
+                    <h4 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">
+                      {selectedTextGroup}
+                    </h4>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      {TEXT_SLOTS.filter(
+                        (slot) =>
+                          slot.group === selectedTextGroup &&
+                          (slot.division === adminDivision || slot.division === "Global"),
+                      ).map((slot) => {
+                        const value = siteTextsAdmin[slot.key] ?? slot.defaultValue;
+                        const isSaving = savingTextKey === slot.key;
+                        const isSaved = savedTextKey === slot.key;
+
+                        return (
+                          <div key={slot.key} className="rounded-[1.2rem] border border-black/8 bg-white p-4 shadow-sm">
+                            <label className="mb-1.5 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-[0.06em] text-[#8b8d91]">
+                              {slot.label}
+                              {isSaving && <span className="normal-case text-[#8b8d91]">Guardando...</span>}
+                              {isSaved && <span className="normal-case text-[#1f6b39]">✓ Guardado</span>}
+                            </label>
+                            {slot.multiline ? (
+                              <textarea
+                                defaultValue={value}
+                                rows={3}
+                                onBlur={(event) => {
+                                  if (event.target.value !== value) void handleSaveText(slot.key, event.target.value);
+                                }}
+                                className="w-full rounded-lg border border-black/10 bg-[#fafaf9] px-3 py-2 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                defaultValue={value}
+                                onBlur={(event) => {
+                                  if (event.target.value !== value) void handleSaveText(slot.key, event.target.value);
+                                }}
+                                className="w-full rounded-lg border border-black/10 bg-[#fafaf9] px-3 py-2 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "settings" && settingsSection === "whatsapp" && canAccessTool("settings") && (
+            <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
+              <div className="mb-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
+                  Contenido del sitio
+                </p>
+                <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                  Número de WhatsApp
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
+                  Este número alimenta el botón flotante de WhatsApp visible en todo el sitio.
+                  Cuando lo dejes vacío, el botón no se muestra.
+                </p>
+              </div>
+
+              {settingsError && (
+                <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {settingsError}
+                </p>
+              )}
+
+              <div className="max-w-md">
+                <input
+                  type="text"
+                  disabled={isLoadingSettings}
+                  placeholder="Ej. 573001234567 (código de país + número, sin espacios ni +)"
+                  value={whatsappNumber}
+                  onChange={(event) => setWhatsappNumber(event.target.value)}
+                  className="w-full rounded-lg border border-black/10 bg-[#fafaf9] px-3.5 py-2.5 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                />
+                <p className="mt-1.5 text-xs text-[#8b8d91]">
+                  Formato internacional sin &quot;+&quot; (código de país + número). Ej. Colombia: 57 + número.
+                </p>
+                <button
+                  type="button"
+                  disabled={isSavingSettings || isLoadingSettings}
+                  onClick={() => void handleSaveWhatsAppNumber()}
+                  className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors duration-200 ${
+                    settingsSaved
+                      ? "bg-[#effaf2] text-[#1f6b39]"
+                      : "bg-[var(--admin-accent)] text-white hover:bg-[#054eb3]"
+                  } ${isSavingSettings || isLoadingSettings ? "pointer-events-none opacity-60" : ""}`}
+                >
+                  {settingsSaved ? "✓ Guardado" : isSavingSettings ? "Guardando..." : "Guardar número"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "accounts" && (
+            <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
+              <div className="mb-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
+                  Equipo
+                </p>
+                <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                  Cuentas del equipo
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
+                  Crea cuentas para tu equipo de {adminBrand.label} y elige qué herramientas del
+                  panel puede usar cada una.
+                </p>
+              </div>
+
+              {teamError && (
+                <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {teamError}
+                </p>
+              )}
+
+              <form
+                onSubmit={handleCreateAccount}
+                className="mb-10 rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-6"
+              >
+                <h3 className="text-sm font-semibold text-[#4f545a]">Nueva cuenta</h3>
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  <label className="space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                      Nombre completo
+                    </span>
+                    <input
+                      required
+                      value={newAccountForm.fullName}
+                      onChange={(event) =>
+                        setNewAccountForm((current) => ({
+                          ...current,
+                          fullName: event.target.value,
+                        }))
+                      }
+                      placeholder="Nombre y apellido"
+                      className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                    />
+                  </label>
+
+                  <label className="space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                      Correo
+                    </span>
+                    <input
+                      required
+                      type="email"
+                      value={newAccountForm.email}
+                      onChange={(event) =>
+                        setNewAccountForm((current) => ({
+                          ...current,
+                          email: event.target.value,
+                        }))
+                      }
+                      placeholder="correo@geu.com.co"
+                      className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                    />
+                  </label>
+
+                  <label className="space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                      Contraseña
+                    </span>
+                    <input
+                      required
+                      type="password"
+                      minLength={8}
+                      value={newAccountForm.password}
+                      onChange={(event) =>
+                        setNewAccountForm((current) => ({
+                          ...current,
+                          password: event.target.value,
+                        }))
+                      }
+                      placeholder="Mínimo 8 caracteres"
+                      className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                    />
+                  </label>
+                </div>
+
+                <div className="mt-5">
+                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                    Herramientas habilitadas
+                  </span>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {assignableToolKeys.map((tool) => {
+                      const checked = newAccountForm.permissions.includes(tool);
+                      return (
+                        <button
+                          key={tool}
+                          type="button"
+                          onClick={() => toggleNewAccountPermission(tool)}
+                          className={`rounded-full border px-4 py-2 text-xs font-semibold transition-colors duration-200 ${
+                            checked
+                              ? "border-[var(--admin-accent)] bg-[var(--admin-accent)] text-white"
+                              : "border-black/10 bg-white text-[#4f545a] hover:border-[var(--admin-accent)]"
+                          }`}
+                        >
+                          {ADMIN_TOOL_LABELS[tool]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-[#8b8d91]">
+                    Marca "Cuentas" solo si esta persona también debe poder crear o editar otras
+                    cuentas del equipo.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isCreatingAccount || newAccountForm.permissions.length === 0}
+                  className="mt-6 inline-flex rounded-full bg-[var(--admin-accent)] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[var(--admin-accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isCreatingAccount ? "Creando..." : "Crear cuenta"}
+                </button>
+              </form>
+
+              <h3 className="mb-4 text-sm font-semibold text-[#4f545a]">Cuentas existentes</h3>
+
+              {isLoadingTeam ? (
+                <p className="text-sm text-[#6e7379]">Cargando cuentas...</p>
+              ) : teamAccounts.length === 0 ? (
+                <div className="rounded-[1.2rem] border border-dashed border-black/12 bg-white px-4 py-5 text-sm text-[#6e7379]">
+                  Todavía no has creado cuentas adicionales para tu equipo.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {teamAccounts.map((account) => {
+                    const isSaving = savingAccountId === account.id;
+                    return (
+                      <div
+                        key={account.id}
+                        className="rounded-[1.2rem] border border-black/8 bg-white p-5"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-[#1f2328]">
+                              {account.fullName}
+                            </p>
+                            <p className="text-xs text-[#8b8d91]">{account.email}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                account.active
+                                  ? "bg-[#effaf2] text-[#1f6b39]"
+                                  : "bg-[#fff1f1] text-[#c53b3b]"
+                              }`}
+                            >
+                              {account.active ? "Activa" : "Desactivada"}
+                            </span>
+                            <button
+                              type="button"
+                              disabled={isSaving}
+                              onClick={() => void handleToggleAccountActive(account)}
+                              className="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {account.active ? "Desactivar" : "Activar"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isSaving}
+                              onClick={() => void handleDeleteAccount(account)}
+                              className="rounded-full border border-red-200 px-4 py-2 text-xs font-semibold text-red-600 transition-colors duration-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {assignableToolKeys.map((tool) => {
+                            const checked = account.permissions.includes(tool);
+                            return (
+                              <button
+                                key={tool}
+                                type="button"
+                                disabled={isSaving}
+                                onClick={() => void handleToggleAccountPermission(account, tool)}
+                                className={`rounded-full border px-4 py-2 text-xs font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                  checked
+                                    ? "border-[var(--admin-accent)] bg-[var(--admin-accent)] text-white"
+                                    : "border-black/10 bg-white text-[#4f545a] hover:border-[var(--admin-accent)]"
+                                }`}
+                              >
+                                {ADMIN_TOOL_LABELS[tool]}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

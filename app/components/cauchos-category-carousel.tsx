@@ -93,7 +93,7 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
         ref={scrollerRef}
         style={visibleWidth ? { maxWidth: visibleWidth } : undefined}
         className={`mx-auto flex snap-x snap-mandatory overflow-x-auto scroll-smooth px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
-          accent === "red" ? "gap-7 py-2" : "gap-2 py-1"
+          accent === "red" ? "gap-7 py-2" : accent === "silver" ? "gap-5 py-2" : "gap-2 py-1"
         }`}
       >
         {categories.map((category) => (
@@ -102,9 +102,11 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
             href={category.href ?? "#productos"}
             title={category.title}
             className={
-              accent === "red" || accent === "silver"
+              accent === "red"
                 ? "group grid grid-cols-1 min-w-[150px] shrink-0 snap-start justify-items-center gap-3 px-2 py-2 text-center transition hover:-translate-y-1 md:min-w-[165px]"
-                : `group grid grid-cols-1 min-h-[156px] w-[210px] shrink-0 snap-start grid-rows-[5rem_auto_1rem] justify-items-center gap-2 rounded-[4px] border border-slate-200 bg-slate-50 px-3 py-3 text-center shadow-sm transition hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_42px_rgba(15,23,42,0.12)] md:min-h-[166px] md:w-[228px] md:grid-rows-[5.5rem_auto_1rem] ${tone.card}`
+                : accent === "silver"
+                  ? "group grid grid-cols-1 w-[152px] shrink-0 snap-start justify-items-center gap-4 px-3 py-4 text-center transition hover:-translate-y-1 md:w-[168px]"
+                  : `group grid grid-cols-1 min-h-[156px] w-[210px] shrink-0 snap-start grid-rows-[5rem_auto_1rem] justify-items-center gap-2 rounded-[4px] border border-slate-200 bg-slate-50 px-3 py-3 text-center shadow-sm transition hover:-translate-y-1 hover:bg-white hover:shadow-[0_18px_42px_rgba(15,23,42,0.12)] md:min-h-[166px] md:w-[228px] md:grid-rows-[5.5rem_auto_1rem] ${tone.card}`
             }
           >
             <span
@@ -124,7 +126,11 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
                 className="object-cover"
               />
             </span>
-            <span className={`${accent === "red" || accent === "silver" ? "min-h-9" : ""} block w-full min-w-0 break-words text-[13px] font-black leading-tight text-slate-950`}>
+            <span
+              className={`${
+                accent === "red" ? "min-h-9" : accent === "silver" ? "min-h-[3.25rem]" : ""
+              } block w-full min-w-0 break-words text-[13px] font-black leading-tight text-slate-950`}
+            >
               {category.title}
             </span>
             <span className="block self-start text-xs font-bold leading-none text-slate-500">

@@ -1,8 +1,9 @@
 import { getDevAdminUserById, getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import type { DivisionName } from "@/lib/divisions";
+import { hasAdminPermission, type AdminToolKey } from "@/lib/admin-permissions";
 
-export async function requireAdminUser() {
+export async function requireAdminUser(permission?: AdminToolKey) {
   const session = await getSessionFromCookies();
 
   if (!session) {
@@ -16,7 +17,11 @@ export async function requireAdminUser() {
 
   const user = await getUserById(session.userId);
 
-  if (!user || user.role !== "ADMIN" || !user.division) {
+  if (!user || user.role !== "ADMIN" || !user.division || !user.active) {
+    throw new Error("FORBIDDEN");
+  }
+
+  if (permission && !hasAdminPermission(user.permissions, permission)) {
     throw new Error("FORBIDDEN");
   }
 

@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import CauchosAccountLink from "./cauchos-account-link";
@@ -7,16 +9,28 @@ import CauchosCategorySidebarMenu from "./cauchos-category-sidebar-menu";
 import CauchosMenuButton from "./cauchos-menu-button";
 import { CauchosMenuProvider } from "./cauchos-menu-context";
 import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
+import { useSiteTexts } from "./use-site-texts";
+import { resolveText } from "@/lib/text-slots";
 
 type Props = {
   division?: DivisionName;
 };
 
 export default function CauchosHeader({ division = "Cauchos" }: Props) {
+  const siteTexts = useSiteTexts();
+  const phone = resolveText("header-phone", siteTexts);
   const brand = DIVISION_BRAND[division];
   const cartAccent = CART_ACCENT[division];
   const brandParam = division === "Cauchos" ? undefined : division.toLowerCase();
   const cartHref = brandParam ? `/carrito?brand=${brandParam}` : "/carrito";
+  const nosotrosHref =
+    division === "Import"
+      ? "/import/nosotros"
+      : division === "Cauchos"
+        ? "/cauchos/nosotros"
+        : division === "Plastic"
+          ? "/plastic/nosotros"
+          : "/quienes-somos";
 
   return (
     <CauchosMenuProvider>
@@ -27,7 +41,7 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
             style={{ "--brand-accent": brand.accent } as React.CSSProperties}
           >
             <div className="hidden gap-3 md:flex">
-              <span>Servicio al cliente 320 88 999 33</span>
+              <span>{phone}</span>
               <span className="text-slate-300">|</span>
               <span>Ventas empresariales</span>
               <span className="text-slate-300">|</span>
@@ -72,6 +86,9 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
             className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end"
             style={{ "--brand-accent": brand.accent } as React.CSSProperties}
           >
+            <Link href={nosotrosHref} className="font-bold hover:text-[var(--brand-accent)]">
+              Nosotros
+            </Link>
             <CauchosCartLink accent={cartAccent} href={cartHref} />
             <CauchosAccountLink className="font-bold hover:text-[var(--brand-accent)]" brand={brandParam} />
           </div>

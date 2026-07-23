@@ -3,9 +3,22 @@ import Link from "next/link";
 import SolutionsCarousel from "../energy/solutions-carousel";
 import CountUpStats from "./count-up-stats";
 import InnovationHeader from "./innovation-header";
+import SiteFooter from "../components/site-footer";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { getSiteTexts, resolveText } from "@/lib/site-texts";
 
 export const dynamic = "force-dynamic";
+
+const navItems = [
+  { label: "Inicio", href: "/" },
+  { label: "Cauchos", href: "/cauchos" },
+  { label: "Import", href: "/import" },
+  { label: "Innovation", href: "/innovation", active: true },
+  { label: "Energy", href: "/energy" },
+  { label: "Plastic", href: "/plastic" },
+  { label: "Nosotros", href: "/quienes-somos" },
+  { label: "Contacto", href: "/innovation#contacto" },
+];
 
 const heroVideo = "/geu-innovation-hero.mp4";
 const brandBannerImage = "/geu-innovation-brand-banner.png";
@@ -156,6 +169,8 @@ const heroStats = [
 
 export default async function InnovationPage() {
   const siteImages = await getSiteImages();
+  const siteTexts = await getSiteTexts();
+  const t = (key: string) => resolveText(key, siteTexts);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -177,7 +192,7 @@ export default async function InnovationPage() {
         <div className="relative z-10 mx-auto flex w-full max-w-[1500px] flex-1 flex-col items-center justify-center px-5 text-center md:px-8">
           <div className="innovation-hero-intro flex max-w-2xl flex-col items-center">
             <h1 className="font-[family:var(--font-display)] text-5xl font-black uppercase leading-none tracking-[0.02em] text-white/85 md:text-7xl">
-              Autoservicio inteligente
+              {t("innovation-hero-titulo")}
             </h1>
             <Link
               href="#soluciones"
@@ -219,7 +234,7 @@ export default async function InnovationPage() {
       <section id="soluciones" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
         <div className="py-14">
           <h2 className="mx-auto max-w-xl px-5 text-center text-3xl font-black tracking-[-0.02em] md:px-8 md:text-4xl">
-            Diseñamos puntos inteligentes a la medida de tu espacio.
+            {t("innovation-soluciones-titulo")}
           </h2>
           <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
             <SolutionsCarousel items={solutions} />
@@ -242,13 +257,13 @@ export default async function InnovationPage() {
             <div className="mx-auto w-full max-w-[1500px] px-5 md:px-8">
               <div className="max-w-md">
                 <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">
-                  Activa tu punto GEU <span className="h-px w-10 bg-[#0498b4]" />
+                  {t("innovation-sistema-eyebrow")} <span className="h-px w-10 bg-[#0498b4]" />
                 </p>
                 <h2 className="mt-3 font-[family:var(--font-display)] text-2xl font-black leading-[1.05] tracking-[-0.02em] text-white md:text-4xl">
-                  Un sistema que se adapta a tu operación.
+                  {t("innovation-sistema-titulo")}
                 </h2>
                 <p className="mt-3 hidden max-w-sm text-sm font-semibold leading-6 text-white/80 md:block">
-                  Simula, cotiza y activa un punto de autoservicio inteligente con la ayuda de nuestro equipo GEU Innovation.
+                  {t("innovation-sistema-subtitulo")}
                 </p>
                 <Link
                   href="#contacto"
@@ -266,10 +281,10 @@ export default async function InnovationPage() {
       <section id="proyectos" className="border-b border-white/10 bg-white text-slate-950">
         <div className="mx-auto max-w-[1500px] px-5 py-24 md:px-8 md:py-32">
           <h2 className="text-center text-5xl font-black tracking-[-0.02em] md:text-7xl">
-            Nuestros proyectos en el país
+            {t("innovation-proyectos-titulo")}
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-center text-base font-semibold leading-7 text-slate-500 md:text-xl">
-            Llevamos soluciones GEU Innovation a comunidades de todo el territorio nacional.
+            {t("innovation-proyectos-subtitulo")}
           </p>
         </div>
       </section>
@@ -278,13 +293,13 @@ export default async function InnovationPage() {
         <div className="py-14">
           <div className="mx-auto max-w-[1500px] px-5 md:px-8">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">
-              Proyecto GEU
+              {t("innovation-proyecto-estufas-eyebrow")}
             </p>
             <h2 className="mt-2 max-w-2xl text-3xl font-black tracking-[-0.02em] md:text-4xl">
-              Estufas ecoeficientes para hogares rurales
+              {t("innovation-proyecto-estufas-titulo")}
             </h2>
             <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
-              Diseñamos, entregamos e instalamos estufas ecoeficientes en comunidades rurales, acompañando a cada familia con capacitación y seguimiento en sitio.
+              {t("innovation-proyecto-estufas-subtitulo")}
             </p>
           </div>
           <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
@@ -317,13 +332,13 @@ export default async function InnovationPage() {
         <div className="py-14">
           <div className="mx-auto max-w-[1500px] px-5 md:px-8">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">
-              Fabricación GEU
+              {t("innovation-fabricacion-eyebrow")}
             </p>
             <h2 className="mt-2 max-w-2xl text-3xl font-black tracking-[-0.02em] md:text-4xl">
-              Así fabricamos nuestras estufas
+              {t("innovation-fabricacion-titulo")}
             </h2>
             <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
-              Cada estufa se corta, suelda, arma y pinta a mano en nuestro taller antes de salir hacia una familia.
+              {t("innovation-fabricacion-subtitulo")}
             </p>
           </div>
           <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
@@ -353,6 +368,19 @@ export default async function InnovationPage() {
         </div>
       </section>
 
+      <SiteFooter
+        logoSrc="/logo-geu-innovation.png"
+        logoAlt="GEU Innovation"
+        logoWidth={220}
+        tagline={t("footer-innovation-tagline")}
+        navItems={navItems}
+        accent="#0498b4"
+        variant="dark"
+        darkBg="#050505"
+        siteTexts={siteTexts}
+        maxWidth="1500px"
+        columns={[]}
+      />
     </main>
   );
 }

@@ -4,8 +4,12 @@ import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import CauchosHeader from "../components/cauchos-header";
 import CauchosProjectChat from "../components/cauchos-project-chat";
+import HeroVideo from "../components/hero-video";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
-import { getSiteImages, resolveImage } from "@/lib/site-images";
+import SiteFooter from "../components/site-footer";
+import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
+import { isVideoUrl } from "@/lib/image-slots";
+import { getSiteTexts, resolveText } from "@/lib/site-texts";
 import { getProducts } from "@/lib/products";
 import { importCategorias, slugify } from "../data/catalog";
 
@@ -18,14 +22,30 @@ const navItems = [
   { label: "Innovation", href: "/innovation" },
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/quienes-somos" },
+  { label: "Nosotros", href: "/import/nosotros" },
   { label: "Contacto", href: "#contacto" },
 ];
 
-const importCategories = importCategorias.map((title) => ({
+const IMPORT_CATEGORY_IMAGE_KEYS: Record<string, string> = {
+  "Láminas de caucho": "import-categoria-laminas",
+  "Empaquetaduras": "import-categoria-empaquetaduras",
+  "Plásticos de Ingeniería": "import-categoria-plasticos",
+  "Acoples OPW": "import-categoria-acoples-opw",
+  "Acoples Hidráulicos": "import-categoria-acoples-hidraulicos",
+  "Mangueras Hidráulicas": "import-categoria-mangueras-hidraulicas",
+  "Mangueras Industriales": "import-categoria-mangueras-industriales",
+  "Mangueras en PVC": "import-categoria-mangueras-pvc",
+  "Mangueras en caucho y lona": "import-categoria-mangueras-caucho-lona",
+  "Línea Neumática": "import-categoria-linea-neumatica",
+  "Aislamientos Térmicos": "import-categoria-aislamientos-termicos",
+  "Mercado Persa": "import-categoria-mercado-persa",
+  "Autopartes": "import-categoria-autopartes",
+};
+
+const importCategoriesBase = importCategorias.map((title) => ({
   label: title,
   title,
-  image: "/home-import.png",
+  imageKey: IMPORT_CATEGORY_IMAGE_KEYS[title] ?? "import-categoria-autopartes",
   count: "Ver productos",
   href: `/import/categoria/${slugify(title)}`,
 }));
@@ -42,38 +62,47 @@ const importFeatured = [
     title: "Importacion empresarial",
     href: "/import",
     imageKey: "import-destacada-1",
-    subtitle: "Compras internacionales gestionadas de punta a punta para tu operacion.",
-    ctaLabel: "Ver mas",
   },
   {
     title: "Proveedores verificados",
     href: "/import",
     imageKey: "import-destacada-2",
-    subtitle: "Red de fabricantes y distribuidores auditados en origen.",
-    ctaLabel: "Ver mas",
   },
   {
     title: "Logistica y aduana",
     href: "#contacto",
     imageKey: "import-destacada-3",
-    subtitle: "Nacionalizacion, trazabilidad y entrega puerta a puerta.",
-    ctaLabel: "Cotizar",
   },
   {
     title: "Abastecimiento recurrente",
     href: "#contacto",
     imageKey: "import-destacada-4",
-    subtitle: "Reposicion programada para que nunca te quedes sin inventario.",
-    ctaLabel: "Cotizar",
   },
 ];
 
 export default async function ImportPage() {
   const siteImages = await getSiteImages();
+  const siteImageLinks = await getSiteImageLinks();
+  const siteTexts = await getSiteTexts();
+  const t = (key: string) => resolveText(key, siteTexts);
   const allProducts = await getProducts();
   const importCatalog = allProducts.filter((product) => product.division === "Import");
   const importFeaturedProducts = importCatalog.filter((product) => product.destacado);
   const importProducts = (importFeaturedProducts.length > 0 ? importFeaturedProducts : importCatalog).slice(0, 4);
+  const importCategories = importCategoriesBase.map((category) => ({
+    ...category,
+    image: resolveImage(category.imageKey, siteImages),
+  }));
+  const importOffersResolved = importOffers.map((offer) => ({
+    ...offer,
+    title: t(offer.imageKey),
+    href: resolveLink(offer.imageKey, siteImageLinks, offer.href),
+  }));
+  const importFeaturedResolved = importFeatured.map((item) => ({
+    ...item,
+    title: t(item.imageKey),
+    href: resolveLink(item.imageKey, siteImageLinks, item.href),
+  }));
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
@@ -83,35 +112,53 @@ export default async function ImportPage() {
         <div className="mx-auto max-w-[1632px] px-5 py-7 md:px-8">
           <CauchosCategoryCarousel categories={importCategories} accent="red" />
         </div>
-        <div className="bg-white text-white">
-          <div
-            className="mx-auto flex min-h-14 w-full flex-wrap items-center justify-center gap-4 bg-[#e31313] px-5 py-3 text-center md:px-8"
-            style={{ maxWidth: "1632px" }}
-          >
-            <p className="text-lg font-black tracking-[-0.01em]">
-              Importacion empresarial y abastecimiento global
-            </p>
-            <span className="rounded bg-white px-3 py-1 text-sm font-black text-[#e31313]">
-              Asesoria integral
-            </span>
-            <span className="text-sm font-bold text-white/86">
-              Repuestos, partes tecnicas, compras por volumen y logistica internacional.
-            </span>
-          </div>
+        <div className="mx-auto w-full overflow-hidden bg-[#e31313]" style={{ maxWidth: "1632px" }}>
+          <CauchosProjectChat
+            division="Import"
+            triggerLabel={
+              <>
+                <span className="sr-only">¿Qué quieres importar?</span>
+                <span aria-hidden="true" className="geu-marquee-track flex w-max items-center">
+                  {[0, 1].map((groupIndex) => (
+                    <span key={groupIndex} className="flex items-center">
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <span
+                          key={i}
+                          className="flex items-center whitespace-nowrap px-5 text-xs font-black uppercase tracking-[0.14em] text-white"
+                        >
+                          ¿Qué quieres importar?
+                          <span className="ml-2">→</span>
+                          <span className="ml-5 text-white/45">✦</span>
+                        </span>
+                      ))}
+                    </span>
+                  ))}
+                </span>
+              </>
+            }
+            triggerClassName="geu-marquee-btn block w-full cursor-pointer overflow-hidden py-2.5 text-left"
+          />
         </div>
         <div className="bg-white">
           <div
             className="relative mx-auto aspect-[8/3] w-full overflow-hidden bg-slate-950"
             style={{ maxWidth: "1632px" }}
           >
-            <Image
-              src={resolveImage("import-principal", siteImages)}
-              alt="GEU Import conecta proveedores y mercados internacionales"
-              fill
-              priority
-              sizes="(min-width: 1632px) 1632px, 100vw"
-              className="object-cover object-center"
-            />
+            {isVideoUrl(resolveImage("import-principal", siteImages)) ? (
+              <HeroVideo
+                src={resolveImage("import-principal", siteImages)}
+                className="absolute inset-0 h-full w-full object-cover object-center"
+              />
+            ) : (
+              <Image
+                src={resolveImage("import-principal", siteImages)}
+                alt="GEU Import conecta proveedores y mercados internacionales"
+                fill
+                priority
+                sizes="(min-width: 1632px) 1632px, 100vw"
+                className="object-cover object-center"
+              />
+            )}
           </div>
         </div>
       </section>
@@ -121,13 +168,13 @@ export default async function ImportPage() {
           <div className="flex flex-wrap items-end justify-between gap-5">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[#e31313]">
-                Productos destacados
+                {t("import-productos-eyebrow")}
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] md:text-5xl">
-                Importados para compra empresarial
+                {t("import-productos-titulo")}
               </h2>
               <p className="mt-3 max-w-2xl text-base font-semibold leading-7 text-slate-500">
-                Seleccion de referencias para abastecimiento continuo, pedidos especiales y homologacion tecnica.
+                {t("import-productos-subtitulo")}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-[0.06em] text-slate-600">
@@ -211,10 +258,10 @@ export default async function ImportPage() {
 
       <BrandOfferSection
         accent="#e31313"
-        eyebrow="Ofertas Import"
-        title="Soluciones listas para importar"
+        eyebrow={t("import-ofertas-eyebrow")}
+        title={t("import-ofertas-titulo")}
         ctaHref="/import"
-        items={importOffers}
+        items={importOffersResolved}
         siteImages={siteImages}
         maxWidth="1632px"
       />
@@ -240,13 +287,13 @@ export default async function ImportPage() {
           <div className="relative grid gap-7 px-7 py-8 md:grid-cols-[1fr_auto] md:items-center md:px-10 md:py-10">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ffb3b3]">
-                Necesitas traer una referencia?
+                {t("import-contacto-eyebrow")}
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] text-white md:text-4xl">
-                Hablemos de tu importacion
+                {t("import-contacto-titulo")}
               </h2>
               <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-white/74">
-                Te ayudamos a comprar, importar, nacionalizar y entregar las partes que tu operacion necesita.
+                {t("import-contacto-subtitulo")}
               </p>
             </div>
             <CauchosProjectChat
@@ -258,9 +305,19 @@ export default async function ImportPage() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-[1632px] px-5 pb-10 md:px-8">
+        <Image
+          src={resolveImage("import-marcas-promo", siteImages)}
+          alt="Promociones y marcas GEU Import"
+          width={2048}
+          height={768}
+          className="h-auto w-full rounded-[10px] border border-slate-200 shadow-[0_18px_44px_rgba(15,23,42,0.12)]"
+        />
+      </section>
+
       <BrandFeaturedSection
-        title="Nuestras marcas destacadas"
-        items={importFeatured}
+        title={t("import-marcas-titulo")}
+        items={importFeaturedResolved}
         siteImages={siteImages}
         compact
         maxWidth="1632px"
@@ -273,50 +330,25 @@ export default async function ImportPage() {
         maxWidth="1632px"
       />
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-[1632px] gap-8 px-5 py-10 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:px-8">
-          <div>
-            <Image
-              src="/logo-geu-import.png"
-              alt="GEU Import"
-              width={2000}
-              height={452}
-              className="h-auto w-[250px] max-w-full object-contain"
-            />
-            <p className="mt-5 max-w-[280px] text-sm leading-6 text-slate-600">
-              Conectamos mercados y generamos oportunidades para que tu negocio no tenga limites.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Enlaces rapidos</h3>
-            <div className="mt-4 grid gap-2 text-sm font-bold text-slate-500">
-              {navItems.slice(0, 6).map((item) => (
-                <Link key={item.label} href={item.href} className={item.active ? "text-[#e31313]" : "hover:text-[#e31313]"}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Servicios</h3>
-            <div className="mt-4 grid gap-2 text-sm font-bold text-slate-500">
-              {["Importacion", "Fletes", "Aduana", "Abastecimiento", "Distribucion"].map((item) => (
-                <span key={item}>{item}</span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-[0.12em]">Certificaciones</h3>
-            <div className="mt-5 flex gap-3">
-              {["ISO 9001", "BASC", "OEA"].map((item) => (
-                <span key={item} className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-center text-[10px] font-black text-slate-600">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter
+        logoSrc="/logo-geu-import.png"
+        logoAlt="GEU Import"
+        tagline={t("footer-import-tagline")}
+        navItems={navItems}
+        accent="#e31313"
+        siteTexts={siteTexts}
+        columns={[
+          {
+            title: t("footer-import-col3-title"),
+            items: t("footer-import-col3-items").split(",").map((s) => s.trim()).filter(Boolean),
+          },
+          {
+            title: t("footer-import-col4-title"),
+            items: t("footer-import-col4-items").split(",").map((s) => s.trim()).filter(Boolean),
+            style: "badges",
+          },
+        ]}
+      />
     </main>
   );
 }

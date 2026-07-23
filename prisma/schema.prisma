@@ -97,6 +97,8 @@ model User {
   passwordHash String
   role         UserRole  @default(CUSTOMER)
   division     Division?
+  permissions  String[]  @default([])
+  active       Boolean   @default(true)
   cartItems    CartItem[]
   orders       Order[]
   quotes       Quote[]
@@ -142,6 +144,7 @@ model Order {
   shippedAt     DateTime?
   deliveredAt   DateTime?
   subtotal      Int
+  shippingCost  Int           @default(0)
   totalItems    Int
   items         OrderItem[]
   createdAt     DateTime      @default(now())
@@ -176,6 +179,12 @@ model SiteImage {
   key       String   @id
   url       String
   link      String?
+  updatedAt DateTime @updatedAt
+}
+
+model SiteSetting {
+  key       String   @id
+  value     String
   updatedAt DateTime @updatedAt
 }
 

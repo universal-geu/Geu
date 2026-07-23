@@ -6,7 +6,7 @@ export async function PATCH(
   context: { params: Promise<{ slug: string }> },
 ) {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUser("edit");
     const { slug } = await context.params;
     const existingDivision = await getProductDivision(slug);
 
@@ -46,7 +46,7 @@ export async function DELETE(
   context: { params: Promise<{ slug: string }> },
 ) {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUser("edit");
     const { slug } = await context.params;
     const existingDivision = await getProductDivision(slug);
 

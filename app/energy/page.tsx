@@ -2,9 +2,22 @@ import Image from "next/image";
 import Link from "next/link";
 import SolutionsCarousel from "./solutions-carousel";
 import EnergyHeader from "./energy-header";
+import SiteFooter from "../components/site-footer";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { getSiteTexts, resolveText } from "@/lib/site-texts";
 
 export const dynamic = "force-dynamic";
+
+const navItems = [
+  { label: "Inicio", href: "/" },
+  { label: "Cauchos", href: "/cauchos" },
+  { label: "Import", href: "/import" },
+  { label: "Innovation", href: "/innovation" },
+  { label: "Energy", href: "/energy", active: true },
+  { label: "Plastic", href: "/plastic" },
+  { label: "Nosotros", href: "/quienes-somos" },
+  { label: "Contacto", href: "/energy#contacto" },
+];
 
 const heroVideo = "/geu-energy-hero-field.mp4";
 const orbitStatsImage = "/geu-energy-orbit-stats.png";
@@ -100,6 +113,8 @@ const systemSteps = [
 
 export default async function EnergyPage() {
   const siteImages = await getSiteImages();
+  const siteTexts = await getSiteTexts();
+  const t = (key: string) => resolveText(key, siteTexts);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -122,13 +137,13 @@ export default async function EnergyPage() {
           <div className="max-w-2xl">
             <span className="block h-1 w-24 bg-[#ffd400] shadow-[0_0_28px_rgba(255,212,0,0.7)]" />
             <p className="mt-6 text-sm font-black uppercase tracking-[0.18em] text-[#ffd400]">
-              GEU Energy
+              {t("energy-hero-eyebrow")}
             </p>
             <h1 className="mt-4 font-[family:var(--font-display)] text-5xl font-black uppercase leading-none tracking-[0.02em] md:text-7xl">
-              Creamos la energía del mañana
+              {t("energy-hero-titulo")}
             </h1>
             <p className="mt-6 max-w-xl text-base font-semibold leading-7 text-white/78 md:text-lg">
-              Soluciones energéticas inteligentes para un futuro sostenible.
+              {t("energy-hero-subtitulo")}
             </p>
             <Link
               href="#soluciones"
@@ -195,7 +210,7 @@ export default async function EnergyPage() {
       <section id="soluciones" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
         <div className="py-14">
           <h2 className="mx-auto max-w-xl px-5 text-center text-3xl font-black tracking-[-0.02em] md:px-8 md:text-4xl">
-            Diseñamos soluciones a la medida de tus necesidades.
+            {t("energy-soluciones-titulo")}
           </h2>
           <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
             <SolutionsCarousel items={solutions} />
@@ -231,13 +246,13 @@ export default async function EnergyPage() {
         <div className="relative mx-auto grid min-h-[640px] max-w-[1500px] items-center gap-10 px-5 py-16 md:px-8 lg:grid-cols-[1fr_0.85fr]">
           <div className="max-w-xl">
             <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.16em] text-[#ffd400]">
-              Diseña tu sistema <span className="h-px w-10 bg-[#ffd400]" />
+              {t("energy-sistema-eyebrow")} <span className="h-px w-10 bg-[#ffd400]" />
             </p>
             <h2 className="mt-4 font-[family:var(--font-display)] text-4xl font-black leading-[1.05] tracking-[-0.02em] md:text-5xl">
-              Soluciones a la medida de tu proyecto.
+              {t("energy-sistema-titulo")}
             </h2>
             <p className="mt-5 max-w-sm text-sm font-semibold leading-6 text-white/75">
-              Simula, cotiza y diseña un sistema energético eficiente con la ayuda de nuestra tecnología y de Gus.
+              {t("energy-sistema-subtitulo")}
             </p>
             <Link
               href="#contacto"
@@ -278,6 +293,19 @@ export default async function EnergyPage() {
         </div>
       </section>
 
+      <SiteFooter
+        logoSrc="/logo-geu-energy.png"
+        logoAlt="GEU Energy"
+        logoWidth={220}
+        tagline={t("footer-energy-tagline")}
+        navItems={navItems}
+        accent="#ffd400"
+        variant="dark"
+        darkBg="#050505"
+        siteTexts={siteTexts}
+        maxWidth="1500px"
+        columns={[]}
+      />
     </main>
   );
 }

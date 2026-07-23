@@ -23,7 +23,7 @@ function createEmptyReport(): SalesReport {
 
 export async function GET() {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUser("reports");
     const report = await getSalesReport(admin.division);
 
     return Response.json({ report });

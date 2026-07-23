@@ -9,7 +9,7 @@ function normalizeDivision(value: unknown): DivisionName {
 
 export async function GET() {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUser("quotes");
     const quotes = await getQuotesForDivision(admin.division);
 
     return Response.json({ quotes });
