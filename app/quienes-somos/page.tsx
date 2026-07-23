@@ -1,13 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
+import SiteFooter from "../components/site-footer";
+import { getSiteTexts, resolveText } from "@/lib/site-texts";
 
 const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Nosotros", href: "/quienes-somos", active: true },
-  { label: "Unidades de negocio", href: "/#unidades" },
-  { label: "Sostenibilidad", href: "#ecosistema" },
-  { label: "Noticias", href: "#noticias" },
-  { label: "Contacto", href: "#contacto" },
+  { label: "Unidades de negocio", href: "#ecosistema" },
 ];
 
 const metrics = [
@@ -51,7 +50,13 @@ const ecosystemLabels = [
   },
 ];
 
-export default function QuienesSomosPage() {
+export const dynamic = "force-dynamic";
+
+export default async function QuienesSomosPage() {
+  const siteTexts = await getSiteTexts();
+  const t = (key: string) => resolveText(key, siteTexts);
+  const heroTitleLines = t("quienes-somos-hero-titulo").split("\n");
+
   return (
     <main className="min-h-screen bg-white text-[#071832]">
       <header className="absolute inset-x-0 top-0 z-20">
@@ -100,14 +105,12 @@ export default function QuienesSomosPage() {
             </p>
             <span className="mt-3 block h-[2px] w-16 bg-[#075ed8]" />
             <h1 className="mt-8 text-[clamp(3rem,5vw,5.7rem)] font-black leading-[0.95] tracking-[-0.04em]">
-              Impulsamos industrias.
-              <span className="block text-black">Construimos el futuro.</span>
+              {heroTitleLines[0]}
+              {heroTitleLines[1] && <span className="block text-black">{heroTitleLines[1]}</span>}
             </h1>
             <span className="mt-10 block h-[2px] w-16 bg-[#075ed8]" />
             <p className="mt-8 max-w-[470px] text-base font-semibold leading-8 text-[#26364b]">
-              Somos una organización dedicada a consolidar, preservar y acrecentar la confianza de
-              los clientes mediante soluciones integrales en caucho, importación, innovación,
-              energía y plásticos, con procesos diseñados para generar valor sostenible.
+              {t("quienes-somos-hero-subtitulo")}
             </p>
           </div>
         </div>
@@ -124,8 +127,7 @@ export default function QuienesSomosPage() {
                 Misión
               </h2>
               <p className="mt-4 max-w-md text-xl font-semibold leading-8 text-[#1d2b3d]">
-                Consolidar empresas industriales que creen soluciones confiables y eleven el
-                estándar técnico del mercado colombiano.
+                {t("quienes-somos-mision-texto")}
               </p>
             </div>
           </article>
@@ -138,8 +140,8 @@ export default function QuienesSomosPage() {
               <h2 className="text-sm font-black uppercase tracking-[0.08em] text-[#075ed8]">
                 Visión
               </h2>
-              <p className="mt-3 text-7xl font-black tracking-[-0.05em] text-[#071832]">
-                2025
+              <p className="mt-4 max-w-md text-xl font-semibold leading-8 text-[#1d2b3d]">
+                {t("quienes-somos-vision-texto")}
               </p>
             </div>
           </article>
@@ -149,7 +151,7 @@ export default function QuienesSomosPage() {
       <section id="ecosistema" className="relative overflow-hidden bg-[#f4f7fb] py-10">
         <div className="mx-auto max-w-[1720px] px-7 text-center md:px-12">
           <h2 className="text-lg font-black uppercase tracking-[0.06em] text-[#0b2f7e]">
-            Nuestro ecosistema
+            {t("quienes-somos-ecosistema-titulo")}
           </h2>
           <span className="mx-auto mt-3 block h-[2px] w-16 bg-[#075ed8]" />
         </div>
@@ -222,63 +224,32 @@ export default function QuienesSomosPage() {
           <div className="max-w-[500px]">
             <span className="block h-[2px] w-16 bg-[#075ed8]" />
             <h2 className="mt-8 text-5xl font-black leading-[1.03] tracking-[-0.04em]">
-              Un ecosistema que trabaja como uno solo.
+              {t("quienes-somos-contacto-titulo")}
             </h2>
             <p className="mt-6 max-w-[420px] text-base font-semibold leading-8 text-white/82">
-              Integramos capacidades, tecnología y talento para ofrecer soluciones completas y
-              generar valor en cada industria donde participamos.
+              {t("quienes-somos-contacto-subtitulo")}
             </p>
           </div>
         </div>
       </section>
 
-      <footer className="bg-[#061735] text-white">
-        <div className="mx-auto grid max-w-[1720px] gap-10 px-7 py-10 md:grid-cols-[1.2fr_1fr_1fr_1fr] md:px-12">
-          <div>
-            <Image
-              src="/home-geu-logo.png"
-              alt="GEU Grupo Empresarial Universal"
-              width={3422}
-              height={1256}
-              className="h-auto w-[150px] brightness-0 invert"
-            />
-            <p className="mt-5 max-w-[330px] text-sm font-semibold leading-6 text-white/70">
-              Impulsamos industrias a través de soluciones integrales, innovación y compromiso con
-              la excelencia.
-            </p>
-          </div>
-
-          <div className="grid gap-3 text-sm font-black uppercase text-white/82">
-            <Link href="/">Inicio</Link>
-            <Link href="/quienes-somos">Nosotros</Link>
-            <Link href="/#unidades">Unidades de negocio</Link>
-          </div>
-
-          <div className="grid gap-3 text-sm font-black uppercase text-white/82">
-            <Link href="#ecosistema">Sostenibilidad</Link>
-            <Link href="#noticias">Noticias</Link>
-            <Link href="#contacto">Contacto</Link>
-          </div>
-
-          <div>
-            <p className="text-sm font-black uppercase text-white/82">Síguenos</p>
-            <div className="mt-4 flex gap-3">
-              {["in", "ig", "yt"].map((item) => (
-                <span
-                  key={item}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/35 text-xs font-black uppercase"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="mx-auto flex max-w-[1720px] justify-between border-t border-white/10 px-7 py-5 text-xs font-semibold text-white/55 md:px-12">
-          <span>© 2024 GEU - Grupo Empresarial Universal.</span>
-          <span>Política de privacidad · Términos y condiciones</span>
-        </div>
-      </footer>
+      <SiteFooter
+        logoSrc="/home-geu-logo.png"
+        logoAlt="GEU Grupo Empresarial Universal"
+        logoWidth={150}
+        tagline={t("footer-quienes-somos-tagline")}
+        navItems={[
+          { label: "Inicio", href: "/" },
+          { label: "Nosotros", href: "/quienes-somos", active: true },
+          { label: "Unidades de negocio", href: "#ecosistema" },
+          { label: "Contacto", href: "#contacto" },
+        ]}
+        accent="#075ed8"
+        variant="dark"
+        siteTexts={siteTexts}
+        maxWidth="1720px"
+        columns={[]}
+      />
     </main>
   );
 }

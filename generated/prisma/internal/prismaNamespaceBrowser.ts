@@ -58,6 +58,7 @@ export const ModelName = {
   OrderItem: 'OrderItem',
   InventoryMovement: 'InventoryMovement',
   SiteImage: 'SiteImage',
+  SiteSetting: 'SiteSetting',
   Quote: 'Quote'
 } as const
 
@@ -124,6 +125,8 @@ export const UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   role: 'role',
   division: 'division',
+  permissions: 'permissions',
+  active: 'active',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -168,6 +171,7 @@ export const OrderScalarFieldEnum = {
   shippedAt: 'shippedAt',
   deliveredAt: 'deliveredAt',
   subtotal: 'subtotal',
+  shippingCost: 'shippingCost',
   totalItems: 'totalItems',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -212,6 +216,15 @@ export const SiteImageScalarFieldEnum = {
 } as const
 
 export type SiteImageScalarFieldEnum = (typeof SiteImageScalarFieldEnum)[keyof typeof SiteImageScalarFieldEnum]
+
+
+export const SiteSettingScalarFieldEnum = {
+  key: 'key',
+  value: 'value',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SiteSettingScalarFieldEnum = (typeof SiteSettingScalarFieldEnum)[keyof typeof SiteSettingScalarFieldEnum]
 
 
 export const QuoteScalarFieldEnum = {

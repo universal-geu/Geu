@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-locations";
 import { formatOrderCode } from "@/lib/format-order";
+import { calculateShippingCost } from "@/lib/shipping";
 import CauchosHeader from "../components/cauchos-header";
 import { DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
 
@@ -49,7 +50,30 @@ type PendingOrderState = {
   id: string;
   totalItems: number;
   subtotal: number;
+  shippingCost: number;
 } | null;
+
+type Destination = {
+  key: string;
+  label: string;
+  department: string;
+  city: string;
+  addressLine1: string;
+  addressLine2: string;
+  quantities: Record<string, number>;
+};
+
+function createDestination(index: number): Destination {
+  return {
+    key: `destino-${Date.now()}-${index}`,
+    label: `Destino ${index}`,
+    department: "",
+    city: "",
+    addressLine1: "",
+    addressLine2: "",
+    quantities: {},
+  };
+}
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-CO", {
@@ -90,10 +114,96 @@ export default function CheckoutForm({
   const [pendingOrder, setPendingOrder] = useState<PendingOrderState>(null);
   const [paymentCode, setPaymentCode] = useState("");
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
+  const [splitShipping, setSplitShipping] = useState(false);
+  const [destinations, setDestinations] = useState<Destination[]>([createDestination(1)]);
   const cityOptions = useMemo(
     () => getCitiesForDepartment(form.department),
     [form.department],
   );
+  const shippingCost = useMemo(() => calculateShippingCost(form.city), [form.city]);
+
+  const splitTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    for (const destination of destinations) {
+      for (const [itemId, qty] of Object.entries(destination.quantities)) {
+        totals[itemId] = (totals[itemId] ?? 0) + qty;
+      }
+    }
+    return totals;
+  }, [destinations]);
+
+  const handleToggleSplitShipping = () => {
+    setSplitShipping((current) => {
+      const nextValue = !current;
+      if (nextValue && destinations.length === 0) {
+        setDestinations([createDestination(1)]);
+      }
+      return nextValue;
+    });
+  };
+
+  const updateDestinationField = (
+    key: string,
+    field: "department" | "city" | "addressLine1" | "addressLine2" | "label",
+    value: string,
+  ) => {
+    setDestinations((current) =>
+      current.map((destination) =>
+        destination.key === key
+          ? {
+              ...destination,
+              [field]: value,
+              ...(field === "department" ? { city: "" } : {}),
+            }
+          : destination,
+      ),
+    );
+  };
+
+  const updateDestinationQuantity = (key: string, itemId: string, delta: number) => {
+    setDestinations((current) =>
+      current.map((destination) => {
+        if (destination.key !== key) return destination;
+        const item = items.find((entry) => entry.id === itemId);
+        const totalAvailable = item?.cantidad ?? 0;
+        const assignedElsewhere = current
+          .filter((entry) => entry.key !== key)
+          .reduce((sum, entry) => sum + (entry.quantities[itemId] ?? 0), 0);
+        const max = Math.max(0, totalAvailable - assignedElsewhere);
+        const currentQty = destination.quantities[itemId] ?? 0;
+        const nextQty = Math.max(0, Math.min(max, currentQty + delta));
+        return {
+          ...destination,
+          quantities: { ...destination.quantities, [itemId]: nextQty },
+        };
+      }),
+    );
+  };
+
+  const addDestination = () => {
+    setDestinations((current) => [...current, createDestination(current.length + 1)]);
+  };
+
+  const removeDestination = (key: string) => {
+    setDestinations((current) => current.filter((destination) => destination.key !== key));
+  };
+
+  const buildSplitNotes = () => {
+    const lines = destinations
+      .filter((destination) => Object.values(destination.quantities).some((qty) => qty > 0))
+      .map((destination) => {
+        const addressText = [destination.addressLine1, destination.addressLine2, destination.city, destination.department]
+          .filter(Boolean)
+          .join(", ");
+        const itemLines = items
+          .filter((item) => (destination.quantities[item.id] ?? 0) > 0)
+          .map((item) => `  - ${item.nombre} x${destination.quantities[item.id]}`)
+          .join("\n");
+        return `📍 ${destination.label} (${addressText || "sin dirección especificada"}):\n${itemLines}`;
+      });
+
+    return lines.join("\n\n");
+  };
 
   useEffect(() => {
     if (!toast) return;
@@ -141,18 +251,23 @@ export default function CheckoutForm({
     setToast(null);
     setIsSubmitting(true);
 
+    const splitNotes = splitShipping ? buildSplitNotes() : "";
+    const finalNotes = [form.notes, splitNotes ? `ENVÍO A DIFERENTES DIRECCIONES:\n${splitNotes}` : ""]
+      .filter(Boolean)
+      .join("\n\n");
+
     const response = await fetch("/api/orders", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, notes: finalNotes }),
     });
 
     const payload = (await response.json()) as {
       error?: string;
       message?: string;
-      order?: { id: string; totalItems: number; subtotal: number };
+      order?: { id: string; totalItems: number; subtotal: number; shippingCost: number };
     };
 
     setIsSubmitting(false);
@@ -246,7 +361,7 @@ export default function CheckoutForm({
                   Total
                 </p>
                 <p className="mt-2 text-sm font-semibold text-[#16384f]">
-                  {formatCurrency(pendingOrder.subtotal)}
+                  {formatCurrency(pendingOrder.subtotal + pendingOrder.shippingCost)}
                 </p>
               </div>
             </div>
@@ -506,6 +621,180 @@ export default function CheckoutForm({
               </div>
             </div>
 
+            {items.length >= 2 && (
+              <div className="mt-8 rounded-[1.25rem] border border-black/8 bg-[#fafaf9] p-5">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={splitShipping}
+                    onChange={handleToggleSplitShipping}
+                    className="mt-1 h-4 w-4 rounded border-slate-300 text-[var(--brand-accent)] focus:ring-[var(--brand-accent)]"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-[#16384f]">
+                      ¿Deseas enviar los productos a diferentes direcciones?
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-[#6e7379]">
+                      Reparte las cantidades de este pedido entre varios destinos, cada uno con su
+                      propia dirección de entrega.
+                    </p>
+                  </div>
+                </label>
+
+                {splitShipping && (
+                  <div className="mt-6 space-y-5">
+                    {destinations.map((destination) => (
+                      <div
+                        key={destination.key}
+                        className="rounded-[1.1rem] border border-black/8 bg-white p-4"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <input
+                            value={destination.label}
+                            onChange={(event) =>
+                              updateDestinationField(destination.key, "label", event.target.value)
+                            }
+                            className="w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-[#16384f] outline-none focus:border-[var(--brand-accent)]"
+                          />
+                          {destinations.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeDestination(destination.key)}
+                              className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-[#6e7379] transition-colors duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                            >
+                              Quitar destino
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="mt-4 grid gap-3 md:grid-cols-2">
+                          <select
+                            value={destination.department}
+                            onChange={(event) =>
+                              updateDestinationField(destination.key, "department", event.target.value)
+                            }
+                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--brand-accent)]"
+                          >
+                            <option value="">Departamento</option>
+                            {departamentosColombia.map((department) => (
+                              <option key={department} value={department}>
+                                {department}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            value={destination.city}
+                            onChange={(event) =>
+                              updateDestinationField(destination.key, "city", event.target.value)
+                            }
+                            list={`destino-cities-${destination.key}`}
+                            disabled={!destination.department}
+                            placeholder={destination.department ? "Ciudad" : "Primero elige un departamento"}
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[var(--brand-accent)]"
+                          />
+                          <datalist id={`destino-cities-${destination.key}`}>
+                            {getCitiesForDepartment(destination.department).map((city) => (
+                              <option key={city} value={city} />
+                            ))}
+                          </datalist>
+                          <input
+                            value={destination.addressLine1}
+                            onChange={(event) =>
+                              updateDestinationField(destination.key, "addressLine1", event.target.value)
+                            }
+                            placeholder="Dirección de entrega"
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[var(--brand-accent)]"
+                          />
+                          <input
+                            value={destination.addressLine2}
+                            onChange={(event) =>
+                              updateDestinationField(destination.key, "addressLine2", event.target.value)
+                            }
+                            placeholder="Apto, interior, piso..."
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[var(--brand-accent)]"
+                          />
+                        </div>
+
+                        <div className="mt-4 space-y-2 border-t border-slate-100 pt-4">
+                          {items.map((item) => {
+                            const assignedElsewhere = destinations
+                              .filter((entry) => entry.key !== destination.key)
+                              .reduce((sum, entry) => sum + (entry.quantities[item.id] ?? 0), 0);
+                            const max = Math.max(0, item.cantidad - assignedElsewhere);
+                            const qty = destination.quantities[item.id] ?? 0;
+
+                            return (
+                              <div key={item.id} className="flex items-center justify-between gap-3 text-sm">
+                                <span className="min-w-0 flex-1 truncate text-[#4f545a]">{item.nombre}</span>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => updateDestinationQuantity(destination.key, item.id, -1)}
+                                    disabled={qty <= 0}
+                                    className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-sm font-bold text-slate-500 transition-colors duration-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                  >
+                                    -
+                                  </button>
+                                  <span className="w-6 text-center text-sm font-semibold text-[#16384f]">
+                                    {qty}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateDestinationQuantity(destination.key, item.id, 1)}
+                                    disabled={qty >= max}
+                                    className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-sm font-bold text-slate-500 transition-colors duration-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={addDestination}
+                      className="rounded-full border border-[var(--brand-accent)]/40 px-5 py-2.5 text-sm font-semibold text-[var(--brand-accent)] transition-colors duration-200 hover:bg-[var(--brand-accent)] hover:text-white"
+                    >
+                      + Agregar otro destino
+                    </button>
+
+                    <div className="rounded-[1.1rem] border border-black/8 bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
+                        Resumen de asignación
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {items.map((item) => {
+                          const assigned = splitTotals[item.id] ?? 0;
+                          const status =
+                            assigned === item.cantidad
+                              ? { text: "Completo", className: "text-[#1f8b45]" }
+                              : assigned > item.cantidad
+                                ? { text: "Excedido", className: "text-red-600" }
+                                : { text: "Pendiente", className: "text-[#b45309]" };
+
+                          return (
+                            <div key={item.id} className="flex items-center justify-between gap-3 text-sm">
+                              <span className="min-w-0 flex-1 truncate text-[#4f545a]">{item.nombre}</span>
+                              <span className="text-[#6e7379]">
+                                {assigned}/{item.cantidad}
+                              </span>
+                              <span className={`text-xs font-semibold ${status.className}`}>
+                                {status.text}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {inlineError && (
               <p className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
                 {inlineError}
@@ -569,6 +858,18 @@ export default function CheckoutForm({
                 <span>Subtotal</span>
                 <span className="font-semibold text-[#16384f]">
                   {formatCurrency(subtotal)}
+                </span>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-sm text-[#5d6167]">
+                <span>Envío{form.city ? ` (${form.city})` : ""}</span>
+                <span className="font-semibold text-[#16384f]">
+                  {formatCurrency(shippingCost)}
+                </span>
+              </div>
+              <div className="mt-3 flex items-center justify-between border-t border-black/8 pt-3 text-sm text-[#5d6167]">
+                <span>Total</span>
+                <span className="font-semibold text-[#16384f]">
+                  {formatCurrency(subtotal + shippingCost)}
                 </span>
               </div>
               <div className="mt-3 flex items-center justify-between text-sm text-[#5d6167]">

@@ -3,6 +3,9 @@ import type { DivisionName } from "@/lib/divisions";
 import { DIVISION_ADMIN_EMAILS, DIVISION_BRAND } from "@/lib/divisions";
 import { emailLayout, sendEmail } from "@/lib/email";
 import { formatOrderCode } from "@/lib/format-order";
+import { calculateShippingCost } from "@/lib/shipping";
+
+export { calculateShippingCost };
 
 export type CheckoutInput = {
   customerName: string;
@@ -110,6 +113,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
     0,
   );
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const shippingCost = calculateShippingCost(city);
 
   const order = await prisma.$transaction(async (tx) => {
     const productSlugs = cartItems.map((item) => item.productId);
@@ -152,6 +156,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
         addressLine2,
         notes,
         subtotal,
+        shippingCost,
         totalItems,
         items: {
           create: cartItems.map((item) => {
@@ -232,6 +237,7 @@ async function sendOrderConfirmationEmails(order: {
   customerName: string;
   customerEmail: string;
   subtotal: number;
+  shippingCost: number;
   totalItems: number;
   items: Array<{ name: string; quantity: number; lineTotal: number }>;
 }) {
@@ -244,6 +250,7 @@ async function sendOrderConfirmationEmails(order: {
         </tr>`,
     )
     .join("");
+  const grandTotal = order.subtotal + order.shippingCost;
 
   await sendEmail({
     to: order.customerEmail,
@@ -254,7 +261,9 @@ async function sendOrderConfirmationEmails(order: {
         Hola ${order.customerName}, recibimos tu pedido <strong>${formatOrderCode(order.id)}</strong> y ya quedó guardado en tu cuenta.
       </p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">${itemsHtml}</table>
-      <p style="margin-top:16px;font-size:16px;font-weight:900;color:#16384f;">Total: ${formatCurrency(order.subtotal)}</p>`,
+      <p style="margin-top:16px;font-size:14px;color:#6e7379;">Subtotal: ${formatCurrency(order.subtotal)}</p>
+      <p style="margin-top:4px;font-size:14px;color:#6e7379;">Envío: ${formatCurrency(order.shippingCost)}</p>
+      <p style="margin-top:8px;font-size:16px;font-weight:900;color:#16384f;">Total: ${formatCurrency(grandTotal)}</p>`,
       order.division,
     ),
   });
@@ -265,7 +274,7 @@ async function sendOrderConfirmationEmails(order: {
     html: emailLayout(
       "Nuevo pedido recibido",
       `<p style="color:#6e7379;font-size:14px;line-height:22px;">
-        ${order.customerName} (${order.customerEmail}) hizo un pedido de ${order.totalItems} producto${order.totalItems === 1 ? "" : "s"} por ${formatCurrency(order.subtotal)}.
+        ${order.customerName} (${order.customerEmail}) hizo un pedido de ${order.totalItems} producto${order.totalItems === 1 ? "" : "s"} por ${formatCurrency(grandTotal)} (incluye envío de ${formatCurrency(order.shippingCost)}).
       </p>`,
       order.division,
     ),

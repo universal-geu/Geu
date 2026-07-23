@@ -77,6 +77,11 @@ export type InventoryMovement = Prisma.InventoryMovementModel
  */
 export type SiteImage = Prisma.SiteImageModel
 /**
+ * Model SiteSetting
+ * 
+ */
+export type SiteSetting = Prisma.SiteSettingModel
+/**
  * Model Quote
  * 
  */

@@ -7,14 +7,18 @@ import {
   cauchosCategorySubcategories,
   categoriasData,
   importCategoriasData,
+  plasticCategoriasData,
   getCategoriasForDivision,
   slugify,
 } from "../data/catalog";
 import { useProducts } from "./products-provider";
 import { useCauchosMenu } from "./cauchos-menu-context";
 import CauchosTechnicalForm from "./cauchos-technical-form";
+import CauchosProjectChat from "./cauchos-project-chat";
 import { useSiteImages } from "./use-site-images";
+import { useSiteTexts } from "./use-site-texts";
 import { resolveImage } from "@/lib/image-slots";
+import { resolveText, categoryLabelKey } from "@/lib/text-slots";
 import type { DivisionName } from "@/lib/divisions";
 
 function CupIcon() {
@@ -239,7 +243,7 @@ const SUBCATEGORY_ICONS: Record<string, () => React.JSX.Element> = {
 };
 
 const DEPARTMENT_COLORS: Record<string, string> = Object.fromEntries(
-  [...categoriasData, ...importCategoriasData].map((item) => [item.nombre, item.color]),
+  [...categoriasData, ...importCategoriasData, ...plasticCategoriasData].map((item) => [item.nombre, item.color]),
 );
 
 type Props = {
@@ -256,6 +260,8 @@ export default function CauchosCategorySidebarMenu({
   const { products } = useProducts();
   const { isOpen, close } = useCauchosMenu();
   const siteImages = useSiteImages();
+  const siteTexts = useSiteTexts();
+  const categoryLabel = (nombre: string) => resolveText(categoryLabelKey(division, nombre), siteTexts, nombre);
   const cauchosBasePath = basePath || "/cauchos";
   const [activeDept, setActiveDept] = useState<string | null>(null);
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
@@ -340,21 +346,102 @@ export default function CauchosCategorySidebarMenu({
     return null;
   }
 
-  if (division === "Plastic") {
+  if (division === "Import") {
     return (
       <div
-        className="absolute inset-x-0 top-full z-40 border-t border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]"
+        className="absolute inset-x-0 top-full z-40 shadow-[0_32px_80px_rgba(0,0,0,0.35)]"
         style={{ "--brand-accent": accent } as CSSProperties}
       >
         <div className="fixed inset-0 -z-10" aria-hidden="true" onClick={close} />
-        <div className="px-8 py-10 text-center">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-            Categorías
-          </p>
-          <p className="mx-auto mt-2 max-w-sm text-sm font-semibold text-slate-500">
-            Estamos organizando las categorías de GEU Plastic. Muy pronto estarán disponibles aquí.
-          </p>
-        </div>
+        <nav className="border-t border-white/10 bg-[#0b0b0d]">
+          <div className="mx-auto max-w-[1632px] px-8 py-7">
+            <p className="mb-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.34em] text-white/40">
+              <span className="h-px w-8" style={{ backgroundColor: "var(--brand-accent)" }} />
+              Categorías
+            </p>
+            <ul className="flex flex-wrap gap-x-11 gap-y-5">
+              {importCategoriasData.map((category, index) => (
+                <li key={category.nombre}>
+                  <Link
+                    href={`${cauchosBasePath}/categoria/${slugify(category.nombre)}`}
+                    onClick={close}
+                    className="group inline-flex items-baseline gap-2.5"
+                  >
+                    <span
+                      className="font-mono text-[10px] font-medium tabular-nums text-white/30 transition-colors duration-200 group-hover:text-[var(--brand-accent)]"
+                      aria-hidden="true"
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="relative text-[13px] font-medium uppercase tracking-[0.05em] text-white/80 transition-colors duration-200 group-hover:text-white">
+                      {categoryLabel(category.nombre)}
+                      <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-[var(--brand-accent)] transition-all duration-300 ease-out group-hover:w-full" />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-7 border-t border-white/10 pt-5">
+              <CauchosProjectChat
+                division="Import"
+                triggerLabel={
+                  <>
+                    ¿Qué quieres importar?
+                    <span className="ml-2">→</span>
+                  </>
+                }
+                triggerClassName="inline-flex items-center text-[13px] font-medium uppercase tracking-[0.05em] text-[var(--brand-accent)] transition-colors duration-200 hover:text-white"
+              />
+            </div>
+          </div>
+        </nav>
+      </div>
+    );
+  }
+
+  if (division === "Plastic") {
+    return (
+      <div
+        className="absolute inset-x-0 top-full z-40 shadow-[0_24px_70px_rgba(15,23,42,0.16)]"
+        style={{ "--brand-accent": accent } as CSSProperties}
+      >
+        <div className="fixed inset-0 -z-10" aria-hidden="true" onClick={close} />
+        <nav className="border-t border-slate-200 bg-white">
+          <div className="mx-auto max-w-[1632px] px-8 py-7">
+            <p className="mb-5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.34em] text-slate-400">
+              <span className="h-px w-8" style={{ backgroundColor: "var(--brand-accent)" }} />
+              Categorías
+            </p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {plasticCategoriasData.map((category) => (
+                <Link
+                  key={category.nombre}
+                  href={`${cauchosBasePath}/categoria/${slugify(category.nombre)}`}
+                  onClick={close}
+                  className="group flex flex-col items-start gap-3 rounded-2xl border border-slate-200 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]"
+                >
+                  <span className="text-[13px] font-bold uppercase leading-tight tracking-[0.02em] text-slate-800 transition-colors duration-200 group-hover:text-slate-950">
+                    {categoryLabel(category.nombre)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-7 border-t border-slate-200 pt-5">
+              <CauchosProjectChat
+                division="Plastic"
+                triggerLabel={
+                  <>
+                    ¿Qué necesitas producir?
+                    <span className="ml-2">→</span>
+                  </>
+                }
+                triggerClassName="inline-flex items-center text-[13px] font-medium uppercase tracking-[0.05em] text-[var(--brand-accent)] transition-colors duration-200 hover:text-slate-950"
+              />
+            </div>
+          </div>
+        </nav>
       </div>
     );
   }
@@ -391,7 +478,7 @@ export default function CauchosCategorySidebarMenu({
                   >
                     <span className="flex items-center gap-3 whitespace-nowrap">
                       <Icon />
-                      {department.title}
+                      {categoryLabel(department.title)}
                     </span>
                     <span aria-hidden="true">›</span>
                   </button>
@@ -409,7 +496,7 @@ export default function CauchosCategorySidebarMenu({
             {active.subcategories.length === 0 && (
               <div className="flex h-full min-h-[350px] flex-col items-center justify-center gap-2 text-center">
                 <p className="text-sm font-bold text-slate-700">
-                  Muy pronto vas a encontrar productos en {active.title}
+                  Muy pronto vas a encontrar productos en {categoryLabel(active.title)}
                 </p>
                 <p className="text-[13px] text-slate-500">
                   Estamos cargando el catálogo de esta categoría.

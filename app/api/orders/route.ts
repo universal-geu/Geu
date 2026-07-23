@@ -4,7 +4,7 @@ import { createOrderFromCart, getAllOrders } from "@/lib/orders";
 
 export async function GET() {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUser("orders");
     const orders = await getAllOrders(admin.division);
 
     return Response.json({ orders });
@@ -70,6 +70,7 @@ export async function POST(request: Request) {
         paymentStatus: order.paymentStatus,
         totalItems: order.totalItems,
         subtotal: order.subtotal,
+        shippingCost: order.shippingCost,
         createdAt: order.createdAt,
       },
       message: "Pedido creado correctamente.",

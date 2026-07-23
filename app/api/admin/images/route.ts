@@ -4,7 +4,7 @@ import { IMAGE_SLOTS } from "@/lib/site-images";
 
 export async function GET() {
   try {
-    await requireAdminUser();
+    await requireAdminUser("images");
     if (!prisma) return Response.json({ images: {}, links: {} });
     const rows = await prisma.siteImage.findMany();
     const images = Object.fromEntries(rows.map((r) => [r.key, r.url]));
@@ -20,7 +20,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUser("images");
     if (!prisma) return Response.json({ error: "BD no disponible." }, { status: 503 });
 
     const body = (await request.json()) as { key?: string; url?: string; link?: string };

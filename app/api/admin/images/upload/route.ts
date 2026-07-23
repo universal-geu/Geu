@@ -14,7 +14,7 @@ const ALLOWED_FILE_TYPES = [
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUser("images");
     const supabase = createSupabaseStorageClient();
     if (!supabase) return Response.json({ error: "Storage no configurado." }, { status: 500 });
 

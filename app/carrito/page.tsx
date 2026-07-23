@@ -5,7 +5,14 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import CauchosHeader from "../components/cauchos-header";
 import { useCart } from "../components/cart-provider";
+import { useProducts } from "../components/products-provider";
+import { formatearMoneda } from "../data/catalog";
 import { CART_ACCENT, DIVISION_BRAND, getDivisionFromBrandParam } from "@/lib/divisions";
+
+function parsePrecio(precio: string) {
+  const numeric = Number(precio.replace(/[^\d]/g, ""));
+  return Number.isFinite(numeric) ? numeric : 0;
+}
 
 const ACTION_BUTTON_CLASS = {
   blue: "border-[#075ed8] text-[#075ed8] hover:bg-[#075ed8]",
@@ -23,9 +30,14 @@ export default function CarritoPage() {
   const searchParams = useSearchParams();
   const { items, incrementItem, decrementItem, removeItem, clearCart } =
     useCart();
+  const { products } = useProducts();
   const brandParam = searchParams.get("brand");
   const division = getDivisionFromBrandParam(brandParam);
   const brand = DIVISION_BRAND[division];
+  const getItemBrand = (itemId: string) => {
+    const product = products.find((entry) => entry.slug === itemId);
+    return DIVISION_BRAND[product?.division ?? division];
+  };
   const isImportCart = division === "Import";
   const cartAccent = CART_ACCENT[division];
   const accent = brand.accent;
@@ -33,6 +45,11 @@ export default function CarritoPage() {
   const checkoutHref = brandParam ? `/checkout?brand=${brandParam}` : "/checkout";
   const actionClasses = ACTION_BUTTON_CLASS[cartAccent];
   const primaryClasses = PRIMARY_BUTTON_CLASS[cartAccent];
+  const totalItems = items.reduce((total, item) => total + item.cantidad, 0);
+  const subtotal = items.reduce(
+    (total, item) => total + parsePrecio(item.precio) * item.cantidad,
+    0,
+  );
 
   return (
     <>
@@ -83,7 +100,12 @@ export default function CarritoPage() {
           ) : (
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
               <div className="space-y-5">
-                {items.map((item) => (
+                {items.map((item) => {
+                  const itemBrand = getItemBrand(item.id);
+                  const unitPrice = parsePrecio(item.precio);
+                  const lineTotal = unitPrice * item.cantidad;
+
+                  return (
                   <article
                     key={item.id}
                     className="flex flex-col gap-5 rounded-[10px] border border-slate-200 bg-white p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] md:flex-row md:items-center"
@@ -99,13 +121,16 @@ export default function CarritoPage() {
                     <div className="flex-1">
                       <p
                         className="text-[11px] font-black uppercase tracking-[0.12em]"
-                        style={{ color: accent }}
+                        style={{ color: itemBrand.accent }}
                       >
-                        {brand.label}
+                        {itemBrand.label}
                       </p>
                       <h2 className="mt-2 text-2xl font-black tracking-[-0.02em] text-slate-950">
                         {item.nombre}
                       </h2>
+                      <p className="mt-1 text-sm font-semibold text-slate-500">
+                        {formatearMoneda(unitPrice)} c/u
+                      </p>
                       <div className="mt-4 inline-flex overflow-hidden rounded-full border border-slate-200 bg-white">
                         <button
                           type="button"
@@ -128,7 +153,7 @@ export default function CarritoPage() {
                         </button>
                       </div>
                       <p className="mt-4 text-2xl font-black text-slate-950">
-                        {item.precio}
+                        {formatearMoneda(lineTotal)}
                       </p>
                     </div>
 
@@ -140,10 +165,11 @@ export default function CarritoPage() {
                       Quitar
                     </button>
                   </article>
-                ))}
+                  );
+                })}
               </div>
 
-              <aside className="rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.07)]">
+              <aside className="h-fit rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.07)] xl:sticky xl:top-24">
                 <p
                   className="text-xs font-black uppercase tracking-[0.16em]"
                   style={{ color: accent }}
@@ -163,19 +189,39 @@ export default function CarritoPage() {
                       key={item.id}
                       className="flex items-center justify-between gap-3 text-sm"
                     >
-                      <span className="font-semibold text-slate-700">{item.nombre}</span>
-                      <span className="font-black" style={{ color: accent }}>
-                        {item.cantidad}x
+                      <span className="font-semibold text-slate-700">
+                        {item.nombre} <span className="text-slate-400">×{item.cantidad}</span>
+                      </span>
+                      <span className="shrink-0 font-black text-slate-900">
+                        {formatearMoneda(parsePrecio(item.precio) * item.cantidad)}
                       </span>
                     </div>
                   ))}
                 </div>
 
+                <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-6">
+                  <span className="text-sm font-semibold text-slate-500">
+                    Subtotal · {totalItems} producto{totalItems === 1 ? "" : "s"}
+                  </span>
+                  <span className="text-2xl font-black tracking-[-0.02em] text-slate-950">
+                    {formatearMoneda(subtotal)}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs font-semibold text-slate-400">
+                  El envío se calcula en el siguiente paso, según tu ciudad de entrega.
+                </p>
+
                 <Link
                   href={checkoutHref}
-                  className={`mt-8 inline-flex w-full items-center justify-center rounded-full border px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white transition-colors duration-200 ${primaryClasses}`}
+                  className={`mt-6 inline-flex w-full items-center justify-center rounded-full border px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white transition-colors duration-200 ${primaryClasses}`}
                 >
                   Continuar compra
+                </Link>
+                <Link
+                  href={homeHref}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-slate-500 transition-colors duration-200 hover:text-slate-950"
+                >
+                  Seguir comprando
                 </Link>
               </aside>
             </div>

@@ -8,7 +8,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUser("create");
     const body = await request.json();
     const product = await createProduct({ ...body, division: admin.division });
 

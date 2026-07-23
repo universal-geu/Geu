@@ -11,6 +11,8 @@ type Props = {
   required?: boolean;
   /** What to call a new entry in the "+ Crear nueva ___" prompt, e.g. "categoría". */
   entityName?: string;
+  /** When true, locks the field to `options` only — no free-text typing, no "+ Crear" entry. */
+  strict?: boolean;
   onChange: (value: string) => void;
 };
 
@@ -22,6 +24,7 @@ export default function CategoryComboBox({
   placeholder,
   required,
   entityName = "opción",
+  strict = false,
   onChange,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -67,6 +70,7 @@ export default function CategoryComboBox({
         name={name}
         value={value}
         onChange={(event) => {
+          if (strict) return;
           onChange(event.target.value);
           setSearch(event.target.value);
         }}
@@ -74,10 +78,13 @@ export default function CategoryComboBox({
           setSearch("");
           setOpen(true);
         }}
+        readOnly={strict}
         placeholder={placeholder}
         required={required}
         autoComplete="off"
-        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8]"
+        className={`w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[#075ed8] ${
+          strict ? "cursor-pointer" : ""
+        }`}
       />
       {open && (
         <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-2xl border border-black/10 bg-white p-1.5 shadow-[0_18px_40px_rgba(15,23,42,0.14)]">
@@ -99,31 +106,32 @@ export default function CategoryComboBox({
               {option}
             </button>
           ))}
-          {isTypingNewValue ? (
-            <button
-              type="button"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                setOpen(false);
-              }}
-              className="mt-0.5 block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-[#075ed8] hover:bg-[#f2f4f7]"
-            >
-              + Crear &quot;{search.trim()}&quot;
-            </button>
-          ) : (
-            <button
-              type="button"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                onChange("");
-                setSearch("");
-                requestAnimationFrame(() => inputRef.current?.focus());
-              }}
-              className="mt-0.5 block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-[#075ed8] hover:bg-[#f2f4f7]"
-            >
-              + Crear nueva {entityName}
-            </button>
-          )}
+          {!strict &&
+            (isTypingNewValue ? (
+              <button
+                type="button"
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  setOpen(false);
+                }}
+                className="mt-0.5 block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-[#075ed8] hover:bg-[#f2f4f7]"
+              >
+                + Crear &quot;{search.trim()}&quot;
+              </button>
+            ) : (
+              <button
+                type="button"
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  onChange("");
+                  setSearch("");
+                  requestAnimationFrame(() => inputRef.current?.focus());
+                }}
+                className="mt-0.5 block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-[#075ed8] hover:bg-[#f2f4f7]"
+              >
+                + Crear nueva {entityName}
+              </button>
+            ))}
         </div>
       )}
     </label>

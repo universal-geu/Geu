@@ -6,7 +6,7 @@ export async function PATCH(
   context: { params: Promise<{ slug: string }> },
 ) {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUser("inventory");
     const { slug } = await context.params;
     const existingDivision = await getProductDivision(slug);
 

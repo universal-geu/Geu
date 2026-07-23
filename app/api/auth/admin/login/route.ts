@@ -60,10 +60,14 @@ export async function POST(request: Request) {
     const message =
       error instanceof Error && error.message === "INVALID_CREDENTIALS"
         ? "Correo o contraseña incorrectos."
-        : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
-          ? "La base de datos no está configurada todavía."
-          : "No fue posible iniciar sesión como administrador.";
+        : error instanceof Error && error.message === "ACCOUNT_DISABLED"
+          ? "Esta cuenta fue desactivada. Contacta al administrador de tu división."
+          : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
+            ? "La base de datos no está configurada todavía."
+            : "No fue posible iniciar sesión como administrador.";
 
-    return Response.json({ error: message }, { status: 500 });
+    const status = error instanceof Error && error.message === "ACCOUNT_DISABLED" ? 403 : 500;
+
+    return Response.json({ error: message }, { status });
   }
 }

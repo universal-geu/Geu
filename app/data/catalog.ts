@@ -67,12 +67,31 @@ export const importCategoriasData = [
 ] as const;
 export const importCategorias: string[] = importCategoriasData.map((item) => item.nombre);
 
+// Plastic's own category taxonomy (transformación de plásticos técnicos) —
+// like Import, each entry is already a single, specific product line, with
+// no further sub-sector breakdown.
+export const plasticCategoriasData = [
+  { nombre: "Extrusión en PVC Rígido", color: "#1971c2", icono: "▭" },
+  { nombre: "Extrusión en PVC Flexible", color: "#0c8599", icono: "▭" },
+  { nombre: "Desarrollo de empaques magnéticos", color: "#5c940d", icono: "◆" },
+  { nombre: "Desarrollo de cintas magnéticas", color: "#e8590c", icono: "◆" },
+  { nombre: "Procesos de ensamble de puertas y encimeras", color: "#495057", icono: "⬡" },
+  { nombre: "Perfilería para hidroponía", color: "#2f9e44", icono: "⬢" },
+  { nombre: "Perfilería para construcción", color: "#868e96", icono: "▲" },
+  { nombre: "Perfilería para carrocería", color: "#c92a2a", icono: "⚙" },
+] as const;
+export const plasticCategorias: string[] = plasticCategoriasData.map((item) => item.nombre);
+
 export function getCategoriasForDivision(division: DivisionName): string[] {
-  return division === "Import" ? importCategorias : categorias;
+  if (division === "Import") return importCategorias;
+  if (division === "Plastic") return plasticCategorias;
+  return categorias;
 }
 
 export function getCategoriasDataForDivision(division: DivisionName) {
-  return division === "Import" ? importCategoriasData : categoriasData;
+  if (division === "Import") return importCategoriasData;
+  if (division === "Plastic") return plasticCategoriasData;
+  return categoriasData;
 }
 
 // Real sub-sector groupings for the Cauchos category menu (e.g. "Alimentos,
