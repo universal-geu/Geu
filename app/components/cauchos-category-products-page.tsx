@@ -10,6 +10,7 @@ import { useProducts } from "./products-provider";
 import { useSiteImages } from "./use-site-images";
 import { resolveImage } from "@/lib/image-slots";
 import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
+import { expandProductCategoryViews } from "@/lib/product-category-views";
 
 type Props = {
   segments?: string[];
@@ -76,14 +77,17 @@ export default function CauchosCategoryProductsPage({
           product.marca.toLowerCase().includes(needle) ||
           product.categoria.toLowerCase().includes(needle) ||
           (product.subcategoria?.toLowerCase().includes(needle) ?? false) ||
-          (product.sku?.toLowerCase().includes(needle) ?? false)
+          (product.sku?.toLowerCase().includes(needle) ?? false) ||
+          (product.categoriasAdicionales?.some(
+            (entry) =>
+              entry.categoria.toLowerCase().includes(needle) ||
+              (entry.subcategoria?.toLowerCase().includes(needle) ?? false),
+          ) ?? false)
         );
       });
     }
 
-    return products.filter((product) => {
-      if (product.division !== division) return false;
-
+    return expandProductCategoryViews(products, division).filter((product) => {
       const productSubcategory = product.subcategoria?.trim() || "Productos";
       const productMinor = product.categoriaMenor?.trim() || product.nombre;
       const department = product.categoria.trim();
@@ -116,10 +120,8 @@ export default function CauchosCategoryProductsPage({
     if (isSearchMode || minorSlug || !resolvedDepartment) return [];
     const menuGroups = cauchosCategorySubcategories[resolvedDepartment] ?? [];
 
-    const departmentProducts = products.filter(
-      (product) =>
-        product.division === division &&
-        product.categoria.trim() === resolvedDepartment,
+    const departmentProducts = expandProductCategoryViews(products, division).filter(
+      (product) => product.categoria.trim() === resolvedDepartment,
     );
 
     const bySubcategory = new Map<string, number>();
