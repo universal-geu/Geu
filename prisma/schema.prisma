@@ -156,6 +156,7 @@ model OrderItem {
   orderId   String
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
+  division  Division @default(Cauchos)
   name      String
   image     String
   unitPrice Int

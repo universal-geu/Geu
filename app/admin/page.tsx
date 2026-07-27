@@ -30,6 +30,7 @@ import {
   ADMIN_TOOL_KEYS,
   ADMIN_TOOL_LABELS,
   hasAdminPermission,
+  isToolAllowedForDivision,
   type AdminToolKey,
 } from "@/lib/admin-permissions";
 
@@ -1341,8 +1342,11 @@ export default function AdminPage() {
   // "Sellos y empaques") that predate this taxonomy and aren't real nav
   // categories, so they're intentionally excluded from the picker.
   const assignableToolKeys = useMemo(
-    () => ADMIN_TOOL_KEYS.filter((key) => key !== "inventory" || !isServiceAdmin),
-    [isServiceAdmin],
+    () =>
+      ADMIN_TOOL_KEYS.filter(
+        (key) => (key !== "inventory" || !isServiceAdmin) && isToolAllowedForDivision(adminDivision, key),
+      ),
+    [isServiceAdmin, adminDivision],
   );
   const categoryOptions = useMemo(() => getCategoriasForDivision(adminDivision), [adminDivision]);
   const subcategoryOptions = useMemo(() => {
@@ -1484,13 +1488,15 @@ export default function AdminPage() {
       };
 
       if (payload.user?.role === "ADMIN" && payload.user.division) {
+        const division = payload.user.division;
         const permissions = payload.user.permissions ?? [];
         setIsAuthenticated(true);
         setAdminName(payload.user.fullName);
-        setAdminDivision(payload.user.division);
+        setAdminDivision(division);
         setAdminPermissions(permissions);
 
-        const canAccess = (tool: AdminToolKey) => hasAdminPermission(permissions, tool);
+        const canAccess = (tool: AdminToolKey) =>
+          isToolAllowedForDivision(division, tool) && hasAdminPermission(permissions, tool);
 
         if (canAccess("dashboard")) {
           void loadDashboardMetrics();
@@ -1498,7 +1504,7 @@ export default function AdminPage() {
           const fallback: Array<[AdminToolKey, () => void]> = [
             ["create", openCreateView],
             ["edit", openEditView],
-            ...(isServiceDivision(payload.user.division)
+            ...(isServiceDivision(division)
               ? []
               : ([["inventory", openInventoryView]] as Array<[AdminToolKey, () => void]>)),
             ["orders", openOrdersView],
@@ -2604,7 +2610,8 @@ export default function AdminPage() {
 
   const pendingQuotesCount = quotes.filter((quote) => quote.status === "NEW").length;
 
-  const canAccessTool = (tool: AdminToolKey) => hasAdminPermission(adminPermissions, tool);
+  const canAccessTool = (tool: AdminToolKey) =>
+    isToolAllowedForDivision(adminDivision, tool) && hasAdminPermission(adminPermissions, tool);
 
   const sidebarNavItems = (
     [

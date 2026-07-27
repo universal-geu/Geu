@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { DivisionName } from "@/lib/divisions";
-import { DIVISION_ADMIN_EMAILS, DIVISION_BRAND } from "@/lib/divisions";
+import { DIVISION_ADMIN_EMAILS, DIVISION_BRAND, isServiceDivision } from "@/lib/divisions";
 import { emailLayout, sendEmail } from "@/lib/email";
 import { formatOrderCode } from "@/lib/format-order";
 import { calculateShippingCost } from "@/lib/shipping";
@@ -68,11 +68,6 @@ export type SalesReport = {
   }>;
 };
 
-function parsePriceValue(price: string) {
-  const numeric = Number(price.replace(/[^\d]/g, ""));
-  return Number.isFinite(numeric) ? numeric : 0;
-}
-
 export async function createOrderFromCart(userId: string, input: CheckoutInput) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
@@ -108,10 +103,6 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
     throw new Error("EMPTY_CART");
   }
 
-  const subtotal = cartItems.reduce(
-    (total, item) => total + parsePriceValue(item.price) * item.quantity,
-    0,
-  );
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
   const shippingCost = calculateShippingCost(city);
 
@@ -126,6 +117,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
       select: {
         id: true,
         slug: true,
+        price: true,
         stock: true,
         minimumStock: true,
         division: true,
@@ -135,11 +127,29 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
     for (const item of cartItems) {
       const product = products.find((entry) => entry.slug === item.productId);
 
-      if (!product || product.stock < item.quantity) {
+      if (!product) {
+        throw new Error("INSUFFICIENT_STOCK");
+      }
+
+      // Service divisions (Innovation, Energy) don't track real inventory —
+      // their products are always created with stock forced to 0, so
+      // enforcing a stock check here would block checkout entirely.
+      if (!isServiceDivision(product.division) && product.stock < item.quantity) {
         throw new Error("INSUFFICIENT_STOCK");
       }
     }
 
+    // Always charge the product's current price server-side — never trust
+    // the price string stored on the cart item.
+    const subtotal = cartItems.reduce((total, item) => {
+      const product = products.find((entry) => entry.slug === item.productId);
+      return total + (product?.price ?? 0) * item.quantity;
+    }, 0);
+
+    // `Order.division` is only used for cosmetic purposes (e.g. which brand's
+    // colors to show on the confirmation page) — the source of truth for who
+    // actually owns each line, and thus each division's revenue, is the
+    // `division` stored on every OrderItem below.
     const orderDivision: DivisionName = products[0]?.division ?? "Cauchos";
 
     const createdOrder = await tx.order.create({
@@ -160,10 +170,12 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
         totalItems,
         items: {
           create: cartItems.map((item) => {
-            const unitPrice = parsePriceValue(item.price);
+            const product = products.find((entry) => entry.slug === item.productId);
+            const unitPrice = product?.price ?? 0;
 
             return {
               productId: item.productId,
+              division: product?.division ?? orderDivision,
               name: item.name,
               image: item.image,
               unitPrice,
@@ -183,7 +195,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
     for (const item of cartItems) {
       const product = products.find((entry) => entry.slug === item.productId);
 
-      if (!product) {
+      if (!product || isServiceDivision(product.division)) {
         continue;
       }
 
@@ -316,7 +328,7 @@ export async function getAllOrders(division?: DivisionName) {
   }
 
   return await prisma.order.findMany({
-    where: division ? { division } : undefined,
+    where: division ? { items: { some: { division } } } : undefined,
     orderBy: { createdAt: "desc" },
     include: {
       user: {
@@ -606,6 +618,7 @@ export async function updateOrderShipping(
       customerName: true,
       customerEmail: true,
       division: true,
+      items: { select: { division: true } },
     },
   });
 
@@ -613,7 +626,7 @@ export async function updateOrderShipping(
     throw new Error("ORDER_NOT_FOUND");
   }
 
-  if (adminDivision && currentOrder.division !== adminDivision) {
+  if (adminDivision && !currentOrder.items.some((item) => item.division === adminDivision)) {
     throw new Error("FORBIDDEN");
   }
 

@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState, type PointerEvent } from "react";
+import { useRef, useState, type MouseEvent, type PointerEvent } from "react";
+import ImageLightbox from "../components/image-lightbox";
 
 type Solution = {
   title: string;
@@ -12,12 +13,15 @@ type Solution = {
 export default function SolutionsCarousel({ items }: { items: Solution[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   const drag = useRef({ isDown: false, startX: 0, startScrollLeft: 0, moved: false });
+  const downTarget = useRef<HTMLElement | null>(null);
 
   function handlePointerDown(e: PointerEvent<HTMLDivElement>) {
     const track = trackRef.current;
     if (!track) return;
     drag.current = { isDown: true, startX: e.clientX, startScrollLeft: track.scrollLeft, moved: false };
+    downTarget.current = e.target as HTMLElement;
     track.setPointerCapture(e.pointerId);
   }
 
@@ -33,6 +37,15 @@ export default function SolutionsCarousel({ items }: { items: Solution[] }) {
     const track = trackRef.current;
     drag.current.isDown = false;
     if (track) track.releasePointerCapture(e.pointerId);
+
+    // setPointerCapture redirects the click event's target to the track
+    // itself, so the card button's own onClick never fires for a real
+    // click/tap — detect a genuine (non-drag) tap here instead, using the
+    // element that was actually under the pointer at pointerdown.
+    if (!drag.current.moved) {
+      const card = downTarget.current?.closest<HTMLElement>("[data-lightbox-index]");
+      if (card) setOpenIndex(Number(card.dataset.lightboxIndex));
+    }
   }
 
   function scrollToIndex(index: number) {
@@ -76,9 +89,15 @@ export default function SolutionsCarousel({ items }: { items: Solution[] }) {
         onPointerLeave={handlePointerUp}
         className="flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto pb-4 active:cursor-grabbing [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {items.map((item) => (
+        {items.map((item, index) => (
           <div key={item.title} className="flex w-80 shrink-0 snap-start flex-col select-none sm:w-96 lg:w-[440px]">
-            <div className="relative aspect-square w-full bg-slate-900">
+            <button
+              type="button"
+              data-lightbox-index={index}
+              onClick={() => setOpenIndex(index)}
+              aria-label={`Ver imagen ampliada de ${item.title}`}
+              className="group relative aspect-square w-full bg-slate-900"
+            >
               <Image
                 src={item.image}
                 alt=""
@@ -87,7 +106,10 @@ export default function SolutionsCarousel({ items }: { items: Solution[] }) {
                 sizes="(min-width: 1024px) 440px, (min-width: 640px) 384px, 320px"
                 className="pointer-events-none object-cover"
               />
-            </div>
+              <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-black/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                Ampliar
+              </span>
+            </button>
             <h3 className="mt-5 text-xl font-black tracking-[-0.02em] text-slate-950">
               {item.title}
             </h3>
@@ -123,6 +145,14 @@ export default function SolutionsCarousel({ items }: { items: Solution[] }) {
           />
         ))}
       </div>
+
+      {openIndex !== null && (
+        <ImageLightbox
+          src={items[openIndex].image}
+          label={items[openIndex].title}
+          onClose={() => setOpenIndex(null)}
+        />
+      )}
     </div>
   );
 }

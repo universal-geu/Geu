@@ -184,6 +184,7 @@ export const OrderItemScalarFieldEnum = {
   id: 'id',
   orderId: 'orderId',
   productId: 'productId',
+  division: 'division',
   name: 'name',
   image: 'image',
   unitPrice: 'unitPrice',
