@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { formatearMoneda } from "@/app/data/catalog";
 
 export type PersistedCartItem = {
   id: string;
@@ -7,6 +8,25 @@ export type PersistedCartItem = {
   imagen: string;
   cantidad: number;
 };
+
+// The client can't be trusted to report the correct price — always look up
+// the product's real price server-side before persisting a cart item.
+async function getTrustedPrice(productId: string) {
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { slug: productId },
+    select: { price: true },
+  });
+
+  if (!product) {
+    throw new Error("PRODUCT_NOT_FOUND");
+  }
+
+  return formatearMoneda(product.price);
+}
 
 export async function getCartItemsForUser(userId: string) {
   if (!prisma) {
@@ -36,6 +56,7 @@ export async function addCartItemForUser(
   }
 
   const quantityToAdd = Math.max(1, Math.trunc(item.cantidad ?? 1));
+  const trustedPrice = await getTrustedPrice(item.id);
 
   await prisma.cartItem.upsert({
     where: {
@@ -46,7 +67,7 @@ export async function addCartItemForUser(
     },
     update: {
       name: item.nombre,
-      price: item.precio,
+      price: trustedPrice,
       image: item.imagen,
       quantity: {
         increment: quantityToAdd,
@@ -56,7 +77,7 @@ export async function addCartItemForUser(
       userId,
       productId: item.id,
       name: item.nombre,
-      price: item.precio,
+      price: trustedPrice,
       image: item.imagen,
       quantity: quantityToAdd,
     },
@@ -151,6 +172,15 @@ export async function syncCartItemsForUser(
   }
 
   for (const item of items) {
+    let trustedPrice: string;
+    try {
+      trustedPrice = await getTrustedPrice(item.id);
+    } catch {
+      // Guest cart references a product that no longer exists — skip it
+      // instead of trusting the client-supplied price.
+      continue;
+    }
+
     await prisma.cartItem.upsert({
       where: {
         userId_productId: {
@@ -160,7 +190,7 @@ export async function syncCartItemsForUser(
       },
       update: {
         name: item.nombre,
-        price: item.precio,
+        price: trustedPrice,
         image: item.imagen,
         quantity: {
           increment: item.cantidad,
@@ -170,7 +200,7 @@ export async function syncCartItemsForUser(
         userId,
         productId: item.id,
         name: item.nombre,
-        price: item.precio,
+        price: trustedPrice,
         image: item.imagen,
         quantity: item.cantidad,
       },

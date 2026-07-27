@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import EnergyHeader from "../energy-header";
+import StructureTypeGrid from "./structure-type-grid";
 
 export const dynamic = "force-dynamic";
 
@@ -107,13 +108,17 @@ const aplicaciones = [
   "Estacionamientos solares (Carport)",
 ];
 
+function SectionEyebrow({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs font-black uppercase tracking-[0.16em] text-[#b17800]">{children}</p>;
+}
+
 function Table({ rows }: { rows: { etiqueta: string; valor: string }[] }) {
   return (
-    <div className="overflow-hidden rounded-[10px] border border-slate-200">
+    <div className="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
       {rows.map((row, index) => (
         <div
           key={row.etiqueta}
-          className={`grid grid-cols-[1fr_1.2fr] ${index < rows.length - 1 ? "border-b border-slate-200" : ""}`}
+          className={`grid grid-cols-[1fr_1.2fr] ${index < rows.length - 1 ? "border-b border-slate-100" : ""}`}
         >
           <div className="bg-slate-50 px-5 py-3 text-sm font-bold text-slate-500">{row.etiqueta}</div>
           <div className="px-5 py-3 text-sm font-semibold text-slate-900">{row.valor}</div>
@@ -125,7 +130,7 @@ function Table({ rows }: { rows: { etiqueta: string; valor: string }[] }) {
 
 export default function EnergyCatalogoPage() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-white text-slate-900">
       <EnergyHeader />
 
       <section className="relative overflow-hidden border-b border-white/10 bg-black pt-20">
@@ -143,7 +148,7 @@ export default function EnergyCatalogoPage() {
         <div className="absolute inset-0 flex items-center">
           <div className="mx-auto w-full max-w-[1500px] px-5 md:px-8">
             <p className="text-xs font-black uppercase tracking-[0.24em] text-[#ffd400]">Ficha técnica</p>
-            <h1 className="mt-3 max-w-2xl font-[family:var(--font-display)] text-4xl font-black leading-[0.95] tracking-[-0.02em] md:text-6xl">
+            <h1 className="mt-3 max-w-2xl font-[family:var(--font-display)] text-4xl font-black leading-[0.95] tracking-[-0.02em] text-white md:text-6xl">
               Estructura fija para paneles solares
             </h1>
             <span className="mt-5 inline-flex rounded-full border border-[#ffd400] px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-[#ffd400]">
@@ -153,61 +158,40 @@ export default function EnergyCatalogoPage() {
         </div>
       </section>
 
-      <section className="border-b border-white/10 bg-[#050505]">
+      <section className="border-b border-slate-100 bg-white">
         <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#ffd400]">1. Tipos de estructuras fijas</p>
-          <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            {tiposEstructura.map((tipo) => (
-              <article
-                key={tipo.nombre}
-                className="overflow-hidden rounded-[10px] border border-white/10 bg-black/40 shadow-[0_14px_36px_rgba(0,0,0,0.3)]"
-              >
-                <div className="relative h-40 overflow-hidden bg-white/5">
-                  <Image
-                    src={tipo.imagen}
-                    alt={`Estructura solar tipo ${tipo.nombre}`}
-                    fill
-                    sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-5">
-                  <h3 className="text-base font-black text-white">{tipo.nombre}</h3>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-white/65">{tipo.texto}</p>
-                </div>
-              </article>
-            ))}
-          </div>
+          <SectionEyebrow>1. Tipos de estructuras fijas</SectionEyebrow>
+          <StructureTypeGrid tipos={tiposEstructura} />
         </div>
       </section>
 
-      <section className="border-b border-white/10 bg-white">
+      <section className="border-b border-slate-100 bg-slate-50">
         <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#a66a00]">2. Descripción general</p>
+          <SectionEyebrow>2. Descripción general</SectionEyebrow>
           <div className="mt-6 max-w-3xl">
             <Table rows={descripcionGeneral} />
           </div>
         </div>
       </section>
 
-      <section className="border-b border-white/10 bg-[#050505]">
+      <section className="border-b border-slate-100 bg-white">
         <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#ffd400]">3. Vistas y dimensiones generales</p>
+          <SectionEyebrow>3. Vistas y dimensiones generales</SectionEyebrow>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {vistasDimensiones.map((vista) => (
-              <div key={vista.vista} className="rounded-[10px] border border-white/10 bg-black/40 p-6">
-                <h3 className="text-base font-black text-white">{vista.vista}</h3>
-                <p className="mt-2 text-sm font-semibold leading-6 text-white/65">{vista.detalle}</p>
+              <div key={vista.vista} className="rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
+                <h3 className="text-base font-black text-slate-900">{vista.vista}</h3>
+                <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">{vista.detalle}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="border-b border-white/10 bg-white">
+      <section className="border-b border-slate-100 bg-slate-50">
         <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#a66a00]">4. Componentes principales</p>
-          <div className="mt-6 overflow-x-auto rounded-[10px] border border-slate-200">
+          <SectionEyebrow>4. Componentes principales</SectionEyebrow>
+          <div className="mt-6 overflow-x-auto rounded-[10px] border border-slate-200 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
             <table className="w-full min-w-[720px] border-collapse text-left text-sm">
               <thead>
                 <tr className="bg-slate-50 text-xs font-black uppercase tracking-[0.06em] text-slate-500">
@@ -220,8 +204,8 @@ export default function EnergyCatalogoPage() {
               </thead>
               <tbody>
                 {componentesPrincipales.map((item, index) => (
-                  <tr key={item.codigo} className={index % 2 === 1 ? "bg-slate-50" : ""}>
-                    <td className="px-5 py-3 font-black text-[#a66a00]">{item.codigo}</td>
+                  <tr key={item.codigo} className={index % 2 === 1 ? "bg-slate-50/60" : ""}>
+                    <td className="px-5 py-3 font-black text-[#b17800]">{item.codigo}</td>
                     <td className="px-5 py-3 font-semibold text-slate-900">{item.descripcion}</td>
                     <td className="px-5 py-3 text-slate-600">{item.perfil}</td>
                     <td className="px-5 py-3 text-slate-600">{item.material}</td>
@@ -234,9 +218,9 @@ export default function EnergyCatalogoPage() {
         </div>
       </section>
 
-      <section className="border-b border-white/10 bg-white">
+      <section className="border-b border-slate-100 bg-white">
         <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#a66a00]">5. Materiales y fijaciones</p>
+          <SectionEyebrow>5. Materiales y fijaciones</SectionEyebrow>
           <div className="mt-6 grid gap-8 md:grid-cols-2">
             <div>
               <h3 className="mb-3 text-sm font-black uppercase tracking-[0.06em] text-slate-500">Perfiles estructurales</h3>
@@ -250,34 +234,36 @@ export default function EnergyCatalogoPage() {
         </div>
       </section>
 
-      <section className="border-b border-white/10 bg-[#0a0a0a]">
+      <section className="border-b border-slate-100 bg-slate-50">
         <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#ffd400]">6. Cimentación recomendada</p>
-          <ul className="mt-6 max-w-2xl list-disc space-y-2 pl-5 text-sm font-semibold leading-6 text-white/75">
-            <li>Pilote o dado de concreto según estudio de suelos.</li>
-            <li>Platina base 300x300x6.35 mm con 4 perforaciones Ø18 mm para anclaje con espárragos 5/8&quot;.</li>
-          </ul>
+          <SectionEyebrow>6. Cimentación recomendada</SectionEyebrow>
+          <div className="mt-6 max-w-2xl rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
+            <ul className="list-disc space-y-2 pl-5 text-sm font-semibold leading-6 text-slate-600">
+              <li>Pilote o dado de concreto según estudio de suelos.</li>
+              <li>Platina base 300x300x6.35 mm con 4 perforaciones Ø18 mm para anclaje con espárragos 5/8&quot;.</li>
+            </ul>
+          </div>
         </div>
       </section>
 
-      <section className="border-b border-white/10 bg-[#050505]">
+      <section className="border-b border-slate-100 bg-white">
         <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#ffd400]">7. Características y beneficios</p>
+          <SectionEyebrow>7. Características y beneficios</SectionEyebrow>
           <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {caracteristicasBeneficios.map((beneficio) => (
-              <div key={beneficio.titulo} className="rounded-[10px] border border-white/10 bg-black/40 p-6">
-                <h3 className="text-base font-black text-[#ffd400]">{beneficio.titulo}</h3>
-                <p className="mt-2 text-sm font-semibold leading-6 text-white/65">{beneficio.texto}</p>
+              <div key={beneficio.titulo} className="rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
+                <h3 className="text-base font-black text-[#b17800]">{beneficio.titulo}</h3>
+                <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">{beneficio.texto}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="border-b border-white/10 bg-white">
+      <section className="border-b border-slate-100 bg-slate-50">
         <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#a66a00]">8. Capacidades de carga referenciales</p>
-          <div className="mt-6 overflow-x-auto rounded-[10px] border border-slate-200">
+          <SectionEyebrow>8. Capacidades de carga referenciales</SectionEyebrow>
+          <div className="mt-6 overflow-x-auto rounded-[10px] border border-slate-200 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
             <table className="w-full min-w-[640px] border-collapse text-left text-sm">
               <thead>
                 <tr className="bg-slate-50 text-xs font-black uppercase tracking-[0.06em] text-slate-500">
@@ -289,7 +275,7 @@ export default function EnergyCatalogoPage() {
               </thead>
               <tbody>
                 {capacidadesCarga.map((item, index) => (
-                  <tr key={item.tipo} className={index % 2 === 1 ? "bg-slate-50" : ""}>
+                  <tr key={item.tipo} className={index % 2 === 1 ? "bg-slate-50/60" : ""}>
                     <td className="px-5 py-3 font-semibold text-slate-900">{item.tipo}</td>
                     <td className="px-5 py-3 text-slate-600">{item.valor}</td>
                     <td className="px-5 py-3 text-slate-600">{item.norma}</td>
@@ -305,14 +291,14 @@ export default function EnergyCatalogoPage() {
         </div>
       </section>
 
-      <section className="bg-[#050505]">
+      <section className="bg-white">
         <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#ffd400]">9. Aplicaciones</p>
+          <SectionEyebrow>9. Aplicaciones</SectionEyebrow>
           <div className="mt-6 flex flex-wrap gap-3">
             {aplicaciones.map((aplicacion) => (
               <span
                 key={aplicacion}
-                className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-bold text-white/80"
+                className="rounded-full border border-[#f0dcae] bg-[#fdf6e8] px-4 py-2 text-sm font-bold text-[#8a5c00]"
               >
                 {aplicacion}
               </span>
@@ -321,7 +307,7 @@ export default function EnergyCatalogoPage() {
 
           <Link
             href="/energy#contacto"
-            className="mt-10 inline-flex rounded-full border border-[#ffd400] bg-transparent px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-[#ffd400] transition-colors duration-200 hover:bg-[#ffd400] hover:text-black"
+            className="mt-10 inline-flex rounded-full bg-[#050505] px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white transition-colors duration-200 hover:bg-[#1a1a1a]"
           >
             Solicitar cotización
           </Link>

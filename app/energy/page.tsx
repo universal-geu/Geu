@@ -5,6 +5,7 @@ import EnergyHeader from "./energy-header";
 import SiteFooter from "../components/site-footer";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import { getWhatsAppNumber } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -20,9 +21,7 @@ const navItems = [
 ];
 
 const heroVideo = "/geu-energy-hero-field.mp4";
-const orbitStatsImage = "/geu-energy-orbit-stats.png";
 const engineeringImage = "/geu-energy-engineering.png";
-const impactImage = "/geu-energy-impact.png";
 const gusImage = "/geu-energy-gus-home.png";
 const projectHouseImage = "/geu-energy-project-house.png";
 const projectHouseVideo = "/geu-energy-project-house.mp4";
@@ -114,7 +113,13 @@ const systemSteps = [
 export default async function EnergyPage() {
   const siteImages = await getSiteImages();
   const siteTexts = await getSiteTexts();
+  const whatsappNumber = await getWhatsAppNumber();
   const t = (key: string) => resolveText(key, siteTexts);
+  const gusWhatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        "Hola Gus, quiero más información sobre energía solar.",
+      )}`
+    : null;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -182,28 +187,28 @@ export default async function EnergyPage() {
         </div>
       </section>
 
-      <section className="overflow-hidden border-b border-white/10 bg-[#050505]">
-        <div className="relative mx-auto aspect-[1717/916] w-full max-w-[1920px]">
-          <Image
-            src={orbitStatsImage}
-            alt="Indicadores GEU Energy: capacidad instalada, proyectos ejecutados, CO2 evitado y experiencia"
-            fill
-            sizes="100vw"
-            className="object-cover"
-            priority={false}
-          />
-        </div>
-      </section>
-
-      <section className="overflow-hidden border-b border-white/10 bg-black">
+      <section className="relative overflow-hidden border-b border-white/10 bg-black">
         <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
           <Image
             src={engineeringImage}
-            alt="Ingeniería que sostiene el futuro: panel, perfil, viga, columna y anclaje"
+            alt="Ingeniería que sostiene el futuro: estructura de montaje GEU Energy"
             fill
             sizes="100vw"
             className="object-cover"
           />
+        </div>
+
+        <div className="absolute inset-0 flex items-center">
+          <div className="mx-auto w-full max-w-[1920px] px-5 md:px-10">
+            <h2 className="max-w-md font-[family:var(--font-display)] text-3xl font-black uppercase leading-[1.05] tracking-[-0.01em] text-white md:text-5xl">
+              Ingeniería
+              <br />
+              <span className="text-[#f5a623]">que sostiene</span>
+              <br />
+              el futuro.
+            </h2>
+            <span className="mt-5 block h-1 w-16 bg-[#f5a623]" />
+          </div>
         </div>
       </section>
 
@@ -215,18 +220,6 @@ export default async function EnergyPage() {
           <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
             <SolutionsCarousel items={solutions} />
           </div>
-        </div>
-      </section>
-
-      <section id="proyectos" className="relative overflow-hidden border-b border-white/10 bg-black">
-        <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
-          <Image
-            src={impactImage}
-            alt="Impacto GEU Energy en almacenamiento, capacidad solar, CO2 evitado, presencia y proyectos ejecutados"
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
         </div>
       </section>
 
@@ -290,6 +283,16 @@ export default async function EnergyPage() {
             sizes="100vw"
             className="object-cover"
           />
+          {gusWhatsappHref && (
+            <a
+              href={gusWhatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Hablar con Gus por WhatsApp"
+              className="absolute rounded-full"
+              style={{ left: "88%", top: "75%", width: "11%", height: "13%" }}
+            />
+          )}
         </div>
       </section>
 

@@ -6,7 +6,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireAdminUser("quotes");
+    const admin = await requireAdminUser("quotes");
 
     const { id } = await params;
     const body = (await request.json()) as {
@@ -19,8 +19,8 @@ export async function PATCH(
     }
 
     const quote = body.status
-      ? await updateQuoteStatus(id, body.status)
-      : await updateQuoteAdminNotes(id, body.adminNotes ?? "");
+      ? await updateQuoteStatus(id, body.status, admin.division)
+      : await updateQuoteAdminNotes(id, body.adminNotes ?? "", admin.division);
 
     return Response.json({ quote, message: "Cotización actualizada correctamente." });
   } catch (error) {

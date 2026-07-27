@@ -102,7 +102,7 @@ export async function getQuotesForUser(userId: string) {
   });
 }
 
-export async function updateQuoteStatus(id: string, status: QuoteStatus) {
+export async function updateQuoteStatus(id: string, status: QuoteStatus, division: DivisionName) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
@@ -110,12 +110,15 @@ export async function updateQuoteStatus(id: string, status: QuoteStatus) {
   const quote = await prisma.quote.findUnique({ where: { id } });
   if (!quote) {
     throw new Error("QUOTE_NOT_FOUND");
+  }
+  if (quote.division !== division) {
+    throw new Error("FORBIDDEN");
   }
 
   return prisma.quote.update({ where: { id }, data: { status } });
 }
 
-export async function updateQuoteAdminNotes(id: string, adminNotes: string) {
+export async function updateQuoteAdminNotes(id: string, adminNotes: string, division: DivisionName) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
@@ -123,6 +126,9 @@ export async function updateQuoteAdminNotes(id: string, adminNotes: string) {
   const quote = await prisma.quote.findUnique({ where: { id } });
   if (!quote) {
     throw new Error("QUOTE_NOT_FOUND");
+  }
+  if (quote.division !== division) {
+    throw new Error("FORBIDDEN");
   }
 
   return prisma.quote.update({ where: { id }, data: { adminNotes: adminNotes.trim() || null } });

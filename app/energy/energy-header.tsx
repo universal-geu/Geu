@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import CauchosAccountLink from "../components/cauchos-account-link";
 
 const navItems = [
   { label: "Catálogos", href: "/energy/catalogo" },
@@ -29,14 +30,6 @@ function SearchIcon() {
   );
 }
 
-function MenuIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-      <path d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  );
-}
-
 export default function EnergyHeader() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/85 backdrop-blur-md">
@@ -55,9 +48,10 @@ export default function EnergyHeader() {
           <button type="button" aria-label="Buscar" className="hover:text-[#f5a623]">
             <SearchIcon />
           </button>
-          <button type="button" aria-label="Abrir menú" className="hover:text-[#f5a623]">
-            <MenuIcon />
-          </button>
+          <CauchosAccountLink
+            brand="energy"
+            className="inline-flex text-[11px] font-black uppercase tracking-[0.08em] hover:text-[#f5a623]"
+          />
         </div>
       </div>
     </header>

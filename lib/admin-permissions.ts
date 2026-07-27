@@ -1,3 +1,5 @@
+import type { DivisionName } from "@/lib/divisions";
+
 export const ADMIN_TOOL_KEYS = [
   "dashboard",
   "create",
@@ -37,6 +39,23 @@ export function hasAdminPermission(
   tool: AdminToolKey,
 ): boolean {
   return permissions.length === 0 || permissions.includes(tool);
+}
+
+// Energy and Innovation have no products for sale, so their admin panels only
+// need image, text/WhatsApp, and team-account management — the rest
+// (dashboard, product CRUD, orders, quotes, reports) has nothing to show.
+export const DIVISION_TOOL_RESTRICTIONS: Partial<Record<DivisionName, readonly AdminToolKey[]>> = {
+  Energy: ["images", "settings", "accounts"],
+  Innovation: ["images", "settings", "accounts"],
+};
+
+export function isToolAllowedForDivision(
+  division: DivisionName | null | undefined,
+  tool: AdminToolKey,
+): boolean {
+  if (!division) return true;
+  const allowed = DIVISION_TOOL_RESTRICTIONS[division];
+  return !allowed || allowed.includes(tool);
 }
 
 export function sanitizePermissions(input: unknown): AdminToolKey[] {
