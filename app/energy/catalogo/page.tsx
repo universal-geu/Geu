@@ -154,6 +154,19 @@ export default function EnergyCatalogoPage() {
             <span className="mt-5 inline-flex rounded-full border border-[#ffd400] px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-[#ffd400]">
               Modelo: GEU-EF-14.6x5.5
             </span>
+            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-bold uppercase tracking-[0.06em] text-white/85">
+              {["Diseño resistente", "Durable", "Eficiente"].map((label, index) => (
+                <span key={label} className="flex items-center gap-3">
+                  {index > 0 && <span className="text-white/40">•</span>}
+                  <span className="flex items-center gap-1.5">
+                    <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 text-[#ffd400]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m4 10 4 4 8-8" />
+                    </svg>
+                    {label}
+                  </span>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -237,11 +250,22 @@ export default function EnergyCatalogoPage() {
       <section className="border-b border-slate-100 bg-slate-50">
         <div className="mx-auto max-w-[1500px] px-5 py-14 md:px-8">
           <SectionEyebrow>6. Cimentación recomendada</SectionEyebrow>
-          <div className="mt-6 max-w-2xl rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
-            <ul className="list-disc space-y-2 pl-5 text-sm font-semibold leading-6 text-slate-600">
-              <li>Pilote o dado de concreto según estudio de suelos.</li>
-              <li>Platina base 300x300x6.35 mm con 4 perforaciones Ø18 mm para anclaje con espárragos 5/8&quot;.</li>
-            </ul>
+          <div className="mt-6 grid gap-6 md:grid-cols-[1fr_280px]">
+            <div className="rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
+              <ul className="list-disc space-y-2 pl-5 text-sm font-semibold leading-6 text-slate-600">
+                <li>Pilote o dado de concreto según estudio de suelos.</li>
+                <li>Platina base 300x300x6.35 mm con 4 perforaciones Ø18 mm para anclaje con espárragos 5/8&quot;.</li>
+              </ul>
+            </div>
+            <div className="relative aspect-square w-full max-w-[280px] justify-self-end overflow-hidden rounded-[10px] border border-slate-200 shadow-[0_2px_10px_rgba(15,23,42,0.04)] md:justify-self-auto">
+              <Image
+                src="/energy-cimentacion-anclaje.jpg"
+                alt="Dado de concreto con platina de anclaje y espárragos para la cimentación de la estructura"
+                fill
+                sizes="280px"
+                className="object-cover"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -311,6 +335,44 @@ export default function EnergyCatalogoPage() {
           >
             Solicitar cotización
           </Link>
+        </div>
+      </section>
+
+      <section className="bg-[#050505]">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-6 px-5 py-8 md:px-8">
+          <span className="text-lg font-black uppercase tracking-[0.06em] text-white">
+            GEU <span className="text-[#ffd400]">Energy</span>
+          </span>
+
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm font-semibold text-white/75">
+            <a href="tel:+573017690955" className="flex items-center gap-2 hover:text-white">
+              <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-[#ffd400]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 3h3l1.5 4-2 1.5a11 11 0 0 0 5 5L13 12l4 1.5V16a2 2 0 0 1-2 2c-6.6 0-12-5.4-12-12a2 2 0 0 1 1-1Z" />
+              </svg>
+              +57 301 769 0955
+            </a>
+            <span className="flex items-center gap-2">
+              <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-[#ffd400]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="10" cy="10" r="7.5" />
+                <path d="M2.5 10h15M10 2.5c2 2.2 3 5 3 7.5s-1 5.3-3 7.5c-2-2.2-3-5-3-7.5s1-5.3 3-7.5Z" />
+              </svg>
+              www.geuenergy.com
+            </span>
+            <a href="mailto:contacto@geuenergy.com" className="flex items-center gap-2 hover:text-white">
+              <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-[#ffd400]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2.5" y="4.5" width="15" height="11" rx="2" />
+                <path d="m3 5.5 7 5.5 7-5.5" />
+              </svg>
+              contacto@geuenergy.com
+            </a>
+            <span className="flex items-center gap-2">
+              <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-[#ffd400]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 18s6-5.2 6-9.6A6 6 0 0 0 4 8.4C4 12.8 10 18 10 18Z" />
+                <circle cx="10" cy="8.4" r="2.1" />
+              </svg>
+              Colombia
+            </span>
+          </div>
         </div>
       </section>
     </main>
