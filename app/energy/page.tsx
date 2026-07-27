@@ -187,20 +187,10 @@ export default async function EnergyPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden border-b border-white/10 bg-black">
-        <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
-          <Image
-            src={engineeringImage}
-            alt="Ingeniería que sostiene el futuro: estructura de montaje GEU Energy"
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
-        </div>
-
-        <div className="absolute inset-0 flex items-center">
-          <div className="mx-auto w-full max-w-[1920px] px-5 md:px-10">
-            <h2 className="max-w-md font-[family:var(--font-display)] text-3xl font-black uppercase leading-[1.05] tracking-[-0.01em] text-white md:text-5xl">
+      <section className="flex flex-col border-b border-white/10 bg-black md:flex-row">
+        <div className="flex w-full shrink-0 items-center px-5 py-12 md:w-[30%] md:px-10 md:py-0">
+          <div>
+            <h2 className="font-[family:var(--font-display)] text-3xl font-black uppercase leading-[1.05] tracking-[-0.01em] text-white md:text-4xl">
               Ingeniería
               <br />
               <span className="text-[#f5a623]">que sostiene</span>
@@ -209,6 +199,16 @@ export default async function EnergyPage() {
             </h2>
             <span className="mt-5 block h-1 w-16 bg-[#f5a623]" />
           </div>
+        </div>
+
+        <div className="relative aspect-[1672/941] w-full md:w-[70%]">
+          <Image
+            src={engineeringImage}
+            alt="Ingeniería que sostiene el futuro: estructura de montaje GEU Energy"
+            fill
+            sizes="(min-width: 768px) 70vw, 100vw"
+            className="object-cover"
+          />
         </div>
       </section>
 
