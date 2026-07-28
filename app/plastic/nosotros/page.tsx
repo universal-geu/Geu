@@ -81,7 +81,7 @@ export default async function PlasticNosotrosPage() {
   const t = (key: string) => resolveText(key, siteTexts);
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
+    <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <CauchosHeader division="Plastic" />
 
       <section className="relative overflow-hidden bg-[#0b0c0d]">

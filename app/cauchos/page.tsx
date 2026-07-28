@@ -145,7 +145,7 @@ export default async function CauchosPage() {
   }));
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
+    <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <CauchosHeader division="Cauchos" />
 
       <section id="catalogo-cauchos" className="border-b border-slate-200 bg-white text-slate-900">

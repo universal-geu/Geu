@@ -105,7 +105,7 @@ export default async function ImportPage() {
   }));
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
+    <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <CauchosHeader division="Import" />
 
       <section id="catalogo-import" className="border-b border-slate-200 bg-white text-slate-900">

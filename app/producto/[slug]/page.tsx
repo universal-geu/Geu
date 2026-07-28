@@ -264,7 +264,7 @@ export default function ProductoDetallePage() {
   if (!producto) {
     if (isRefreshingCatalog) {
       return (
-        <main className="min-h-screen bg-[#f5f5f5] text-[#111]">
+        <main className="min-h-screen overflow-x-hidden bg-[#f5f5f5] text-[#111]">
           <section className="mx-auto max-w-[960px] px-6 py-20 text-center">
             <p className="text-lg text-[#6e7379]">Cargando producto...</p>
           </section>
@@ -273,7 +273,7 @@ export default function ProductoDetallePage() {
     }
 
     return (
-      <main className="min-h-screen bg-[#f5f5f5] text-[#111]">
+      <main className="min-h-screen overflow-x-hidden bg-[#f5f5f5] text-[#111]">
         <section className="mx-auto max-w-[960px] px-6 py-20 text-center">
           <div className="rounded-[2rem] border border-dashed border-black/12 bg-white p-12 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
             <h1 className="text-4xl font-semibold tracking-[-0.04em] text-[#4f545a]">
@@ -337,7 +337,7 @@ export default function ProductoDetallePage() {
   return (
     <>
       <CauchosHeader division={productDivision} />
-      <main className="min-h-screen bg-[#f5f5f5] text-[#111]">
+      <main className="min-h-screen overflow-x-hidden bg-[#f5f5f5] text-[#111]">
       <section className="mx-auto max-w-[1440px] px-6 py-12">
         <div className="mb-8 flex flex-wrap items-center gap-3 text-sm text-[#6e7379]">
           <Link
