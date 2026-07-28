@@ -123,7 +123,7 @@ export default async function PlasticPage() {
   }));
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
+    <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <CauchosHeader division="Plastic" />
 
       <section id="catalogo-plastic" className="border-b border-slate-200 bg-white text-slate-900">

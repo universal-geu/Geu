@@ -265,6 +265,7 @@ export default function CauchosCategorySidebarMenu({
   const categoryLabel = (nombre: string) => resolveText(categoryLabelKey(division, nombre), siteTexts, nombre);
   const cauchosBasePath = basePath || "/cauchos";
   const [activeDept, setActiveDept] = useState<string | null>(null);
+  const [expandedMobileDept, setExpandedMobileDept] = useState<string | null>(null);
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
   const menuData = useMemo(() => {
@@ -360,23 +361,22 @@ export default function CauchosCategorySidebarMenu({
               <span className="h-px w-8" style={{ backgroundColor: "var(--brand-accent)" }} />
               Categorías
             </p>
-            <ul className="flex flex-wrap gap-x-11 gap-y-5">
-              {importCategoriasData.map((category, index) => (
+            <ul className="grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-3 lg:grid-cols-5">
+              {importCategoriasData.map((category) => (
                 <li key={category.nombre}>
                   <Link
                     href={`${cauchosBasePath}/categoria/${slugify(category.nombre)}`}
                     onClick={close}
-                    className="group inline-flex items-baseline gap-2.5"
+                    className="group flex items-center gap-3"
                   >
-                    <span
-                      className="font-mono text-[10px] font-medium tabular-nums text-white/30 transition-colors duration-200 group-hover:text-[var(--brand-accent)]"
-                      aria-hidden="true"
-                    >
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className="relative text-[13px] font-medium uppercase tracking-[0.05em] text-white/80 transition-colors duration-200 group-hover:text-white">
+                    <span className="relative text-[13px] font-bold uppercase leading-tight tracking-[0.02em] text-white/80 transition-colors duration-200 group-hover:text-white">
                       {categoryLabel(category.nombre)}
-                      <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-[var(--brand-accent)] transition-all duration-300 ease-out group-hover:w-full" />
+                      <span
+                        className="absolute -bottom-1.5 left-0 h-px w-0 bg-[var(--brand-accent)] transition-all duration-300 ease-out group-hover:w-full"
+                      />
+                    </span>
+                    <span className="ml-auto text-white/30 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                      →
                     </span>
                   </Link>
                 </li>
@@ -457,7 +457,81 @@ export default function CauchosCategorySidebarMenu({
         aria-hidden="true"
         onClick={close}
       />
-      <div className="relative" onMouseLeave={() => setActiveDept(null)}>
+      <div className="max-h-[calc(100vh-80px)] overflow-y-auto md:hidden">
+        <p className="px-5 pb-3 pt-4 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+          Categorías
+        </p>
+        <ul>
+          {menuData.map((department) => {
+            const Icon = DEPARTMENT_ICONS[department.title] ?? GearIcon;
+            const isExpanded = expandedMobileDept === department.title;
+
+            return (
+              <li key={department.title} className="border-t border-slate-100 first:border-t-0">
+                <button
+                  type="button"
+                  onClick={() => setExpandedMobileDept(isExpanded ? null : department.title)}
+                  className={`flex w-full items-center justify-between gap-3 px-5 py-3 text-left text-[13px] font-bold transition-colors duration-150 ${
+                    isExpanded ? "bg-[#eef5ff] text-[var(--brand-accent)]" : "text-slate-800"
+                  }`}
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <Icon />
+                    <span className="min-w-0">{categoryLabel(department.title)}</span>
+                  </span>
+                  <span aria-hidden="true" className={`shrink-0 transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}>
+                    ›
+                  </span>
+                </button>
+
+                {isExpanded && (
+                  <div className="bg-slate-50 px-5 py-3">
+                    {department.subcategories.length === 0 ? (
+                      <Link
+                        href={`${cauchosBasePath}/categoria/${slugify(department.title)}`}
+                        onClick={close}
+                        className="block py-2 text-[13px] font-semibold text-[var(--brand-accent)]"
+                      >
+                        Ver {categoryLabel(department.title)} &gt;
+                      </Link>
+                    ) : (
+                      <ul className="flex flex-col gap-1">
+                        {department.subcategories.map((subcategory) => (
+                          <li key={subcategory.name}>
+                            <Link
+                              href={subcategory.groupHref}
+                              onClick={close}
+                              className="block py-2 text-[13px] font-medium text-slate-700"
+                            >
+                              {subcategory.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        {division === "Cauchos" && (
+          <div className="border-t border-slate-100 px-5 py-4">
+            <CauchosTechnicalForm
+              triggerClassName="inline-flex items-center gap-2 text-[13px] font-bold text-[#dd1b44]"
+              triggerLabel={
+                <>
+                  <PencilRulerIcon />
+                  Diseña tu pieza
+                </>
+              }
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="relative hidden md:block" onMouseLeave={() => setActiveDept(null)}>
         <nav className="w-[540px] shrink-0 border-r border-slate-200 py-4">
           <p className="px-5 pb-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
             Categorías

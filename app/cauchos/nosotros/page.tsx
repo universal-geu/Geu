@@ -99,7 +99,7 @@ export default async function CauchosNosotrosPage() {
   const heroTitleLines = t("cauchos-nosotros-hero-titulo").split("\n");
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
+    <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <CauchosHeader division="Cauchos" />
 
       <section className="relative overflow-hidden bg-[#020c1f]">

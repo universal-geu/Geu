@@ -156,10 +156,6 @@ export default function MediaShowcase({ items }: MediaShowcaseProps) {
             <h1 className="mt-4 text-4xl font-semibold leading-[0.92] tracking-[-0.07em] text-white md:text-6xl">
               Contenido vertical para seguir descubriendo
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-white/68 md:text-lg">
-              Título arriba, plataformas al frente y un showcase vertical con
-              navegación por swipe para que se sienta más vivo.
-            </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
