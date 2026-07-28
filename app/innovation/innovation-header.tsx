@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CauchosAccountLink from "../components/cauchos-account-link";
+import MobileBottomNav from "../components/mobile-bottom-nav";
 
 const navItems = [
   { label: "Nosotros", href: "/quienes-somos" },
@@ -39,9 +40,10 @@ function SearchIcon() {
 
 export default function InnovationHeader() {
   const [isSolucionesOpen, setIsSolucionesOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileSolucionesOpen, setIsMobileSolucionesOpen] = useState(false);
 
   return (
+    <>
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/85 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-5 md:px-8">
         <Link href="/" className="shrink-0">
@@ -109,21 +111,10 @@ export default function InnovationHeader() {
             brand="innovation"
             className="hidden text-[11px] font-black uppercase tracking-[0.08em] hover:text-[#0498b4] lg:inline-flex"
           />
-          <button
-            type="button"
-            aria-label="Abrir menú"
-            aria-expanded={isMobileMenuOpen}
-            onClick={() => setIsMobileMenuOpen((current) => !current)}
-            className="lg:hidden"
-          >
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              {isMobileMenuOpen ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
-            </svg>
-          </button>
         </div>
       </div>
 
-      {isMobileMenuOpen && (
+      {isMobileSolucionesOpen && (
         <div className="border-t border-white/10 bg-[#050505] px-5 py-4 lg:hidden">
           <p className="px-1 text-[11px] font-black uppercase tracking-[0.08em] text-white/50">Soluciones</p>
           <div className="mt-1 flex flex-col">
@@ -131,31 +122,26 @@ export default function InnovationHeader() {
               <Link
                 key={item.label}
                 href={item.href}
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => setIsMobileSolucionesOpen(false)}
                 className="rounded-lg px-1 py-2.5 text-sm font-semibold text-white/85 hover:text-[#0498b4]"
               >
                 {item.label}
               </Link>
             ))}
-          </div>
-          <div className="mt-3 flex flex-col border-t border-white/10 pt-3">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="rounded-lg px-1 py-2.5 text-sm font-semibold text-white/85 hover:text-[#0498b4]"
-              >
-                {item.label}
-              </Link>
-            ))}
-            <CauchosAccountLink
-              brand="innovation"
-              className="rounded-lg px-1 py-2.5 text-left text-sm font-semibold text-white/85 hover:text-[#0498b4]"
-            />
           </div>
         </div>
       )}
     </header>
+
+    <MobileBottomNav
+      homeHref="/innovation"
+      accent="#0498b4"
+      onCategoriasClick={() => setIsMobileSolucionesOpen((current) => !current)}
+      categoriasLabel="Soluciones"
+      accountBrand="innovation"
+      moreItems={navItems}
+      breakpointClassName="lg:hidden"
+    />
+    </>
   );
 }

@@ -88,7 +88,7 @@ export default function SiteFooter({
 
   return (
     <footer
-      className={isDark ? "text-white" : "border-t border-slate-200 bg-white"}
+      className={`pb-16 lg:pb-0 ${isDark ? "text-white" : "border-t border-slate-200 bg-white"}`}
       style={isDark ? { backgroundColor: darkBg } : undefined}
     >
       <div
