@@ -7,10 +7,36 @@ import CauchosCartLink from "./cauchos-cart-link";
 import CauchosSearchForm from "./cauchos-search-form";
 import CauchosCategorySidebarMenu from "./cauchos-category-sidebar-menu";
 import CauchosMenuButton from "./cauchos-menu-button";
-import { CauchosMenuProvider } from "./cauchos-menu-context";
+import { CauchosMenuProvider, useCauchosMenu } from "./cauchos-menu-context";
 import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
 import { useSiteTexts } from "./use-site-texts";
 import { resolveText } from "@/lib/text-slots";
+import { useCart } from "./cart-provider";
+import MobileBottomNav from "./mobile-bottom-nav";
+
+type BottomNavProps = {
+  homeHref: string;
+  accent: string;
+  cartHref: string;
+  accountBrand?: string;
+  moreItems: { label: string; href: string }[];
+};
+
+function CauchosBottomNav({ homeHref, accent, cartHref, accountBrand, moreItems }: BottomNavProps) {
+  const { toggle } = useCauchosMenu();
+  const { totalItems } = useCart();
+
+  return (
+    <MobileBottomNav
+      homeHref={homeHref}
+      accent={accent}
+      cart={{ href: cartHref, count: totalItems }}
+      onCategoriasClick={toggle}
+      accountBrand={accountBrand}
+      moreItems={moreItems}
+    />
+  );
+}
 
 type Props = {
   division?: DivisionName;
@@ -95,6 +121,19 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
         </div>
 
         <CauchosCategorySidebarMenu basePath={brand.basePath} division={division} accent={brand.accent} />
+
+        <CauchosBottomNav
+          homeHref={brand.basePath}
+          accent={brand.accent}
+          cartHref={cartHref}
+          accountBrand={brandParam}
+          moreItems={[
+            { label: "Nosotros", href: nosotrosHref },
+            { label: "Cotizaciones", href: `${brand.basePath}#contacto` },
+            { label: "Catálogos", href: `${brand.basePath}#productos` },
+            { label: "GEU empresas", href: "/quienes-somos" },
+          ]}
+        />
       </header>
     </CauchosMenuProvider>
   );
