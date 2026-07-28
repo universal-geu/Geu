@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -213,10 +213,26 @@ function ProductImageGallery({
 
 export default function ProductoDetallePage() {
   const params = useParams<{ slug: string }>();
-  const { products } = useProducts();
+  const { products, refreshProducts } = useProducts();
   const [cantidad, setCantidad] = useState(1);
+  const [selectedVariantSku, setSelectedVariantSku] = useState<string | null>(null);
+  const [isMedidaMenuOpen, setIsMedidaMenuOpen] = useState(false);
   const slug = params.slug;
   const producto = products.find((item) => item.slug === slug);
+
+  // The product catalog is only loaded once per full page load — if a
+  // product was created/renamed after that, a client-side navigation here
+  // won't see it until we explicitly refetch. Retry once per slug before
+  // giving up and showing "not found".
+  const attemptedRefreshRef = useRef<string | null>(null);
+  const [isRefreshingCatalog, setIsRefreshingCatalog] = useState(() => !producto);
+
+  useEffect(() => {
+    if (producto || attemptedRefreshRef.current === slug) return;
+    attemptedRefreshRef.current = slug;
+    setIsRefreshingCatalog(true);
+    void refreshProducts().finally(() => setIsRefreshingCatalog(false));
+  }, [producto, slug, refreshProducts]);
   const galleryImages = useMemo(
     () =>
       producto
@@ -225,9 +241,37 @@ export default function ProductoDetallePage() {
     [producto],
   );
 
-  const maxCantidad = Math.max(1, producto?.stock ?? 1);
+  useEffect(() => {
+    if (!producto?.variantes?.length) {
+      setSelectedVariantSku(null);
+      return;
+    }
+
+    const firstInStock = producto.variantes.find((variante) => variante.stock > 0);
+    setSelectedVariantSku((firstInStock ?? producto.variantes[0]).sku);
+    setCantidad(1);
+    // Only re-run when the product itself changes, not on every re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [producto?.slug]);
+
+  const hasVariants = Boolean(producto?.variantes?.length);
+  const selectedVariant = hasVariants
+    ? producto?.variantes?.find((variante) => variante.sku === selectedVariantSku) ?? null
+    : null;
+
+  const maxCantidad = Math.max(1, (hasVariants ? selectedVariant?.stock : producto?.stock) ?? 1);
 
   if (!producto) {
+    if (isRefreshingCatalog) {
+      return (
+        <main className="min-h-screen bg-[#f5f5f5] text-[#111]">
+          <section className="mx-auto max-w-[960px] px-6 py-20 text-center">
+            <p className="text-lg text-[#6e7379]">Cargando producto...</p>
+          </section>
+        </main>
+      );
+    }
+
     return (
       <main className="min-h-screen bg-[#f5f5f5] text-[#111]">
         <section className="mx-auto max-w-[960px] px-6 py-20 text-center">
@@ -270,7 +314,11 @@ export default function ProductoDetallePage() {
   const isRed = cartAccent === "red";
   const accentTextClass = ACCENT_TEXT_CLASS[cartAccent];
   const isService = isServiceDivision(productDivision);
-  const canPurchase = isService ? true : producto.puedeComprar;
+  const canPurchase = isService
+    ? true
+    : hasVariants
+      ? Boolean(selectedVariant && selectedVariant.stock > 0)
+      : producto.puedeComprar;
   const productImage =
     producto.imagen === "/hero-unipars.jpg"
       ? FALLBACK_PRODUCT_IMAGE[productDivision]
@@ -386,7 +434,10 @@ export default function ProductoDetallePage() {
                   {producto.nombre}
                 </h1>
                 <p className="mt-3 text-sm font-semibold text-slate-500">
-                  Código {producto.sku || producto.slug.toUpperCase().replace(/-/g, "")}
+                  Código{" "}
+                  {hasVariants
+                    ? selectedVariant?.sku || "—"
+                    : producto.sku || producto.slug.toUpperCase().replace(/-/g, "")}
                 </p>
               </div>
             </div>
@@ -406,10 +457,79 @@ export default function ProductoDetallePage() {
               </p>
               {!isService && (
                 <p className="mt-3 text-sm font-bold text-slate-500">
-                  Stock disponible: {producto.stock ?? 0}
+                  Stock disponible: {(hasVariants ? selectedVariant?.stock : producto.stock) ?? 0}
                 </p>
               )}
             </div>
+
+            {hasVariants && (
+              <div className="relative">
+                <p className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+                  Medida
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsMedidaMenuOpen((current) => !current)}
+                  className={`flex w-full items-center justify-between rounded-2xl border-2 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition-colors duration-200 ${
+                    isMedidaMenuOpen ? GALLERY_ACTIVE_BORDER_CLASS[cartAccent] : GALLERY_HOVER_BORDER_CLASS[cartAccent]
+                  }`}
+                >
+                  <span>{selectedVariant?.medida || "Selecciona una medida"}</span>
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isMedidaMenuOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+
+                {isMedidaMenuOpen && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Cerrar selector de medida"
+                      onClick={() => setIsMedidaMenuOpen(false)}
+                      className="fixed inset-0 z-[110] cursor-default"
+                    />
+                    <div className="absolute z-[111] mt-2 max-h-80 w-full overflow-y-auto rounded-2xl border border-black/10 bg-white p-2 shadow-[0_18px_40px_rgba(15,23,42,0.15)]">
+                      {producto.variantes!.map((variante) => {
+                        const isSelected = variante.sku === selectedVariantSku;
+                        const isOutOfStock = variante.stock <= 0;
+
+                        return (
+                          <button
+                            key={variante.sku}
+                            type="button"
+                            disabled={isOutOfStock}
+                            onClick={() => {
+                              setSelectedVariantSku(variante.sku);
+                              setCantidad(1);
+                              setIsMedidaMenuOpen(false);
+                            }}
+                            className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-bold transition-colors duration-200 ${
+                              isOutOfStock
+                                ? "cursor-not-allowed text-slate-300 line-through"
+                                : isSelected
+                                  ? `${GALLERY_BADGE_CLASS[cartAccent]}`
+                                  : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            <span>{variante.medida}</span>
+                            {isOutOfStock && <span className="text-xs font-semibold">Agotado</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-wrap items-center gap-3 pt-4">
               <div className="flex items-center overflow-hidden rounded-full border border-slate-200 bg-white">
@@ -435,8 +555,8 @@ export default function ProductoDetallePage() {
               </div>
 
               <CauchosAddToCartButton
-                id={producto.slug}
-                nombre={producto.nombre}
+                id={hasVariants && selectedVariant ? `${producto.slug}::${selectedVariant.sku}` : producto.slug}
+                nombre={hasVariants && selectedVariant ? `${producto.nombre} - ${selectedVariant.medida}` : producto.nombre}
                 precio={producto.precio}
                 imagen={productImage}
                 cantidad={cantidad}
@@ -453,7 +573,10 @@ export default function ProductoDetallePage() {
                 <li>Compatibilidad directa con la línea {producto.categoria}.</li>
                 <li>Producto con respaldo comercial y disponibilidad {producto.disponibilidad.toLowerCase()}.</li>
                 {!isService && (
-                  <li>Inventario actual: {producto.stock ?? 0} unidad{(producto.stock ?? 0) === 1 ? "" : "es"}.</li>
+                  <li>
+                    Inventario actual: {(hasVariants ? selectedVariant?.stock : producto.stock) ?? 0} unidad
+                    {((hasVariants ? selectedVariant?.stock : producto.stock) ?? 0) === 1 ? "" : "es"}.
+                  </li>
                 )}
                 <li>Componente pensado para rendimiento estable y mantenimiento ágil.</li>
               </ul>
