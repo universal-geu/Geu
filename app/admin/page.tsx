@@ -233,6 +233,39 @@ function normalizeTechnicalSpecFormItems(
     .filter((item) => item.etiqueta && item.valor);
 }
 
+const MAX_VARIANTES = 50;
+
+type VariantFormItem = {
+  id: string;
+  medida: string;
+  sku: string;
+  stock: string;
+};
+
+function createVariantItem(variante?: {
+  medida?: string;
+  sku?: string;
+  stock?: string;
+}): VariantFormItem {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    medida: variante?.medida || "",
+    sku: variante?.sku || "",
+    stock: variante?.stock ?? "0",
+  };
+}
+
+function normalizeVariantFormItems(items: VariantFormItem[]) {
+  return items
+    .map((item) => ({
+      medida: item.medida.trim(),
+      sku: item.sku.trim().toUpperCase(),
+      stock: Math.max(0, Math.round(Number(item.stock) || 0)),
+    }))
+    .filter((item) => item.medida && item.sku)
+    .slice(0, MAX_VARIANTES);
+}
+
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 const RECOMMENDED_FILE_SIZE_KB = 500;
 const EXTRA_IMAGE_SLOTS = 3;
@@ -761,6 +794,110 @@ function TechnicalSpecsEditor({
   );
 }
 
+function VariantesEditor({
+  items,
+  onChange,
+}: {
+  items: VariantFormItem[];
+  onChange: (items: VariantFormItem[]) => void;
+}) {
+  const updateItem = (id: string, field: "medida" | "sku" | "stock", value: string) => {
+    onChange(items.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
+  };
+
+  const removeItem = (id: string) => {
+    onChange(items.filter((item) => item.id !== id));
+  };
+
+  const addItem = () => {
+    if (items.length >= MAX_VARIANTES) return;
+    onChange([...items, createVariantItem()]);
+  };
+
+  return (
+    <div className="md:col-span-2 rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-[#4f545a]">Medidas del producto</p>
+          <p className="mt-2 text-xs leading-6 text-[#6e7379]">
+            Agrega hasta {MAX_VARIANTES} medidas. Cada una tiene su propio SKU y su propio stock.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={addItem}
+          disabled={items.length >= MAX_VARIANTES}
+          className="inline-flex rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white disabled:hover:text-[#16384f]"
+        >
+          Agregar medida
+        </button>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        {items.length === 0 && (
+          <div className="rounded-[1.2rem] border border-dashed border-black/12 bg-white px-4 py-5 text-sm text-[#6e7379]">
+            Aún no hay medidas. Agrega la primera fila.
+          </div>
+        )}
+
+        {items.map((item, index) => (
+          <div
+            key={item.id}
+            className="grid gap-3 rounded-[1.2rem] border border-black/8 bg-white p-4 md:grid-cols-[1fr_1fr_140px_auto]"
+          >
+            <label className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                Medida
+              </span>
+              <input
+                value={item.medida}
+                onChange={(event) => updateItem(item.id, "medida", event.target.value)}
+                placeholder={index === 0 ? "Ej. 215/65 R16" : "Medida"}
+                className="w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                SKU
+              </span>
+              <input
+                value={item.sku}
+                onChange={(event) => updateItem(item.id, "sku", event.target.value)}
+                placeholder="Ej. IMP-215-65-R16"
+                className="w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                Stock
+              </span>
+              <input
+                type="number"
+                min="0"
+                value={item.stock}
+                onChange={(event) => updateItem(item.id, "stock", event.target.value)}
+                className="w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+              />
+            </label>
+
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={() => removeItem(item.id)}
+                className="inline-flex rounded-full border border-black/10 px-4 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+              >
+                Quitar
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function getSubcategoryOptionsFor(categoria: string, adminProducts: StoreProduct[]) {
   const normalizedCategoria = normalizeMatchKey(categoria);
   const menuGroups = cauchosCategorySubcategories[categoria] ?? [];
@@ -1236,6 +1373,11 @@ export default function AdminPage() {
   const [technicalSpecs, setTechnicalSpecs] = useState<TechnicalSpecFormItem[]>([
     createTechnicalSpecItem({ etiqueta: "Observaciones" }),
   ]);
+  const [variantMode, setVariantMode] = useState(false);
+  const [variantes, setVariantes] = useState<VariantFormItem[]>([]);
+  const canUseVariantMode =
+    adminDivision === "Import" || adminDivision === "Plastic" || adminDivision === "Cauchos";
+  const isVariantModeActive = canUseVariantMode && variantMode;
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [requestError, setRequestError] = useState("");
@@ -1395,7 +1537,8 @@ export default function AdminPage() {
         search.length === 0 ||
         product.nombre.toLowerCase().includes(search) ||
         product.marca.toLowerCase().includes(search) ||
-        (product.sku || "").toLowerCase().includes(search);
+        (product.sku || "").toLowerCase().includes(search) ||
+        (product.variantes || []).some((variante) => variante.sku.toLowerCase().includes(search));
       const matchesInventory =
         inventoryStatusFilter === "all" ||
         product.estadoInventario === inventoryStatusFilter;
@@ -1727,8 +1870,11 @@ export default function AdminPage() {
           index !== primaryImageIndex && Boolean(image),
       );
 
+      const normalizedVariantes = isVariantModeActive ? normalizeVariantFormItems(variantes) : [];
+      const variantStockTotal = normalizedVariantes.reduce((total, item) => total + item.stock, 0);
+
       const payload = {
-        sku: form.sku,
+        sku: isVariantModeActive ? undefined : form.sku,
         oemReferencia: form.oemReferencia,
         referenciasAlternas: splitCommaSeparatedValues(form.referenciasAlternas),
         categoria: form.categoria,
@@ -1750,7 +1896,7 @@ export default function AdminPage() {
           : Number(form.precioAnteriorValor || form.precioValor),
         displayPriceOverride: isServiceAdmin ? form.displayPriceOverride : undefined,
         displaySecondaryLabel: isServiceAdmin ? form.displaySecondaryLabel : undefined,
-        stock: isServiceAdmin ? 0 : Number(form.stock),
+        stock: isServiceAdmin ? 0 : isVariantModeActive ? variantStockTotal : Number(form.stock),
         stockMinimo: isServiceAdmin ? 0 : Number(form.stockMinimo),
         imagen: nextPrimaryImage,
         imagenesExtra: reorderedExtraImages.slice(0, EXTRA_IMAGE_SLOTS),
@@ -1761,6 +1907,7 @@ export default function AdminPage() {
         garantia: form.garantia,
         fichaTecnicaUrl,
         especificacionesTecnicas: normalizeTechnicalSpecFormItems(technicalSpecs),
+        variantes: normalizedVariantes,
       };
       const result = editingSlug
         ? await updateProduct(editingSlug, payload)
@@ -1794,6 +1941,8 @@ export default function AdminPage() {
       setSelectedPdf(null);
       setExistingPdfUrl(null);
       setTechnicalSpecs([createTechnicalSpecItem({ etiqueta: "Observaciones" })]);
+      setVariantMode(false);
+      setVariantes([]);
       setEditingSlug(null);
       setActiveTab(null);
       setSaved(true);
@@ -1864,6 +2013,16 @@ export default function AdminPage() {
         ? (product.especificacionesTecnicas || []).map((item) => createTechnicalSpecItem(item))
         : [createTechnicalSpecItem({ etiqueta: "Observaciones" })],
     );
+    setVariantMode(Boolean(product.variantes?.length));
+    setVariantes(
+      (product.variantes || []).map((variante) =>
+        createVariantItem({
+          medida: variante.medida,
+          sku: variante.sku,
+          stock: String(variante.stock),
+        }),
+      ),
+    );
   };
 
   const handleResetForm = () => {
@@ -1881,6 +2040,8 @@ export default function AdminPage() {
     setSelectedPdf(null);
     setExistingPdfUrl(null);
     setTechnicalSpecs([createTechnicalSpecItem({ etiqueta: "Observaciones" })]);
+    setVariantMode(false);
+    setVariantes([]);
   };
 
   const handleDeleteProduct = async (slug: string) => {
@@ -2113,6 +2274,8 @@ export default function AdminPage() {
     setSelectedPdf(null);
     setExistingPdfUrl(null);
     setTechnicalSpecs([createTechnicalSpecItem({ etiqueta: "Observaciones" })]);
+    setVariantMode(false);
+    setVariantes([]);
     setActiveTab("create");
   };
 
@@ -3221,17 +3384,38 @@ export default function AdminPage() {
                 )}
               </div>
 
-                <div className="grid gap-5 md:grid-cols-2">
-                  <label className="space-y-2">
-                    <span className="text-sm font-medium text-[#4f545a]">SKU</span>
+                {canUseVariantMode && (
+                  <label className="mb-5 flex items-center gap-3 rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3">
                     <input
-                      name="sku"
-                      value={form.sku}
-                      onChange={handleChange}
-                      placeholder="Ej. FAROLA001"
-                      className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                      type="checkbox"
+                      checked={variantMode}
+                      onChange={(event) => setVariantMode(event.target.checked)}
                     />
+                    <span className="text-sm font-medium text-[#4f545a]">
+                      Este producto está categorizado por medidas
+                    </span>
                   </label>
+                )}
+
+                {isVariantModeActive && (
+                  <div className="mb-5">
+                    <VariantesEditor items={variantes} onChange={setVariantes} />
+                  </div>
+                )}
+
+                <div className="grid gap-5 md:grid-cols-2">
+                  {!isVariantModeActive && (
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-[#4f545a]">SKU</span>
+                      <input
+                        name="sku"
+                        value={form.sku}
+                        onChange={handleChange}
+                        placeholder="Ej. FAROLA001"
+                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                      />
+                    </label>
+                  )}
 
                   <CategoryComboBox
                     label={adminDivision === "Import" || adminDivision === "Plastic" ? "Categoría" : "Crear categoría"}
@@ -3341,14 +3525,20 @@ export default function AdminPage() {
 
                     <label className="space-y-2">
                       <span className="text-sm font-medium text-[#4f545a]">Stock actual</span>
-                      <input
-                        name="stock"
-                        type="number"
-                        min="0"
-                        value={form.stock}
-                        onChange={handleChange}
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                      />
+                      {isVariantModeActive ? (
+                        <div className="w-full rounded-2xl border border-black/10 bg-[#f3f3f2] px-4 py-3 text-sm text-[#6e7379]">
+                          {variantes.reduce((total, item) => total + (Number(item.stock) || 0), 0)} (suma de las medidas)
+                        </div>
+                      ) : (
+                        <input
+                          name="stock"
+                          type="number"
+                          min="0"
+                          value={form.stock}
+                          onChange={handleChange}
+                          className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                        />
+                      )}
                     </label>
 
                     <label className="space-y-2">
@@ -3753,17 +3943,38 @@ export default function AdminPage() {
                     )}
                   </div>
 
-                  <div className="grid gap-5 md:grid-cols-2">
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[#4f545a]">SKU</span>
+                  {canUseVariantMode && (
+                    <label className="mb-5 flex items-center gap-3 rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3">
                       <input
-                        name="sku"
-                        value={form.sku}
-                        onChange={handleChange}
-                        placeholder="Ej. FAROLA001"
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                        type="checkbox"
+                        checked={variantMode}
+                        onChange={(event) => setVariantMode(event.target.checked)}
                       />
+                      <span className="text-sm font-medium text-[#4f545a]">
+                        Este producto está categorizado por medidas
+                      </span>
                     </label>
+                  )}
+
+                  {isVariantModeActive && (
+                    <div className="mb-5">
+                      <VariantesEditor items={variantes} onChange={setVariantes} />
+                    </div>
+                  )}
+
+                  <div className="grid gap-5 md:grid-cols-2">
+                    {!isVariantModeActive && (
+                      <label className="space-y-2">
+                        <span className="text-sm font-medium text-[#4f545a]">SKU</span>
+                        <input
+                          name="sku"
+                          value={form.sku}
+                          onChange={handleChange}
+                          placeholder="Ej. FAROLA001"
+                          className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                        />
+                      </label>
+                    )}
 
                     <CategoryComboBox
                       label={adminDivision === "Import" || adminDivision === "Plastic" ? "Categoría" : "Crear categoría"}
@@ -3873,14 +4084,20 @@ export default function AdminPage() {
 
                         <label className="space-y-2">
                           <span className="text-sm font-medium text-[#4f545a]">Stock actual</span>
-                          <input
-                            name="stock"
-                            type="number"
-                            min="0"
-                            value={form.stock}
-                            onChange={handleChange}
-                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                          />
+                          {isVariantModeActive ? (
+                            <div className="w-full rounded-2xl border border-black/10 bg-[#f3f3f2] px-4 py-3 text-sm text-[#6e7379]">
+                              {variantes.reduce((total, item) => total + (Number(item.stock) || 0), 0)} (suma de las medidas)
+                            </div>
+                          ) : (
+                            <input
+                              name="stock"
+                              type="number"
+                              min="0"
+                              value={form.stock}
+                              onChange={handleChange}
+                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                            />
+                          )}
                         </label>
 
                         <label className="space-y-2">

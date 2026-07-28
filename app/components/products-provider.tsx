@@ -16,7 +16,7 @@ import {
 } from "../data/catalog";
 import type { StoreProduct } from "@/lib/products";
 import { DIVISION_BRAND, isServiceDivision, type DivisionName } from "@/lib/divisions";
-import type { ProductoCategoriaAdicional } from "../data/catalog";
+import type { ProductoCategoriaAdicional, ProductoVariante } from "../data/catalog";
 
 export type AdminProductInput = {
   sku?: string;
@@ -42,6 +42,7 @@ export type AdminProductInput = {
   aplicacion?: string;
   compatibilidad?: string[];
   garantia?: string;
+  variantes?: ProductoVariante[];
 };
 
 type ProductsContextValue = {
@@ -143,6 +144,10 @@ function createLocalProduct(
     compatibilidad: input.compatibilidad || [input.marca, input.categoria],
     garantia:
       input.garantia || "Garantía técnica según aplicación y condiciones de uso.",
+    // Offline/local mode is a dev/demo fallback, not the production path —
+    // it doesn't recompute aggregate stock from variantes, cap at 50 rows,
+    // or enforce SKU uniqueness the way lib/products.ts does server-side.
+    variantes: input.variantes || [],
     destacado: false,
   };
 }

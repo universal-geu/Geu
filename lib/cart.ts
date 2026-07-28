@@ -9,6 +9,23 @@ export type PersistedCartItem = {
   cantidad: number;
 };
 
+// The client-side cart id is either a plain product slug, or (for a
+// variant/"medida" selection) a composite "slug::variantSku" string. The DB
+// keeps slug and variant sku in separate columns — this is the only place
+// that string gets built and taken apart.
+export function parseCartItemId(id: string): { slug: string; variantSku: string } {
+  const separatorIndex = id.indexOf("::");
+  if (separatorIndex === -1) return { slug: id, variantSku: "" };
+  return {
+    slug: id.slice(0, separatorIndex),
+    variantSku: id.slice(separatorIndex + 2),
+  };
+}
+
+function buildCartItemId(productId: string, variantSku: string) {
+  return variantSku ? `${productId}::${variantSku}` : productId;
+}
+
 // The client can't be trusted to report the correct price — always look up
 // the product's real price server-side before persisting a cart item.
 async function getTrustedPrice(productId: string) {
@@ -28,6 +45,26 @@ async function getTrustedPrice(productId: string) {
   return formatearMoneda(product.price);
 }
 
+// A variant sku is client-supplied — always verify it actually belongs to
+// the product before trusting it (mirrors getTrustedPrice above).
+async function getTrustedVariantLabel(productId: string, variantSku: string) {
+  if (!variantSku) return "";
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  const variant = await prisma.productVariant.findFirst({
+    where: { sku: variantSku, product: { slug: productId } },
+    select: { label: true },
+  });
+
+  if (!variant) {
+    throw new Error("VARIANT_NOT_FOUND");
+  }
+
+  return variant.label;
+}
+
 export async function getCartItemsForUser(userId: string) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
@@ -39,7 +76,7 @@ export async function getCartItemsForUser(userId: string) {
   });
 
   return items.map((item) => ({
-    id: item.productId,
+    id: buildCartItemId(item.productId, item.variantSku),
     nombre: item.name,
     precio: item.price,
     imagen: item.image,
@@ -55,27 +92,33 @@ export async function addCartItemForUser(
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
 
+  const { slug, variantSku } = parseCartItemId(item.id);
   const quantityToAdd = Math.max(1, Math.trunc(item.cantidad ?? 1));
-  const trustedPrice = await getTrustedPrice(item.id);
+  const trustedPrice = await getTrustedPrice(slug);
+  const variantLabel = await getTrustedVariantLabel(slug, variantSku);
 
   await prisma.cartItem.upsert({
     where: {
-      userId_productId: {
+      userId_productId_variantSku: {
         userId,
-        productId: item.id,
+        productId: slug,
+        variantSku,
       },
     },
     update: {
       name: item.nombre,
       price: trustedPrice,
       image: item.imagen,
+      variantLabel,
       quantity: {
         increment: quantityToAdd,
       },
     },
     create: {
       userId,
-      productId: item.id,
+      productId: slug,
+      variantSku,
+      variantLabel,
       name: item.nombre,
       price: trustedPrice,
       image: item.imagen,
@@ -89,6 +132,7 @@ export async function addCartItemForUser(
 export async function updateCartItemQuantityForUser(
   userId: string,
   productId: string,
+  variantSku: string,
   action: "increment" | "decrement",
 ) {
   if (!prisma) {
@@ -97,9 +141,10 @@ export async function updateCartItemQuantityForUser(
 
   const item = await prisma.cartItem.findUnique({
     where: {
-      userId_productId: {
+      userId_productId_variantSku: {
         userId,
         productId,
+        variantSku,
       },
     },
   });
@@ -111,18 +156,20 @@ export async function updateCartItemQuantityForUser(
   if (action === "decrement" && item.quantity <= 1) {
     await prisma.cartItem.delete({
       where: {
-        userId_productId: {
+        userId_productId_variantSku: {
           userId,
           productId,
+          variantSku,
         },
       },
     });
   } else {
     await prisma.cartItem.update({
       where: {
-        userId_productId: {
+        userId_productId_variantSku: {
           userId,
           productId,
+          variantSku,
         },
       },
       data: {
@@ -136,7 +183,11 @@ export async function updateCartItemQuantityForUser(
   return getCartItemsForUser(userId);
 }
 
-export async function removeCartItemForUser(userId: string, productId: string) {
+export async function removeCartItemForUser(
+  userId: string,
+  productId: string,
+  variantSku: string,
+) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
@@ -145,6 +196,7 @@ export async function removeCartItemForUser(userId: string, productId: string) {
     where: {
       userId,
       productId,
+      variantSku,
     },
   });
 
@@ -172,33 +224,40 @@ export async function syncCartItemsForUser(
   }
 
   for (const item of items) {
+    const { slug, variantSku } = parseCartItemId(item.id);
     let trustedPrice: string;
+    let variantLabel: string;
     try {
-      trustedPrice = await getTrustedPrice(item.id);
+      trustedPrice = await getTrustedPrice(slug);
+      variantLabel = await getTrustedVariantLabel(slug, variantSku);
     } catch {
-      // Guest cart references a product that no longer exists — skip it
-      // instead of trusting the client-supplied price.
+      // Guest cart references a product (or medida) that no longer exists —
+      // skip it instead of trusting the client-supplied price.
       continue;
     }
 
     await prisma.cartItem.upsert({
       where: {
-        userId_productId: {
+        userId_productId_variantSku: {
           userId,
-          productId: item.id,
+          productId: slug,
+          variantSku,
         },
       },
       update: {
         name: item.nombre,
         price: trustedPrice,
         image: item.imagen,
+        variantLabel,
         quantity: {
           increment: item.cantidad,
         },
       },
       create: {
         userId,
-        productId: item.id,
+        productId: slug,
+        variantSku,
+        variantLabel,
         name: item.nombre,
         price: trustedPrice,
         image: item.imagen,

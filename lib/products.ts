@@ -11,6 +11,7 @@ import {
   type ProductoCatalogo,
   type ProductoCategoriaAdicional,
   type ProductoEspecificacion,
+  type ProductoVariante,
 } from "@/app/data/catalog";
 import { prisma } from "@/lib/prisma";
 import { isServiceDivision, type DivisionName } from "@/lib/divisions";
@@ -41,6 +42,7 @@ type ProductRecord = {
   technicalSheetUrl?: string | null;
   technicalSpecs?: unknown;
   featured: boolean;
+  variants?: Array<{ label: string; sku: string; stock: number }> | null;
 };
 
 export type StoreProduct = ProductoCatalogo & {
@@ -86,7 +88,41 @@ export type ProductMutationInput = {
   garantia?: string;
   fichaTecnicaUrl?: string;
   especificacionesTecnicas?: ProductoEspecificacion[];
+  variantes?: ProductoVariante[];
 };
+
+function normalizeVariantes(variantes: unknown): ProductoVariante[] {
+  if (!Array.isArray(variantes)) return [];
+
+  const seenSkus = new Set<string>();
+  const result: ProductoVariante[] = [];
+
+  for (const item of variantes) {
+    if (!item || typeof item !== "object") continue;
+
+    const medida =
+      "medida" in item && typeof item.medida === "string" ? item.medida.trim() : "";
+    const sku =
+      "sku" in item && typeof item.sku === "string" ? item.sku.trim().toUpperCase() : "";
+    const stock =
+      "stock" in item && typeof item.stock === "number" && Number.isFinite(item.stock)
+        ? Math.max(0, Math.round(item.stock))
+        : 0;
+
+    if (!medida || !sku || seenSkus.has(sku)) continue;
+
+    seenSkus.add(sku);
+    result.push({ medida, sku, stock });
+
+    if (result.length >= 50) break;
+  }
+
+  return result;
+}
+
+function sumVariantStock(variantes: ProductoVariante[]) {
+  return variantes.reduce((total, variante) => total + variante.stock, 0);
+}
 
 function normalizeTechnicalSpecs(specs: unknown): ProductoEspecificacion[] {
   if (!Array.isArray(specs)) return [];
@@ -338,6 +374,11 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
     garantia: product.warranty?.trim() || "1 año de garantía del fabricante",
     fichaTecnicaUrl: product.technicalSheetUrl || undefined,
     especificacionesTecnicas: normalizeTechnicalSpecs(product.technicalSpecs),
+    variantes: (product.variants || []).map((variant) => ({
+      medida: variant.label,
+      sku: variant.sku,
+      stock: variant.stock,
+    })),
     destacado: product.featured,
   };
 }
@@ -401,6 +442,7 @@ export async function getProducts() {
         active: true,
       },
       orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      include: { variants: true },
     });
 
     return products.map(toStoreProduct);
@@ -433,25 +475,33 @@ export async function createProduct(input: ProductMutationInput) {
     suffix += 1;
   }
 
+  const normalizedVariantes = normalizeVariantes(input.variantes);
+  const hasVariants = normalizedVariantes.length > 0;
   const precioValor = Math.max(1, Math.round(input.precioValor));
   const precioAnteriorValor = Math.max(
     precioValor,
     Math.round(input.precioAnteriorValor || input.precioValor),
   );
-  const stock = Math.max(0, Math.round(input.stock));
+  const stock = hasVariants ? sumVariantStock(normalizedVariantes) : Math.max(0, Math.round(input.stock));
   const stockMinimo = Math.max(0, Math.round(input.stockMinimo));
   const imagen = normalizeProductImage(input.imagen) || "/cauchos-product-sellos.png";
   const imagenesExtra = normalizeGalleryImages(input.imagenesExtra || []);
-  const baseSku = (input.sku?.trim() || createSkuFromName(nombre)).toUpperCase();
-  let sku = baseSku;
-  let skuSuffix = 1;
+  let sku: string | null = null;
 
-  while (await prisma.product.findUnique({ where: { sku } })) {
-    sku = `${baseSku}-${skuSuffix}`;
-    skuSuffix += 1;
+  if (!hasVariants) {
+    const baseSku = (input.sku?.trim() || createSkuFromName(nombre)).toUpperCase();
+    sku = baseSku;
+    let skuSuffix = 1;
+
+    while (await prisma.product.findUnique({ where: { sku } })) {
+      sku = `${baseSku}-${skuSuffix}`;
+      skuSuffix += 1;
+    }
   }
 
-  const created = await prisma.product.create({
+  let created;
+  try {
+    created = await prisma.product.create({
     data: {
       slug,
       sku,
@@ -503,8 +553,29 @@ export async function createProduct(input: ProductMutationInput) {
           note: "Inventario inicial del producto",
         },
       },
+      variants: hasVariants
+        ? {
+            create: normalizedVariantes.map((variante) => ({
+              label: variante.medida,
+              sku: variante.sku,
+              stock: variante.stock,
+            })),
+          }
+        : undefined,
     },
+    include: { variants: true },
   });
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      throw new Error("DUPLICATE_VARIANT_SKU");
+    }
+    throw error;
+  }
 
   return toStoreProduct(created);
 }
@@ -516,6 +587,7 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
 
   const existing = await prisma.product.findUnique({
     where: { slug },
+    include: { variants: true },
   });
 
   if (!existing) {
@@ -529,7 +601,9 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
     precioValor,
     Math.round(input.precioAnteriorValor || input.precioValor),
   );
-  const stock = Math.max(0, Math.round(input.stock));
+  const normalizedVariantes = normalizeVariantes(input.variantes);
+  const hasVariants = normalizedVariantes.length > 0;
+  const stock = hasVariants ? sumVariantStock(normalizedVariantes) : Math.max(0, Math.round(input.stock));
   const stockMinimo = Math.max(0, Math.round(input.stockMinimo));
   const imagen = normalizeProductImage(input.imagen) || existing.image;
   const imagenesExtra = normalizeGalleryImages(input.imagenesExtra || []);
@@ -554,82 +628,139 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
     }
   }
 
-  const nextSkuBase = (input.sku?.trim() || existing.sku || createSkuFromName(nombre)).toUpperCase();
-  let nextSku = nextSkuBase;
+  let nextSku: string | null = null;
 
-  if (nextSkuBase !== existing.sku) {
-    let skuSuffix = 1;
+  if (!hasVariants) {
+    const nextSkuBase = (input.sku?.trim() || existing.sku || createSkuFromName(nombre)).toUpperCase();
+    nextSku = nextSkuBase;
 
-    while (
-      await prisma.product.findFirst({
-        where: {
-          sku: nextSku,
-          NOT: { id: existing.id },
-        },
-      })
-    ) {
-      nextSku = `${nextSkuBase}-${skuSuffix}`;
-      skuSuffix += 1;
+    if (nextSkuBase !== existing.sku) {
+      let skuSuffix = 1;
+
+      while (
+        await prisma.product.findFirst({
+          where: {
+            sku: nextSku,
+            NOT: { id: existing.id },
+          },
+        })
+      ) {
+        nextSku = `${nextSkuBase}-${skuSuffix}`;
+        skuSuffix += 1;
+      }
     }
   }
 
   const stockDelta = stock - existing.stock;
 
-  const updated = await prisma.product.update({
-    where: { slug },
-    data: {
-      slug: nextSlug,
-      sku: nextSku,
-      oemReference: input.oemReferencia?.trim() || null,
-      alternativeReferences: {
-        set: normalizeTextList(input.referenciasAlternas || []),
-      },
-      category: input.categoria,
-      name: nombre,
-      brand: marca,
-      price: precioValor,
-      previousPrice: precioAnteriorValor,
-      displayPriceOverride: input.displayPriceOverride?.trim() || null,
-      displaySecondaryLabel: input.displaySecondaryLabel?.trim() || null,
-      stock,
-      minimumStock: stockMinimo,
-      image: imagen,
-      galleryImages: {
-        set: imagenesExtra,
-      },
-      availability: normalizeStockAvailability(input.disponibilidad, stock, stockMinimo, isServiceDivision(input.division)),
-      description:
-        input.descripcion?.trim() ||
-        descripcionProducto({
-          nombre,
-          categoria: input.categoria,
-          marca,
-        }),
-      application: input.aplicacion?.trim() || null,
-      compatibility: {
-        set: normalizeCompatibilityList(
-          input.compatibilidad || [],
-          input.subcategoria,
-          input.categoriaMenor,
-          input.categoriasAdicionales,
-        ),
-      },
-      warranty: input.garantia?.trim() || "1 año de garantía del fabricante",
-      technicalSheetUrl: input.fichaTecnicaUrl?.trim() || existing.technicalSheetUrl || null,
-      technicalSpecs: normalizeTechnicalSpecs(input.especificacionesTecnicas),
-      inventoryMovements:
-        stockDelta !== 0
-          ? {
-              create: {
-                type: "ADJUSTMENT",
-                quantity: stockDelta,
-                stockAfter: stock,
-                note: "Ajuste manual desde el panel admin",
-              },
-            }
-          : undefined,
-    },
-  });
+  // Reconcile variant rows by SKU (the admin form's row id is client-only,
+  // not the DB row id) — rows removed from the submission get deleted, rows
+  // matching an existing SKU get updated in place, and the rest are new.
+  const incomingSkus = new Set(normalizedVariantes.map((variante) => variante.sku));
+  const variantesToDelete = existing.variants.filter((variant) => !incomingSkus.has(variant.sku));
+  const variantesToUpdate = normalizedVariantes.filter((variante) =>
+    existing.variants.some((variant) => variant.sku === variante.sku),
+  );
+  const variantesToCreate = normalizedVariantes.filter(
+    (variante) => !existing.variants.some((variant) => variant.sku === variante.sku),
+  );
+
+  let updated;
+
+  try {
+    updated = await prisma.$transaction(async (tx) => {
+      if (variantesToDelete.length > 0) {
+        await tx.productVariant.deleteMany({
+          where: { id: { in: variantesToDelete.map((variant) => variant.id) } },
+        });
+      }
+
+      for (const variante of variantesToUpdate) {
+        await tx.productVariant.update({
+          where: { sku: variante.sku },
+          data: { label: variante.medida, stock: variante.stock },
+        });
+      }
+
+      if (variantesToCreate.length > 0) {
+        await tx.productVariant.createMany({
+          data: variantesToCreate.map((variante) => ({
+            productId: existing.id,
+            label: variante.medida,
+            sku: variante.sku,
+            stock: variante.stock,
+          })),
+        });
+      }
+
+      return tx.product.update({
+        where: { slug },
+        data: {
+          slug: nextSlug,
+          sku: nextSku,
+          oemReference: input.oemReferencia?.trim() || null,
+          alternativeReferences: {
+            set: normalizeTextList(input.referenciasAlternas || []),
+          },
+          category: input.categoria,
+          name: nombre,
+          brand: marca,
+          price: precioValor,
+          previousPrice: precioAnteriorValor,
+          displayPriceOverride: input.displayPriceOverride?.trim() || null,
+          displaySecondaryLabel: input.displaySecondaryLabel?.trim() || null,
+          stock,
+          minimumStock: stockMinimo,
+          image: imagen,
+          galleryImages: {
+            set: imagenesExtra,
+          },
+          availability: normalizeStockAvailability(input.disponibilidad, stock, stockMinimo, isServiceDivision(input.division)),
+          description:
+            input.descripcion?.trim() ||
+            descripcionProducto({
+              nombre,
+              categoria: input.categoria,
+              marca,
+            }),
+          application: input.aplicacion?.trim() || null,
+          compatibility: {
+            set: normalizeCompatibilityList(
+              input.compatibilidad || [],
+              input.subcategoria,
+              input.categoriaMenor,
+              input.categoriasAdicionales,
+            ),
+          },
+          warranty: input.garantia?.trim() || "1 año de garantía del fabricante",
+          technicalSheetUrl: input.fichaTecnicaUrl?.trim() || existing.technicalSheetUrl || null,
+          technicalSpecs: normalizeTechnicalSpecs(input.especificacionesTecnicas),
+          inventoryMovements:
+            stockDelta !== 0
+              ? {
+                  create: {
+                    type: "ADJUSTMENT",
+                    quantity: stockDelta,
+                    stockAfter: stock,
+                    note: "Ajuste manual desde el panel admin",
+                  },
+                }
+              : undefined,
+        },
+        include: { variants: true },
+      });
+    });
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      throw new Error("DUPLICATE_VARIANT_SKU");
+    }
+    throw error;
+  }
 
   return toStoreProduct(updated);
 }

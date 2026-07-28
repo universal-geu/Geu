@@ -166,6 +166,12 @@ export type ProductoCategoriaAdicional = {
   categoriaMenor?: string;
 };
 
+export type ProductoVariante = {
+  medida: string;
+  sku: string;
+  stock: number;
+};
+
 export type ProductoCatalogo = {
   slug: string;
   sku?: string;
@@ -197,6 +203,7 @@ export type ProductoCatalogo = {
   garantia?: string;
   fichaTecnicaUrl?: string;
   especificacionesTecnicas?: ProductoEspecificacion[];
+  variantes?: ProductoVariante[];
   destacado?: boolean;
 };
 

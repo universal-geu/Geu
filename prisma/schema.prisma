@@ -64,8 +64,8 @@ model Product {
   division              Division            @default(Cauchos)
   price                 Int
   previousPrice         Int
-  displayPriceOverride   String?
-  displaySecondaryLabel  String?
+  displayPriceOverride  String?
+  displaySecondaryLabel String?
   stock                 Int                 @default(12)
   minimumStock          Int                 @default(3)
   image                 String
@@ -80,100 +80,119 @@ model Product {
   featured              Boolean             @default(false)
   active                Boolean             @default(true)
   inventoryMovements    InventoryMovement[]
+  variants              ProductVariant[]
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
 }
 
+model ProductVariant {
+  id                 String              @id @default(cuid())
+  productId          String
+  product            Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label              String
+  sku                String              @unique
+  stock              Int                 @default(0)
+  inventoryMovements InventoryMovement[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
 model User {
-  id           String    @id @default(cuid())
+  id           String     @id @default(cuid())
   fullName     String
   company      String?
-  email        String    @unique
+  email        String     @unique
   phone        String?
   department   String?
   city         String?
   addressLine1 String?
   addressLine2 String?
   passwordHash String
-  role         UserRole  @default(CUSTOMER)
+  role         UserRole   @default(CUSTOMER)
   division     Division?
-  permissions  String[]  @default([])
-  active       Boolean   @default(true)
+  permissions  String[]   @default([])
+  active       Boolean    @default(true)
   cartItems    CartItem[]
   orders       Order[]
   quotes       Quote[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model CartItem {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId String
-  name      String
-  price     String
-  image     String
-  quantity  Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId    String
+  variantSku   String   @default("")
+  variantLabel String   @default("")
+  name         String
+  price        String
+  image        String
+  quantity     Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  @@unique([userId, productId])
+  @@unique([userId, productId, variantSku])
 }
 
 model Order {
-  id            String        @id @default(cuid())
-  userId        String
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status        OrderStatus   @default(PENDING)
-  paymentStatus PaymentStatus @default(PENDING)
+  id             String         @id @default(cuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status         OrderStatus    @default(PENDING)
+  paymentStatus  PaymentStatus  @default(PENDING)
   shippingStatus ShippingStatus @default(PENDING)
-  division      Division      @default(Cauchos)
-  customerName  String
-  customerEmail String
-  customerPhone String
-  company       String?
-  department    String
-  city          String
-  addressLine1  String
-  addressLine2  String?
-  notes         String?
-  carrier       String?
+  division       Division       @default(Cauchos)
+  customerName   String
+  customerEmail  String
+  customerPhone  String
+  company        String?
+  department     String
+  city           String
+  addressLine1   String
+  addressLine2   String?
+  notes          String?
+  carrier        String?
   trackingNumber String?
-  adminNotes    String?
-  shippedAt     DateTime?
-  deliveredAt   DateTime?
-  subtotal      Int
-  shippingCost  Int           @default(0)
-  totalItems    Int
-  items         OrderItem[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  adminNotes     String?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  subtotal       Int
+  shippingCost   Int            @default(0)
+  totalItems     Int
+  items          OrderItem[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  division  Division @default(Cauchos)
-  name      String
-  image     String
-  unitPrice Int
-  quantity  Int
-  lineTotal Int
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  variantSku   String?
+  variantLabel String?
+  division     Division @default(Cauchos)
+  name         String
+  image        String
+  unitPrice    Int
+  quantity     Int
+  lineTotal    Int
+  createdAt    DateTime @default(now())
 }
 
 model InventoryMovement {
-  id         String                @id @default(cuid())
-  productId  String
-  product    Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
-  type       InventoryMovementType
-  quantity   Int
-  stockAfter Int
-  note       String?
-  createdAt  DateTime              @default(now())
+  id               String                @id @default(cuid())
+  productId        String
+  product          Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productVariantId String?
+  productVariant   ProductVariant?       @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
+  type             InventoryMovementType
+  quantity         Int
+  stockAfter       Int
+  note             String?
+  createdAt        DateTime              @default(now())
 }
 
 model SiteImage {

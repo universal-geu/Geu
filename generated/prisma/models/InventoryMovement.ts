@@ -39,6 +39,7 @@ export type InventoryMovementSumAggregateOutputType = {
 export type InventoryMovementMinAggregateOutputType = {
   id: string | null
   productId: string | null
+  productVariantId: string | null
   type: $Enums.InventoryMovementType | null
   quantity: number | null
   stockAfter: number | null
@@ -49,6 +50,7 @@ export type InventoryMovementMinAggregateOutputType = {
 export type InventoryMovementMaxAggregateOutputType = {
   id: string | null
   productId: string | null
+  productVariantId: string | null
   type: $Enums.InventoryMovementType | null
   quantity: number | null
   stockAfter: number | null
@@ -59,6 +61,7 @@ export type InventoryMovementMaxAggregateOutputType = {
 export type InventoryMovementCountAggregateOutputType = {
   id: number
   productId: number
+  productVariantId: number
   type: number
   quantity: number
   stockAfter: number
@@ -81,6 +84,7 @@ export type InventoryMovementSumAggregateInputType = {
 export type InventoryMovementMinAggregateInputType = {
   id?: true
   productId?: true
+  productVariantId?: true
   type?: true
   quantity?: true
   stockAfter?: true
@@ -91,6 +95,7 @@ export type InventoryMovementMinAggregateInputType = {
 export type InventoryMovementMaxAggregateInputType = {
   id?: true
   productId?: true
+  productVariantId?: true
   type?: true
   quantity?: true
   stockAfter?: true
@@ -101,6 +106,7 @@ export type InventoryMovementMaxAggregateInputType = {
 export type InventoryMovementCountAggregateInputType = {
   id?: true
   productId?: true
+  productVariantId?: true
   type?: true
   quantity?: true
   stockAfter?: true
@@ -198,6 +204,7 @@ export type InventoryMovementGroupByArgs<ExtArgs extends runtime.Types.Extension
 export type InventoryMovementGroupByOutputType = {
   id: string
   productId: string
+  productVariantId: string | null
   type: $Enums.InventoryMovementType
   quantity: number
   stockAfter: number
@@ -231,23 +238,27 @@ export type InventoryMovementWhereInput = {
   NOT?: Prisma.InventoryMovementWhereInput | Prisma.InventoryMovementWhereInput[]
   id?: Prisma.StringFilter<"InventoryMovement"> | string
   productId?: Prisma.StringFilter<"InventoryMovement"> | string
+  productVariantId?: Prisma.StringNullableFilter<"InventoryMovement"> | string | null
   type?: Prisma.EnumInventoryMovementTypeFilter<"InventoryMovement"> | $Enums.InventoryMovementType
   quantity?: Prisma.IntFilter<"InventoryMovement"> | number
   stockAfter?: Prisma.IntFilter<"InventoryMovement"> | number
   note?: Prisma.StringNullableFilter<"InventoryMovement"> | string | null
   createdAt?: Prisma.DateTimeFilter<"InventoryMovement"> | Date | string
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
+  productVariant?: Prisma.XOR<Prisma.ProductVariantNullableScalarRelationFilter, Prisma.ProductVariantWhereInput> | null
 }
 
 export type InventoryMovementOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  productVariantId?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   stockAfter?: Prisma.SortOrder
   note?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   product?: Prisma.ProductOrderByWithRelationInput
+  productVariant?: Prisma.ProductVariantOrderByWithRelationInput
 }
 
 export type InventoryMovementWhereUniqueInput = Prisma.AtLeast<{
@@ -256,17 +267,20 @@ export type InventoryMovementWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.InventoryMovementWhereInput[]
   NOT?: Prisma.InventoryMovementWhereInput | Prisma.InventoryMovementWhereInput[]
   productId?: Prisma.StringFilter<"InventoryMovement"> | string
+  productVariantId?: Prisma.StringNullableFilter<"InventoryMovement"> | string | null
   type?: Prisma.EnumInventoryMovementTypeFilter<"InventoryMovement"> | $Enums.InventoryMovementType
   quantity?: Prisma.IntFilter<"InventoryMovement"> | number
   stockAfter?: Prisma.IntFilter<"InventoryMovement"> | number
   note?: Prisma.StringNullableFilter<"InventoryMovement"> | string | null
   createdAt?: Prisma.DateTimeFilter<"InventoryMovement"> | Date | string
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
+  productVariant?: Prisma.XOR<Prisma.ProductVariantNullableScalarRelationFilter, Prisma.ProductVariantWhereInput> | null
 }, "id">
 
 export type InventoryMovementOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  productVariantId?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   stockAfter?: Prisma.SortOrder
@@ -285,6 +299,7 @@ export type InventoryMovementScalarWhereWithAggregatesInput = {
   NOT?: Prisma.InventoryMovementScalarWhereWithAggregatesInput | Prisma.InventoryMovementScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"InventoryMovement"> | string
   productId?: Prisma.StringWithAggregatesFilter<"InventoryMovement"> | string
+  productVariantId?: Prisma.StringNullableWithAggregatesFilter<"InventoryMovement"> | string | null
   type?: Prisma.EnumInventoryMovementTypeWithAggregatesFilter<"InventoryMovement"> | $Enums.InventoryMovementType
   quantity?: Prisma.IntWithAggregatesFilter<"InventoryMovement"> | number
   stockAfter?: Prisma.IntWithAggregatesFilter<"InventoryMovement"> | number
@@ -300,11 +315,13 @@ export type InventoryMovementCreateInput = {
   note?: string | null
   createdAt?: Date | string
   product: Prisma.ProductCreateNestedOneWithoutInventoryMovementsInput
+  productVariant?: Prisma.ProductVariantCreateNestedOneWithoutInventoryMovementsInput
 }
 
 export type InventoryMovementUncheckedCreateInput = {
   id?: string
   productId: string
+  productVariantId?: string | null
   type: $Enums.InventoryMovementType
   quantity: number
   stockAfter: number
@@ -320,11 +337,13 @@ export type InventoryMovementUpdateInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   product?: Prisma.ProductUpdateOneRequiredWithoutInventoryMovementsNestedInput
+  productVariant?: Prisma.ProductVariantUpdateOneWithoutInventoryMovementsNestedInput
 }
 
 export type InventoryMovementUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.StringFieldUpdateOperationsInput | string
+  productVariantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumInventoryMovementTypeFieldUpdateOperationsInput | $Enums.InventoryMovementType
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockAfter?: Prisma.IntFieldUpdateOperationsInput | number
@@ -335,6 +354,7 @@ export type InventoryMovementUncheckedUpdateInput = {
 export type InventoryMovementCreateManyInput = {
   id?: string
   productId: string
+  productVariantId?: string | null
   type: $Enums.InventoryMovementType
   quantity: number
   stockAfter: number
@@ -354,6 +374,7 @@ export type InventoryMovementUpdateManyMutationInput = {
 export type InventoryMovementUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   productId?: Prisma.StringFieldUpdateOperationsInput | string
+  productVariantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumInventoryMovementTypeFieldUpdateOperationsInput | $Enums.InventoryMovementType
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockAfter?: Prisma.IntFieldUpdateOperationsInput | number
@@ -374,6 +395,7 @@ export type InventoryMovementOrderByRelationAggregateInput = {
 export type InventoryMovementCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  productVariantId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   stockAfter?: Prisma.SortOrder
@@ -389,6 +411,7 @@ export type InventoryMovementAvgOrderByAggregateInput = {
 export type InventoryMovementMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  productVariantId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   stockAfter?: Prisma.SortOrder
@@ -399,6 +422,7 @@ export type InventoryMovementMaxOrderByAggregateInput = {
 export type InventoryMovementMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   productId?: Prisma.SortOrder
+  productVariantId?: Prisma.SortOrder
   type?: Prisma.SortOrder
   quantity?: Prisma.SortOrder
   stockAfter?: Prisma.SortOrder
@@ -453,6 +477,48 @@ export type InventoryMovementUncheckedUpdateManyWithoutProductNestedInput = {
   deleteMany?: Prisma.InventoryMovementScalarWhereInput | Prisma.InventoryMovementScalarWhereInput[]
 }
 
+export type InventoryMovementCreateNestedManyWithoutProductVariantInput = {
+  create?: Prisma.XOR<Prisma.InventoryMovementCreateWithoutProductVariantInput, Prisma.InventoryMovementUncheckedCreateWithoutProductVariantInput> | Prisma.InventoryMovementCreateWithoutProductVariantInput[] | Prisma.InventoryMovementUncheckedCreateWithoutProductVariantInput[]
+  connectOrCreate?: Prisma.InventoryMovementCreateOrConnectWithoutProductVariantInput | Prisma.InventoryMovementCreateOrConnectWithoutProductVariantInput[]
+  createMany?: Prisma.InventoryMovementCreateManyProductVariantInputEnvelope
+  connect?: Prisma.InventoryMovementWhereUniqueInput | Prisma.InventoryMovementWhereUniqueInput[]
+}
+
+export type InventoryMovementUncheckedCreateNestedManyWithoutProductVariantInput = {
+  create?: Prisma.XOR<Prisma.InventoryMovementCreateWithoutProductVariantInput, Prisma.InventoryMovementUncheckedCreateWithoutProductVariantInput> | Prisma.InventoryMovementCreateWithoutProductVariantInput[] | Prisma.InventoryMovementUncheckedCreateWithoutProductVariantInput[]
+  connectOrCreate?: Prisma.InventoryMovementCreateOrConnectWithoutProductVariantInput | Prisma.InventoryMovementCreateOrConnectWithoutProductVariantInput[]
+  createMany?: Prisma.InventoryMovementCreateManyProductVariantInputEnvelope
+  connect?: Prisma.InventoryMovementWhereUniqueInput | Prisma.InventoryMovementWhereUniqueInput[]
+}
+
+export type InventoryMovementUpdateManyWithoutProductVariantNestedInput = {
+  create?: Prisma.XOR<Prisma.InventoryMovementCreateWithoutProductVariantInput, Prisma.InventoryMovementUncheckedCreateWithoutProductVariantInput> | Prisma.InventoryMovementCreateWithoutProductVariantInput[] | Prisma.InventoryMovementUncheckedCreateWithoutProductVariantInput[]
+  connectOrCreate?: Prisma.InventoryMovementCreateOrConnectWithoutProductVariantInput | Prisma.InventoryMovementCreateOrConnectWithoutProductVariantInput[]
+  upsert?: Prisma.InventoryMovementUpsertWithWhereUniqueWithoutProductVariantInput | Prisma.InventoryMovementUpsertWithWhereUniqueWithoutProductVariantInput[]
+  createMany?: Prisma.InventoryMovementCreateManyProductVariantInputEnvelope
+  set?: Prisma.InventoryMovementWhereUniqueInput | Prisma.InventoryMovementWhereUniqueInput[]
+  disconnect?: Prisma.InventoryMovementWhereUniqueInput | Prisma.InventoryMovementWhereUniqueInput[]
+  delete?: Prisma.InventoryMovementWhereUniqueInput | Prisma.InventoryMovementWhereUniqueInput[]
+  connect?: Prisma.InventoryMovementWhereUniqueInput | Prisma.InventoryMovementWhereUniqueInput[]
+  update?: Prisma.InventoryMovementUpdateWithWhereUniqueWithoutProductVariantInput | Prisma.InventoryMovementUpdateWithWhereUniqueWithoutProductVariantInput[]
+  updateMany?: Prisma.InventoryMovementUpdateManyWithWhereWithoutProductVariantInput | Prisma.InventoryMovementUpdateManyWithWhereWithoutProductVariantInput[]
+  deleteMany?: Prisma.InventoryMovementScalarWhereInput | Prisma.InventoryMovementScalarWhereInput[]
+}
+
+export type InventoryMovementUncheckedUpdateManyWithoutProductVariantNestedInput = {
+  create?: Prisma.XOR<Prisma.InventoryMovementCreateWithoutProductVariantInput, Prisma.InventoryMovementUncheckedCreateWithoutProductVariantInput> | Prisma.InventoryMovementCreateWithoutProductVariantInput[] | Prisma.InventoryMovementUncheckedCreateWithoutProductVariantInput[]
+  connectOrCreate?: Prisma.InventoryMovementCreateOrConnectWithoutProductVariantInput | Prisma.InventoryMovementCreateOrConnectWithoutProductVariantInput[]
+  upsert?: Prisma.InventoryMovementUpsertWithWhereUniqueWithoutProductVariantInput | Prisma.InventoryMovementUpsertWithWhereUniqueWithoutProductVariantInput[]
+  createMany?: Prisma.InventoryMovementCreateManyProductVariantInputEnvelope
+  set?: Prisma.InventoryMovementWhereUniqueInput | Prisma.InventoryMovementWhereUniqueInput[]
+  disconnect?: Prisma.InventoryMovementWhereUniqueInput | Prisma.InventoryMovementWhereUniqueInput[]
+  delete?: Prisma.InventoryMovementWhereUniqueInput | Prisma.InventoryMovementWhereUniqueInput[]
+  connect?: Prisma.InventoryMovementWhereUniqueInput | Prisma.InventoryMovementWhereUniqueInput[]
+  update?: Prisma.InventoryMovementUpdateWithWhereUniqueWithoutProductVariantInput | Prisma.InventoryMovementUpdateWithWhereUniqueWithoutProductVariantInput[]
+  updateMany?: Prisma.InventoryMovementUpdateManyWithWhereWithoutProductVariantInput | Prisma.InventoryMovementUpdateManyWithWhereWithoutProductVariantInput[]
+  deleteMany?: Prisma.InventoryMovementScalarWhereInput | Prisma.InventoryMovementScalarWhereInput[]
+}
+
 export type EnumInventoryMovementTypeFieldUpdateOperationsInput = {
   set?: $Enums.InventoryMovementType
 }
@@ -464,10 +530,12 @@ export type InventoryMovementCreateWithoutProductInput = {
   stockAfter: number
   note?: string | null
   createdAt?: Date | string
+  productVariant?: Prisma.ProductVariantCreateNestedOneWithoutInventoryMovementsInput
 }
 
 export type InventoryMovementUncheckedCreateWithoutProductInput = {
   id?: string
+  productVariantId?: string | null
   type: $Enums.InventoryMovementType
   quantity: number
   stockAfter: number
@@ -507,6 +575,7 @@ export type InventoryMovementScalarWhereInput = {
   NOT?: Prisma.InventoryMovementScalarWhereInput | Prisma.InventoryMovementScalarWhereInput[]
   id?: Prisma.StringFilter<"InventoryMovement"> | string
   productId?: Prisma.StringFilter<"InventoryMovement"> | string
+  productVariantId?: Prisma.StringNullableFilter<"InventoryMovement"> | string | null
   type?: Prisma.EnumInventoryMovementTypeFilter<"InventoryMovement"> | $Enums.InventoryMovementType
   quantity?: Prisma.IntFilter<"InventoryMovement"> | number
   stockAfter?: Prisma.IntFilter<"InventoryMovement"> | number
@@ -514,8 +583,55 @@ export type InventoryMovementScalarWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"InventoryMovement"> | Date | string
 }
 
+export type InventoryMovementCreateWithoutProductVariantInput = {
+  id?: string
+  type: $Enums.InventoryMovementType
+  quantity: number
+  stockAfter: number
+  note?: string | null
+  createdAt?: Date | string
+  product: Prisma.ProductCreateNestedOneWithoutInventoryMovementsInput
+}
+
+export type InventoryMovementUncheckedCreateWithoutProductVariantInput = {
+  id?: string
+  productId: string
+  type: $Enums.InventoryMovementType
+  quantity: number
+  stockAfter: number
+  note?: string | null
+  createdAt?: Date | string
+}
+
+export type InventoryMovementCreateOrConnectWithoutProductVariantInput = {
+  where: Prisma.InventoryMovementWhereUniqueInput
+  create: Prisma.XOR<Prisma.InventoryMovementCreateWithoutProductVariantInput, Prisma.InventoryMovementUncheckedCreateWithoutProductVariantInput>
+}
+
+export type InventoryMovementCreateManyProductVariantInputEnvelope = {
+  data: Prisma.InventoryMovementCreateManyProductVariantInput | Prisma.InventoryMovementCreateManyProductVariantInput[]
+  skipDuplicates?: boolean
+}
+
+export type InventoryMovementUpsertWithWhereUniqueWithoutProductVariantInput = {
+  where: Prisma.InventoryMovementWhereUniqueInput
+  update: Prisma.XOR<Prisma.InventoryMovementUpdateWithoutProductVariantInput, Prisma.InventoryMovementUncheckedUpdateWithoutProductVariantInput>
+  create: Prisma.XOR<Prisma.InventoryMovementCreateWithoutProductVariantInput, Prisma.InventoryMovementUncheckedCreateWithoutProductVariantInput>
+}
+
+export type InventoryMovementUpdateWithWhereUniqueWithoutProductVariantInput = {
+  where: Prisma.InventoryMovementWhereUniqueInput
+  data: Prisma.XOR<Prisma.InventoryMovementUpdateWithoutProductVariantInput, Prisma.InventoryMovementUncheckedUpdateWithoutProductVariantInput>
+}
+
+export type InventoryMovementUpdateManyWithWhereWithoutProductVariantInput = {
+  where: Prisma.InventoryMovementScalarWhereInput
+  data: Prisma.XOR<Prisma.InventoryMovementUpdateManyMutationInput, Prisma.InventoryMovementUncheckedUpdateManyWithoutProductVariantInput>
+}
+
 export type InventoryMovementCreateManyProductInput = {
   id?: string
+  productVariantId?: string | null
   type: $Enums.InventoryMovementType
   quantity: number
   stockAfter: number
@@ -530,10 +646,12 @@ export type InventoryMovementUpdateWithoutProductInput = {
   stockAfter?: Prisma.IntFieldUpdateOperationsInput | number
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  productVariant?: Prisma.ProductVariantUpdateOneWithoutInventoryMovementsNestedInput
 }
 
 export type InventoryMovementUncheckedUpdateWithoutProductInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  productVariantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.EnumInventoryMovementTypeFieldUpdateOperationsInput | $Enums.InventoryMovementType
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockAfter?: Prisma.IntFieldUpdateOperationsInput | number
@@ -543,6 +661,47 @@ export type InventoryMovementUncheckedUpdateWithoutProductInput = {
 
 export type InventoryMovementUncheckedUpdateManyWithoutProductInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  productVariantId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.EnumInventoryMovementTypeFieldUpdateOperationsInput | $Enums.InventoryMovementType
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  stockAfter?: Prisma.IntFieldUpdateOperationsInput | number
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type InventoryMovementCreateManyProductVariantInput = {
+  id?: string
+  productId: string
+  type: $Enums.InventoryMovementType
+  quantity: number
+  stockAfter: number
+  note?: string | null
+  createdAt?: Date | string
+}
+
+export type InventoryMovementUpdateWithoutProductVariantInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumInventoryMovementTypeFieldUpdateOperationsInput | $Enums.InventoryMovementType
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  stockAfter?: Prisma.IntFieldUpdateOperationsInput | number
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  product?: Prisma.ProductUpdateOneRequiredWithoutInventoryMovementsNestedInput
+}
+
+export type InventoryMovementUncheckedUpdateWithoutProductVariantInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumInventoryMovementTypeFieldUpdateOperationsInput | $Enums.InventoryMovementType
+  quantity?: Prisma.IntFieldUpdateOperationsInput | number
+  stockAfter?: Prisma.IntFieldUpdateOperationsInput | number
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type InventoryMovementUncheckedUpdateManyWithoutProductVariantInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumInventoryMovementTypeFieldUpdateOperationsInput | $Enums.InventoryMovementType
   quantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockAfter?: Prisma.IntFieldUpdateOperationsInput | number
@@ -555,39 +714,46 @@ export type InventoryMovementUncheckedUpdateManyWithoutProductInput = {
 export type InventoryMovementSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   productId?: boolean
+  productVariantId?: boolean
   type?: boolean
   quantity?: boolean
   stockAfter?: boolean
   note?: boolean
   createdAt?: boolean
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  productVariant?: boolean | Prisma.InventoryMovement$productVariantArgs<ExtArgs>
 }, ExtArgs["result"]["inventoryMovement"]>
 
 export type InventoryMovementSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   productId?: boolean
+  productVariantId?: boolean
   type?: boolean
   quantity?: boolean
   stockAfter?: boolean
   note?: boolean
   createdAt?: boolean
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  productVariant?: boolean | Prisma.InventoryMovement$productVariantArgs<ExtArgs>
 }, ExtArgs["result"]["inventoryMovement"]>
 
 export type InventoryMovementSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   productId?: boolean
+  productVariantId?: boolean
   type?: boolean
   quantity?: boolean
   stockAfter?: boolean
   note?: boolean
   createdAt?: boolean
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  productVariant?: boolean | Prisma.InventoryMovement$productVariantArgs<ExtArgs>
 }, ExtArgs["result"]["inventoryMovement"]>
 
 export type InventoryMovementSelectScalar = {
   id?: boolean
   productId?: boolean
+  productVariantId?: boolean
   type?: boolean
   quantity?: boolean
   stockAfter?: boolean
@@ -595,25 +761,30 @@ export type InventoryMovementSelectScalar = {
   createdAt?: boolean
 }
 
-export type InventoryMovementOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "productId" | "type" | "quantity" | "stockAfter" | "note" | "createdAt", ExtArgs["result"]["inventoryMovement"]>
+export type InventoryMovementOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "productId" | "productVariantId" | "type" | "quantity" | "stockAfter" | "note" | "createdAt", ExtArgs["result"]["inventoryMovement"]>
 export type InventoryMovementInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  productVariant?: boolean | Prisma.InventoryMovement$productVariantArgs<ExtArgs>
 }
 export type InventoryMovementIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  productVariant?: boolean | Prisma.InventoryMovement$productVariantArgs<ExtArgs>
 }
 export type InventoryMovementIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
+  productVariant?: boolean | Prisma.InventoryMovement$productVariantArgs<ExtArgs>
 }
 
 export type $InventoryMovementPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "InventoryMovement"
   objects: {
     product: Prisma.$ProductPayload<ExtArgs>
+    productVariant: Prisma.$ProductVariantPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     productId: string
+    productVariantId: string | null
     type: $Enums.InventoryMovementType
     quantity: number
     stockAfter: number
@@ -1014,6 +1185,7 @@ readonly fields: InventoryMovementFieldRefs;
 export interface Prisma__InventoryMovementClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   product<T extends Prisma.ProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductDefaultArgs<ExtArgs>>): Prisma.Prisma__ProductClient<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  productVariant<T extends Prisma.InventoryMovement$productVariantArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.InventoryMovement$productVariantArgs<ExtArgs>>): Prisma.Prisma__ProductVariantClient<runtime.Types.Result.GetResult<Prisma.$ProductVariantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1045,6 +1217,7 @@ export interface Prisma__InventoryMovementClient<T, Null = never, ExtArgs extend
 export interface InventoryMovementFieldRefs {
   readonly id: Prisma.FieldRef<"InventoryMovement", 'String'>
   readonly productId: Prisma.FieldRef<"InventoryMovement", 'String'>
+  readonly productVariantId: Prisma.FieldRef<"InventoryMovement", 'String'>
   readonly type: Prisma.FieldRef<"InventoryMovement", 'InventoryMovementType'>
   readonly quantity: Prisma.FieldRef<"InventoryMovement", 'Int'>
   readonly stockAfter: Prisma.FieldRef<"InventoryMovement", 'Int'>
@@ -1448,6 +1621,25 @@ export type InventoryMovementDeleteManyArgs<ExtArgs extends runtime.Types.Extens
    * Limit how many InventoryMovements to delete.
    */
   limit?: number
+}
+
+/**
+ * InventoryMovement.productVariant
+ */
+export type InventoryMovement$productVariantArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProductVariant
+   */
+  select?: Prisma.ProductVariantSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProductVariant
+   */
+  omit?: Prisma.ProductVariantOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProductVariantInclude<ExtArgs> | null
+  where?: Prisma.ProductVariantWhereInput
 }
 
 /**

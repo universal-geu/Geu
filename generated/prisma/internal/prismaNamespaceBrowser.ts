@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Product: 'Product',
+  ProductVariant: 'ProductVariant',
   User: 'User',
   CartItem: 'CartItem',
   Order: 'Order',
@@ -112,6 +113,19 @@ export const ProductScalarFieldEnum = {
 export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
 
 
+export const ProductVariantScalarFieldEnum = {
+  id: 'id',
+  productId: 'productId',
+  label: 'label',
+  sku: 'sku',
+  stock: 'stock',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProductVariantScalarFieldEnum = (typeof ProductVariantScalarFieldEnum)[keyof typeof ProductVariantScalarFieldEnum]
+
+
 export const UserScalarFieldEnum = {
   id: 'id',
   fullName: 'fullName',
@@ -138,6 +152,8 @@ export const CartItemScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   productId: 'productId',
+  variantSku: 'variantSku',
+  variantLabel: 'variantLabel',
   name: 'name',
   price: 'price',
   image: 'image',
@@ -184,6 +200,8 @@ export const OrderItemScalarFieldEnum = {
   id: 'id',
   orderId: 'orderId',
   productId: 'productId',
+  variantSku: 'variantSku',
+  variantLabel: 'variantLabel',
   division: 'division',
   name: 'name',
   image: 'image',
@@ -199,6 +217,7 @@ export type OrderItemScalarFieldEnum = (typeof OrderItemScalarFieldEnum)[keyof t
 export const InventoryMovementScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
+  productVariantId: 'productVariantId',
   type: 'type',
   quantity: 'quantity',
   stockAfter: 'stockAfter',

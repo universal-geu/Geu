@@ -47,6 +47,11 @@ export { Prisma }
  */
 export type Product = Prisma.ProductModel
 /**
+ * Model ProductVariant
+ * 
+ */
+export type ProductVariant = Prisma.ProductVariantModel
+/**
  * Model User
  * 
  */

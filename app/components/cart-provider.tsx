@@ -206,7 +206,7 @@ export function CartProvider({
 
         if (currentUserId) {
           void (async () => {
-            const response = await fetch(`/api/cart/${normalizedId}`, {
+            const response = await fetch(`/api/cart/${encodeURIComponent(normalizedId)}`, {
               method: "PATCH",
               headers: {
                 "Content-Type": "application/json",
@@ -242,7 +242,7 @@ export function CartProvider({
 
         if (currentUserId) {
           void (async () => {
-            const response = await fetch(`/api/cart/${normalizedId}`, {
+            const response = await fetch(`/api/cart/${encodeURIComponent(normalizedId)}`, {
               method: "PATCH",
               headers: {
                 "Content-Type": "application/json",
@@ -274,7 +274,7 @@ export function CartProvider({
 
         if (currentUserId) {
           void (async () => {
-            const response = await fetch(`/api/cart/${normalizedId}`, {
+            const response = await fetch(`/api/cart/${encodeURIComponent(normalizedId)}`, {
               method: "DELETE",
             });
             if (response.status === 401) {

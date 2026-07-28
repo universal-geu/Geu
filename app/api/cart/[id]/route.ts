@@ -1,4 +1,5 @@
 import {
+  parseCartItemId,
   removeCartItemForUser,
   updateCartItemQuantityForUser,
 } from "@/lib/cart";
@@ -19,13 +20,15 @@ export async function PATCH(
   try {
     const session = await getSessionOrUnauthorized();
     const { id } = await context.params;
+    const { slug, variantSku } = parseCartItemId(id);
     const body = (await request.json()) as {
       action: "increment" | "decrement";
     };
 
     const items = await updateCartItemQuantityForUser(
       session.userId,
-      id,
+      slug,
+      variantSku,
       body.action,
     );
     return Response.json({ items });
@@ -48,7 +51,8 @@ export async function DELETE(
   try {
     const session = await getSessionOrUnauthorized();
     const { id } = await context.params;
-    const items = await removeCartItemForUser(session.userId, id);
+    const { slug, variantSku } = parseCartItemId(id);
+    const items = await removeCartItemForUser(session.userId, slug, variantSku);
     return Response.json({ items });
   } catch (error) {
     const status =

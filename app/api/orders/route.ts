@@ -83,6 +83,8 @@ export async function POST(request: Request) {
           ? "Tu carrito está vacío en este momento."
           : error instanceof Error && error.message === "INSUFFICIENT_STOCK"
             ? "Uno de los productos ya no tiene stock suficiente para completar el pedido."
+          : error instanceof Error && error.message === "VARIANT_NOT_FOUND"
+            ? "Uno de los productos en tu carrito ya no tiene esa medida disponible, actualiza tu carrito."
           : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
             ? "La base de datos no está configurada todavía."
             : "No fue posible crear el pedido.";
@@ -92,7 +94,8 @@ export async function POST(request: Request) {
         ? 400
         : error instanceof Error && error.message === "EMPTY_CART"
           ? 400
-          : error instanceof Error && error.message === "INSUFFICIENT_STOCK"
+          : error instanceof Error &&
+              (error.message === "INSUFFICIENT_STOCK" || error.message === "VARIANT_NOT_FOUND")
             ? 409
           : 500;
 

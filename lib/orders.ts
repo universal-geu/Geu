@@ -124,11 +124,34 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
       },
     });
 
+    const variantSkus = cartItems
+      .map((item) => item.variantSku)
+      .filter((sku): sku is string => Boolean(sku));
+    const variants = variantSkus.length
+      ? await tx.productVariant.findMany({
+          where: { sku: { in: variantSkus } },
+        })
+      : [];
+
     for (const item of cartItems) {
       const product = products.find((entry) => entry.slug === item.productId);
 
       if (!product) {
         throw new Error("INSUFFICIENT_STOCK");
+      }
+
+      if (item.variantSku) {
+        const variant = variants.find((entry) => entry.sku === item.variantSku);
+
+        if (!variant) {
+          throw new Error("VARIANT_NOT_FOUND");
+        }
+
+        if (variant.stock < item.quantity) {
+          throw new Error("INSUFFICIENT_STOCK");
+        }
+
+        continue;
       }
 
       // Service divisions (Innovation, Energy) don't track real inventory —
@@ -175,6 +198,8 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
 
             return {
               productId: item.productId,
+              variantSku: item.variantSku || null,
+              variantLabel: item.variantLabel || null,
               division: product?.division ?? orderDivision,
               name: item.name,
               image: item.image,
@@ -192,19 +217,55 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
       },
     });
 
+    // Deduct variant-level stock first (each variant appears at most once
+    // per cart, since CartItem is unique on {userId, productId, variantSku}).
+    for (const item of cartItems) {
+      if (!item.variantSku) continue;
+
+      const variant = variants.find((entry) => entry.sku === item.variantSku);
+      if (!variant) continue;
+
+      const nextVariantStock = variant.stock - item.quantity;
+
+      await tx.productVariant.update({
+        where: { id: variant.id },
+        data: { stock: { decrement: item.quantity } },
+      });
+
+      await tx.inventoryMovement.create({
+        data: {
+          productId: variant.productId,
+          productVariantId: variant.id,
+          type: "ORDER_DEDUCTION",
+          quantity: -item.quantity,
+          stockAfter: nextVariantStock,
+          note: `Descuento automático por pedido ${createdOrder.id}`,
+        },
+      });
+    }
+
+    // Deduct the product-level aggregate once per product (a product can now
+    // have more than one cart line when it has variants), using an atomic
+    // `decrement` rather than a stale-read subtraction.
+    const quantityByProductId = new Map<string, number>();
     for (const item of cartItems) {
       const product = products.find((entry) => entry.slug === item.productId);
+      if (!product || isServiceDivision(product.division)) continue;
 
-      if (!product || isServiceDivision(product.division)) {
-        continue;
-      }
+      quantityByProductId.set(
+        product.id,
+        (quantityByProductId.get(product.id) || 0) + item.quantity,
+      );
+    }
 
-      const nextStock = product.stock - item.quantity;
+    for (const [productId, totalQuantity] of quantityByProductId) {
+      const product = products.find((entry) => entry.id === productId)!;
+      const nextStock = product.stock - totalQuantity;
 
       await tx.product.update({
-        where: { id: product.id },
+        where: { id: productId },
         data: {
-          stock: nextStock,
+          stock: { decrement: totalQuantity },
           availability:
             nextStock <= 0
               ? "Agotado"
@@ -214,7 +275,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
           inventoryMovements: {
             create: {
               type: "ORDER_DEDUCTION",
-              quantity: -item.quantity,
+              quantity: -totalQuantity,
               stockAfter: nextStock,
               note: `Descuento automático por pedido ${createdOrder.id}`,
             },
