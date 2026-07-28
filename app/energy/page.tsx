@@ -22,7 +22,9 @@ const navItems = [
 
 const heroVideo = "/geu-energy-hero-field.mp4";
 const engineeringImage = "/geu-energy-engineering.png";
-const gusImage = "/geu-energy-gus-home.png";
+const gusBgImage = "/geu-energy-gus-bg.jpg";
+const gusAvatarImage = "/geu-energy-gus-avatar.png";
+const gusButtonImage = "/geu-energy-gus-boton.png";
 const projectHouseImage = "/geu-energy-project-house.png";
 const projectHouseVideo = "/geu-energy-project-house.mp4";
 
@@ -275,23 +277,55 @@ export default async function EnergyPage() {
       </section>
 
       <section id="contacto" className="relative overflow-hidden bg-black">
-        <div className="relative mx-auto aspect-[2048/768] w-full max-w-[1920px]">
+        <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
           <Image
-            src={gusImage}
-            alt="Gus, tu asistente energético"
+            src={gusBgImage}
+            alt="Sistema fotovoltaico instalado por GEU Energy"
             fill
             sizes="100vw"
             className="object-cover"
           />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-black/10" />
+
+          <div className="absolute inset-0 flex items-center">
+            <div className="mx-auto w-full max-w-[1920px] px-5 md:px-10">
+              <h2 className="font-[family:var(--font-display)] text-4xl font-black uppercase leading-[1.05] tracking-[-0.01em] text-white md:text-5xl">
+                <span className="text-[#f5a623]">Gus,</span>
+                <br />
+                tu asistente
+                <br />
+                <span className="text-[#f5a623]">energético.</span>
+              </h2>
+              <span className="mt-5 block h-1 w-16 bg-[#f5a623]" />
+            </div>
+          </div>
+
+          <div className="absolute bottom-[10%] right-[5%] w-[16%] min-w-[110px] overflow-hidden rounded-full">
+            <Image
+              src={gusAvatarImage}
+              alt="Gus, el asistente virtual de GEU Energy"
+              width={300}
+              height={300}
+              className="h-auto w-full object-cover"
+            />
+          </div>
+
           {gusWhatsappHref && (
             <a
               href={gusWhatsappHref}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Hablar con Gus por WhatsApp"
-              className="absolute rounded-full"
-              style={{ left: "88%", top: "75%", width: "11%", height: "13%" }}
-            />
+              className="absolute bottom-[2%] right-[3%] w-[26%] min-w-[220px] max-w-[340px] transition-transform duration-200 hover:scale-[1.03]"
+            >
+              <Image
+                src={gusButtonImage}
+                alt="Hablar con Gus"
+                width={1522}
+                height={368}
+                className="h-auto w-full object-contain"
+              />
+            </a>
           )}
         </div>
       </section>
