@@ -162,12 +162,22 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
       }
     }
 
-    // Always charge the product's current price server-side — never trust
-    // the price string stored on the cart item.
-    const subtotal = cartItems.reduce((total, item) => {
+    // Always charge the product's (or, when a variant is selected, the
+    // variant's) current price server-side — never trust the price string
+    // stored on the cart item.
+    const getUnitPrice = (item: (typeof cartItems)[number]) => {
       const product = products.find((entry) => entry.slug === item.productId);
-      return total + (product?.price ?? 0) * item.quantity;
-    }, 0);
+      if (item.variantSku) {
+        const variant = variants.find((entry) => entry.sku === item.variantSku);
+        if (variant?.price != null) return variant.price;
+      }
+      return product?.price ?? 0;
+    };
+
+    const subtotal = cartItems.reduce(
+      (total, item) => total + getUnitPrice(item) * item.quantity,
+      0,
+    );
 
     // `Order.division` is only used for cosmetic purposes (e.g. which brand's
     // colors to show on the confirmation page) — the source of truth for who
@@ -194,7 +204,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
         items: {
           create: cartItems.map((item) => {
             const product = products.find((entry) => entry.slug === item.productId);
-            const unitPrice = product?.price ?? 0;
+            const unitPrice = getUnitPrice(item);
 
             return {
               productId: item.productId,

@@ -240,18 +240,21 @@ type VariantFormItem = {
   medida: string;
   sku: string;
   stock: string;
+  precio: string;
 };
 
 function createVariantItem(variante?: {
   medida?: string;
   sku?: string;
   stock?: string;
+  precio?: string;
 }): VariantFormItem {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     medida: variante?.medida || "",
     sku: variante?.sku || "",
     stock: variante?.stock ?? "0",
+    precio: variante?.precio ?? "",
   };
 }
 
@@ -261,6 +264,7 @@ function normalizeVariantFormItems(items: VariantFormItem[]) {
       medida: item.medida.trim(),
       sku: item.sku.trim().toUpperCase(),
       stock: Math.max(0, Math.round(Number(item.stock) || 0)),
+      precioValor: item.precio.trim() ? Math.max(1, Math.round(Number(item.precio))) : undefined,
     }))
     .filter((item) => item.medida && item.sku)
     .slice(0, MAX_VARIANTES);
@@ -801,7 +805,11 @@ function VariantesEditor({
   items: VariantFormItem[];
   onChange: (items: VariantFormItem[]) => void;
 }) {
-  const updateItem = (id: string, field: "medida" | "sku" | "stock", value: string) => {
+  const updateItem = (
+    id: string,
+    field: "medida" | "sku" | "stock" | "precio",
+    value: string,
+  ) => {
     onChange(items.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
   };
 
@@ -820,7 +828,9 @@ function VariantesEditor({
         <div>
           <p className="text-sm font-medium text-[#4f545a]">Medidas del producto</p>
           <p className="mt-2 text-xs leading-6 text-[#6e7379]">
-            Agrega hasta {MAX_VARIANTES} medidas. Cada una tiene su propio SKU y su propio stock.
+            Agrega hasta {MAX_VARIANTES} medidas. Cada una tiene su propio SKU, stock y, si lo
+            necesitas, un precio distinto al precio base (déjalo vacío para usar el precio del
+            producto).
           </p>
         </div>
         <button
@@ -843,7 +853,7 @@ function VariantesEditor({
         {items.map((item, index) => (
           <div
             key={item.id}
-            className="grid gap-3 rounded-[1.2rem] border border-black/8 bg-white p-4 md:grid-cols-[1fr_1fr_140px_auto]"
+            className="grid gap-3 rounded-[1.2rem] border border-black/8 bg-white p-4 md:grid-cols-[1fr_1fr_140px_140px_auto]"
           >
             <label className="space-y-2">
               <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
@@ -865,6 +875,20 @@ function VariantesEditor({
                 value={item.sku}
                 onChange={(event) => updateItem(item.id, "sku", event.target.value)}
                 placeholder="Ej. IMP-215-65-R16"
+                className="w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                Precio
+              </span>
+              <input
+                type="number"
+                min="0"
+                value={item.precio}
+                onChange={(event) => updateItem(item.id, "precio", event.target.value)}
+                placeholder="Precio base"
                 className="w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
               />
             </label>
@@ -2020,6 +2044,7 @@ export default function AdminPage() {
           medida: variante.medida,
           sku: variante.sku,
           stock: String(variante.stock),
+          precio: variante.precioValor != null ? String(variante.precioValor) : "",
         }),
       ),
     );

@@ -42,7 +42,7 @@ type ProductRecord = {
   technicalSheetUrl?: string | null;
   technicalSpecs?: unknown;
   featured: boolean;
-  variants?: Array<{ label: string; sku: string; stock: number }> | null;
+  variants?: Array<{ label: string; sku: string; stock: number; price?: number | null }> | null;
 };
 
 export type StoreProduct = ProductoCatalogo & {
@@ -108,11 +108,18 @@ function normalizeVariantes(variantes: unknown): ProductoVariante[] {
       "stock" in item && typeof item.stock === "number" && Number.isFinite(item.stock)
         ? Math.max(0, Math.round(item.stock))
         : 0;
+    const precioValor =
+      "precioValor" in item &&
+      typeof item.precioValor === "number" &&
+      Number.isFinite(item.precioValor) &&
+      item.precioValor > 0
+        ? Math.max(1, Math.round(item.precioValor))
+        : undefined;
 
     if (!medida || !sku || seenSkus.has(sku)) continue;
 
     seenSkus.add(sku);
-    result.push({ medida, sku, stock });
+    result.push({ medida, sku, stock, precioValor });
 
     if (result.length >= 50) break;
   }
@@ -378,6 +385,9 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
       medida: variant.label,
       sku: variant.sku,
       stock: variant.stock,
+      precio:
+        variant.price != null ? formatearMoneda(variant.price) : undefined,
+      precioValor: variant.price != null ? variant.price : undefined,
     })),
     destacado: product.featured,
   };
@@ -559,6 +569,7 @@ export async function createProduct(input: ProductMutationInput) {
               label: variante.medida,
               sku: variante.sku,
               stock: variante.stock,
+              price: variante.precioValor ?? null,
             })),
           }
         : undefined,
@@ -678,7 +689,11 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
       for (const variante of variantesToUpdate) {
         await tx.productVariant.update({
           where: { sku: variante.sku },
-          data: { label: variante.medida, stock: variante.stock },
+          data: {
+            label: variante.medida,
+            stock: variante.stock,
+            price: variante.precioValor ?? null,
+          },
         });
       }
 
@@ -689,6 +704,7 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
             label: variante.medida,
             sku: variante.sku,
             stock: variante.stock,
+            price: variante.precioValor ?? null,
           })),
         });
       }

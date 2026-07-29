@@ -170,6 +170,8 @@ export type ProductoVariante = {
   medida: string;
   sku: string;
   stock: number;
+  precio?: string;
+  precioValor?: number;
 };
 
 export type ProductoCatalogo = {
