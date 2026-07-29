@@ -260,6 +260,7 @@ export default function ProductoDetallePage() {
     : null;
 
   const maxCantidad = Math.max(1, (hasVariants ? selectedVariant?.stock : producto?.stock) ?? 1);
+  const displayPrecio = selectedVariant?.precio || producto?.precio || "";
 
   if (!producto) {
     if (isRefreshingCatalog) {
@@ -453,7 +454,7 @@ export default function ProductoDetallePage() {
                 {producto.precioAnterior}
               </p>
               <p className="mt-1 text-4xl font-black tracking-[-0.02em] text-slate-950">
-                {producto.precio}
+                {displayPrecio}
               </p>
               {!isService && (
                 <p className="mt-3 text-sm font-bold text-slate-500">
@@ -520,7 +521,14 @@ export default function ProductoDetallePage() {
                                   : "text-slate-600 hover:bg-slate-50"
                             }`}
                           >
-                            <span>{variante.medida}</span>
+                            <span className="flex items-baseline gap-2">
+                              <span>{variante.medida}</span>
+                              {variante.precio && (
+                                <span className="text-xs font-semibold text-slate-400">
+                                  {variante.precio}
+                                </span>
+                              )}
+                            </span>
                             {isOutOfStock && <span className="text-xs font-semibold">Agotado</span>}
                           </button>
                         );
@@ -557,7 +565,7 @@ export default function ProductoDetallePage() {
               <CauchosAddToCartButton
                 id={hasVariants && selectedVariant ? `${producto.slug}::${selectedVariant.sku}` : producto.slug}
                 nombre={hasVariants && selectedVariant ? `${producto.nombre} - ${selectedVariant.medida}` : producto.nombre}
-                precio={producto.precio}
+                precio={displayPrecio}
                 imagen={productImage}
                 cantidad={cantidad}
                 disabled={!canPurchase}
