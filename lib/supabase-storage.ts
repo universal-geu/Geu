@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-function getSupabaseUrl() {
+export function getSupabaseUrl() {
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     return process.env.NEXT_PUBLIC_SUPABASE_URL;
   }

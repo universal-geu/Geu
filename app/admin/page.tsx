@@ -26,6 +26,7 @@ import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
 import { TEXT_SLOTS } from "@/lib/text-slots";
 import { getDivisionFromBrandParam, isServiceDivision, type DivisionName } from "@/lib/divisions";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
   ADMIN_TOOL_KEYS,
   ADMIN_TOOL_LABELS,
@@ -1762,64 +1763,80 @@ export default function AdminPage() {
         message?.toLowerCase().includes("storage"),
     );
 
+  const uploadFileDirectToStorage = async (file: File, productName: string) => {
+    const signResponse = await fetch("/api/uploads/sign", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fileName: file.name,
+        productName,
+        contentType: file.type,
+        fileSize: file.size,
+      }),
+    });
+
+    const signPayload = (await signResponse.json()) as {
+      error?: string;
+      path?: string;
+      token?: string;
+      bucket?: string;
+      supabaseUrl?: string;
+      anonKey?: string;
+      publicUrl?: string;
+    };
+
+    if (!signResponse.ok || !signPayload.token || !signPayload.publicUrl) {
+      return { error: signPayload.error, publicUrl: undefined as string | undefined };
+    }
+
+    const supabase = createSupabaseBrowserClient(signPayload.supabaseUrl!, signPayload.anonKey!);
+    const { error: uploadError } = await supabase.storage
+      .from(signPayload.bucket!)
+      .uploadToSignedUrl(signPayload.path!, signPayload.token, file, {
+        contentType: file.type || "application/octet-stream",
+      });
+
+    if (uploadError) {
+      return { error: uploadError.message, publicUrl: undefined as string | undefined };
+    }
+
+    return { error: undefined, publicUrl: signPayload.publicUrl };
+  };
+
   const uploadProductImage = async (
     file: File,
     productName: string,
     fallbackUrl: string | null = adminBrand.logo,
   ) => {
-    const uploadData = new FormData();
-    uploadData.append("file", file);
-    uploadData.append("productName", productName);
+    const { error, publicUrl } = await uploadFileDirectToStorage(file, productName);
 
-    const uploadResponse = await fetch("/api/uploads", {
-      method: "POST",
-      body: uploadData,
-    });
-
-    const uploadPayload = (await uploadResponse.json()) as {
-      error?: string;
-      publicUrl?: string;
-    };
-
-    if (!uploadResponse.ok || !uploadPayload.publicUrl) {
-      if (isStorageConfigurationError(uploadPayload.error)) {
+    if (!publicUrl) {
+      if (isStorageConfigurationError(error)) {
         return {
           publicUrl: fallbackUrl,
           usedFallback: true,
         };
       }
 
-      throw new Error(
-        uploadPayload.error || "No fue posible subir la imagen a Supabase Storage.",
-      );
+      throw new Error(error || "No fue posible subir la imagen a Supabase Storage.");
     }
 
     return {
-      publicUrl: uploadPayload.publicUrl,
+      publicUrl,
       usedFallback: false,
     };
   };
 
   const uploadPdf = async (file: File, productName: string) => {
-    const uploadData = new FormData();
-    uploadData.append("file", file);
-    uploadData.append("productName", productName);
+    const { error, publicUrl } = await uploadFileDirectToStorage(file, productName);
 
-    const uploadResponse = await fetch("/api/uploads", {
-      method: "POST",
-      body: uploadData,
-    });
-
-    const uploadPayload = (await uploadResponse.json()) as {
-      error?: string;
-      publicUrl?: string;
-    };
-
-    if (!uploadResponse.ok || !uploadPayload.publicUrl) {
-      throw new Error(uploadPayload.error || "No fue posible subir la ficha técnica.");
+    if (!publicUrl) {
+      throw new Error(error || "No fue posible subir la ficha técnica.");
     }
 
-    return uploadPayload.publicUrl;
+    return publicUrl;
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
