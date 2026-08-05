@@ -2771,9 +2771,15 @@ export default function AdminPage() {
   };
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", {
+    const response = await fetch("/api/auth/logout", {
       method: "POST",
     });
+
+    if (!response.ok) {
+      setToast({ tone: "error", message: "No fue posible cerrar sesión. Intenta de nuevo." });
+      return;
+    }
+
     setIsAuthenticated(false);
     setAdminName("");
     router.refresh();

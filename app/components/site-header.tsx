@@ -67,9 +67,12 @@ export default function SiteHeader({ currentUser }: SiteHeaderProps) {
   };
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", {
+    const response = await fetch("/api/auth/logout", {
       method: "POST",
     });
+
+    if (!response.ok) return;
+
     router.push("/");
     router.refresh();
   };
