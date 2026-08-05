@@ -139,44 +139,27 @@ export async function updateCartItemQuantityForUser(
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
 
-  const item = await prisma.cartItem.findUnique({
-    where: {
-      userId_productId_variantSku: {
-        userId,
-        productId,
-        variantSku,
-      },
-    },
-  });
+  if (action === "increment") {
+    await prisma.cartItem.updateMany({
+      where: { userId, productId, variantSku },
+      data: { quantity: { increment: 1 } },
+    });
 
-  if (!item) {
     return getCartItemsForUser(userId);
   }
 
-  if (action === "decrement" && item.quantity <= 1) {
-    await prisma.cartItem.delete({
-      where: {
-        userId_productId_variantSku: {
-          userId,
-          productId,
-          variantSku,
-        },
-      },
-    });
-  } else {
-    await prisma.cartItem.update({
-      where: {
-        userId_productId_variantSku: {
-          userId,
-          productId,
-          variantSku,
-        },
-      },
-      data: {
-        quantity: {
-          [action === "increment" ? "increment" : "decrement"]: 1,
-        },
-      },
+  // Decrement: resolved as two atomic, mutually exclusive conditional writes
+  // instead of a read-then-branch-then-write sequence, so two concurrent
+  // decrements can never both read a stale quantity and leave a zero-quantity
+  // row behind — the DB's row lock during each write serializes them.
+  const decremented = await prisma.cartItem.updateMany({
+    where: { userId, productId, variantSku, quantity: { gt: 1 } },
+    data: { quantity: { decrement: 1 } },
+  });
+
+  if (decremented.count === 0) {
+    await prisma.cartItem.deleteMany({
+      where: { userId, productId, variantSku, quantity: { lte: 1 } },
     });
   }
 

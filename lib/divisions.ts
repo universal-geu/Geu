@@ -18,6 +18,8 @@ export const DIVISION_ADMIN_EMAILS: Record<DivisionName, string> = {
 
 export const DIVISION_ADMIN_PASSWORD = "123456789";
 
+export const DIVISION_ADMIN_PIN = "1234";
+
 export const DIVISION_ADMIN_NAMES: Record<DivisionName, string> = {
   Cauchos: "Administrador GEU",
   Import: "Administrador GEU Import",

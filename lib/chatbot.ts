@@ -1,10 +1,15 @@
 import {
-  categorias,
   formatearMoneda,
+  getCategoriasForDivision,
   slugCategoria,
   type Categoria,
 } from "@/app/data/catalog";
+import { DIVISIONS, type DivisionName } from "@/lib/divisions";
 import { getProducts, type StoreProduct } from "@/lib/products";
+
+function normalizeDivision(value: string | undefined): DivisionName {
+  return DIVISIONS.includes(value as DivisionName) ? (value as DivisionName) : "Cauchos";
+}
 
 export type ChatSuggestion = {
   label: string;
@@ -54,23 +59,35 @@ function scoreProduct(product: StoreProduct, queryTokens: string[]) {
   }, 0);
 }
 
-function getMatchedCategories(query: string) {
+function getMatchedCategories(query: string, division: DivisionName) {
   const normalized = normalizeText(query);
+  const queryTokens = new Set(tokenize(query));
+  const categoriesForDivision = getCategoriasForDivision(division);
 
-  return categorias.filter((category) => {
+  return categoriesForDivision.filter((category) => {
     const categoryValue = normalizeText(category);
-    return (
-      normalized.includes(categoryValue) ||
-      normalized.includes(slugCategoria(category)) ||
-      categoryValue.split(" ").some((word) => normalized.includes(word))
-    );
+    if (normalized.includes(categoryValue)) return true;
+    if (normalized.includes(slugCategoria(category))) return true;
+
+    // Word-level match against the tokenized query, not a raw substring
+    // check — otherwise a short connector word like "y" (present in several
+    // category names) matches almost any query containing that letter.
+    return categoryValue
+      .split(" ")
+      .filter((word) => word.length > 2)
+      .some((word) => queryTokens.has(word));
   });
 }
 
-export async function getCatalogSnapshot(query: string): Promise<CatalogSnapshot> {
-  const products = await getProducts();
+export async function getCatalogSnapshot(
+  query: string,
+  divisionInput?: string,
+): Promise<CatalogSnapshot> {
+  const division = normalizeDivision(divisionInput);
+  const allProducts = await getProducts();
+  const products = allProducts.filter((product) => (product.division ?? "Cauchos") === division);
   const queryTokens = tokenize(query);
-  const matchedCategories = getMatchedCategories(query);
+  const matchedCategories = getMatchedCategories(query, division);
 
   const matchedProducts = products
     .map((product) => ({
@@ -87,7 +104,7 @@ export async function getCatalogSnapshot(query: string): Promise<CatalogSnapshot
   return {
     matchedProducts,
     matchedCategories,
-    allCategories: categorias,
+    allCategories: getCategoriasForDivision(division),
   };
 }
 
@@ -118,27 +135,32 @@ function buildProductSuggestions(products: StoreProduct[]): ChatSuggestion[] {
   }));
 }
 
-function buildCategorySuggestions(categoriesToSuggest: Categoria[]): ChatSuggestion[] {
+function buildCategorySuggestions(
+  categoriesToSuggest: Categoria[],
+  division: DivisionName,
+): ChatSuggestion[] {
   return categoriesToSuggest.slice(0, 3).map((category) => ({
     label: category,
-    href: `/categorias?categoria=${slugCategoria(category)}`,
+    href: `/categorias?categoria=${slugCategoria(category)}&division=${division}`,
   }));
 }
 
 export function buildLocalAssistantReply(
   query: string,
   snapshot: CatalogSnapshot,
+  divisionInput?: string,
 ): {
   message: string;
   suggestions: ChatSuggestion[];
 } {
+  const division = normalizeDivision(divisionInput);
   const normalized = normalizeText(query);
 
   if (!normalized) {
     return {
       message:
         "Te ayudo a encontrar productos, categorías y disponibilidad. Puedes escribir algo como “busco cauchos”, “necesito motores” o “cómo funciona el envío”.",
-      suggestions: buildCategorySuggestions(snapshot.allCategories),
+      suggestions: buildCategorySuggestions(snapshot.allCategories, division),
     };
   }
 
@@ -151,7 +173,7 @@ export function buildLocalAssistantReply(
       message:
         "En GEU puedes ver el estado del despacho desde tu cuenta. Cuando el pedido avance, verás etapas como pedido confirmado, en preparación, enviado y recibido. Si quieres, también puedo ayudarte a encontrar primero el producto correcto.",
       suggestions: [
-        { label: "Ver categorías", href: "/categorias" },
+        { label: "Ver categorías", href: `/categorias?division=${division}` },
         { label: "Mi cuenta", href: "/mi-cuenta" },
       ],
     };
@@ -198,12 +220,12 @@ export function buildLocalAssistantReply(
   if (snapshot.matchedCategories.length > 0) {
     return {
       message: `No vi un producto exacto todavía, pero sí una línea relacionada con tu búsqueda: ${snapshot.matchedCategories.join(", ")}. Te la puedo abrir para que filtres más rápido.`,
-      suggestions: buildCategorySuggestions(snapshot.matchedCategories),
+      suggestions: buildCategorySuggestions(snapshot.matchedCategories, division),
     };
   }
 
   return {
     message: `Todavía no encontré una coincidencia clara en el catálogo. Puedes probar con el nombre del producto, la categoría o una descripción más concreta. Las líneas principales de GEU son: ${snapshot.allCategories.join(", ")}.`,
-    suggestions: buildCategorySuggestions(snapshot.allCategories),
+    suggestions: buildCategorySuggestions(snapshot.allCategories, division),
   };
 }

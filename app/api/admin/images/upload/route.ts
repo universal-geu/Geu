@@ -23,7 +23,11 @@ export async function POST(request: Request) {
     const key = String(formData.get("key") || "banner");
     const slot = IMAGE_SLOTS.find((item) => item.key === key);
 
-    if (slot && slot.division !== admin.division) {
+    if (!slot) {
+      return Response.json({ error: "key no válida." }, { status: 400 });
+    }
+
+    if (slot.division !== admin.division) {
       return Response.json({ error: "No autorizado para esta división." }, { status: 403 });
     }
 

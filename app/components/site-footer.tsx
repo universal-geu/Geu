@@ -2,6 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { resolveText, type SiteTexts } from "@/lib/text-slots";
 
+function isSafeHttpUrl(value: string): boolean {
+  if (!value) return false;
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 type FooterColumn = {
   title: string;
   items: string[];
@@ -84,7 +94,7 @@ export default function SiteFooter({
     { key: "footer-social-youtube-url", Icon: YoutubeIcon, label: "YouTube" },
   ]
     .map((social) => ({ ...social, url: resolveText(social.key, siteTexts, "") }))
-    .filter((social) => social.url);
+    .filter((social) => isSafeHttpUrl(social.url));
 
   return (
     <footer

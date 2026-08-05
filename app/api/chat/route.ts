@@ -14,6 +14,8 @@ const openai = process.env.OPENAI_API_KEY
     })
   : null;
 
+const MAX_MESSAGE_LENGTH = 2000;
+
 function sanitizeMessages(messages: unknown): IncomingMessage[] {
   if (!Array.isArray(messages)) return [];
 
@@ -31,7 +33,7 @@ function sanitizeMessages(messages: unknown): IncomingMessage[] {
     )
     .map((message): IncomingMessage => ({
       role: message.role === "assistant" ? "assistant" : "user",
-      content: message.content.trim(),
+      content: message.content.trim().slice(0, MAX_MESSAGE_LENGTH),
     }))
     .filter((message) => message.content.length > 0)
     .slice(-8);
@@ -41,6 +43,7 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
       messages?: IncomingMessage[];
+      division?: string;
     };
 
     const messages = sanitizeMessages(body.messages);
@@ -53,8 +56,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const snapshot = await getCatalogSnapshot(latestUserMessage.content);
-    const fallback = buildLocalAssistantReply(latestUserMessage.content, snapshot);
+    const division = typeof body.division === "string" ? body.division : undefined;
+    const snapshot = await getCatalogSnapshot(latestUserMessage.content, division);
+    const fallback = buildLocalAssistantReply(latestUserMessage.content, snapshot, division);
 
     if (!openai) {
       return Response.json({

@@ -7,6 +7,7 @@ import CauchosHeader from "../components/cauchos-header";
 import {
   DIVISION_ADMIN_EMAILS,
   DIVISION_ADMIN_PASSWORD,
+  DIVISION_ADMIN_PIN,
   DIVISION_BRAND,
   getDivisionFromBrandParam,
 } from "@/lib/divisions";
@@ -237,6 +238,7 @@ export default function LoginPage() {
       body: JSON.stringify({
         email: DIVISION_ADMIN_EMAILS[loginDivision],
         password: DIVISION_ADMIN_PASSWORD,
+        adminPin: DIVISION_ADMIN_PIN,
       }),
     });
 

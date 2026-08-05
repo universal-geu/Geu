@@ -23,6 +23,15 @@ const quickPrompts = [
   "¿Qué categorías manejan?",
 ];
 
+function getDivisionFromPathname(pathname: string | null): string {
+  if (!pathname) return "Cauchos";
+  if (pathname.startsWith("/import")) return "Import";
+  if (pathname.startsWith("/innovation")) return "Innovation";
+  if (pathname.startsWith("/energy")) return "Energy";
+  if (pathname.startsWith("/plastic")) return "Plastic";
+  return "Cauchos";
+}
+
 const initialMessage: ChatMessage = {
   id: "welcome",
   role: "assistant",
@@ -89,6 +98,7 @@ export default function SupportChat() {
             role: message.role,
             content: message.content,
           })),
+          division: getDivisionFromPathname(pathname),
         }),
       });
 
@@ -145,7 +155,7 @@ export default function SupportChat() {
     };
   }, []);
 
-  if (pathname === "/" || pathname === "/cauchos" || pathname === "/import" || pathname === "/innovation" || pathname === "/energy" || pathname === "/admin" || isVisualSearchOpen) {
+  if (pathname === "/" || pathname === "/cauchos" || pathname === "/import" || pathname === "/innovation" || pathname === "/energy" || pathname === "/plastic" || pathname === "/admin" || isVisualSearchOpen) {
     return null;
   }
 

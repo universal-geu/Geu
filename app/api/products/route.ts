@@ -20,7 +20,13 @@ export async function POST(request: Request) {
         ? "No autorizado."
         : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
           ? "Configura Supabase antes de crear productos desde el panel."
-          : "No fue posible guardar el producto.";
+          : error instanceof Error && error.message === "DUPLICATE_SLUG"
+            ? "Ya existe un producto con ese nombre/slug."
+            : error instanceof Error && error.message === "DUPLICATE_SKU"
+              ? "Ya existe un producto con ese SKU."
+              : error instanceof Error && error.message === "DUPLICATE_VARIANT_SKU"
+                ? "Ya existe una variante con ese SKU."
+                : "No fue posible guardar el producto.";
 
     const status =
       error instanceof Error &&

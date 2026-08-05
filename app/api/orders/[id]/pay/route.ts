@@ -49,16 +49,23 @@ export async function POST(
         ? "El código de pago no es válido."
         : error instanceof Error && error.message === "ORDER_NOT_FOUND"
           ? "No encontramos ese pedido para tu cuenta."
-          : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
-            ? "La base de datos no está configurada todavía."
-            : "No fue posible confirmar el pago.";
+          : error instanceof Error && error.message === "ORDER_CANCELLED"
+            ? "Este pedido fue cancelado y ya no se puede pagar."
+            : error instanceof Error && error.message === "ORDER_ALREADY_PAID"
+              ? "Este pedido ya fue pagado."
+              : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
+                ? "La base de datos no está configurada todavía."
+                : "No fue posible confirmar el pago.";
 
     const status =
       error instanceof Error && error.message === "INVALID_PAYMENT_CODE"
         ? 400
         : error instanceof Error && error.message === "ORDER_NOT_FOUND"
           ? 404
-          : 500;
+          : error instanceof Error &&
+              (error.message === "ORDER_CANCELLED" || error.message === "ORDER_ALREADY_PAID")
+            ? 409
+            : 500;
 
     return Response.json({ error: message }, { status });
   }

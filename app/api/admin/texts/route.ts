@@ -18,13 +18,17 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdminUser("settings");
+    const admin = await requireAdminUser("settings");
     if (!prisma) return Response.json({ error: "BD no disponible." }, { status: 503 });
 
     const body = (await request.json()) as { key?: string; value?: string };
     if (!body.key) return Response.json({ error: "key es requerido." }, { status: 400 });
-    if (!TEXT_SLOTS.some((slot) => slot.key === body.key)) {
+    const slot = TEXT_SLOTS.find((s) => s.key === body.key);
+    if (!slot) {
       return Response.json({ error: "key no válida." }, { status: 400 });
+    }
+    if (slot.division !== admin.division && slot.division !== "Global") {
+      return Response.json({ error: "No autorizado para esta división." }, { status: 403 });
     }
 
     const value = (body.value ?? "").trim();
