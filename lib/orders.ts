@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { DivisionName } from "@/lib/divisions";
 import { DIVISION_ADMIN_EMAILS, DIVISION_BRAND, isServiceDivision } from "@/lib/divisions";
-import { emailLayout, sendEmail } from "@/lib/email";
+import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { formatOrderCode } from "@/lib/format-order";
 import { calculateShippingCost } from "@/lib/shipping";
 
@@ -229,17 +229,27 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
 
     // Deduct variant-level stock first (each variant appears at most once
     // per cart, since CartItem is unique on {userId, productId, variantSku}).
+    // Uses a conditional `updateMany` (stock >= quantity) so the check and the
+    // decrement happen atomically at the DB row-lock level — two concurrent
+    // checkouts can no longer both pass a stale read and oversell the item.
     for (const item of cartItems) {
       if (!item.variantSku) continue;
 
       const variant = variants.find((entry) => entry.sku === item.variantSku);
       if (!variant) continue;
 
-      const nextVariantStock = variant.stock - item.quantity;
-
-      await tx.productVariant.update({
-        where: { id: variant.id },
+      const decremented = await tx.productVariant.updateMany({
+        where: { id: variant.id, stock: { gte: item.quantity } },
         data: { stock: { decrement: item.quantity } },
+      });
+
+      if (decremented.count === 0) {
+        throw new Error("INSUFFICIENT_STOCK");
+      }
+
+      const updatedVariant = await tx.productVariant.findUniqueOrThrow({
+        where: { id: variant.id },
+        select: { stock: true },
       });
 
       await tx.inventoryMovement.create({
@@ -248,7 +258,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
           productVariantId: variant.id,
           type: "ORDER_DEDUCTION",
           quantity: -item.quantity,
-          stockAfter: nextVariantStock,
+          stockAfter: updatedVariant.stock,
           note: `Descuento automático por pedido ${createdOrder.id}`,
         },
       });
@@ -270,12 +280,25 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
 
     for (const [productId, totalQuantity] of quantityByProductId) {
       const product = products.find((entry) => entry.id === productId)!;
-      const nextStock = product.stock - totalQuantity;
+
+      const decremented = await tx.product.updateMany({
+        where: { id: productId, stock: { gte: totalQuantity } },
+        data: { stock: { decrement: totalQuantity } },
+      });
+
+      if (decremented.count === 0) {
+        throw new Error("INSUFFICIENT_STOCK");
+      }
+
+      const updatedProduct = await tx.product.findUniqueOrThrow({
+        where: { id: productId },
+        select: { stock: true },
+      });
+      const nextStock = updatedProduct.stock;
 
       await tx.product.update({
         where: { id: productId },
         data: {
-          stock: { decrement: totalQuantity },
           availability:
             nextStock <= 0
               ? "Agotado"
@@ -328,12 +351,14 @@ async function sendOrderConfirmationEmails(order: {
     .map(
       (item) =>
         `<tr>
-          <td style="padding: 8px 0; color: #16384f; font-size: 14px;">${item.name} × ${item.quantity}</td>
+          <td style="padding: 8px 0; color: #16384f; font-size: 14px;">${escapeHtml(item.name)} × ${item.quantity}</td>
           <td style="padding: 8px 0; text-align: right; color: #16384f; font-size: 14px; font-weight: 700;">${formatCurrency(item.lineTotal)}</td>
         </tr>`,
     )
     .join("");
   const grandTotal = order.subtotal + order.shippingCost;
+  const customerName = escapeHtml(order.customerName);
+  const customerEmail = escapeHtml(order.customerEmail);
 
   await sendEmail({
     to: order.customerEmail,
@@ -341,7 +366,7 @@ async function sendOrderConfirmationEmails(order: {
     html: emailLayout(
       "¡Gracias por tu pedido!",
       `<p style="color:#6e7379;font-size:14px;line-height:22px;">
-        Hola ${order.customerName}, recibimos tu pedido <strong>${formatOrderCode(order.id)}</strong> y ya quedó guardado en tu cuenta.
+        Hola ${customerName}, recibimos tu pedido <strong>${formatOrderCode(order.id)}</strong> y ya quedó guardado en tu cuenta.
       </p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">${itemsHtml}</table>
       <p style="margin-top:16px;font-size:14px;color:#6e7379;">Subtotal: ${formatCurrency(order.subtotal)}</p>
@@ -357,7 +382,7 @@ async function sendOrderConfirmationEmails(order: {
     html: emailLayout(
       "Nuevo pedido recibido",
       `<p style="color:#6e7379;font-size:14px;line-height:22px;">
-        ${order.customerName} (${order.customerEmail}) hizo un pedido de ${order.totalItems} producto${order.totalItems === 1 ? "" : "s"} por ${formatCurrency(grandTotal)} (incluye envío de ${formatCurrency(order.shippingCost)}).
+        ${customerName} (${customerEmail}) hizo un pedido de ${order.totalItems} producto${order.totalItems === 1 ? "" : "s"} por ${formatCurrency(grandTotal)} (incluye envío de ${formatCurrency(order.shippingCost)}).
       </p>`,
       order.division,
     ),
@@ -522,7 +547,7 @@ export async function getSalesReport(division?: DivisionName): Promise<SalesRepo
       paidOrders: paidOrders.length,
       pendingOrders: activeOrders.filter((order) => order.paymentStatus === "PENDING")
         .length,
-      cancelledOrders: orders.length - allActiveOrders.length,
+      cancelledOrders: scopedOrders.filter((order) => order.status === "CANCELLED").length,
       productsSold,
       grossRevenue,
       paidRevenue,
@@ -785,8 +810,8 @@ async function sendShippingStatusEmail({
   const trackingHtml =
     shippingStatus === "SHIPPED" && (carrier || trackingNumber)
       ? `<p style="color:#6e7379;font-size:14px;line-height:22px;">
-          ${carrier ? `Transportadora: <strong>${carrier}</strong>. ` : ""}
-          ${trackingNumber ? `Número de guía: <strong>${trackingNumber}</strong>.` : ""}
+          ${carrier ? `Transportadora: <strong>${escapeHtml(carrier)}</strong>. ` : ""}
+          ${trackingNumber ? `Número de guía: <strong>${escapeHtml(trackingNumber)}</strong>.` : ""}
         </p>`
       : "";
 
@@ -796,7 +821,7 @@ async function sendShippingStatusEmail({
     html: emailLayout(
       `Actualización de tu pedido`,
       `<p style="color:#6e7379;font-size:14px;line-height:22px;">
-        Hola ${customerName}, tu pedido <strong>${formatOrderCode(orderId)}</strong> cambió de estado a
+        Hola ${escapeHtml(customerName)}, tu pedido <strong>${formatOrderCode(orderId)}</strong> cambió de estado a
         <strong style="color:${DIVISION_BRAND[division].accent};">${label}</strong>.
       </p>
       ${trackingHtml}`,
@@ -835,6 +860,14 @@ export async function confirmSimulatedOrderPayment(
 
   if (!order) {
     throw new Error("ORDER_NOT_FOUND");
+  }
+
+  if (order.status === "CANCELLED" || order.shippingStatus === "CANCELLED") {
+    throw new Error("ORDER_CANCELLED");
+  }
+
+  if (order.paymentStatus === "PAID") {
+    throw new Error("ORDER_ALREADY_PAID");
   }
 
   return await prisma.order.update({

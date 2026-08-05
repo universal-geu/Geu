@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { DIVISION_ADMIN_EMAILS, type DivisionName } from "@/lib/divisions";
-import { emailLayout, sendEmail } from "@/lib/email";
+import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 
 export type QuoteStatus = "NEW" | "CONTACTED" | "CLOSED";
 
@@ -49,7 +49,7 @@ export async function createQuote(input: CreateQuoteInput) {
     .filter(([, value]) => value?.trim())
     .map(
       ([label, value]) =>
-        `<tr><td style="padding: 6px 0; font-weight: 700;">${label}</td><td style="padding: 6px 0;">${value}</td></tr>`,
+        `<tr><td style="padding: 6px 0; font-weight: 700;">${escapeHtml(label)}</td><td style="padding: 6px 0;">${escapeHtml(value)}</td></tr>`,
     )
     .join("");
 
@@ -60,16 +60,16 @@ export async function createQuote(input: CreateQuoteInput) {
       "Nueva solicitud de evaluación técnica",
       `
         <p style="margin: 0 0 12px; color: #4b5563; font-size: 14px; line-height: 1.6;">
-          ${input.fullName} (${input.company}) envió una nueva solicitud desde el sitio.
+          ${escapeHtml(input.fullName)} (${escapeHtml(input.company)}) envió una nueva solicitud desde el sitio.
         </p>
         <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #16384f;">
-          <tr><td style="padding: 6px 0; font-weight: 700;">NIT</td><td style="padding: 6px 0;">${input.nit}</td></tr>
-          <tr><td style="padding: 6px 0; font-weight: 700;">Teléfono</td><td style="padding: 6px 0;">${input.phone}</td></tr>
-          <tr><td style="padding: 6px 0; font-weight: 700;">Tipo</td><td style="padding: 6px 0;">${input.requestType}</td></tr>
-          <tr><td style="padding: 6px 0; font-weight: 700;">Producto</td><td style="padding: 6px 0;">${input.productDetails}</td></tr>
-          <tr><td style="padding: 6px 0; font-weight: 700;">Proceso</td><td style="padding: 6px 0;">${input.process.join(", ")}</td></tr>
-          <tr><td style="padding: 6px 0; font-weight: 700;">Condiciones</td><td style="padding: 6px 0;">${input.conditions.join(", ")}</td></tr>
-          <tr><td style="padding: 6px 0; font-weight: 700;">Cantidad / entrega</td><td style="padding: 6px 0;">${input.quantityAndDeadline}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 700;">NIT</td><td style="padding: 6px 0;">${escapeHtml(input.nit)}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 700;">Teléfono</td><td style="padding: 6px 0;">${escapeHtml(input.phone)}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 700;">Tipo</td><td style="padding: 6px 0;">${escapeHtml(input.requestType)}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 700;">Producto</td><td style="padding: 6px 0;">${escapeHtml(input.productDetails)}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 700;">Proceso</td><td style="padding: 6px 0;">${escapeHtml(input.process.join(", "))}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 700;">Condiciones</td><td style="padding: 6px 0;">${escapeHtml(input.conditions.join(", "))}</td></tr>
+          <tr><td style="padding: 6px 0; font-weight: 700;">Cantidad / entrega</td><td style="padding: 6px 0;">${escapeHtml(input.quantityAndDeadline)}</td></tr>
           ${detailsRows}
         </table>
       `,

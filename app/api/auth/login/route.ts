@@ -1,6 +1,7 @@
 import { authenticateUser } from "@/lib/users";
 import { getDevAdminUserByEmail, setSessionCookie } from "@/lib/auth";
 import { DIVISION_ADMIN_PASSWORD } from "@/lib/divisions";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -18,6 +19,16 @@ export async function POST(request: Request) {
       return Response.json(
         { error: "Ingresa tu correo y contraseña." },
         { status: 400 },
+      );
+    }
+
+    const rateLimitKey = `login:${getClientIp(request)}:${email.toLowerCase()}`;
+    const rateLimit = checkRateLimit(rateLimitKey, { limit: 10, windowMs: 5 * 60 * 1000 });
+
+    if (!rateLimit.allowed) {
+      return Response.json(
+        { error: "Demasiados intentos. Intenta de nuevo en unos minutos." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
       );
     }
 

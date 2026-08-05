@@ -27,7 +27,13 @@ export async function PATCH(
           ? "Configura Supabase antes de editar productos desde el panel."
           : error instanceof Error && error.message === "PRODUCT_NOT_FOUND"
             ? "No encontramos el producto que intentas editar."
-            : "No fue posible actualizar el producto.";
+            : error instanceof Error && error.message === "DUPLICATE_SLUG"
+              ? "Ya existe un producto con ese nombre/slug."
+              : error instanceof Error && error.message === "DUPLICATE_SKU"
+                ? "Ya existe un producto con ese SKU."
+                : error instanceof Error && error.message === "DUPLICATE_VARIANT_SKU"
+                  ? "Ya existe una variante con ese SKU."
+                  : "No fue posible actualizar el producto.";
 
     const status =
       error instanceof Error &&

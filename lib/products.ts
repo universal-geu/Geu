@@ -14,7 +14,7 @@ import {
   type ProductoVariante,
 } from "@/app/data/catalog";
 import { prisma } from "@/lib/prisma";
-import { isServiceDivision, type DivisionName } from "@/lib/divisions";
+import { DIVISION_BRAND, isServiceDivision, type DivisionName } from "@/lib/divisions";
 
 type ProductRecord = {
   id?: string;
@@ -215,44 +215,118 @@ function normalizeCategoria(value: string): Categoria {
   return value.trim() || categorias[0];
 }
 
+// `Product.slug`, `Product.sku` and `ProductVariant.sku` are all `@unique`.
+// Slug/product-SKU collisions are already avoided by the pre-insert
+// collision-avoidance loops in createProduct/updateProduct, so at insert time
+// a P2002 on "sku" almost always comes from a variant SKU (which is never
+// pre-checked) — but we still read `meta.target` when Prisma provides it so
+// the error isn't blindly mislabeled as "duplicate variant SKU" when it's
+// actually the product's own slug or SKU racing a concurrent create.
+function classifyProductUniqueConstraintError(error: unknown, hasVariants: boolean) {
+  const target =
+    error &&
+    typeof error === "object" &&
+    "meta" in error &&
+    error.meta &&
+    typeof error.meta === "object" &&
+    "target" in error.meta
+      ? (error as { meta: { target?: unknown } }).meta.target
+      : undefined;
+  const targetFields = Array.isArray(target)
+    ? target
+    : typeof target === "string"
+      ? [target]
+      : [];
+
+  if (targetFields.includes("slug")) return "DUPLICATE_SLUG";
+  if (targetFields.includes("sku") && !hasVariants) return "DUPLICATE_SKU";
+  return "DUPLICATE_VARIANT_SKU";
+}
+
+// Internal bookkeeping markers (subcategoría / categoría menor / categorías
+// adicionales) are smuggled inside the same `compatibility` string array the
+// admin's free-text "Compatibilidad" field reads and writes. They're tagged
+// with a leading NUL byte so they can never collide with real admin-entered
+// text (which previously used a plain human-readable prefix like
+// "Subcategoría: ..." — a legitimate compatibility entry starting with those
+// exact words was silently dropped on save). Legacy plain-prefixed markers
+// from products saved before this change are still recognized on read.
+const INTERNAL_MARKER_PREFIX = "\u0000geu-internal:";
+const LEGACY_SUBCATEGORY_PREFIX = "subcategoría:";
+const LEGACY_MINOR_CATEGORY_PREFIX = "categoría menor:";
+const LEGACY_ADDITIONAL_CATEGORIES_PREFIX = "categorías adicionales:";
+
 function getSubcategoryMarker(value: string) {
-  return `Subcategoría: ${value.trim()}`;
+  return `${INTERNAL_MARKER_PREFIX}subcategoria:${value.trim()}`;
 }
 
 function getMinorCategoryMarker(value: string) {
-  return `Categoría menor: ${value.trim()}`;
+  return `${INTERNAL_MARKER_PREFIX}categoria-menor:${value.trim()}`;
+}
+
+function isInternalMarker(value: string) {
+  const normalized = value.toLowerCase();
+  return (
+    value.startsWith(INTERNAL_MARKER_PREFIX) ||
+    normalized.startsWith(LEGACY_SUBCATEGORY_PREFIX) ||
+    normalized.startsWith(LEGACY_MINOR_CATEGORY_PREFIX) ||
+    normalized.startsWith(LEGACY_ADDITIONAL_CATEGORIES_PREFIX)
+  );
 }
 
 function extractSubcategory(values: Array<string | null | undefined>) {
-  return normalizeTextList(values)
-    .find((value) => value.toLowerCase().startsWith("subcategoría:"))
+  const list = normalizeTextList(values);
+
+  const sentinel = list.find((value) =>
+    value.startsWith(`${INTERNAL_MARKER_PREFIX}subcategoria:`),
+  );
+  if (sentinel) {
+    return sentinel.slice(`${INTERNAL_MARKER_PREFIX}subcategoria:`.length).trim();
+  }
+
+  return list
+    .find((value) => value.toLowerCase().startsWith(LEGACY_SUBCATEGORY_PREFIX))
     ?.replace(/^subcategoría:\s*/i, "")
     .trim();
 }
 
 function extractMinorCategory(values: Array<string | null | undefined>) {
-  return normalizeTextList(values)
-    .find((value) => value.toLowerCase().startsWith("categoría menor:"))
+  const list = normalizeTextList(values);
+
+  const sentinel = list.find((value) =>
+    value.startsWith(`${INTERNAL_MARKER_PREFIX}categoria-menor:`),
+  );
+  if (sentinel) {
+    return sentinel.slice(`${INTERNAL_MARKER_PREFIX}categoria-menor:`.length).trim();
+  }
+
+  return list
+    .find((value) => value.toLowerCase().startsWith(LEGACY_MINOR_CATEGORY_PREFIX))
     ?.replace(/^categoría menor:\s*/i, "")
     .trim();
 }
 
-const ADDITIONAL_CATEGORIES_PREFIX = "categorías adicionales:";
-
 function getAdditionalCategoriesMarker(entries: ProductoCategoriaAdicional[]) {
-  return `Categorías adicionales: ${JSON.stringify(entries)}`;
+  return `${INTERNAL_MARKER_PREFIX}categorias-adicionales:${JSON.stringify(entries)}`;
 }
 
 function extractAdditionalCategories(
   values: Array<string | null | undefined>,
 ): ProductoCategoriaAdicional[] {
-  const marker = normalizeTextList(values).find((value) =>
-    value.toLowerCase().startsWith(ADDITIONAL_CATEGORIES_PREFIX),
-  );
-  if (!marker) return [];
+  const list = normalizeTextList(values);
+  const sentinelPrefix = `${INTERNAL_MARKER_PREFIX}categorias-adicionales:`;
+  const sentinelMarker = list.find((value) => value.startsWith(sentinelPrefix));
+  const legacyMarker = sentinelMarker
+    ? undefined
+    : list.find((value) => value.toLowerCase().startsWith(LEGACY_ADDITIONAL_CATEGORIES_PREFIX));
+  if (!sentinelMarker && !legacyMarker) return [];
+
+  const json = sentinelMarker
+    ? sentinelMarker.slice(sentinelPrefix.length).trim()
+    : legacyMarker!.slice(legacyMarker!.indexOf(":") + 1).trim();
 
   try {
-    const parsed = JSON.parse(marker.slice(marker.indexOf(":") + 1).trim());
+    const parsed = JSON.parse(json);
     if (!Array.isArray(parsed)) return [];
 
     const result: ProductoCategoriaAdicional[] = [];
@@ -287,12 +361,7 @@ function normalizeCompatibilityList(
   categoriaMenor?: string,
   categoriasAdicionales?: ProductoCategoriaAdicional[],
 ) {
-  const withoutMarkers = normalizeTextList(values).filter(
-    (value) =>
-      !value.toLowerCase().startsWith("subcategoría:") &&
-      !value.toLowerCase().startsWith("categoría menor:") &&
-      !value.toLowerCase().startsWith(ADDITIONAL_CATEGORIES_PREFIX),
-  );
+  const withoutMarkers = normalizeTextList(values).filter((value) => !isInternalMarker(value));
   const nextValues = [...withoutMarkers];
 
   if (subcategoria?.trim()) {
@@ -373,10 +442,7 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
       product.application?.trim() ||
       `Aplicación recomendada para la línea ${categoria}.`,
     compatibilidad: normalizeTextList(product.compatibility || []).filter(
-      (value) =>
-        !value.toLowerCase().startsWith("subcategoría:") &&
-        !value.toLowerCase().startsWith("categoría menor:") &&
-        !value.toLowerCase().startsWith(ADDITIONAL_CATEGORIES_PREFIX),
+      (value) => !isInternalMarker(value),
     ),
     garantia: product.warranty?.trim() || "1 año de garantía del fabricante",
     fichaTecnicaUrl: product.technicalSheetUrl || undefined,
@@ -457,8 +523,14 @@ export async function getProducts() {
 
     return products.map(toStoreProduct);
   } catch (error) {
-    console.error("getProducts: fallo la consulta a la base de datos, usando catalogo estatico de respaldo", error);
-    return getFallbackProducts();
+    // Do NOT fall back to the static placeholder catalog here — those are
+    // unrelated demo products (wrong prices/stock/images, some left over
+    // from a different project) and silently swapping to them on a real DB
+    // error would show customers fabricated pricing and availability. An
+    // empty catalog is the honest degraded state; every caller already
+    // handles zero products safely.
+    console.error("getProducts: fallo la consulta a la base de datos", error);
+    return [];
   }
 }
 
@@ -494,7 +566,7 @@ export async function createProduct(input: ProductMutationInput) {
   );
   const stock = hasVariants ? sumVariantStock(normalizedVariantes) : Math.max(0, Math.round(input.stock));
   const stockMinimo = Math.max(0, Math.round(input.stockMinimo));
-  const imagen = normalizeProductImage(input.imagen) || "/cauchos-product-sellos.png";
+  const imagen = normalizeProductImage(input.imagen) || DIVISION_BRAND[input.division].logo;
   const imagenesExtra = normalizeGalleryImages(input.imagenesExtra || []);
   let sku: string | null = null;
 
@@ -583,7 +655,7 @@ export async function createProduct(input: ProductMutationInput) {
       "code" in error &&
       error.code === "P2002"
     ) {
-      throw new Error("DUPLICATE_VARIANT_SKU");
+      throw new Error(classifyProductUniqueConstraintError(error, hasVariants));
     }
     throw error;
   }
@@ -773,7 +845,7 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
       "code" in error &&
       error.code === "P2002"
     ) {
-      throw new Error("DUPLICATE_VARIANT_SKU");
+      throw new Error(classifyProductUniqueConstraintError(error, hasVariants));
     }
     throw error;
   }

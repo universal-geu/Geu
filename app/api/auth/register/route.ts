@@ -1,6 +1,7 @@
 import { registerUser } from "@/lib/users";
 import { setSessionCookie } from "@/lib/auth";
 import { DIVISIONS, type DivisionName } from "@/lib/divisions";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 function normalizeDivision(value: unknown): DivisionName | undefined {
   return DIVISIONS.includes(value as DivisionName) ? (value as DivisionName) : undefined;
@@ -8,6 +9,18 @@ function normalizeDivision(value: unknown): DivisionName | undefined {
 
 export async function POST(request: Request) {
   try {
+    const rateLimit = checkRateLimit(`register:${getClientIp(request)}`, {
+      limit: 20,
+      windowMs: 60 * 60 * 1000,
+    });
+
+    if (!rateLimit.allowed) {
+      return Response.json(
+        { error: "Demasiados intentos. Intenta de nuevo más tarde." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
+    }
+
     const body = (await request.json()) as {
       fullName?: string;
       company?: string;

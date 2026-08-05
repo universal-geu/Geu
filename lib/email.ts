@@ -45,6 +45,22 @@ export async function sendEmail({
   }
 }
 
+const HTML_ESCAPE_MAP: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+// Customer-controlled fields (name, product names typed via cart, quote
+// messages, etc.) get interpolated into transactional email HTML — escape
+// them so a crafted name/message can't inject markup or links into the
+// email seen by customers and division admins.
+export function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => HTML_ESCAPE_MAP[char] ?? char);
+}
+
 export function emailLayout(title: string, bodyHtml: string, division: DivisionName = "Cauchos") {
   const brand = DIVISION_BRAND[division];
 

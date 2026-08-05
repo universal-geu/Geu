@@ -2,17 +2,27 @@ import Image from "next/image";
 import Link from "next/link";
 import { slugCategoria } from "../data/catalog";
 import { getProducts } from "@/lib/products";
+import { DIVISION_BRAND } from "@/lib/divisions";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Buscar por imagen | Unipars",
-  description: "Concepto visual de búsqueda de repuestos por imagen en Unipars.",
+  title: "Buscar por imagen | GEU",
+  description: "Concepto visual de búsqueda de repuestos por imagen en GEU.",
 };
+
+const DIVISIONS_WITH_CATEGORY_ROUTE = new Set(["Cauchos", "Import", "Plastic"]);
 
 export default async function BuscarPorImagenPage() {
   const products = await getProducts();
   const selectedProduct = products[0];
+  const selectedProductDivision = selectedProduct?.division ?? "Cauchos";
+  const selectedProductBrand = DIVISION_BRAND[selectedProductDivision];
+  const selectedProductCategoriaHref = selectedProduct
+    ? DIVISIONS_WITH_CATEGORY_ROUTE.has(selectedProductDivision)
+      ? `${selectedProductBrand.basePath}/categoria/${slugCategoria(selectedProduct.categoria)}`
+      : selectedProductBrand.basePath
+    : "/";
 
   if (!selectedProduct) {
     return (
@@ -234,7 +244,7 @@ export default async function BuscarPorImagenPage() {
                   Abrir producto sugerido
                 </Link>
                 <Link
-                  href={`/cauchos/categoria/${slugCategoria(selectedProduct.categoria)}`}
+                  href={selectedProductCategoriaHref}
                   className="rounded-full border border-black/10 px-5 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
                 >
                   Ver categoría detectada

@@ -307,7 +307,9 @@ export default function ProductoDetallePage() {
   const relacionados = products
     .filter(
       (item) =>
-        item.categoria === producto.categoria && item.slug !== producto.slug,
+        item.categoria === producto.categoria &&
+        item.division === producto.division &&
+        item.slug !== producto.slug,
     )
     .slice(0, 3);
   const productDivision = producto.division ?? "Cauchos";
