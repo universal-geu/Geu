@@ -246,11 +246,12 @@ export default function LoginPage() {
       error?: string;
       message?: string;
       user?: { id: string; role: "CUSTOMER" | "ADMIN" };
+      requiresAdminPin?: boolean;
     };
 
     setIsMasterSubmitting(false);
 
-    if (!response.ok) {
+    if (!response.ok || payload.requiresAdminPin || payload.user?.role !== "ADMIN") {
       const message = payload.error || "No fue posible iniciar como usuario maestro.";
       setInlineError(message);
       setToast({ tone: "error", message });
