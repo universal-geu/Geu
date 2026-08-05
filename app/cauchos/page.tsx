@@ -277,6 +277,7 @@ export default async function CauchosPage() {
                         nombre={product.nombre}
                         precio={product.precio}
                         imagen={productImage}
+                        division="Cauchos"
                       />
                       <Link
                         href={`/producto/${product.slug}`}

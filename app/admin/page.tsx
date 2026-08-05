@@ -26,6 +26,7 @@ import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
 import { TEXT_SLOTS } from "@/lib/text-slots";
 import { getDivisionFromBrandParam, isServiceDivision, type DivisionName } from "@/lib/divisions";
+import type { CauchosSalesMode } from "@/lib/site-settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
   ADMIN_TOOL_KEYS,
@@ -1215,10 +1216,21 @@ function WhatsAppSubIcon() {
   );
 }
 
-const SETTINGS_SUB_ICONS: Record<"images" | "texts" | "whatsapp", () => React.JSX.Element> = {
+function SalesModeSubIcon() {
+  return (
+    <SidebarIconShell>
+      <rect x="2.5" y="7" width="19" height="12" rx="2.5" />
+      <circle cx="8" cy="13" r="2.2" />
+      <path d="M14 13h4.5" />
+    </SidebarIconShell>
+  );
+}
+
+const SETTINGS_SUB_ICONS: Record<"images" | "texts" | "whatsapp" | "salesMode", () => React.JSX.Element> = {
   images: ImagesSubIcon,
   texts: TextsSubIcon,
   whatsapp: WhatsAppSubIcon,
+  salesMode: SalesModeSubIcon,
 };
 
 function DashboardMetricIconShell({ children }: { children: React.ReactNode }) {
@@ -1365,6 +1377,8 @@ export default function AdminPage() {
   const [savedImageKey, setSavedImageKey] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [cauchosSalesMode, setCauchosSalesMode] = useState<CauchosSalesMode>("precios");
+  const [isSavingSalesMode, setIsSavingSalesMode] = useState(false);
   const [isLoadingSettings, setIsLoadingSettings] = useState(false);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
@@ -1376,7 +1390,7 @@ export default function AdminPage() {
   const [savedTextKey, setSavedTextKey] = useState<string | null>(null);
   const [selectedTextGroup, setSelectedTextGroup] = useState<string | null>(null);
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
-  const [settingsSection, setSettingsSection] = useState<"images" | "texts" | "whatsapp" | null>(null);
+  const [settingsSection, setSettingsSection] = useState<"images" | "texts" | "whatsapp" | "salesMode" | null>(null);
   const [editSearch, setEditSearch] = useState("");
   const [editCategoryFilter, setEditCategoryFilter] = useState<"Todas" | Categoria>("Todas");
   const [inventoryStatusFilter, setInventoryStatusFilter] = useState<
@@ -2414,11 +2428,16 @@ export default function AdminPage() {
     setSettingsError(null);
     try {
       const response = await fetch("/api/admin/settings");
-      const payload = (await response.json()) as { whatsappNumber?: string; error?: string };
+      const payload = (await response.json()) as {
+        whatsappNumber?: string;
+        cauchosSalesMode?: CauchosSalesMode;
+        error?: string;
+      };
       if (!response.ok) {
         throw new Error(payload.error || "No fue posible cargar la configuración.");
       }
       setWhatsappNumber(payload.whatsappNumber ?? "");
+      setCauchosSalesMode(payload.cauchosSalesMode === "whatsapp" ? "whatsapp" : "precios");
     } catch (error) {
       setSettingsError(
         error instanceof Error ? error.message : "No fue posible cargar la configuración.",
@@ -2449,6 +2468,35 @@ export default function AdminPage() {
       setSettingsError(error instanceof Error ? error.message : "No se pudo guardar el número.");
     } finally {
       setIsSavingSettings(false);
+    }
+  };
+
+  const handleChangeCauchosSalesMode = async (mode: CauchosSalesMode) => {
+    const previousMode = cauchosSalesMode;
+    setCauchosSalesMode(mode);
+    setIsSavingSalesMode(true);
+    setSettingsSaved(false);
+    setSettingsError(null);
+    try {
+      const response = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cauchosSalesMode: mode }),
+      });
+      const payload = (await response.json()) as { cauchosSalesMode?: CauchosSalesMode; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo guardar el modo de venta.");
+      }
+      setCauchosSalesMode(payload.cauchosSalesMode === "whatsapp" ? "whatsapp" : "precios");
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 2000);
+    } catch (error) {
+      setCauchosSalesMode(previousMode);
+      setSettingsError(
+        error instanceof Error ? error.message : "No se pudo guardar el modo de venta.",
+      );
+    } finally {
+      setIsSavingSalesMode(false);
     }
   };
 
@@ -2492,7 +2540,7 @@ export default function AdminPage() {
     }
   };
 
-  const openSettingsSection = (section: "images" | "texts" | "whatsapp") => {
+  const openSettingsSection = (section: "images" | "texts" | "whatsapp" | "salesMode") => {
     setSelectedImage(null);
     setRequestError("");
     setPrimaryImageIndex(0);
@@ -2505,6 +2553,7 @@ export default function AdminPage() {
     if (section === "images") void loadSiteImages();
     if (section === "texts") void loadSiteTexts();
     if (section === "whatsapp") void loadSiteSettings();
+    if (section === "salesMode") void loadSiteSettings();
   };
 
   const openSettingsView = () => {
@@ -2887,6 +2936,14 @@ export default function AdminPage() {
             label: "WhatsApp",
             active: activeTab === "settings" && settingsSection === "whatsapp",
             onClick: () => openSettingsSection("whatsapp"),
+          }
+        : null,
+      canAccessTool("settings") && adminDivision === "Cauchos"
+        ? {
+            key: "salesMode" as const,
+            label: "Modo de venta",
+            active: activeTab === "settings" && settingsSection === "salesMode",
+            onClick: () => openSettingsSection("salesMode"),
           }
         : null,
     ] as const
@@ -5865,6 +5922,75 @@ export default function AdminPage() {
               </div>
             </div>
           )}
+
+          {activeTab === "settings" &&
+            settingsSection === "salesMode" &&
+            canAccessTool("settings") &&
+            adminDivision === "Cauchos" && (
+              <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
+                <div className="mb-8">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
+                    Universal de Cauchos
+                  </p>
+                  <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                    Modo de venta
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
+                    En modo Precios, el sitio funciona como una tienda normal: los clientes agregan
+                    productos al carrito y pagan en línea. En modo WhatsApp, el precio se sigue
+                    mostrando pero el botón de compra y el carrito se reemplazan por un contacto
+                    directo por WhatsApp — útil si prefieres cerrar las ventas por chat.
+                  </p>
+                </div>
+
+                {settingsError && (
+                  <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                    {settingsError}
+                  </p>
+                )}
+
+                <div className="flex max-w-md flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    disabled={isSavingSalesMode || isLoadingSettings}
+                    onClick={() => void handleChangeCauchosSalesMode("precios")}
+                    className={`flex-1 rounded-2xl border-2 px-5 py-4 text-left transition-colors duration-200 ${
+                      cauchosSalesMode === "precios"
+                        ? "border-[var(--admin-accent)] bg-[var(--admin-accent-soft)]"
+                        : "border-black/10 hover:border-black/20"
+                    } ${isSavingSalesMode || isLoadingSettings ? "pointer-events-none opacity-60" : ""}`}
+                  >
+                    <span className="block text-sm font-black uppercase tracking-[0.06em] text-[#16384f]">
+                      Precios
+                    </span>
+                    <span className="mt-1 block text-xs leading-5 text-[#6e7379]">
+                      Carrito y checkout normales (actual).
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSavingSalesMode || isLoadingSettings}
+                    onClick={() => void handleChangeCauchosSalesMode("whatsapp")}
+                    className={`flex-1 rounded-2xl border-2 px-5 py-4 text-left transition-colors duration-200 ${
+                      cauchosSalesMode === "whatsapp"
+                        ? "border-[#25D366] bg-[#f0fdf4]"
+                        : "border-black/10 hover:border-black/20"
+                    } ${isSavingSalesMode || isLoadingSettings ? "pointer-events-none opacity-60" : ""}`}
+                  >
+                    <span className="block text-sm font-black uppercase tracking-[0.06em] text-[#16384f]">
+                      WhatsApp
+                    </span>
+                    <span className="mt-1 block text-xs leading-5 text-[#6e7379]">
+                      Contacto por WhatsApp, sin carrito ni checkout.
+                    </span>
+                  </button>
+                </div>
+
+                {settingsSaved && (
+                  <p className="mt-4 text-sm font-semibold text-[#1f6b39]">✓ Modo de venta guardado</p>
+                )}
+              </div>
+            )}
 
           {activeTab === "accounts" && (
             <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">

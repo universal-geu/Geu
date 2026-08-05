@@ -12,6 +12,7 @@ import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions"
 import { useSiteTexts } from "./use-site-texts";
 import { resolveText } from "@/lib/text-slots";
 import { useCart } from "./cart-provider";
+import { useSalesSettings } from "./sales-settings-provider";
 import MobileBottomNav from "./mobile-bottom-nav";
 
 type BottomNavProps = {
@@ -20,9 +21,10 @@ type BottomNavProps = {
   cartHref: string;
   accountBrand?: string;
   moreItems: { label: string; href: string }[];
+  showCart: boolean;
 };
 
-function CauchosBottomNav({ homeHref, accent, cartHref, accountBrand, moreItems }: BottomNavProps) {
+function CauchosBottomNav({ homeHref, accent, cartHref, accountBrand, moreItems, showCart }: BottomNavProps) {
   const { toggle } = useCauchosMenu();
   const { totalItems } = useCart();
 
@@ -30,7 +32,7 @@ function CauchosBottomNav({ homeHref, accent, cartHref, accountBrand, moreItems 
     <MobileBottomNav
       homeHref={homeHref}
       accent={accent}
-      cart={{ href: cartHref, count: totalItems }}
+      cart={showCart ? { href: cartHref, count: totalItems } : undefined}
       onCategoriasClick={toggle}
       accountBrand={accountBrand}
       moreItems={moreItems}
@@ -44,6 +46,8 @@ type Props = {
 
 export default function CauchosHeader({ division = "Cauchos" }: Props) {
   const siteTexts = useSiteTexts();
+  const { cauchosSalesMode } = useSalesSettings();
+  const showCart = !(division === "Cauchos" && cauchosSalesMode === "whatsapp");
   const phone = resolveText("header-phone", siteTexts);
   const brand = DIVISION_BRAND[division];
   const cartAccent = CART_ACCENT[division];
@@ -115,7 +119,7 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
             <Link href={nosotrosHref} className="font-bold hover:text-[var(--brand-accent)]">
               Nosotros
             </Link>
-            <CauchosCartLink accent={cartAccent} href={cartHref} />
+            {showCart && <CauchosCartLink accent={cartAccent} href={cartHref} />}
             <CauchosAccountLink className="font-bold hover:text-[var(--brand-accent)]" brand={brandParam} />
           </div>
         </div>
@@ -127,6 +131,7 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
           accent={brand.accent}
           cartHref={cartHref}
           accountBrand={brandParam}
+          showCart={showCart}
           moreItems={[
             { label: "Nosotros", href: nosotrosHref },
             { label: "Cotizaciones", href: `${brand.basePath}#contacto` },

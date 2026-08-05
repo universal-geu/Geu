@@ -601,6 +601,7 @@ export default function CauchosCategoryProductsPage({
                       nombre={product.nombre}
                       precio={product.precio}
                       imagen={productImage}
+                      division={division}
                       accent={cartAccent}
                     />
                     <Link
