@@ -3,6 +3,8 @@ import CheckoutForm from "./checkout-form";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getCartItemsForUser } from "@/lib/cart";
 import { getUserById } from "@/lib/users";
+import { getDivisionFromBrandParam } from "@/lib/divisions";
+import { getCauchosSalesMode } from "@/lib/site-settings";
 
 function parsePriceValue(price: string) {
   const numeric = Number(price.replace(/[^\d]/g, ""));
@@ -17,6 +19,12 @@ export default async function CheckoutPage({
   const { brand } = await searchParams;
   const loginRedirect = brand ? `/login?next=/checkout&brand=${brand}` : "/login?next=/checkout";
   const cartRedirect = brand ? `/carrito?brand=${brand}` : "/carrito";
+  const division = getDivisionFromBrandParam(brand);
+
+  if (division === "Cauchos" && (await getCauchosSalesMode()) === "whatsapp") {
+    redirect(cartRedirect);
+  }
+
   const session = await getSessionFromCookies();
 
   if (!session) {

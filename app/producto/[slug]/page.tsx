@@ -569,6 +569,7 @@ export default function ProductoDetallePage() {
                 nombre={hasVariants && selectedVariant ? `${producto.nombre} - ${selectedVariant.medida}` : producto.nombre}
                 precio={displayPrecio}
                 imagen={productImage}
+                division={productDivision}
                 cantidad={cantidad}
                 disabled={!canPurchase}
                 accent={cartAccent}

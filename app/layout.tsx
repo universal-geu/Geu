@@ -3,6 +3,7 @@ import { Orbitron, Rajdhani } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./components/cart-provider";
 import { ProductsProvider } from "./components/products-provider";
+import { SalesSettingsProvider } from "./components/sales-settings-provider";
 import HeaderShell from "./components/header-shell";
 import SupportChat from "./components/support-chat";
 import WhatsAppFloatButton from "./components/whatsapp-float-button";
@@ -10,7 +11,7 @@ import { getProducts } from "@/lib/products";
 import { getDevAdminUserById, getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import { getCartItemsForUser } from "@/lib/cart";
-import { getWhatsAppNumber } from "@/lib/site-settings";
+import { getCauchosSalesMode, getWhatsAppNumber } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,7 @@ export default async function RootLayout({
 }>) {
   const initialProducts = await getProducts();
   const whatsappNumber = await getWhatsAppNumber();
+  const cauchosSalesMode = await getCauchosSalesMode();
   const session = await getSessionFromCookies();
   let currentUser = null;
   let initialCartItems: Awaited<ReturnType<typeof getCartItemsForUser>> = [];
@@ -76,22 +78,24 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ProductsProvider initialProducts={initialProducts}>
-          <CartProvider
-            key={cartProviderKey}
-            initialItems={initialCartItems}
-            currentUserId={currentUser?.id ?? null}
-          >
-            <HeaderShell
-              currentUser={
-                currentUser
-                  ? { fullName: currentUser.fullName, role: currentUser.role }
-                  : null
-              }
-            />
-            {children}
-            <SupportChat />
-            <WhatsAppFloatButton whatsappNumber={whatsappNumber} />
-          </CartProvider>
+          <SalesSettingsProvider cauchosSalesMode={cauchosSalesMode} whatsappNumber={whatsappNumber}>
+            <CartProvider
+              key={cartProviderKey}
+              initialItems={initialCartItems}
+              currentUserId={currentUser?.id ?? null}
+            >
+              <HeaderShell
+                currentUser={
+                  currentUser
+                    ? { fullName: currentUser.fullName, role: currentUser.role }
+                    : null
+                }
+              />
+              {children}
+              <SupportChat />
+              <WhatsAppFloatButton whatsappNumber={whatsappNumber} />
+            </CartProvider>
+          </SalesSettingsProvider>
         </ProductsProvider>
       </body>
     </html>

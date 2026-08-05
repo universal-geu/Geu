@@ -240,6 +240,7 @@ export default async function ImportPage() {
                       nombre={product.nombre}
                       precio={product.precio}
                       imagen={productImage}
+                      division="Import"
                       accent="red"
                     />
                     <Link

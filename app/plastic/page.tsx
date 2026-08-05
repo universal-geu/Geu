@@ -320,6 +320,7 @@ export default async function PlasticPage() {
                       nombre={product.nombre}
                       precio={product.precio}
                       imagen={productImage}
+                      division="Plastic"
                       accent="gray"
                     />
                     <Link

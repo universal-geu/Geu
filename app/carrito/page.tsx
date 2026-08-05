@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import CauchosHeader from "../components/cauchos-header";
 import { useCart } from "../components/cart-provider";
 import { useProducts } from "../components/products-provider";
+import { useSalesSettings } from "../components/sales-settings-provider";
 import { formatearMoneda } from "../data/catalog";
 import { CART_ACCENT, DIVISION_BRAND, getDivisionFromBrandParam } from "@/lib/divisions";
 
@@ -31,9 +32,11 @@ export default function CarritoPage() {
   const { items, incrementItem, decrementItem, removeItem, clearCart } =
     useCart();
   const { products } = useProducts();
+  const { cauchosSalesMode, whatsappNumber } = useSalesSettings();
   const brandParam = searchParams.get("brand");
   const division = getDivisionFromBrandParam(brandParam);
   const brand = DIVISION_BRAND[division];
+  const whatsappModeActive = division === "Cauchos" && cauchosSalesMode === "whatsapp";
   const getItemBrand = (itemId: string) => {
     const product = products.find((entry) => entry.slug === itemId);
     return DIVISION_BRAND[product?.division ?? division];
@@ -50,6 +53,54 @@ export default function CarritoPage() {
     (total, item) => total + parsePrecio(item.precio) * item.cantidad,
     0,
   );
+
+  if (whatsappModeActive) {
+    const whatsappHref = whatsappNumber
+      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hola GEU, quiero comprar productos de Universal de Cauchos.")}`
+      : undefined;
+
+    return (
+      <>
+        <CauchosHeader division={division} />
+        <main className="min-h-screen bg-slate-50 text-slate-950">
+          <section className="mx-auto max-w-2xl px-5 py-24 text-center">
+            <p className="mb-2 text-xs font-black uppercase tracking-[0.16em]" style={{ color: accent }}>
+              Compra empresarial
+            </p>
+            <h1 className="text-4xl font-black uppercase tracking-[-0.02em] text-slate-950 md:text-5xl">
+              Estamos atendiendo por WhatsApp
+            </h1>
+            <p className="mt-4 text-base font-semibold leading-7 text-slate-500">
+              Por ahora las compras de Universal de Cauchos se coordinan directamente por WhatsApp
+              con uno de nuestros asesores. Escríbenos y con gusto te ayudamos con tu pedido.
+            </p>
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              {whatsappHref ? (
+                <a
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_10px_24px_rgba(37,211,102,0.24)] transition hover:brightness-95"
+                >
+                  Escribir por WhatsApp
+                </a>
+              ) : (
+                <p className="text-sm font-semibold text-slate-500">
+                  El número de WhatsApp aún no está configurado.
+                </p>
+              )}
+              <Link
+                href={homeHref}
+                className={`inline-flex items-center justify-center rounded-full border bg-white px-6 py-3 text-sm font-black uppercase tracking-[0.08em] transition-colors duration-200 ${actionClasses} hover:text-white`}
+              >
+                Seguir explorando
+              </Link>
+            </div>
+          </section>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
