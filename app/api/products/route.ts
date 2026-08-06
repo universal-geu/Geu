@@ -14,6 +14,7 @@ export async function POST(request: Request) {
 
     return Response.json({ product }, { status: 201 });
   } catch (error) {
+    console.error("[POST /api/products] error real:", error);
     const message =
       error instanceof Error &&
       (error.message === "UNAUTHORIZED" || error.message === "FORBIDDEN")
