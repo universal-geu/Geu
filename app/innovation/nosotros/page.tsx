@@ -90,7 +90,7 @@ export default async function InnovationNosotrosPage() {
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-contain object-right"
         />
         <div className="relative mx-auto max-w-[1632px] px-5 py-24 md:px-8 md:py-32">
           <h1 className="max-w-2xl text-4xl font-medium leading-[1.15] tracking-[-0.01em] text-slate-950 md:text-6xl">
