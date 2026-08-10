@@ -102,30 +102,21 @@ export default async function CauchosNosotrosPage() {
     <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <CauchosHeader division="Cauchos" />
 
-      <section className="relative overflow-hidden bg-[#020c1f]">
+      <section className="relative overflow-hidden bg-white">
         <Image
-          src="/about-geu-ecosystem.png"
+          src="/cauchos-nosotros-hero.png"
           alt="Universal de Cauchos"
           fill
           priority
           sizes="100vw"
-          className="object-cover"
-          style={{ objectPosition: "82% 20%" }}
-        />
-        <div
-          className="absolute inset-0"
-          aria-hidden="true"
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(2,12,31,0.97) 0%, rgba(3,18,46,0.9) 42%, rgba(3,18,46,0.35) 75%, rgba(3,18,46,0.15) 100%)",
-          }}
+          className="object-cover object-center"
         />
         <div className="relative mx-auto max-w-[1632px] px-5 py-24 md:px-8 md:py-32">
-          <h1 className="max-w-2xl text-4xl font-medium leading-[1.15] tracking-[-0.01em] text-white md:text-6xl">
+          <h1 className="max-w-2xl text-4xl font-medium leading-[1.15] tracking-[-0.01em] text-slate-950 md:text-6xl">
             {heroTitleLines[0]}
             {heroTitleLines[1] && <span className="block">{heroTitleLines[1]}</span>}
           </h1>
-          <p className="mt-8 max-w-xl text-[15px] font-normal leading-8 text-white/65">
+          <p className="mt-8 max-w-xl text-[15px] font-normal leading-8 text-slate-600">
             {t("cauchos-nosotros-hero-subtitulo")}
           </p>
         </div>
