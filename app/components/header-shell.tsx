@@ -42,6 +42,9 @@ export default function HeaderShell({ currentUser }: HeaderShellProps) {
     pathname.startsWith("/energy/") ||
     pathname === "/plastic" ||
     pathname.startsWith("/plastic/") ||
+    pathname === "/terminos-y-condiciones" ||
+    pathname === "/politica-de-privacidad" ||
+    pathname === "/tratamiento-de-datos-personales" ||
     Boolean(producto)
   ) {
     return null;
