@@ -14,7 +14,7 @@ const navItems = [
   { label: "Innovation", href: "/innovation", active: true },
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/quienes-somos" },
+  { label: "Nosotros", href: "/innovation/nosotros" },
   { label: "Contacto", href: "/innovation/estufas#contacto" },
 ];
 

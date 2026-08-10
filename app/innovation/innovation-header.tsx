@@ -7,7 +7,7 @@ import CauchosAccountLink from "../components/cauchos-account-link";
 import MobileBottomNav from "../components/mobile-bottom-nav";
 
 const navItems = [
-  { label: "Nosotros", href: "/quienes-somos" },
+  { label: "Nosotros", href: "/innovation/nosotros" },
   { label: "Contacto", href: "/innovation#contacto" },
 ];
 
