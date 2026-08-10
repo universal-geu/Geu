@@ -185,10 +185,10 @@ export default async function CauchosNosotrosPage() {
         <div className="mx-auto grid max-w-[1632px] grid-cols-2 gap-3 px-5 py-10 md:grid-cols-4 md:px-8">
           {(
             [
-              "marca-destacada-perfiles",
-              "marca-destacada-mangueras",
-              "marca-destacada-laminas",
-              "marca-destacada-soportes",
+              "cauchos-nosotros-destacada-1",
+              "cauchos-nosotros-destacada-2",
+              "cauchos-nosotros-destacada-3",
+              "cauchos-nosotros-destacada-4",
             ] as const
           ).map((key) => (
             <div key={key} className="relative aspect-[4/3] overflow-hidden rounded-[6px]">
