@@ -83,7 +83,7 @@ export default async function InnovationNosotrosPage() {
     <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <InnovationHeader />
 
-      <section className="relative overflow-hidden bg-white">
+      <section className="relative min-h-[460px] overflow-hidden bg-white md:min-h-[620px]">
         <Image
           src="/innovation-nosotros-hero.png"
           alt="GEU Innovation"
@@ -92,7 +92,7 @@ export default async function InnovationNosotrosPage() {
           sizes="100vw"
           className="object-contain object-right"
         />
-        <div className="relative mx-auto max-w-[1632px] px-5 py-24 md:px-8 md:py-32">
+        <div className="relative mx-auto flex min-h-[460px] max-w-[1632px] flex-col justify-center px-5 py-24 md:min-h-[620px] md:px-8 md:py-32">
           <h1 className="max-w-2xl text-4xl font-medium leading-[1.15] tracking-[-0.01em] text-slate-950 md:text-6xl">
             {t("innovation-nosotros-hero-titulo")}
           </h1>
