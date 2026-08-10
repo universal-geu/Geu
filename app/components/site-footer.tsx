@@ -20,6 +20,12 @@ type FooterColumn = {
 
 type FooterNavItem = { label: string; href: string; active?: boolean };
 
+const LEGAL_LINKS: FooterNavItem[] = [
+  { label: "Términos y condiciones", href: "/terminos-y-condiciones" },
+  { label: "Política de privacidad", href: "/politica-de-privacidad" },
+  { label: "Tratamiento de datos", href: "/tratamiento-de-datos-personales" },
+];
+
 type SiteFooterProps = {
   logoSrc: string;
   logoAlt: string;
@@ -185,10 +191,23 @@ export default function SiteFooter({
         }`}
         style={{ maxWidth }}
       >
-        <span>
-          © {new Date().getFullYear()} {copyrightName}
-          {phone ? ` · ${phone}` : ""}
-        </span>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <span>
+            © {new Date().getFullYear()} {copyrightName}
+            {phone ? ` · ${phone}` : ""}
+          </span>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            {LEGAL_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={isDark ? "hover:text-white" : "hover:text-slate-900"}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
         {socials.length > 0 && (
           <div className="flex gap-2">
             {socials.map((social) => (

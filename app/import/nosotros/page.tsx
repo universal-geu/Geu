@@ -219,11 +219,6 @@ export default async function ImportNosotrosPage() {
             title: t("footer-import-col3-title"),
             items: t("footer-import-col3-items").split(",").map((s) => s.trim()).filter(Boolean),
           },
-          {
-            title: t("footer-import-col4-title"),
-            items: t("footer-import-col4-items").split(",").map((s) => s.trim()).filter(Boolean),
-            style: "badges",
-          },
         ]}
       />
     </main>
