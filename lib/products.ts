@@ -251,7 +251,7 @@ function classifyProductUniqueConstraintError(error: unknown, hasVariants: boole
 // "Subcategoría: ..." — a legitimate compatibility entry starting with those
 // exact words was silently dropped on save). Legacy plain-prefixed markers
 // from products saved before this change are still recognized on read.
-const INTERNAL_MARKER_PREFIX = "\u0000geu-internal:";
+const INTERNAL_MARKER_PREFIX = "\uE000geu-internal:";
 const LEGACY_SUBCATEGORY_PREFIX = "subcategoría:";
 const LEGACY_MINOR_CATEGORY_PREFIX = "categoría menor:";
 const LEGACY_ADDITIONAL_CATEGORIES_PREFIX = "categorías adicionales:";
