@@ -84,28 +84,20 @@ export default async function PlasticNosotrosPage() {
     <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <CauchosHeader division="Plastic" />
 
-      <section className="relative overflow-hidden bg-[#0b0c0d]">
+      <section className="relative overflow-hidden bg-white">
         <Image
-          src={resolveImage("plastic-principal", siteImages)}
+          src="/plastic-nosotros-hero.png"
           alt="GEU Plastic"
           fill
           priority
           sizes="100vw"
           className="object-cover object-center"
         />
-        <div
-          className="absolute inset-0"
-          aria-hidden="true"
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(11,12,13,0.97) 0%, rgba(24,25,27,0.9) 42%, rgba(24,25,27,0.35) 75%, rgba(24,25,27,0.15) 100%)",
-          }}
-        />
         <div className="relative mx-auto max-w-[1632px] px-5 py-24 md:px-8 md:py-32">
-          <h1 className="max-w-2xl text-4xl font-medium leading-[1.15] tracking-[-0.01em] text-white md:text-6xl">
+          <h1 className="max-w-2xl text-4xl font-medium leading-[1.15] tracking-[-0.01em] text-slate-950 md:text-6xl">
             {t("plastic-nosotros-hero-titulo")}
           </h1>
-          <p className="mt-8 max-w-xl text-[15px] font-normal leading-8 text-white/65">
+          <p className="mt-8 max-w-xl text-[15px] font-normal leading-8 text-slate-600">
             {t("plastic-nosotros-hero-subtitulo")}
           </p>
         </div>
