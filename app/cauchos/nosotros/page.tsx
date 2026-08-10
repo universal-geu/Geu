@@ -104,12 +104,13 @@ export default async function CauchosNosotrosPage() {
 
       <section className="relative overflow-hidden bg-[#020c1f]">
         <Image
-          src={resolveImage("banner-principal", siteImages)}
+          src="/about-geu-ecosystem.png"
           alt="Universal de Cauchos"
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-cover"
+          style={{ objectPosition: "82% 20%" }}
         />
         <div
           className="absolute inset-0"
