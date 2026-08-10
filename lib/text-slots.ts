@@ -54,8 +54,6 @@ export const TEXT_SLOTS: TextSlot[] = [
   { key: "footer-cauchos-tagline", label: "Footer · Frase de marca", group: "Footer", division: "Cauchos", defaultValue: "Construimos empresas que transforman industrias y generan valor para un futuro mejor.", multiline: true },
   { key: "footer-cauchos-col3-title", label: "Footer · Columna 3 (título)", group: "Footer", division: "Cauchos", defaultValue: "Cauchos" },
   { key: "footer-cauchos-col3-items", label: "Footer · Columna 3 (items, separados por coma)", group: "Footer", division: "Cauchos", defaultValue: "Soluciones, Productos, Industrias, Catalogos, Cotizacion" },
-  { key: "footer-cauchos-col4-title", label: "Footer · Columna 4 (título)", group: "Footer", division: "Cauchos", defaultValue: "Certificaciones" },
-  { key: "footer-cauchos-col4-items", label: "Footer · Columna 4 (items, separados por coma)", group: "Footer", division: "Cauchos", defaultValue: "ISO 9001, ISO 14001, ISO 45001" },
 
   // ---- Cauchos · Nosotros ----
   { key: "cauchos-nosotros-hero-titulo", label: "Nosotros · Título (usa salto de línea para 2 líneas)", group: "Nosotros", division: "Cauchos", defaultValue: "Impulsamos industrias.\nConstruimos el futuro.", multiline: true },
@@ -90,8 +88,6 @@ export const TEXT_SLOTS: TextSlot[] = [
   { key: "footer-import-tagline", label: "Footer · Frase de marca", group: "Footer", division: "Import", defaultValue: "Conectamos mercados y generamos oportunidades para que tu negocio no tenga limites.", multiline: true },
   { key: "footer-import-col3-title", label: "Footer · Columna 3 (título)", group: "Footer", division: "Import", defaultValue: "Servicios" },
   { key: "footer-import-col3-items", label: "Footer · Columna 3 (items, separados por coma)", group: "Footer", division: "Import", defaultValue: "Importacion, Fletes, Aduana, Abastecimiento, Distribucion" },
-  { key: "footer-import-col4-title", label: "Footer · Columna 4 (título)", group: "Footer", division: "Import", defaultValue: "Certificaciones" },
-  { key: "footer-import-col4-items", label: "Footer · Columna 4 (items, separados por coma)", group: "Footer", division: "Import", defaultValue: "ISO 9001, BASC, OEA" },
 
   // ---- Import · Nosotros ----
   { key: "import-nosotros-hero-titulo", label: "Nosotros · Título", group: "Nosotros", division: "Import", defaultValue: "¿Quiénes somos?" },

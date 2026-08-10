@@ -1216,6 +1216,65 @@ html.geu-light-mode .geu-theme-page > section:not(:first-of-type) input {
   }
 }
 
+.legal-prose h2 {
+  margin-top: 2.5rem;
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: #071832;
+}
+
+.legal-prose h2:first-child {
+  margin-top: 0;
+}
+
+.legal-prose h3 {
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #071832;
+}
+
+.legal-prose p {
+  margin-top: 0.9rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #364152;
+}
+
+.legal-prose ul,
+.legal-prose ol {
+  margin-top: 0.9rem;
+  padding-left: 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #364152;
+}
+
+.legal-prose ul {
+  list-style: disc;
+}
+
+.legal-prose ol {
+  list-style: decimal;
+}
+
+.legal-prose li + li {
+  margin-top: 0.4rem;
+}
+
+.legal-prose strong {
+  color: #071832;
+  font-weight: 800;
+}
+
+.legal-prose a {
+  color: #075ed8;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .innovation-hero-intro {
   opacity: 0;
   animation: innovationHeroIntro 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;

@@ -307,11 +307,6 @@ export default async function CauchosNosotrosPage() {
             title: t("footer-cauchos-col3-title"),
             items: t("footer-cauchos-col3-items").split(",").map((s) => s.trim()).filter(Boolean),
           },
-          {
-            title: t("footer-cauchos-col4-title"),
-            items: t("footer-cauchos-col4-items").split(",").map((s) => s.trim()).filter(Boolean),
-            style: "badges",
-          },
         ]}
       />
     </main>
