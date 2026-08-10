@@ -1,3 +1,5 @@
+import Image from "next/image";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import SiteFooter from "./site-footer";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
@@ -5,6 +7,12 @@ import { getSiteTexts, resolveText } from "@/lib/site-texts";
 const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Nosotros", href: "/quienes-somos" },
+];
+
+const legalNavItems = [
+  { label: "Términos y condiciones", href: "/terminos-y-condiciones" },
+  { label: "Política de privacidad", href: "/politica-de-privacidad" },
+  { label: "Tratamiento de datos personales", href: "/tratamiento-de-datos-personales" },
 ];
 
 type LegalPageLayoutProps = {
@@ -19,6 +27,28 @@ export default async function LegalPageLayout({ title, updatedAt, children }: Le
 
   return (
     <main className="min-h-screen bg-white text-[#071832]">
+      <header className="border-b border-slate-200">
+        <div className="mx-auto flex max-w-[1720px] items-center justify-between px-7 py-6 md:px-12">
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/home-geu-logo.png"
+              alt="GEU Grupo Empresarial Universal"
+              width={3422}
+              height={1256}
+              priority
+              className="h-auto w-[130px] object-contain md:w-[160px]"
+            />
+          </Link>
+          <nav className="hidden items-center gap-8 text-[11px] font-black uppercase tracking-[0.04em] text-[#061735] lg:flex">
+            {legalNavItems.map((item) => (
+              <Link key={item.label} href={item.href} className="transition-colors hover:text-[#075ed8]">
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </header>
+
       <section className="mx-auto max-w-[840px] px-6 py-16 md:px-8 md:py-20">
         <p className="text-xs font-black uppercase tracking-[0.14em] text-[#075ed8]">Legal</p>
         <span className="mt-3 block h-[2px] w-16 bg-[#075ed8]" />
