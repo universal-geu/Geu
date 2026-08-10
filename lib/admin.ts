@@ -1,7 +1,11 @@
 import { getDevAdminUserById, getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import type { DivisionName } from "@/lib/divisions";
-import { hasAdminPermission, type AdminToolKey } from "@/lib/admin-permissions";
+import {
+  hasAdminPermission,
+  isToolAllowedForDivision,
+  type AdminToolKey,
+} from "@/lib/admin-permissions";
 
 export async function requireAdminUser(permission?: AdminToolKey) {
   const session = await getSessionFromCookies();
@@ -12,6 +16,9 @@ export async function requireAdminUser(permission?: AdminToolKey) {
 
   const devAdmin = getDevAdminUserById(session.userId);
   if (devAdmin && session.role === "ADMIN") {
+    if (permission && !isToolAllowedForDivision(devAdmin.division, permission)) {
+      throw new Error("FORBIDDEN");
+    }
     return devAdmin;
   }
 
@@ -21,7 +28,11 @@ export async function requireAdminUser(permission?: AdminToolKey) {
     throw new Error("FORBIDDEN");
   }
 
-  if (permission && !hasAdminPermission(user.permissions, permission)) {
+  if (
+    permission &&
+    (!isToolAllowedForDivision(user.division as DivisionName, permission) ||
+      !hasAdminPermission(user.permissions, permission))
+  ) {
     throw new Error("FORBIDDEN");
   }
 
