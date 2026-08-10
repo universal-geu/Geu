@@ -26,9 +26,18 @@ export default async function MiCuentaPage({
   }
 
   const orders = await getOrdersForUser(session.userId);
-  const quotes = await getQuotesForUser(session.userId);
+  const rawQuotes = await getQuotesForUser(session.userId);
+  const quotes = rawQuotes.map((quote) => ({ ...quote, details: normalizeQuoteDetails(quote.details) }));
   const { brand } = await searchParams;
   const division = brand ? getDivisionFromBrandParam(brand) : user.division ?? "Cauchos";
 
   return <AccountProfileForm user={user} orders={orders} quotes={quotes} division={division} />;
+}
+
+function normalizeQuoteDetails(details: unknown): Record<string, string> | null {
+  if (!details || typeof details !== "object" || Array.isArray(details)) return null;
+
+  return Object.fromEntries(
+    Object.entries(details as Record<string, unknown>).map(([key, value]) => [key, String(value ?? "")]),
+  );
 }
