@@ -58,7 +58,49 @@ type AccountQuote = {
   quantityAndDeadline: string;
   adminNotes: string | null;
   createdAt: Date;
+  details?: Record<string, string> | null;
 };
+
+// Mirrors the section layout of the "Diseña tu pieza" form (cauchos-technical-form.tsx)
+// so a submitted request reads back exactly like the form the customer filled out.
+const QUOTE_DETAIL_SECTIONS: Array<{ title: string; fields: string[] }> = [
+  {
+    title: "Datos de la solicitud",
+    fields: ["Cliente", "Tel", "Contacto", "Tipo de solicitud", "Producto", "Descripción de la solicitud"],
+  },
+  { title: "Proceso solicitado", fields: ["Proceso solicitado"] },
+  {
+    title: "Información del producto",
+    fields: [
+      "Color del producto",
+      "Adjunta plano del producto",
+      "Adjunta muestra física",
+      "Realiza dibujo del producto",
+      "Cliente suministra material",
+      "Cliente suministra material · cuál",
+      "Material sugerido",
+      "Dureza",
+    ],
+  },
+  {
+    title: "Condiciones de trabajo",
+    fields: [
+      "Hidrocarburos",
+      "Impacto",
+      "Abrasión",
+      "Uso externo",
+      "Presión de trabajo",
+      "Presión de trabajo · cuál",
+      "Temperatura de trabajo",
+      "Temperatura de trabajo · cuál",
+      "Requisito legal",
+      "Requisito legal · cuál",
+      "Grado alimenticio",
+      "Otro",
+    ],
+  },
+  { title: "Información comercial", fields: ["Cantidad"] },
+];
 
 type ToastState = {
   tone: "success" | "error";
@@ -1044,33 +1086,65 @@ export default function AccountProfileForm({
                       </span>
                     </div>
 
-                    <p className="mt-4 text-sm leading-7 text-[#5d6167]">{quote.productDetails}</p>
+                    {quote.details && Object.keys(quote.details).length > 0 ? (
+                      <div className="mt-5 space-y-5 divide-y divide-black/6">
+                        {QUOTE_DETAIL_SECTIONS.map(({ title, fields }) => {
+                          const entries = fields
+                            .map((field) => [field, quote.details?.[field]] as const)
+                            .filter(([, value]) => value?.trim());
 
-                    {(quote.process.length > 0 || quote.conditions.length > 0) && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {quote.process.map((item) => (
-                          <span
-                            key={item}
-                            className="rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-semibold text-[#075ed8]"
-                          >
-                            {item}
-                          </span>
-                        ))}
-                        {quote.conditions.map((item) => (
-                          <span
-                            key={item}
-                            className="rounded-full bg-[#fff1f1] px-3 py-1 text-xs font-semibold text-[#c53b3b]"
-                          >
-                            {item}
-                          </span>
-                        ))}
+                          if (entries.length === 0) return null;
+
+                          return (
+                            <div key={title} className="pt-5 first:pt-0">
+                              <p className="border-b border-black/8 pb-2 text-xs font-black uppercase tracking-[0.14em] text-[var(--brand-accent)]">
+                                {title}
+                              </p>
+                              <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                                {entries.map(([label, value]) => (
+                                  <div key={label}>
+                                    <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8b8d91]">
+                                      {label}
+                                    </dt>
+                                    <dd className="mt-0.5 text-sm font-semibold text-[#1f2328]">{value}</dd>
+                                  </div>
+                                ))}
+                              </dl>
+                            </div>
+                          );
+                        })}
                       </div>
-                    )}
+                    ) : (
+                      <>
+                        <p className="mt-4 text-sm leading-7 text-[#5d6167]">{quote.productDetails}</p>
 
-                    {quote.quantityAndDeadline && (
-                      <p className="mt-3 text-sm font-semibold text-[#16384f]">
-                        Cantidad: {quote.quantityAndDeadline}
-                      </p>
+                        {(quote.process.length > 0 || quote.conditions.length > 0) && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {quote.process.map((item) => (
+                              <span
+                                key={item}
+                                className="rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-semibold text-[#075ed8]"
+                              >
+                                {item}
+                              </span>
+                            ))}
+                            {quote.conditions.map((item) => (
+                              <span
+                                key={item}
+                                className="rounded-full bg-[#fff1f1] px-3 py-1 text-xs font-semibold text-[#c53b3b]"
+                              >
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {quote.quantityAndDeadline && (
+                          <p className="mt-3 text-sm font-semibold text-[#16384f]">
+                            Cantidad: {quote.quantityAndDeadline}
+                          </p>
+                        )}
+                      </>
                     )}
 
                     {quote.adminNotes && (
