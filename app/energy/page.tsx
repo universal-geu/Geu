@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import SolutionsCarousel from "./solutions-carousel";
 import EnergyHeader from "./energy-header";
+import EngineeringModelViewer from "./engineering-model-viewer";
 import SiteFooter from "../components/site-footer";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
@@ -21,12 +22,12 @@ const navItems = [
 ];
 
 const heroVideo = "/geu-energy-hero-field.mp4";
-const engineeringImage = "/geu-energy-engineering.png";
 const gusBgImage = "/geu-energy-gus-bg.jpg";
 const gusAvatarImage = "/geu-energy-gus-avatar.png";
 const gusButtonImage = "/geu-energy-gus-boton.png";
 const projectHouseImage = "/geu-energy-project-house.png";
 const projectHouseVideo = "/geu-energy-project-house.mp4";
+const structuresBannerImage = "/geu-energy-structures-banner.png";
 
 const solutions = [
   {
@@ -190,7 +191,7 @@ export default async function EnergyPage() {
       </section>
 
       <section className="flex flex-col border-b border-white/10 bg-black md:flex-row">
-        <div className="flex w-full shrink-0 items-center px-5 py-12 md:w-[30%] md:px-10 md:py-0">
+        <div className="flex w-full shrink-0 items-center px-5 py-12 md:w-[30%] md:py-0 md:pl-[max(2rem,calc((100vw-1500px)/2+2rem))] md:pr-8">
           <div>
             <h2 className="font-[family:var(--font-display)] text-3xl font-black uppercase leading-[1.05] tracking-[-0.01em] text-white md:text-4xl">
               Ingeniería
@@ -203,14 +204,8 @@ export default async function EnergyPage() {
           </div>
         </div>
 
-        <div className="relative aspect-[1672/941] w-full md:w-[70%]">
-          <Image
-            src={engineeringImage}
-            alt="Ingeniería que sostiene el futuro: estructura de montaje GEU Energy"
-            fill
-            sizes="(min-width: 768px) 70vw, 100vw"
-            className="object-cover"
-          />
+        <div className="relative w-full md:w-[70%]">
+          <EngineeringModelViewer />
         </div>
       </section>
 
@@ -276,8 +271,18 @@ export default async function EnergyPage() {
         </div>
       </section>
 
+      <section className="relative overflow-hidden bg-black">
+        <Image
+          src={structuresBannerImage}
+          alt="Estructuras solares diseñadas para sostener el futuro"
+          width={2400}
+          height={800}
+          className="h-auto w-full object-cover"
+        />
+      </section>
+
       <section id="contacto" className="relative overflow-hidden bg-black">
-        <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
+        <div className="relative aspect-[1672/941] w-full">
           <Image
             src={gusBgImage}
             alt="Sistema fotovoltaico instalado por GEU Energy"
@@ -288,19 +293,24 @@ export default async function EnergyPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-black/10" />
 
           <div className="absolute inset-0 flex items-center">
-            <div className="mx-auto w-full max-w-[1920px] px-5 md:px-10">
+            <div className="mx-auto w-full max-w-[1500px] px-5 md:px-8">
               <h2 className="font-[family:var(--font-display)] text-4xl font-black uppercase leading-[1.05] tracking-[-0.01em] text-white md:text-5xl">
                 <span className="text-[#f5a623]">Gus,</span>
                 <br />
-                tu asistente
+                inteligencia que
                 <br />
-                <span className="text-[#f5a623]">energético.</span>
+                <span className="text-[#f5a623]">impulsa tu energía.</span>
               </h2>
               <span className="mt-5 block h-1 w-16 bg-[#f5a623]" />
             </div>
           </div>
 
-          <div className="absolute bottom-[10%] right-[5%] w-[16%] min-w-[110px] overflow-hidden rounded-full">
+        </div>
+      </section>
+
+      {gusWhatsappHref && (
+        <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
+          <div className="w-28 overflow-hidden rounded-full shadow-lg shadow-black/50 md:w-32">
             <Image
               src={gusAvatarImage}
               alt="Gus, el asistente virtual de GEU Energy"
@@ -310,25 +320,23 @@ export default async function EnergyPage() {
             />
           </div>
 
-          {gusWhatsappHref && (
-            <a
-              href={gusWhatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Hablar con Gus por WhatsApp"
-              className="absolute bottom-[2%] right-[3%] w-[26%] min-w-[220px] max-w-[340px] transition-transform duration-200 hover:scale-[1.03]"
-            >
-              <Image
-                src={gusButtonImage}
-                alt="Hablar con Gus"
-                width={1522}
-                height={368}
-                className="h-auto w-full object-contain"
-              />
-            </a>
-          )}
+          <a
+            href={gusWhatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Hablar con Gus por WhatsApp"
+            className="w-56 transition-transform duration-200 hover:scale-[1.03] md:w-64"
+          >
+            <Image
+              src={gusButtonImage}
+              alt="Hablar con Gus"
+              width={1522}
+              height={368}
+              className="h-auto w-full object-contain"
+            />
+          </a>
         </div>
-      </section>
+      )}
 
       <SiteFooter
         logoSrc="/logo-geu-energy.png"
