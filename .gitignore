@@ -42,3 +42,7 @@ next-env.d.ts
 
 # scratch/temp files
 /tmp
+
+# unrelated automation artifacts
+/.pet-runs
+/.codex-pet-runs
