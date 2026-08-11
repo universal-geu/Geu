@@ -3,6 +3,7 @@ import Link from "next/link";
 import SolutionsCarousel from "./solutions-carousel";
 import EnergyHeader from "./energy-header";
 import EngineeringModelViewer from "./engineering-model-viewer";
+import GusChat from "./gus-chat";
 import SiteFooter from "../components/site-footer";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
@@ -17,14 +18,12 @@ const navItems = [
   { label: "Innovation", href: "/innovation" },
   { label: "Energy", href: "/energy", active: true },
   { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/quienes-somos" },
+  { label: "Nosotros", href: "/energy/nosotros" },
   { label: "Contacto", href: "/energy#contacto" },
 ];
 
 const heroVideo = "/geu-energy-hero-field.mp4";
 const gusBgImage = "/geu-energy-gus-bg.jpg";
-const gusAvatarImage = "/geu-energy-gus-avatar.png";
-const gusButtonImage = "/geu-energy-gus-boton.png";
 const projectHouseImage = "/geu-energy-project-house.png";
 const projectHouseVideo = "/geu-energy-project-house.mp4";
 const structuresBannerImage = "/geu-energy-structures-banner.png";
@@ -308,35 +307,7 @@ export default async function EnergyPage() {
         </div>
       </section>
 
-      {gusWhatsappHref && (
-        <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
-          <div className="w-28 overflow-hidden rounded-full shadow-lg shadow-black/50 md:w-32">
-            <Image
-              src={gusAvatarImage}
-              alt="Gus, el asistente virtual de GEU Energy"
-              width={300}
-              height={300}
-              className="h-auto w-full object-cover"
-            />
-          </div>
-
-          <a
-            href={gusWhatsappHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Hablar con Gus por WhatsApp"
-            className="w-56 transition-transform duration-200 hover:scale-[1.03] md:w-64"
-          >
-            <Image
-              src={gusButtonImage}
-              alt="Hablar con Gus"
-              width={1522}
-              height={368}
-              className="h-auto w-full object-contain"
-            />
-          </a>
-        </div>
-      )}
+      <GusChat whatsappHref={gusWhatsappHref} />
 
       <SiteFooter
         logoSrc="/logo-geu-energy.png"
