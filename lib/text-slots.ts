@@ -142,6 +142,13 @@ export const TEXT_SLOTS: TextSlot[] = [
   { key: "energy-sistema-subtitulo", label: "Sistema · Subtítulo", group: "Energy", division: "Energy", defaultValue: "Simula, cotiza y diseña un sistema energético eficiente con la ayuda de nuestra tecnología y de Gus.", multiline: true },
   { key: "footer-energy-tagline", label: "Footer · Frase de marca", group: "Footer", division: "Energy", defaultValue: "Soluciones energéticas inteligentes para un futuro sostenible.", multiline: true },
 
+  // ---- Energy · Nosotros ----
+  { key: "energy-nosotros-hero-titulo", label: "Nosotros · Título", group: "Nosotros", division: "Energy", defaultValue: "¿Quiénes somos?" },
+  { key: "energy-nosotros-hero-subtitulo", label: "Nosotros · Párrafo introductorio", group: "Nosotros", division: "Energy", defaultValue: "GEU Energy es una empresa especializada en soluciones para infraestructura energética sostenible. Conectamos innovación, ingeniería y tecnología para desarrollar proyectos que impulsan la transición hacia un futuro más limpio, eficiente y responsable con el planeta.", multiline: true },
+  { key: "energy-valores-titulo", label: "Nosotros · Título de valores", group: "Nosotros", division: "Energy", defaultValue: "Lo que guía cada decisión que tomamos." },
+  { key: "energy-filosofia-texto", label: "Nosotros · Párrafo de filosofía", group: "Nosotros", division: "Energy", defaultValue: "Creemos que la energía del futuro se construye con decisiones responsables en el presente. Por eso desarrollamos soluciones que integran ingeniería, innovación y sostenibilidad para crear infraestructura confiable que impulse la transición hacia un mundo más eficiente y respetuoso con el medio ambiente.", multiline: true },
+  { key: "energy-promesa-titulo", label: "Nosotros · Título de cierre", group: "Nosotros", division: "Energy", defaultValue: "Construimos la infraestructura de un futuro más sostenible." },
+
   // ---- Innovation · Home ----
   { key: "innovation-hero-titulo", label: "Héroe · Título", group: "Innovation", division: "Innovation", defaultValue: "Autoservicio inteligente" },
   { key: "innovation-soluciones-titulo", label: "Soluciones · Título", group: "Innovation", division: "Innovation", defaultValue: "Diseñamos puntos inteligentes a la medida de tu espacio." },

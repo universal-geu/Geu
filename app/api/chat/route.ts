@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { buildCatalogContext, buildLocalAssistantReply, getCatalogSnapshot } from "@/lib/chatbot";
+import { buildGusLocalReply, GUS_SYSTEM_PROMPT } from "@/lib/gus-context";
 
 export const dynamic = "force-dynamic";
 
@@ -57,8 +58,13 @@ export async function POST(request: Request) {
     }
 
     const division = typeof body.division === "string" ? body.division : undefined;
-    const snapshot = await getCatalogSnapshot(latestUserMessage.content, division);
-    const fallback = buildLocalAssistantReply(latestUserMessage.content, snapshot, division);
+    const isEnergy = division === "Energy";
+
+    const snapshot = isEnergy ? null : await getCatalogSnapshot(latestUserMessage.content, division);
+
+    const fallback = isEnergy
+      ? buildGusLocalReply(latestUserMessage.content)
+      : buildLocalAssistantReply(latestUserMessage.content, snapshot!, division);
 
     if (!openai) {
       return Response.json({
@@ -68,18 +74,22 @@ export async function POST(request: Request) {
       });
     }
 
+    const instructions = isEnergy
+      ? GUS_SYSTEM_PROMPT
+      : [
+          "Eres el asistente comercial de GEU Grupo Empresarial Universal.",
+          "Responde siempre en español claro, breve y útil.",
+          "Tu objetivo es ayudar a encontrar productos, categorías y orientar sobre disponibilidad, envíos y pagos.",
+          "No inventes productos, precios ni stock.",
+          "Si no estás seguro, dilo claramente y sugiere una categoría o producto real del contexto.",
+          "Cuando menciones productos, usa el nombre exacto y si es útil di su ruta relativa.",
+          "Contexto del catálogo:",
+          buildCatalogContext(snapshot!),
+        ].join("\n\n");
+
     const response = await openai.responses.create({
       model: process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini",
-      instructions: [
-        "Eres el asistente comercial de GEU Grupo Empresarial Universal.",
-        "Responde siempre en español claro, breve y útil.",
-        "Tu objetivo es ayudar a encontrar productos, categorías y orientar sobre disponibilidad, envíos y pagos.",
-        "No inventes productos, precios ni stock.",
-        "Si no estás seguro, dilo claramente y sugiere una categoría o producto real del contexto.",
-        "Cuando menciones productos, usa el nombre exacto y si es útil di su ruta relativa.",
-        "Contexto del catálogo:",
-        buildCatalogContext(snapshot),
-      ].join("\n\n"),
+      instructions,
       input: messages.map((message) => ({
         role: message.role,
         content: [

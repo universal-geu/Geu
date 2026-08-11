@@ -7,12 +7,12 @@ import MobileBottomNav from "../components/mobile-bottom-nav";
 
 const navItems = [
   { label: "Catálogos", href: "/energy/catalogo" },
-  { label: "Nosotros", href: "/quienes-somos" },
+  { label: "Nosotros", href: "/energy/nosotros" },
   { label: "Contacto", href: "/energy#contacto" },
 ];
 
 const moreItems = [
-  { label: "Nosotros", href: "/quienes-somos" },
+  { label: "Nosotros", href: "/energy/nosotros" },
   { label: "Contacto", href: "/energy#contacto" },
 ];
 
