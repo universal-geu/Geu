@@ -288,17 +288,15 @@ export default function SupportChat() {
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="group relative flex items-center gap-3 rounded-full border border-white/12 bg-[#16384f] px-4 py-3 text-white shadow-[0_22px_50px_rgba(22,56,79,0.38)] ring-1 ring-black/5 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0f2a3b]"
+        aria-label={assistantCta}
+        className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-white/12 bg-[#16384f] text-white shadow-[0_22px_50px_rgba(22,56,79,0.38)] ring-1 ring-black/5 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#0f2a3b]"
       >
-        <span className="absolute -left-1 -top-1 h-3 w-3 rounded-full bg-[#43c172] shadow-[0_0_0_6px_rgba(67,193,114,0.18)]" />
-        <span className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white text-xs font-black tracking-[0.08em] text-[#075ed8]">
+        <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#16384f] bg-[#43c172]" />
+        <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white text-xs font-black tracking-[0.08em] text-[#075ed8]">
           {assistantMark}
         </span>
-        <span className="text-left">
-          <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">
-            Asistente
-          </span>
-          <span className="block text-sm font-semibold">{assistantCta}</span>
+        <span className="pointer-events-none absolute right-full top-1/2 mr-3 -translate-y-1/2 whitespace-nowrap rounded-full bg-[#16384f] px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-[0_10px_24px_rgba(15,23,42,0.24)] transition-opacity duration-200 group-hover:opacity-100">
+          {assistantCta}
         </span>
         <span className="absolute -inset-1 -z-10 rounded-full bg-[radial-gradient(circle,rgba(237,132,53,0.16),transparent_70%)] opacity-90 blur-md" />
       </button>
