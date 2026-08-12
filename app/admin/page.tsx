@@ -6101,7 +6101,7 @@ export default function AdminPage() {
                     })}
                   </div>
                   <p className="mt-2 text-xs leading-5 text-[#8b8d91]">
-                    Marca "Cuentas" solo si esta persona también debe poder crear o editar otras
+                    Marca &quot;Cuentas&quot; solo si esta persona también debe poder crear o editar otras
                     cuentas del equipo.
                   </p>
                 </div>
