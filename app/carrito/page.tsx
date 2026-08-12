@@ -36,11 +36,18 @@ export default function CarritoPage() {
   const brandParam = searchParams.get("brand");
   const division = getDivisionFromBrandParam(brandParam);
   const brand = DIVISION_BRAND[division];
-  const whatsappModeActive = division === "Cauchos" && cauchosSalesMode === "whatsapp";
   const getItemBrand = (itemId: string) => {
     const product = products.find((entry) => entry.slug === itemId);
     return DIVISION_BRAND[product?.division ?? division];
   };
+  // Also checked against the cart's actual items (not just the `?brand=`
+  // query param) so a Cauchos item already in the cart can't dodge the
+  // WhatsApp-only notice just by opening the cart with a different brand.
+  const cartHasCauchosItem = items.some(
+    (item) => (products.find((entry) => entry.slug === item.id)?.division ?? division) === "Cauchos",
+  );
+  const whatsappModeActive =
+    cauchosSalesMode === "whatsapp" && (division === "Cauchos" || cartHasCauchosItem);
   const isImportCart = division === "Import";
   const cartAccent = CART_ACCENT[division];
   const accent = brand.accent;

@@ -4,6 +4,7 @@ import { DIVISION_ADMIN_EMAILS, DIVISION_BRAND, isServiceDivision } from "@/lib/
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { formatOrderCode } from "@/lib/format-order";
 import { calculateShippingCost } from "@/lib/shipping";
+import { getCauchosSalesMode } from "@/lib/site-settings";
 
 export { calculateShippingCost };
 
@@ -17,6 +18,12 @@ export type CheckoutInput = {
   addressLine1: string;
   addressLine2?: string;
   notes?: string;
+  // Present only for split-shipping orders: one entry per destination that
+  // actually has items assigned. The order still stores a single primary
+  // department/city/address (the other destinations are detailed in
+  // `notes`), but the shipping fee charged sums every destination's cost
+  // instead of only the primary one's.
+  shippingCities?: string[];
 };
 
 export type ShippingStatus =
@@ -104,7 +111,19 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
   }
 
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
-  const shippingCost = calculateShippingCost(city);
+
+  // Never trust a client-submitted total — recompute from the list of
+  // destination cities server-side, summing one shipping fee per
+  // destination for split-shipping orders.
+  const shippingCities = (input.shippingCities ?? [])
+    .map((destinationCity) => destinationCity.trim())
+    .filter(Boolean);
+  const shippingCost =
+    shippingCities.length > 0
+      ? shippingCities.reduce((total, destinationCity) => total + calculateShippingCost(destinationCity), 0)
+      : calculateShippingCost(city);
+
+  const cauchosSalesMode = await getCauchosSalesMode();
 
   const order = await prisma.$transaction(async (tx) => {
     const productSlugs = cartItems.map((item) => item.productId);
@@ -123,6 +142,13 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
         division: true,
       },
     });
+
+    // Enforced here (not just in the checkout/cart UI) so it can't be bypassed
+    // by navigating with a different `?brand=` query param — this is the one
+    // place every checkout path funnels through before an order is created.
+    if (cauchosSalesMode === "whatsapp" && products.some((product) => product.division === "Cauchos")) {
+      throw new Error("CAUCHOS_WHATSAPP_MODE");
+    }
 
     const variantSkus = cartItems
       .map((item) => item.variantSku)

@@ -120,7 +120,22 @@ export default function CheckoutForm({
     () => getCitiesForDepartment(form.department),
     [form.department],
   );
-  const shippingCost = useMemo(() => calculateShippingCost(form.city), [form.city]);
+  const shippingDestinationCities = useMemo(
+    () =>
+      destinations
+        .filter((destination) => Object.values(destination.quantities).some((qty) => qty > 0))
+        .map((destination) => destination.city.trim())
+        .filter(Boolean),
+    [destinations],
+  );
+  // One shipping fee per destination when splitting the order, so the total
+  // shown here matches what the server actually charges.
+  const shippingCost = useMemo(() => {
+    if (splitShipping && shippingDestinationCities.length > 0) {
+      return shippingDestinationCities.reduce((total, city) => total + calculateShippingCost(city), 0);
+    }
+    return calculateShippingCost(form.city);
+  }, [splitShipping, shippingDestinationCities, form.city]);
 
   const splitTotals = useMemo(() => {
     const totals: Record<string, number> = {};
@@ -261,7 +276,11 @@ export default function CheckoutForm({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ ...form, notes: finalNotes }),
+      body: JSON.stringify({
+        ...form,
+        notes: finalNotes,
+        shippingCities: splitShipping ? shippingDestinationCities : undefined,
+      }),
     });
 
     const payload = (await response.json()) as {

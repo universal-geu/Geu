@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       addressLine1?: string;
       addressLine2?: string;
       notes?: string;
+      shippingCities?: string[];
     };
 
     const order = await createOrderFromCart(session.userId, {
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
       department: body.department || "",
       city: body.city || "",
       addressLine1: body.addressLine1 || "",
+      shippingCities: Array.isArray(body.shippingCities) ? body.shippingCities : undefined,
       addressLine2: body.addressLine2,
       notes: body.notes,
     });
@@ -85,6 +87,8 @@ export async function POST(request: Request) {
             ? "Uno de los productos ya no tiene stock suficiente para completar el pedido."
           : error instanceof Error && error.message === "VARIANT_NOT_FOUND"
             ? "Uno de los productos en tu carrito ya no tiene esa medida disponible, actualiza tu carrito."
+          : error instanceof Error && error.message === "CAUCHOS_WHATSAPP_MODE"
+            ? "Los productos de Universal de Cauchos solo se pueden solicitar por WhatsApp en este momento."
           : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
             ? "La base de datos no está configurada todavía."
             : "No fue posible crear el pedido.";
@@ -95,7 +99,9 @@ export async function POST(request: Request) {
         : error instanceof Error && error.message === "EMPTY_CART"
           ? 400
           : error instanceof Error &&
-              (error.message === "INSUFFICIENT_STOCK" || error.message === "VARIANT_NOT_FOUND")
+              (error.message === "INSUFFICIENT_STOCK" ||
+                error.message === "VARIANT_NOT_FOUND" ||
+                error.message === "CAUCHOS_WHATSAPP_MODE")
             ? 409
           : 500;
 

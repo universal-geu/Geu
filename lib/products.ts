@@ -494,6 +494,19 @@ function getFallbackProducts(): StoreProduct[] {
   }));
 }
 
+export async function getProductDivisionsBySlugs(slugs: string[]): Promise<DivisionName[]> {
+  if (!prisma || slugs.length === 0) {
+    return [];
+  }
+
+  const products = await prisma.product.findMany({
+    where: { slug: { in: slugs } },
+    select: { division: true },
+  });
+
+  return products.map((product) => product.division);
+}
+
 export async function getProductDivision(slug: string): Promise<DivisionName | null> {
   if (!prisma) {
     return null;
@@ -872,56 +885,66 @@ export async function adjustProductInventory(
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-  });
-
-  if (!product) {
-    throw new Error("PRODUCT_NOT_FOUND");
-  }
-
   const normalizedQuantity = Math.trunc(quantity);
 
   if (normalizedQuantity === 0) {
     throw new Error("INVALID_QUANTITY");
   }
 
-  const nextStock = product.stock + normalizedQuantity;
+  const updated = await prisma.$transaction(async (tx) => {
+    // The stock change itself is applied with a single atomic, conditional
+    // `updateMany` (mirroring the checkout stock decrement in lib/orders.ts)
+    // so two concurrent adjustments on the same product can't both read the
+    // same starting stock and silently clobber one another's result.
+    const result =
+      normalizedQuantity < 0
+        ? await tx.product.updateMany({
+            where: { slug, stock: { gte: -normalizedQuantity } },
+            data: { stock: { increment: normalizedQuantity } },
+          })
+        : await tx.product.updateMany({
+            where: { slug },
+            data: { stock: { increment: normalizedQuantity } },
+          });
 
-  if (nextStock < 0) {
-    throw new Error("INSUFFICIENT_STOCK");
-  }
+    if (result.count === 0) {
+      const exists = await tx.product.findUnique({ where: { slug }, select: { id: true } });
+      throw new Error(exists ? "INSUFFICIENT_STOCK" : "PRODUCT_NOT_FOUND");
+    }
 
-  const updated = await prisma.product.update({
-    where: { slug },
-    data: {
-      stock: nextStock,
-      availability:
-        nextStock <= 0
-          ? "Agotado"
-          : nextStock <= product.minimumStock
-            ? "Disponible por pedido"
-            : "Entrega inmediata",
-      inventoryMovements: {
-        create: {
-          type: "ADJUSTMENT",
-          quantity: normalizedQuantity,
-          stockAfter: nextStock,
-          note: note?.trim() || "Ajuste rápido desde inventario",
+    const product = await tx.product.findUniqueOrThrow({ where: { slug } });
+
+    return tx.product.update({
+      where: { slug },
+      data: {
+        availability:
+          product.stock <= 0
+            ? "Agotado"
+            : product.stock <= product.minimumStock
+              ? "Disponible por pedido"
+              : "Entrega inmediata",
+        inventoryMovements: {
+          create: {
+            type: "ADJUSTMENT",
+            quantity: normalizedQuantity,
+            stockAfter: product.stock,
+            note: note?.trim() || "Ajuste rápido desde inventario",
+          },
         },
       },
-    },
+    });
   });
 
   return toStoreProduct(updated);
 }
 
-export async function getRecentInventoryMovements(limit = 16) {
+export async function getRecentInventoryMovements(division: DivisionName, limit = 16) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
 
   const movements = await prisma.inventoryMovement.findMany({
+    where: { product: { division } },
     orderBy: { createdAt: "desc" },
     take: limit,
     include: {
