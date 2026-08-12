@@ -73,6 +73,7 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "import-categoria-plasticos", label: "Categoría · Plásticos de Ingeniería", group: "Categorías", division: "Import", defaultSrc: "/home-import.png", dims: "600 × 600 px" },
   { key: "import-categoria-acoples-opw", label: "Categoría · Acoples OPW", group: "Categorías", division: "Import", defaultSrc: "/home-import.png", dims: "600 × 600 px" },
   { key: "import-categoria-acoples-hidraulicos", label: "Categoría · Acoples Hidráulicos", group: "Categorías", division: "Import", defaultSrc: "/home-import.png", dims: "600 × 600 px" },
+  { key: "import-categoria-valvulas", label: "Categoría · Válvulas, acoples y racores", group: "Categorías", division: "Import", defaultSrc: "/home-import.png", dims: "600 × 600 px" },
   { key: "import-categoria-mangueras-hidraulicas", label: "Categoría · Mangueras Hidráulicas", group: "Categorías", division: "Import", defaultSrc: "/home-import.png", dims: "600 × 600 px" },
   { key: "import-categoria-mangueras-industriales", label: "Categoría · Mangueras Industriales", group: "Categorías", division: "Import", defaultSrc: "/home-import.png", dims: "600 × 600 px" },
   { key: "import-categoria-mangueras-pvc", label: "Categoría · Mangueras en PVC", group: "Categorías", division: "Import", defaultSrc: "/home-import.png", dims: "600 × 600 px" },

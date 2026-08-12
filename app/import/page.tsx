@@ -32,6 +32,7 @@ const IMPORT_CATEGORY_IMAGE_KEYS: Record<string, string> = {
   "Plásticos de Ingeniería": "import-categoria-plasticos",
   "Acoples OPW": "import-categoria-acoples-opw",
   "Acoples Hidráulicos": "import-categoria-acoples-hidraulicos",
+  "Válvulas, acoples y racores": "import-categoria-valvulas",
   "Mangueras Hidráulicas": "import-categoria-mangueras-hidraulicas",
   "Mangueras Industriales": "import-categoria-mangueras-industriales",
   "Mangueras en PVC": "import-categoria-mangueras-pvc",
