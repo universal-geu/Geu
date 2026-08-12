@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState, type MouseEvent, type PointerEvent } from "react";
+import { useRef, useState, type PointerEvent } from "react";
 import ImageLightbox from "../components/image-lightbox";
 
 type Solution = {
@@ -78,6 +78,10 @@ export default function SolutionsCarousel({ items }: { items: Solution[] }) {
     scrollToIndex(Math.min(active + 1, items.length - 1));
   }
 
+  function goPrev() {
+    scrollToIndex(Math.max(active - 1, 0));
+  }
+
   return (
     <div className="relative">
       <div
@@ -119,6 +123,18 @@ export default function SolutionsCarousel({ items }: { items: Solution[] }) {
           </div>
         ))}
       </div>
+
+      <button
+        type="button"
+        onClick={goPrev}
+        aria-label="Anterior"
+        disabled={active === 0}
+        className="absolute left-0 top-1/2 hidden h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.14)] hover:bg-slate-950 hover:text-white disabled:opacity-0 sm:flex"
+      >
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m15 6-6 6 6 6" />
+        </svg>
+      </button>
 
       <button
         type="button"
