@@ -56,6 +56,7 @@ export const importCategoriasData = [
   { nombre: "Plásticos de Ingeniería", color: "#5c940d", icono: "⬡" },
   { nombre: "Acoples OPW", color: "#e8590c", icono: "⬤" },
   { nombre: "Acoples Hidráulicos", color: "#0c8599", icono: "⬢" },
+  { nombre: "Válvulas, acoples y racores", color: "#087f5b", icono: "◎" },
   { nombre: "Mangueras Hidráulicas", color: "#c92a2a", icono: "▶" },
   { nombre: "Mangueras Industriales", color: "#495057", icono: "▶" },
   { nombre: "Mangueras en PVC", color: "#7048e8", icono: "▶" },
