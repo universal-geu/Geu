@@ -1,3 +1,3 @@
-export function formatOrderCode(orderId: string) {
-  return `#${orderId.slice(-8).toUpperCase()}`;
+export function formatOrderCode(orderNumber: number) {
+  return `#${String(orderNumber).padStart(4, "0")}`;
 }

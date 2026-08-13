@@ -66,6 +66,7 @@ export type SalesReport = {
   categories: SalesReportCategory[];
   recentOrders: Array<{
     id: string;
+    orderNumber: number;
     customerName: string;
     status: "PENDING" | "PAID" | "CANCELLED";
     paymentStatus: "PENDING" | "PAID" | "FAILED";
@@ -365,6 +366,7 @@ function formatCurrency(value: number) {
 
 async function sendOrderConfirmationEmails(order: {
   id: string;
+  orderNumber: number;
   division: DivisionName;
   customerName: string;
   customerEmail: string;
@@ -388,11 +390,11 @@ async function sendOrderConfirmationEmails(order: {
 
   await sendEmail({
     to: order.customerEmail,
-    subject: `Pedido ${formatOrderCode(order.id)} recibido`,
+    subject: `Pedido ${formatOrderCode(order.orderNumber)} recibido`,
     html: emailLayout(
       "¡Gracias por tu pedido!",
       `<p style="color:#6e7379;font-size:14px;line-height:22px;">
-        Hola ${customerName}, recibimos tu pedido <strong>${formatOrderCode(order.id)}</strong> y ya quedó guardado en tu cuenta.
+        Hola ${customerName}, recibimos tu pedido <strong>${formatOrderCode(order.orderNumber)}</strong> y ya quedó guardado en tu cuenta.
       </p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">${itemsHtml}</table>
       <p style="margin-top:16px;font-size:14px;color:#6e7379;">Subtotal: ${formatCurrency(order.subtotal)}</p>
@@ -404,7 +406,7 @@ async function sendOrderConfirmationEmails(order: {
 
   await sendEmail({
     to: DIVISION_ADMIN_EMAILS[order.division],
-    subject: `Nuevo pedido ${formatOrderCode(order.id)}`,
+    subject: `Nuevo pedido ${formatOrderCode(order.orderNumber)}`,
     html: emailLayout(
       "Nuevo pedido recibido",
       `<p style="color:#6e7379;font-size:14px;line-height:22px;">
@@ -426,6 +428,21 @@ export async function getOrderDivision(orderId: string): Promise<DivisionName | 
   });
 
   return order?.division ?? null;
+}
+
+export async function getOrderConfirmationSummary(
+  orderId: string,
+): Promise<{ division: DivisionName; orderNumber: number } | null> {
+  if (!prisma) {
+    return null;
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { division: true, orderNumber: true },
+  });
+
+  return order ? { division: order.division, orderNumber: order.orderNumber } : null;
 }
 
 export async function getOrdersForUser(userId: string) {
@@ -585,6 +602,7 @@ export async function getSalesReport(division?: DivisionName): Promise<SalesRepo
     categories,
     recentOrders: scopedOrders.slice(0, 5).map((order) => ({
       id: order.id,
+      orderNumber: order.orderNumber,
       customerName: order.customerName,
       status: order.status,
       paymentStatus: order.paymentStatus,
@@ -794,7 +812,7 @@ export async function updateOrderShipping(
 
   if (currentOrder.shippingStatus !== shippingStatus) {
     void sendShippingStatusEmail({
-      orderId: updatedOrder.id,
+      orderNumber: updatedOrder.orderNumber,
       division: currentOrder.division,
       customerName: currentOrder.customerName,
       customerEmail: currentOrder.customerEmail,
@@ -816,7 +834,7 @@ const SHIPPING_STATUS_LABELS: Record<ShippingStatus, string> = {
 };
 
 async function sendShippingStatusEmail({
-  orderId,
+  orderNumber,
   division,
   customerName,
   customerEmail,
@@ -824,7 +842,7 @@ async function sendShippingStatusEmail({
   carrier,
   trackingNumber,
 }: {
-  orderId: string;
+  orderNumber: number;
   division: DivisionName;
   customerName: string;
   customerEmail: string;
@@ -843,11 +861,11 @@ async function sendShippingStatusEmail({
 
   await sendEmail({
     to: customerEmail,
-    subject: `Tu pedido ${formatOrderCode(orderId)} cambió a: ${label}`,
+    subject: `Tu pedido ${formatOrderCode(orderNumber)} cambió a: ${label}`,
     html: emailLayout(
       `Actualización de tu pedido`,
       `<p style="color:#6e7379;font-size:14px;line-height:22px;">
-        Hola ${escapeHtml(customerName)}, tu pedido <strong>${formatOrderCode(orderId)}</strong> cambió de estado a
+        Hola ${escapeHtml(customerName)}, tu pedido <strong>${formatOrderCode(orderNumber)}</strong> cambió de estado a
         <strong style="color:${DIVISION_BRAND[division].accent};">${label}</strong>.
       </p>
       ${trackingHtml}`,
