@@ -2,10 +2,20 @@ import { requireAdminUser } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { IMAGE_SLOTS } from "@/lib/image-slots";
 import { TEXT_SLOTS } from "@/lib/text-slots";
+import { COLOR_SLOTS } from "@/lib/color-slots";
 
 function labelFor(key: string, kind: string) {
   if (kind === "image") return IMAGE_SLOTS.find((s) => s.key === key)?.label ?? key;
+  if (kind === "color") return COLOR_SLOTS.find((s) => s.key === key)?.label ?? key;
   return TEXT_SLOTS.find((s) => s.key === key)?.label ?? key;
+}
+
+function defaultSettingValue(key: string) {
+  return (
+    TEXT_SLOTS.find((s) => s.key === key)?.defaultValue ??
+    COLOR_SLOTS.find((s) => s.key === key)?.defaultValue ??
+    ""
+  );
 }
 
 export async function POST() {
@@ -23,7 +33,7 @@ export async function POST() {
     }
 
     const imageKeys = drafts.filter((d) => d.kind === "image").map((d) => d.key);
-    const textKeys = drafts.filter((d) => d.kind === "text").map((d) => d.key);
+    const textKeys = drafts.filter((d) => d.kind !== "image").map((d) => d.key);
 
     const [previousImages, previousTexts] = await Promise.all([
       imageKeys.length ? db.siteImage.findMany({ where: { key: { in: imageKeys } } }) : [],
@@ -46,10 +56,7 @@ export async function POST() {
         ]),
       ),
       texts: Object.fromEntries(
-        textKeys.map((key) => [
-          key,
-          previousTextMap.get(key) ?? TEXT_SLOTS.find((s) => s.key === key)?.defaultValue ?? "",
-        ]),
+        textKeys.map((key) => [key, previousTextMap.get(key) ?? defaultSettingValue(key)]),
       ),
     };
 
@@ -64,7 +71,7 @@ export async function POST() {
           }),
         ),
       ...drafts
-        .filter((d) => d.kind === "text")
+        .filter((d) => d.kind !== "image")
         .map((d) =>
           db.siteSetting.upsert({
             where: { key: d.key },

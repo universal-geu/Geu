@@ -25,6 +25,7 @@ import type { DashboardMetrics, SalesReport, ShippingStatus } from "@/lib/orders
 import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
 import { TEXT_SLOTS } from "@/lib/text-slots";
+import { COLOR_SLOTS } from "@/lib/color-slots";
 import { getDivisionFromBrandParam, isServiceDivision, type DivisionName } from "@/lib/divisions";
 import type { CauchosSalesMode } from "@/lib/site-settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
@@ -1224,6 +1225,18 @@ function TextsSubIcon() {
   );
 }
 
+function ColorsSubIcon() {
+  return (
+    <SidebarIconShell>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 3a5 5 0 0 0 0 18 2.5 2.5 0 0 0 2.5-2.5c0-.7-.3-1.2-.7-1.7-.4-.5-.5-.8-.3-1.3.2-.4.7-.5 1.3-.5H16a5 5 0 0 0 5-5A9 9 0 0 0 12 3Z" />
+      <circle cx="8" cy="11" r=".6" fill="currentColor" />
+      <circle cx="12" cy="8" r=".6" fill="currentColor" />
+      <circle cx="16" cy="11" r=".6" fill="currentColor" />
+    </SidebarIconShell>
+  );
+}
+
 function WhatsAppSubIcon() {
   return (
     <SidebarIconShell>
@@ -1243,9 +1256,13 @@ function SalesModeSubIcon() {
   );
 }
 
-const SETTINGS_SUB_ICONS: Record<"images" | "texts" | "whatsapp" | "salesMode", () => React.JSX.Element> = {
+const SETTINGS_SUB_ICONS: Record<
+  "images" | "texts" | "colors" | "whatsapp" | "salesMode",
+  () => React.JSX.Element
+> = {
   images: ImagesSubIcon,
   texts: TextsSubIcon,
+  colors: ColorsSubIcon,
   whatsapp: WhatsAppSubIcon,
   salesMode: SalesModeSubIcon,
 };
@@ -1407,8 +1424,13 @@ export default function AdminPage() {
   const [savingTextKey, setSavingTextKey] = useState<string | null>(null);
   const [savedTextKey, setSavedTextKey] = useState<string | null>(null);
   const [selectedTextGroup, setSelectedTextGroup] = useState<string | null>(null);
+  const [siteColorsAdmin, setSiteColorsAdmin] = useState<Record<string, string>>({});
+  const [isLoadingColors, setIsLoadingColors] = useState(false);
+  const [colorsError, setColorsError] = useState<string | null>(null);
+  const [savingColorKey, setSavingColorKey] = useState<string | null>(null);
+  const [savedColorKey, setSavedColorKey] = useState<string | null>(null);
   const [contentDrafts, setContentDrafts] = useState<
-    Record<string, { kind: "image" | "text"; division: string; value: string; link: string | null }>
+    Record<string, { kind: "image" | "text" | "color"; division: string; value: string; link: string | null }>
   >({});
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
@@ -1420,7 +1442,9 @@ export default function AdminPage() {
   const [isLoadingVersions, setIsLoadingVersions] = useState(false);
   const [restoringVersionId, setRestoringVersionId] = useState<string | null>(null);
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
-  const [settingsSection, setSettingsSection] = useState<"images" | "texts" | "whatsapp" | "salesMode" | null>(null);
+  const [settingsSection, setSettingsSection] = useState<
+    "images" | "texts" | "colors" | "whatsapp" | "salesMode" | null
+  >(null);
   const [editSearch, setEditSearch] = useState("");
   const [editCategoryFilter, setEditCategoryFilter] = useState<"Todas" | Categoria>("Todas");
   const [inventoryStatusFilter, setInventoryStatusFilter] = useState<
@@ -2423,7 +2447,7 @@ export default function AdminPage() {
         Object.fromEntries(
           payload.drafts.map((d) => [
             d.key,
-            { kind: d.kind as "image" | "text", division: d.division, value: d.value, link: d.link },
+            { kind: d.kind as "image" | "text" | "color", division: d.division, value: d.value, link: d.link },
           ]),
         ),
       );
@@ -2464,6 +2488,12 @@ export default function AdminPage() {
     return siteTextsAdmin[key] ?? fallback;
   };
 
+  const resolveAdminColor = (key: string, fallback: string) => {
+    const draft = contentDrafts[key];
+    if (draft?.kind === "color") return draft.value;
+    return siteColorsAdmin[key] ?? fallback;
+  };
+
   const handleDiscardDraft = async (key: string) => {
     try {
       await fetch("/api/admin/content-drafts/discard", {
@@ -2495,7 +2525,7 @@ export default function AdminPage() {
       setIsPublishModalOpen(false);
       setPublishNotice(`✓ ${payload.published?.length ?? 0} cambios publicados`);
       window.setTimeout(() => setPublishNotice(null), 3000);
-      await Promise.all([loadSiteImages(), loadSiteTexts(), loadContentDrafts()]);
+      await Promise.all([loadSiteImages(), loadSiteTexts(), loadSiteColors(), loadContentDrafts()]);
     } catch (error) {
       setImageError(error instanceof Error ? error.message : "No se pudieron publicar los cambios.");
     } finally {
@@ -2523,7 +2553,13 @@ export default function AdminPage() {
       if (!response.ok) throw new Error("No se pudo restaurar esta versión.");
       setPublishNotice("✓ Versión restaurada");
       window.setTimeout(() => setPublishNotice(null), 3000);
-      await Promise.all([loadSiteImages(), loadSiteTexts(), loadContentDrafts(), loadContentVersions()]);
+      await Promise.all([
+        loadSiteImages(),
+        loadSiteTexts(),
+        loadSiteColors(),
+        loadContentDrafts(),
+        loadContentVersions(),
+      ]);
     } catch (error) {
       setImageError(error instanceof Error ? error.message : "No se pudo restaurar esta versión.");
     } finally {
@@ -2697,7 +2733,50 @@ export default function AdminPage() {
     }
   };
 
-  const openSettingsSection = (section: "images" | "texts" | "whatsapp" | "salesMode") => {
+  const loadSiteColors = async () => {
+    setIsLoadingColors(true);
+    setColorsError(null);
+    try {
+      const response = await fetch("/api/admin/colors");
+      const payload = (await response.json()) as { colors?: Record<string, string>; error?: string };
+      if (!response.ok || !payload.colors) {
+        throw new Error(payload.error || "No fue posible cargar los colores.");
+      }
+      setSiteColorsAdmin(payload.colors);
+    } catch (error) {
+      setColorsError(error instanceof Error ? error.message : "No fue posible cargar los colores.");
+    } finally {
+      setIsLoadingColors(false);
+    }
+  };
+
+  const handleSaveColor = async (key: string, value: string) => {
+    setSavingColorKey(key);
+    setColorsError(null);
+    try {
+      const response = await fetch("/api/admin/content-drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, kind: "color", value }),
+      });
+      const payload = (await response.json()) as {
+        draft?: { kind: "color"; division: string; value: string; link: string | null };
+        error?: string;
+      };
+      if (!response.ok || !payload.draft) {
+        throw new Error(payload.error || "No se pudo guardar el color.");
+      }
+      setContentDrafts((current) => ({ ...current, [key]: payload.draft! }));
+      setSavedColorKey(key);
+      setTimeout(() => setSavedColorKey((current) => (current === key ? null : current)), 1500);
+    } catch (error) {
+      setColorsError(error instanceof Error ? error.message : "No se pudo guardar el color.");
+    } finally {
+      setSavingColorKey(null);
+    }
+  };
+
+  const openSettingsSection = (section: "images" | "texts" | "colors" | "whatsapp" | "salesMode") => {
     setSelectedImage(null);
     setRequestError("");
     setPrimaryImageIndex(0);
@@ -2713,6 +2792,10 @@ export default function AdminPage() {
     }
     if (section === "texts") {
       void loadSiteTexts();
+      void loadContentDrafts();
+    }
+    if (section === "colors") {
+      void loadSiteColors();
       void loadContentDrafts();
     }
     if (section === "whatsapp") void loadSiteSettings();
@@ -3095,6 +3178,14 @@ export default function AdminPage() {
             label: "Textos",
             active: activeTab === "settings" && settingsSection === "texts",
             onClick: () => openSettingsSection("texts"),
+          }
+        : null,
+      canAccessTool("settings")
+        ? {
+            key: "colors" as const,
+            label: "Colores",
+            active: activeTab === "settings" && settingsSection === "colors",
+            onClick: () => openSettingsSection("colors"),
           }
         : null,
       canAccessTool("settings")
@@ -6229,6 +6320,143 @@ export default function AdminPage() {
             </div>
           )}
 
+          {activeTab === "settings" && settingsSection === "colors" && canAccessTool("settings") && (
+            <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
+              <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
+                    Contenido del sitio
+                  </p>
+                  <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                    Colores
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
+                    Color principal de la marca en botones, enlaces y acentos del sitio. Los cambios se
+                    guardan al salir del campo.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void loadContentVersions();
+                      setIsHistoryModalOpen(true);
+                    }}
+                    className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                  >
+                    Historial
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void loadSiteColors()}
+                    className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                  >
+                    Recargar
+                  </button>
+                </div>
+              </div>
+
+              {colorsError && (
+                <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{colorsError}</p>
+              )}
+
+              {publishNotice && (
+                <p className="mb-6 rounded-xl bg-[#effaf2] px-4 py-3 text-sm font-semibold text-[#1f6b39]">
+                  {publishNotice}
+                </p>
+              )}
+
+              {myContentDrafts.length > 0 && (
+                <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-[#f3d9b1] bg-[#fff8ef] px-5 py-4">
+                  <p className="flex items-center gap-2 text-sm font-semibold text-[#92400e]">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-[#b45309]" />
+                    {myContentDrafts.length} cambio{myContentDrafts.length === 1 ? "" : "s"} sin publicar
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsPublishModalOpen(true)}
+                    className="inline-flex rounded-full bg-[#16384f] px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#0e2536]"
+                  >
+                    Publicar cambios
+                  </button>
+                </div>
+              )}
+
+              {isLoadingColors ? (
+                <p className="text-sm text-[#6e7379]">Cargando colores...</p>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {COLOR_SLOTS.filter((slot) => slot.division === adminDivision).map((slot) => {
+                    const value = resolveAdminColor(slot.key, slot.defaultValue);
+                    const isSaving = savingColorKey === slot.key;
+                    const isSaved = savedColorKey === slot.key;
+                    const hasDraft = Boolean(contentDrafts[slot.key]);
+
+                    return (
+                      <div
+                        key={slot.key}
+                        className="rounded-[1.2rem] border border-black/8 bg-white p-4 shadow-sm"
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-[0.06em] text-[#8b8d91]">
+                          <span className="flex items-center gap-2">
+                            {slot.label}
+                            {hasDraft && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-[#b45309] px-2 py-0.5 text-[9px] font-bold normal-case text-white">
+                                ● Sin publicar
+                              </span>
+                            )}
+                          </span>
+                          <span className="flex items-center gap-2">
+                            {isSaving && <span className="normal-case text-[#8b8d91]">Guardando...</span>}
+                            {isSaved && <span className="normal-case text-[#1f6b39]">✓ Guardado</span>}
+                            {hasDraft && !isSaving && (
+                              <button
+                                type="button"
+                                onClick={() => void handleDiscardDraft(slot.key)}
+                                className="normal-case text-[#8b8d91] hover:text-[var(--admin-accent)]"
+                              >
+                                ↺ Deshacer
+                              </button>
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={value}
+                            onChange={(event) => void handleSaveColor(slot.key, event.target.value)}
+                            className="h-11 w-14 shrink-0 cursor-pointer rounded-lg border border-black/10 bg-white p-1"
+                            aria-label={`Selector de color para ${slot.label}`}
+                          />
+                          <input
+                            key={`${slot.key}:${value}`}
+                            type="text"
+                            defaultValue={value}
+                            onBlur={(event) => {
+                              if (/^#[0-9a-fA-F]{6}$/.test(event.target.value) && event.target.value !== value) {
+                                void handleSaveColor(slot.key, event.target.value);
+                              }
+                            }}
+                            className="w-full rounded-lg border border-black/10 bg-[#fafaf9] px-3 py-2 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                          />
+                          {value !== slot.defaultValue && (
+                            <button
+                              type="button"
+                              onClick={() => void handleSaveColor(slot.key, slot.defaultValue)}
+                              className="shrink-0 whitespace-nowrap text-xs font-semibold text-[#8b8d91] hover:text-[var(--admin-accent)]"
+                            >
+                              Usar original
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {activeTab === "settings" && settingsSection === "whatsapp" && canAccessTool("settings") && (
             <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
               <div className="mb-8">
@@ -6569,10 +6797,14 @@ export default function AdminPage() {
                 const label =
                   draft.kind === "image"
                     ? IMAGE_SLOTS.find((s) => s.key === key)?.label ?? key
-                    : TEXT_SLOTS.find((s) => s.key === key)?.label ?? key;
+                    : draft.kind === "color"
+                      ? COLOR_SLOTS.find((s) => s.key === key)?.label ?? key
+                      : TEXT_SLOTS.find((s) => s.key === key)?.label ?? key;
+                const kindLabel =
+                  draft.kind === "image" ? "Imagen" : draft.kind === "color" ? "Color" : "Texto";
                 return (
                   <p key={key} className="text-sm text-[#1f2328]">
-                    <span className="font-semibold">{draft.kind === "image" ? "Imagen" : "Texto"}</span> · {label}
+                    <span className="font-semibold">{kindLabel}</span> · {label}
                   </p>
                 );
               })}

@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import CauchosAccountLink from "../components/cauchos-account-link";
 import MobileBottomNav from "../components/mobile-bottom-nav";
+import { useSiteColors } from "../components/use-site-colors";
+import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
 
 const navItems = [
   { label: "Catálogos", href: "/energy/catalogo" },
@@ -30,8 +32,12 @@ function EnergyMark() {
 }
 
 export default function EnergyHeader() {
+  const siteColors = useSiteColors();
+  const colorOverrideCss = buildDivisionColorOverrideCss("Energy", siteColors);
+
   return (
     <>
+    {colorOverrideCss && <style dangerouslySetInnerHTML={{ __html: colorOverrideCss }} />}
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/85 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-5 md:px-8">
         <Link href="/" className="shrink-0">
