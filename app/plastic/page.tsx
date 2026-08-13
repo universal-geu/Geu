@@ -148,12 +148,20 @@ export default async function PlasticPage() {
               style={{ maxWidth: "1632px" }}
             >
               <Image
+                src={resolveImage("plastic-principal-movil", siteImages)}
+                alt="GEU Plastic, perfiles en PVC de alta calidad para todas las industrias"
+                fill
+                priority
+                sizes="100vw"
+                className="block object-cover object-center md:hidden"
+              />
+              <Image
                 src={resolveImage("plastic-principal", siteImages)}
                 alt="GEU Plastic, perfiles en PVC de alta calidad para todas las industrias"
                 fill
                 priority
                 sizes="(min-width: 1632px) 1632px, 100vw"
-                className="object-cover object-center"
+                className="hidden object-cover object-center md:block"
               />
             </div>
           )}
@@ -319,6 +327,7 @@ export default async function PlasticPage() {
 
       <BrandClosingBanner
         imageKey="plastic-cierre"
+        mobileImageKey="plastic-cierre-movil"
         alt="Cierre GEU Plastic"
         siteImages={siteImages}
         maxWidth="1632px"

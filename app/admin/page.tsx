@@ -5564,6 +5564,9 @@ export default function AdminPage() {
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
                     Sube o reemplaza las imágenes o videos del sitio público. JPG · PNG · WEBP · MP4 · WEBM · MOV · máx. 4 MB.
                   </p>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
+                    Las tarjetas con la insignia <span className="inline-flex items-center gap-1 rounded-full bg-[#16384f] px-2 py-0.5 text-[10px] font-bold text-white">📱 Móvil</span> son la versión que se ve en celulares. Si no subes una, se usa automáticamente la misma imagen de escritorio.
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -5735,6 +5738,11 @@ export default function AdminPage() {
                                     </svg>
                                   </div>
                                 </div>
+                              )}
+                              {slot.isMobile && (
+                                <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#16384f] px-2 py-1 text-[10px] font-bold text-white shadow-sm">
+                                  📱 Móvil
+                                </span>
                               )}
                             </div>
                             <div className="p-3">

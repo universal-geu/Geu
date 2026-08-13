@@ -186,15 +186,26 @@ export default async function CauchosPage() {
               style={{ maxWidth: "1632px" }}
             />
           ) : (
-            <Image
-              src={resolveImage("banner-principal", siteImages)}
-              alt="Todo en caucho para cada industria"
-              width={2048}
-              height={768}
-              priority
-              className="mx-auto h-auto w-full object-contain"
-              style={{ maxWidth: "1632px" }}
-            />
+            <>
+              <Image
+                src={resolveImage("banner-principal-movil", siteImages)}
+                alt="Todo en caucho para cada industria"
+                width={1024}
+                height={1024}
+                priority
+                className="mx-auto block h-auto w-full object-contain md:hidden"
+                style={{ maxWidth: "1632px" }}
+              />
+              <Image
+                src={resolveImage("banner-principal", siteImages)}
+                alt="Todo en caucho para cada industria"
+                width={2048}
+                height={768}
+                priority
+                className="mx-auto hidden h-auto w-full object-contain md:block"
+                style={{ maxWidth: "1632px" }}
+              />
+            </>
           )}
         </div>
       </section>
