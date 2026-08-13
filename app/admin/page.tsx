@@ -348,6 +348,8 @@ type AdminOrder = {
   items: Array<{
     id: string;
     name: string;
+    image: string;
+    variantSku: string | null;
     quantity: number;
     unitPrice: number;
     lineTotal: number;
@@ -447,6 +449,14 @@ function getShippingStatusLabel(status: ShippingStatus) {
   if (status === "CANCELLED") return "Cancelado";
   return "Pendiente";
 }
+
+const SHIPPING_STATUS_BADGE_CLASS: Record<ShippingStatus, string> = {
+  PENDING: "bg-amber-50 text-amber-700",
+  PREPARING: "bg-emerald-50 text-emerald-700",
+  SHIPPED: "bg-blue-50 text-blue-700",
+  DELIVERED: "bg-emerald-600 text-white",
+  CANCELLED: "bg-slate-200 text-slate-600",
+};
 
 function getPaymentStatusLabel(status: "PENDING" | "PAID" | "FAILED") {
   if (status === "PAID") return "Pago confirmado";
@@ -1530,6 +1540,7 @@ export default function AdminPage() {
   });
   const [isSavingOrder, setIsSavingOrder] = useState(false);
   const editFormRef = useRef<HTMLFormElement | null>(null);
+  const orderCardsScrollRef = useRef<HTMLDivElement | null>(null);
   const editingProduct =
     adminProducts.find((product) => product.slug === editingSlug) ?? null;
   const previewImageUrl = useMemo(() => {
@@ -1659,15 +1670,24 @@ export default function AdminPage() {
         orderShippingFilter === "all" || order.shippingStatus === orderShippingFilter;
       const matchesSearch =
         search.length === 0 ||
-        order.id.toLowerCase().includes(search) ||
+        formatOrderCode(order.orderNumber).toLowerCase().includes(search) ||
         order.customerName.toLowerCase().includes(search) ||
         order.customerEmail.toLowerCase().includes(search) ||
         order.city.toLowerCase().includes(search) ||
-        (order.trackingNumber || "").toLowerCase().includes(search);
+        (order.trackingNumber || "").toLowerCase().includes(search) ||
+        order.items.some((item) => item.name.toLowerCase().includes(search));
 
       return matchesFilter && matchesSearch;
     });
   }, [orderSearch, orderShippingFilter, orders]);
+
+  const orderStatusCounts = useMemo(() => {
+    const counts = { all: orders.length } as Record<"all" | ShippingStatus, number>;
+    for (const status of shippingStatuses) {
+      counts[status] = orders.filter((order) => order.shippingStatus === status).length;
+    }
+    return counts;
+  }, [orders]);
 
   const filteredQuotes = useMemo(() => {
     return quotes.filter(
@@ -4937,359 +4957,400 @@ export default function AdminPage() {
           )}
 
           {activeTab === "orders" && (
-            <div className="admin-fade-up space-y-8">
-              <div className="grid gap-8 xl:grid-cols-[360px_minmax(0,1fr)]">
-                <aside className="space-y-5">
-                  <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[#4f545a]">
-                        Buscar por pedido, cliente o guía
-                      </span>
-                      <input
-                        type="search"
-                        value={orderSearch}
-                        onChange={(event) => setOrderSearch(event.target.value)}
-                        placeholder="Ej: cm..., Brandon, 12345..."
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                      />
-                    </label>
+            <div className="admin-fade-up space-y-6">
+              <div>
+                <h2 className="text-3xl font-semibold tracking-[-0.03em] text-[#16384f]">Pedidos</h2>
+                <p className="mt-1 text-sm text-[#6e7379]">
+                  Gestiona y monitorea todos los pedidos y envíos de tu negocio.
+                </p>
+              </div>
 
-                    <div className="mt-5 flex flex-wrap gap-3">
+              <div className="relative">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8b8d91]"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.4-3.4" />
+                </svg>
+                <input
+                  type="search"
+                  value={orderSearch}
+                  onChange={(event) => setOrderSearch(event.target.value)}
+                  placeholder="Buscar por pedido, cliente o producto..."
+                  className="w-full rounded-full border border-black/10 bg-white py-3 pl-11 pr-4 text-sm text-[#1f2328] shadow-[0_8px_20px_rgba(15,23,42,0.05)] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOrderShippingFilter("all")}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
+                    orderShippingFilter === "all"
+                      ? "bg-[#16384f] text-white"
+                      : "border border-black/10 bg-white text-[#5d6167] hover:bg-[#fafaf9]"
+                  }`}
+                >
+                  Todos {orderStatusCounts.all}
+                </button>
+                {shippingStatuses.map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setOrderShippingFilter(status)}
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
+                      orderShippingFilter === status
+                        ? "bg-[#16384f] text-white"
+                        : "border border-black/10 bg-white text-[#5d6167] hover:bg-[#fafaf9]"
+                    }`}
+                  >
+                    {getShippingStatusLabel(status)} {orderStatusCounts[status]}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-label="Ver pedidos anteriores"
+                  onClick={() => orderCardsScrollRef.current?.scrollBy({ left: -320, behavior: "smooth" })}
+                  className="absolute -left-3 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-white text-[#5d6167] shadow-[0_8px_18px_rgba(15,23,42,0.1)] hover:text-[var(--admin-accent)] md:flex"
+                >
+                  ‹
+                </button>
+                <div
+                  ref={orderCardsScrollRef}
+                  className="flex gap-3 overflow-x-auto scroll-smooth px-1 py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  {isLoadingOrders ? (
+                    <p className="py-4 text-sm text-[#6e7379]">Cargando pedidos...</p>
+                  ) : filteredOrders.length === 0 ? (
+                    <p className="py-4 text-sm text-[#6e7379]">
+                      Aún no hay pedidos que coincidan con los filtros actuales.
+                    </p>
+                  ) : (
+                    filteredOrders.map((order) => (
                       <button
+                        key={order.id}
                         type="button"
-                        onClick={() => setOrderShippingFilter("all")}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
-                          orderShippingFilter === "all"
-                            ? "bg-[#16384f] text-white"
-                            : "border border-black/10 bg-[#fafaf9] text-[#5d6167] hover:bg-[#ececea]"
+                        onClick={() => {
+                          setSelectedOrderId(order.id);
+                          setOrderForm(getOrderEditState(order));
+                        }}
+                        className={`w-[190px] shrink-0 rounded-2xl border bg-white p-4 text-left shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition-colors duration-200 ${
+                          selectedOrderId === order.id
+                            ? "border-[var(--admin-accent)] ring-2 ring-[var(--admin-accent)]/15"
+                            : "border-black/8 hover:border-black/16"
                         }`}
                       >
-                        Todos
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-semibold text-[#16384f]">
+                            {formatOrderCode(order.orderNumber)}
+                          </span>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${SHIPPING_STATUS_BADGE_CLASS[order.shippingStatus]}`}
+                          >
+                            {getShippingStatusLabel(order.shippingStatus)}
+                          </span>
+                        </div>
+                        <p className="mt-2 truncate text-xs font-medium text-[#5d6167]">
+                          {order.customerName}
+                        </p>
+                        <p className="mt-0.5 text-xs text-[#8b8d91]">
+                          {order.city} · {formatCurrency(order.subtotal + order.shippingCost)}
+                        </p>
                       </button>
-                      {shippingStatuses.map((status) => (
-                        <button
-                          key={status}
-                          type="button"
-                          onClick={() => setOrderShippingFilter(status)}
-                          className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
-                            orderShippingFilter === status
-                              ? "bg-[#6366f1] text-white"
-                              : "border border-black/10 bg-[#fafaf9] text-[#5d6167] hover:bg-[#ececea]"
-                          }`}
-                        >
-                          {getShippingStatusLabel(status)}
-                        </button>
-                      ))}
-                    </div>
-
-                    <p className="mt-5 text-sm text-[#6e7379]">
-                      Mostrando {filteredOrders.length} pedido{filteredOrders.length === 1 ? "" : "s"}.
-                    </p>
-                  </div>
-
-                  <div className="space-y-3">
-                    {isLoadingOrders ? (
-                      <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 text-sm text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                        Cargando pedidos...
-                      </div>
-                    ) : filteredOrders.length === 0 ? (
-                      <div className="rounded-[1.5rem] border border-dashed border-black/12 bg-white p-5 text-sm leading-7 text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                        Aún no hay pedidos que coincidan con los filtros actuales.
-                      </div>
-                    ) : (
-                      filteredOrders.map((order) => (
-                        <button
-                          key={order.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedOrderId(order.id);
-                            setOrderForm(getOrderEditState(order));
-                          }}
-                          className={`block w-full rounded-[1.4rem] border p-5 text-left shadow-[0_14px_28px_rgba(15,23,42,0.05)] transition-all duration-200 ${
-                            selectedOrderId === order.id
-                              ? "border-[#16384f] bg-[#16384f] text-white"
-                              : "border-black/8 bg-white hover:-translate-y-0.5 hover:border-[#16384f]/18"
-                          }`}
-                        >
-                          <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${selectedOrderId === order.id ? "text-white/72" : "text-[#8b8d91]"}`}>
-                            Pedido
-                          </p>
-                          <p className="mt-2 text-lg font-semibold">{formatOrderCode(order.orderNumber)}</p>
-                          <p className={`mt-2 text-sm ${selectedOrderId === order.id ? "text-white/78" : "text-[#5d6167]"}`}>
-                            {order.customerName} · {order.city}
-                          </p>
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${selectedOrderId === order.id ? "bg-white/14 text-white" : "bg-[#effaf2] text-[#1f6b39]"}`}>
-                              {getShippingStatusLabel(order.shippingStatus)}
-                            </span>
-                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${selectedOrderId === order.id ? "bg-white/14 text-white" : "bg-[var(--admin-accent-soft)] text-[var(--admin-accent)]"}`}>
-                              {getPaymentStatusLabel(order.paymentStatus)}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </aside>
-
-                <div className="space-y-8">
-                  {!selectedOrder || !selectedOrderPreview ? (
-                    <div className="rounded-[1.75rem] border border-dashed border-black/12 bg-white p-8 text-center text-sm leading-7 text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                      Selecciona un pedido para editar su envío, guía y notas internas.
-                    </div>
-                  ) : (
-                    <>
-                      <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                        <div className="flex flex-wrap items-start justify-between gap-4">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8b8d91]">
-                              Pedido seleccionado
-                            </p>
-                            <h3 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                              {formatOrderCode(selectedOrderPreview.orderNumber)}
-                            </h3>
-                            <p className="mt-3 text-sm leading-7 text-[#6e7379]">
-                              {selectedOrderPreview.customerName} · {selectedOrderPreview.customerEmail} · {selectedOrderPreview.customerPhone}
-                            </p>
-                            <p className="text-sm leading-7 text-[#6e7379]">
-                              {selectedOrderPreview.department}, {selectedOrderPreview.city} · {selectedOrderPreview.addressLine1}
-                              {selectedOrderPreview.addressLine2 ? ` · ${selectedOrderPreview.addressLine2}` : ""}
-                            </p>
-                          </div>
-
-                          <div className="flex flex-wrap gap-4">
-                            <div>
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
-                                Pago
-                              </p>
-                              <span className="mt-1 inline-flex rounded-full border border-[var(--admin-accent)]/18 bg-[var(--admin-accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--admin-accent)]">
-                                {getPaymentStatusLabel(selectedOrderPreview.paymentStatus)}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
-                                Envío
-                              </p>
-                              <span className="mt-1 inline-flex rounded-full border border-[#1f8b45]/18 bg-[#effaf2] px-3 py-1 text-xs font-semibold text-[#1f6b39]">
-                                {getShippingStatusLabel(selectedOrderPreview.shippingStatus)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_320px]">
-                          <div className="rounded-[1.4rem] border border-black/8 bg-[#fafaf9] p-5">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                              <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
-                                  Resumen del pedido
-                                </p>
-                                <p className="mt-2 text-sm text-[#6e7379]">
-                                  Revisa qué compró el cliente antes de actualizar envío y guía.
-                                </p>
-                              </div>
-                              <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#16384f] shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
-                                {selectedOrderPreview.totalItems} producto
-                                {selectedOrderPreview.totalItems === 1 ? "" : "s"}
-                              </span>
-                            </div>
-
-                            <div className="mt-5 space-y-3">
-                              {selectedOrderPreview.items.map((item) => (
-                                <div
-                                  key={`summary-${item.id}`}
-                                  className="rounded-[1rem] border border-black/8 bg-white px-4 py-4"
-                                >
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                      <p className="text-sm font-semibold text-[#1f2328]">
-                                        {item.name}
-                                      </p>
-                                      <p className="mt-2 text-xs uppercase tracking-[0.18em] text-[#8b8d91]">
-                                        Cantidad
-                                      </p>
-                                      <p className="mt-1 text-sm font-medium text-[#5d6167]">
-                                        {item.quantity}
-                                      </p>
-                                    </div>
-                                    <div className="text-right">
-                                      <p className="text-xs uppercase tracking-[0.18em] text-[#8b8d91]">
-                                        Precio unidad
-                                      </p>
-                                      <p className="mt-1 text-sm font-semibold text-[#16384f]">
-                                        {formatCurrency(item.unitPrice)}
-                                      </p>
-                                      <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#8b8d91]">
-                                        Subtotal
-                                      </p>
-                                      <p className="mt-1 text-sm font-semibold text-[var(--admin-accent)]">
-                                        {formatCurrency(item.lineTotal)}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="grid gap-3">
-                            <div className="rounded-[1.4rem] border border-black/8 bg-[#fafaf9] px-5 py-4">
-                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                                Total del pedido
-                              </p>
-                              <p className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-[var(--admin-accent)]">
-                                {formatCurrency(selectedOrderPreview.subtotal + selectedOrderPreview.shippingCost)}
-                              </p>
-                              <p className="mt-2 text-xs text-[#6e7379]">
-                                Subtotal {formatCurrency(selectedOrderPreview.subtotal)} + envío{" "}
-                                {formatCurrency(selectedOrderPreview.shippingCost)}
-                              </p>
-                            </div>
-                            <div className="rounded-[1.4rem] border border-black/8 bg-[#fafaf9] px-5 py-4">
-                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                                Transportadora actual
-                              </p>
-                              <p className="mt-2 text-sm font-semibold text-[#16384f]">
-                                {selectedOrderPreview.carrier || "Por definir"}
-                              </p>
-                            </div>
-                            <div className="rounded-[1.4rem] border border-black/8 bg-[#fafaf9] px-5 py-4">
-                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                                Guía actual
-                              </p>
-                              <p className="mt-2 text-sm font-semibold text-[#16384f]">
-                                {selectedOrderPreview.trackingNumber || "Aún no asignada"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-6">
-                          <AdminOrderProgress order={selectedOrderPreview} />
-                        </div>
-
-                        <div className="mt-6 grid gap-5 md:grid-cols-2">
-                          <label className="space-y-2">
-                            <span className="text-sm font-medium text-[#4f545a]">Estado de envío</span>
-                            <select
-                              name="shippingStatus"
-                              value={orderForm.shippingStatus}
-                              onChange={handleOrderFieldChange}
-                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                            >
-                              {shippingStatuses.map((status) => (
-                                <option key={status} value={status}>
-                                  {getShippingStatusLabel(status)}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-
-                          <label className="space-y-2">
-                            <span className="text-sm font-medium text-[#4f545a]">Estado de pago</span>
-                            <select
-                              name="paymentStatus"
-                              value={orderForm.paymentStatus}
-                              onChange={handleOrderFieldChange}
-                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                            >
-                              {paymentStatuses.map((status) => (
-                                <option key={status} value={status}>
-                                  {getPaymentStatusLabel(status)}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-
-                          <label className="space-y-2">
-                            <span className="text-sm font-medium text-[#4f545a]">Transportadora</span>
-                            <input
-                              name="carrier"
-                              value={orderForm.carrier}
-                              onChange={handleOrderFieldChange}
-                              placeholder="Ej. Coordinadora, Servientrega..."
-                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                            />
-                          </label>
-
-                          <label className="space-y-2">
-                            <span className="text-sm font-medium text-[#4f545a]">Número de guía</span>
-                            <input
-                              name="trackingNumber"
-                              value={orderForm.trackingNumber}
-                              onChange={handleOrderFieldChange}
-                              placeholder="Ej. 123456789"
-                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                            />
-                          </label>
-
-                          <label className="space-y-2 md:col-span-2">
-                            <span className="text-sm font-medium text-[#4f545a]">Notas internas del envío</span>
-                            <textarea
-                              name="adminNotes"
-                              value={orderForm.adminNotes}
-                              onChange={handleOrderFieldChange}
-                              rows={4}
-                              placeholder="Ej. Sale hoy en la tarde, cliente pidió entregar en portería..."
-                              className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                            />
-                          </label>
-                        </div>
-
-                        <div className="mt-6 flex flex-wrap gap-3">
-                          <button
-                            type="button"
-                            onClick={handleSaveOrder}
-                            disabled={isSavingOrder}
-                            className="inline-flex rounded-full bg-[#16384f] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#0f2a3b] disabled:cursor-not-allowed disabled:opacity-70"
-                          >
-                            {isSavingOrder ? "Guardando..." : "Actualizar pedido"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void loadOrders()}
-                            className="inline-flex rounded-full border border-black/10 px-6 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
-                          >
-                            Recargar pedidos
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                        <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                          Productos del pedido
-                        </h3>
-                        <div className="mt-5 grid gap-3 md:grid-cols-2">
-                          {selectedOrder.items.map((item) => (
-                            <div
-                              key={item.id}
-                              className="rounded-[1.1rem] border border-black/8 bg-[#fafaf9] px-4 py-4"
-                            >
-                              <p className="text-sm font-semibold text-[#1f2328]">{item.name}</p>
-                              <div className="mt-2 flex items-center justify-between text-sm text-[#6e7379]">
-                                <span>Cantidad: {item.quantity}</span>
-                                <span className="font-semibold text-[#16384f]">
-                                  {formatCurrency(item.unitPrice)}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-black/8 pt-4 text-sm">
-                          <span className="text-[#6e7379]">
-                            {selectedOrder.totalItems} producto{selectedOrder.totalItems === 1 ? "" : "s"} + envío{" "}
-                            {formatCurrency(selectedOrder.shippingCost)}
-                          </span>
-                          <span className="text-lg font-semibold text-[var(--admin-accent)]">
-                            {formatCurrency(selectedOrder.subtotal + selectedOrder.shippingCost)}
-                          </span>
-                        </div>
-                      </div>
-                    </>
+                    ))
                   )}
                 </div>
+                <button
+                  type="button"
+                  aria-label="Ver más pedidos"
+                  onClick={() => orderCardsScrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
+                  className="absolute -right-3 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-white text-[#5d6167] shadow-[0_8px_18px_rgba(15,23,42,0.1)] hover:text-[var(--admin-accent)] md:flex"
+                >
+                  ›
+                </button>
               </div>
+
+              {!selectedOrder || !selectedOrderPreview ? (
+                <div className="rounded-[1.75rem] border border-dashed border-black/12 bg-white p-8 text-center text-sm leading-7 text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                  Selecciona un pedido para ver su detalle y actualizar su envío.
+                </div>
+              ) : (
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_360px]">
+                  <div className="space-y-6">
+                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h3 className="text-xl font-semibold text-[#16384f]">
+                            Pedido {formatOrderCode(selectedOrderPreview.orderNumber)}
+                          </h3>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${SHIPPING_STATUS_BADGE_CLASS[selectedOrderPreview.shippingStatus]}`}
+                          >
+                            {getShippingStatusLabel(selectedOrderPreview.shippingStatus)}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => window.print()}
+                          title="Imprimir pedido"
+                          aria-label="Imprimir pedido"
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 text-[#5d6167] transition-colors duration-200 hover:border-[var(--admin-accent)] hover:text-[var(--admin-accent)]"
+                        >
+                          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M6 9V3h12v6" />
+                            <rect x="4" y="9" width="16" height="8" rx="1.5" />
+                            <path d="M6 15h12v6H6z" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div className="mt-4 space-y-2 text-sm text-[#5d6167]">
+                        <p className="flex items-center gap-2.5">
+                          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="8" r="3.5" />
+                            <path d="M5 20c1.2-3.5 4-5.5 7-5.5s5.8 2 7 5.5" />
+                          </svg>
+                          {selectedOrderPreview.customerName}
+                        </p>
+                        <p className="flex items-center gap-2.5">
+                          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="5" width="18" height="14" rx="2" />
+                            <path d="m4 7 8 6 8-6" />
+                          </svg>
+                          {selectedOrderPreview.customerEmail}
+                        </p>
+                        <p className="flex items-center gap-2.5">
+                          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z" />
+                            <circle cx="12" cy="10" r="2.5" />
+                          </svg>
+                          {selectedOrderPreview.department}, {selectedOrderPreview.city} · {selectedOrderPreview.addressLine1}
+                          {selectedOrderPreview.addressLine2 ? ` · ${selectedOrderPreview.addressLine2}` : ""}
+                        </p>
+                        <p className="flex items-center gap-2.5">
+                          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="4.5" width="18" height="16" rx="2" />
+                            <path d="M3 9h18M8 3v3M16 3v3" />
+                          </svg>
+                          Creado: {new Date(selectedOrderPreview.createdAt).toLocaleString("es-CO")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
+                          Resumen del pedido
+                        </p>
+                        <span className="rounded-full bg-[#fafaf9] px-3 py-1 text-xs font-semibold text-[#16384f]">
+                          {selectedOrderPreview.totalItems} producto
+                          {selectedOrderPreview.totalItems === 1 ? "" : "s"}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 space-y-3">
+                        {selectedOrderPreview.items.map((item) => (
+                          <div
+                            key={`summary-${item.id}`}
+                            className="flex items-center gap-3 rounded-[1rem] border border-black/8 px-3 py-3"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="h-14 w-14 shrink-0 rounded-lg border border-black/8 object-contain"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-[#1f2328]">{item.name}</p>
+                              {item.variantSku && (
+                                <p className="mt-0.5 text-xs text-[#8b8d91]">Código: {item.variantSku}</p>
+                              )}
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className="text-xs text-[#8b8d91]">
+                                {item.quantity} × {formatCurrency(item.unitPrice)}
+                              </p>
+                              <p className="mt-0.5 text-sm font-semibold text-[var(--admin-accent)]">
+                                {formatCurrency(item.lineTotal)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-4 space-y-1.5 border-t border-black/8 pt-4 text-sm">
+                        <div className="flex items-center justify-between text-[#6e7379]">
+                          <span>Subtotal</span>
+                          <span>{formatCurrency(selectedOrderPreview.subtotal)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-[#6e7379]">
+                          <span>Envío</span>
+                          <span>{formatCurrency(selectedOrderPreview.shippingCost)}</span>
+                        </div>
+                        <div className="flex items-center justify-between pt-1 text-base font-semibold text-[#16384f]">
+                          <span>Total del pedido</span>
+                          <span>
+                            {formatCurrency(selectedOrderPreview.subtotal + selectedOrderPreview.shippingCost)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                      <AdminOrderProgress order={selectedOrderPreview} />
+                    </div>
+
+                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                      <label className="space-y-2">
+                        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
+                          Notas internas
+                        </span>
+                        <textarea
+                          name="adminNotes"
+                          value={orderForm.adminNotes}
+                          onChange={handleOrderFieldChange}
+                          rows={3}
+                          placeholder="Ej. Sale hoy en la tarde, cliente pidió entregar en portería..."
+                          className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={handleSaveOrder}
+                        disabled={isSavingOrder}
+                        className="inline-flex rounded-full bg-[#16384f] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#0f2a3b] disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {isSavingOrder ? "Guardando..." : "Actualizar pedido"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void loadOrders()}
+                        className="inline-flex rounded-full border border-black/10 px-6 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                      >
+                        Recargar pedidos
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
+                        Información logística
+                      </p>
+                      <div className="mt-4 space-y-4">
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-[#4f545a]">Estado de envío</span>
+                          <select
+                            name="shippingStatus"
+                            value={orderForm.shippingStatus}
+                            onChange={handleOrderFieldChange}
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-2.5 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                          >
+                            {shippingStatuses.map((status) => (
+                              <option key={status} value={status}>
+                                {getShippingStatusLabel(status)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-[#4f545a]">Transportadora</span>
+                          <input
+                            name="carrier"
+                            value={orderForm.carrier}
+                            onChange={handleOrderFieldChange}
+                            placeholder="Ej. Coordinadora, Servientrega..."
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-2.5 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                          />
+                        </label>
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-[#4f545a]">Número de guía</span>
+                          <input
+                            name="trackingNumber"
+                            value={orderForm.trackingNumber}
+                            onChange={handleOrderFieldChange}
+                            placeholder="Ej. 123456789"
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-2.5 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
+                        Estado de pago
+                      </p>
+                      <label className="mt-4 block space-y-1.5">
+                        <span className="text-sm font-medium text-[#4f545a]">Pago</span>
+                        <select
+                          name="paymentStatus"
+                          value={orderForm.paymentStatus}
+                          onChange={handleOrderFieldChange}
+                          className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-2.5 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                        >
+                          {paymentStatuses.map((status) => (
+                            <option key={status} value={status}>
+                              {getPaymentStatusLabel(status)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
+                        Historial del pedido
+                      </p>
+                      <ul className="mt-4 space-y-4">
+                        <li className="flex gap-3">
+                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[var(--admin-accent)]" />
+                          <div>
+                            <p className="text-xs text-[#8b8d91]">
+                              {new Date(selectedOrderPreview.createdAt).toLocaleString("es-CO")}
+                            </p>
+                            <p className="text-sm font-semibold text-[#1f2328]">Pedido creado</p>
+                            <p className="text-sm text-[#6e7379]">El pedido quedó registrado correctamente.</p>
+                          </div>
+                        </li>
+                        {selectedOrderPreview.shippedAt && (
+                          <li className="flex gap-3">
+                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[var(--admin-accent)]" />
+                            <div>
+                              <p className="text-xs text-[#8b8d91]">
+                                {new Date(selectedOrderPreview.shippedAt).toLocaleString("es-CO")}
+                              </p>
+                              <p className="text-sm font-semibold text-[#1f2328]">Pedido enviado</p>
+                            </div>
+                          </li>
+                        )}
+                        {selectedOrderPreview.deliveredAt && (
+                          <li className="flex gap-3">
+                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[var(--admin-accent)]" />
+                            <div>
+                              <p className="text-xs text-[#8b8d91]">
+                                {new Date(selectedOrderPreview.deliveredAt).toLocaleString("es-CO")}
+                              </p>
+                              <p className="text-sm font-semibold text-[#1f2328]">Pedido entregado</p>
+                            </div>
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
