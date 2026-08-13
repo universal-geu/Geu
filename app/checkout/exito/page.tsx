@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { formatOrderCode } from "@/lib/format-order";
-import { getOrderDivision } from "@/lib/orders";
+import { getOrderConfirmationSummary } from "@/lib/orders";
 import { DIVISION_BRAND } from "@/lib/divisions";
 import CauchosHeader from "../../components/cauchos-header";
 
@@ -11,7 +11,8 @@ export default async function CheckoutSuccessPage({
 }) {
   const params = await searchParams;
   const paymentConfirmed = params.pagado === "1";
-  const division = params.pedido ? (await getOrderDivision(params.pedido)) ?? "Cauchos" : "Cauchos";
+  const confirmationSummary = params.pedido ? await getOrderConfirmationSummary(params.pedido) : null;
+  const division = confirmationSummary?.division ?? "Cauchos";
   const brand = DIVISION_BRAND[division];
 
   return (
@@ -33,12 +34,14 @@ export default async function CheckoutSuccessPage({
             : "Tu pedido quedó guardado en la base de datos y ya aparece dentro de tu cuenta. El siguiente paso será conectar el pago con Wompi sobre esta misma orden."}
         </p>
 
-        {params.pedido && (
+        {confirmationSummary && (
           <div className="mt-8 rounded-[1.4rem] border border-black/8 bg-[#fafaf9] px-5 py-4">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
               Código de pedido
             </p>
-            <p className="mt-2 text-lg font-semibold text-[#16384f]">{formatOrderCode(params.pedido)}</p>
+            <p className="mt-2 text-lg font-semibold text-[#16384f]">
+              {formatOrderCode(confirmationSummary.orderNumber)}
+            </p>
           </div>
         )}
 

@@ -48,6 +48,7 @@ type FormState = {
 
 type PendingOrderState = {
   id: string;
+  orderNumber: number;
   totalItems: number;
   subtotal: number;
   shippingCost: number;
@@ -286,7 +287,7 @@ export default function CheckoutForm({
     const payload = (await response.json()) as {
       error?: string;
       message?: string;
-      order?: { id: string; totalItems: number; subtotal: number; shippingCost: number };
+      order?: { id: string; orderNumber: number; totalItems: number; subtotal: number; shippingCost: number };
     };
 
     setIsSubmitting(false);
@@ -373,7 +374,7 @@ export default function CheckoutForm({
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
                   Pedido
                 </p>
-                <p className="mt-2 text-sm font-semibold text-[#16384f]">{formatOrderCode(pendingOrder.id)}</p>
+                <p className="mt-2 text-sm font-semibold text-[#16384f]">{formatOrderCode(pendingOrder.orderNumber)}</p>
               </div>
               <div className="rounded-[1.2rem] border border-black/8 bg-[#fafaf9] px-4 py-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">

@@ -68,6 +68,7 @@ export async function POST(request: Request) {
     return Response.json({
       order: {
         id: order.id,
+        orderNumber: order.orderNumber,
         status: order.status,
         paymentStatus: order.paymentStatus,
         totalItems: order.totalItems,

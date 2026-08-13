@@ -24,6 +24,7 @@ type AccountUser = {
 
 type AccountOrder = {
   id: string;
+  orderNumber: number;
   status: "PENDING" | "PAID" | "CANCELLED";
   paymentStatus: "PENDING" | "PAID" | "FAILED";
   shippingStatus: "PENDING" | "PREPARING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
@@ -897,7 +898,7 @@ export default function AccountProfileForm({
                           Pedido
                         </p>
                         <h3 className="mt-2 text-lg font-semibold text-[#16384f] md:text-xl">
-                          {formatOrderCode(order.id)}
+                          {formatOrderCode(order.orderNumber)}
                         </h3>
                         <p className="mt-2 text-sm text-[#6e7379]">
                           {new Date(order.createdAt).toLocaleDateString("es-CO")} ·{" "}

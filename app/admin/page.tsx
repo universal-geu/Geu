@@ -319,6 +319,7 @@ type ToastState = {
 
 type AdminOrder = {
   id: string;
+  orderNumber: number;
   status: "PENDING" | "PAID" | "CANCELLED";
   paymentStatus: "PENDING" | "PAID" | "FAILED";
   shippingStatus: ShippingStatus;
@@ -4882,7 +4883,7 @@ export default function AdminPage() {
                                       {order.customerName}
                                     </p>
                                     <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#8b8d91]">
-                                      {formatOrderCode(order.id)}
+                                      {formatOrderCode(order.orderNumber)}
                                     </p>
                                     <p className="mt-2 text-xs text-[#6e7379]">
                                       {new Date(order.createdAt).toLocaleString("es-CO")}
@@ -5007,7 +5008,7 @@ export default function AdminPage() {
                           <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${selectedOrderId === order.id ? "text-white/72" : "text-[#8b8d91]"}`}>
                             Pedido
                           </p>
-                          <p className="mt-2 text-lg font-semibold">{formatOrderCode(order.id)}</p>
+                          <p className="mt-2 text-lg font-semibold">{formatOrderCode(order.orderNumber)}</p>
                           <p className={`mt-2 text-sm ${selectedOrderId === order.id ? "text-white/78" : "text-[#5d6167]"}`}>
                             {order.customerName} · {order.city}
                           </p>
@@ -5039,7 +5040,7 @@ export default function AdminPage() {
                               Pedido seleccionado
                             </p>
                             <h3 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                              {selectedOrderPreview.id}
+                              {formatOrderCode(selectedOrderPreview.orderNumber)}
                             </h3>
                             <p className="mt-3 text-sm leading-7 text-[#6e7379]">
                               {selectedOrderPreview.customerName} · {selectedOrderPreview.customerEmail} · {selectedOrderPreview.customerPhone}
@@ -5050,16 +5051,23 @@ export default function AdminPage() {
                             </p>
                           </div>
 
-                          <div className="flex flex-wrap gap-2">
-                            <span className="rounded-full bg-[#16384f] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white">
-                              {selectedOrderPreview.status}
-                            </span>
-                            <span className="rounded-full border border-[var(--admin-accent)]/18 bg-[var(--admin-accent-soft)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--admin-accent)]">
-                              {getPaymentStatusLabel(selectedOrderPreview.paymentStatus)}
-                            </span>
-                            <span className="rounded-full border border-[#1f8b45]/18 bg-[#effaf2] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#1f6b39]">
-                              {getShippingStatusLabel(selectedOrderPreview.shippingStatus)}
-                            </span>
+                          <div className="flex flex-wrap gap-4">
+                            <div>
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                                Pago
+                              </p>
+                              <span className="mt-1 inline-flex rounded-full border border-[var(--admin-accent)]/18 bg-[var(--admin-accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--admin-accent)]">
+                                {getPaymentStatusLabel(selectedOrderPreview.paymentStatus)}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                                Envío
+                              </p>
+                              <span className="mt-1 inline-flex rounded-full border border-[#1f8b45]/18 bg-[#effaf2] px-3 py-1 text-xs font-semibold text-[#1f6b39]">
+                                {getShippingStatusLabel(selectedOrderPreview.shippingStatus)}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
