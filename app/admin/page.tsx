@@ -1389,6 +1389,7 @@ export default function AdminPage() {
   const [siteImageLinks, setSiteImageLinks] = useState<Record<string, string>>({});
   const [savingLinkKey, setSavingLinkKey] = useState<string | null>(null);
   const [selectedImageGroup, setSelectedImageGroup] = useState<string | null>(null);
+  const [imageViewMode, setImageViewMode] = useState<"web" | "movil">("web");
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(null);
   const [savedImageKey, setSavedImageKey] = useState<string | null>(null);
@@ -5564,9 +5565,6 @@ export default function AdminPage() {
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
                     Sube o reemplaza las imágenes o videos del sitio público. JPG · PNG · WEBP · MP4 · WEBM · MOV · máx. 4 MB.
                   </p>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
-                    Las tarjetas con la insignia <span className="inline-flex items-center gap-1 rounded-full bg-[#16384f] px-2 py-0.5 text-[10px] font-bold text-white">📱 Móvil</span> son la versión que se ve en celulares. Si no subes una, se usa automáticamente la misma imagen de escritorio.
-                  </p>
                 </div>
                 <button
                   type="button"
@@ -5583,21 +5581,52 @@ export default function AdminPage() {
                 </p>
               )}
 
-              <p className="mb-8 text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
-                Editando · <span className="text-[#16384f]">{imageDivisionFilter}</span>
-              </p>
+              <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
+                  Editando · <span className="text-[#16384f]">{imageDivisionFilter}</span>
+                </p>
+                <div className="inline-flex rounded-full border border-black/10 bg-[#f5f5f4] p-1">
+                  {(
+                    [
+                      { mode: "web" as const, label: "Web" },
+                      { mode: "movil" as const, label: "📱 Móvil" },
+                    ]
+                  ).map((tab) => (
+                    <button
+                      key={tab.mode}
+                      type="button"
+                      onClick={() => {
+                        setImageViewMode(tab.mode);
+                        setSelectedImageGroup(null);
+                      }}
+                      className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
+                        imageViewMode === tab.mode
+                          ? "bg-[#16384f] text-white shadow-sm"
+                          : "text-[#6e7379] hover:text-[#16384f]"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-              {isLoadingImages ? (
+              {imageViewMode === "movil" && (
+                <p className="-mt-4 mb-8 max-w-2xl text-sm leading-6 text-[#6e7379]">
+                  Estas son las imágenes que se ven en celulares para los banners anchos. Si dejas alguna sin subir, se usa automáticamente su versión de escritorio.
+                </p>
+              )}
+
+              {(() => {
+                const isMobileTab = imageViewMode === "movil";
+                return isLoadingImages ? (
                 <p className="text-sm text-[#6e7379]">Cargando imágenes...</p>
               ) : !selectedImageGroup ? (
                 (() => {
-                  const divisionGroups = Array.from(
-                    new Set(
-                      IMAGE_SLOTS.filter((slot) => slot.division === imageDivisionFilter).map(
-                        (slot) => slot.group,
-                      ),
-                    ),
+                  const divisionSlots = IMAGE_SLOTS.filter(
+                    (slot) => slot.division === imageDivisionFilter && Boolean(slot.isMobile) === isMobileTab,
                   );
+                  const divisionGroups = Array.from(new Set(divisionSlots.map((slot) => slot.group)));
                   const sections = [
                     ...IMAGE_GROUP_SECTIONS.map((section) => ({
                       label: section.label,
@@ -5611,6 +5640,14 @@ export default function AdminPage() {
                     },
                   ].filter((section) => section.groups.length > 0);
 
+                  if (isMobileTab && sections.length === 0) {
+                    return (
+                      <p className="rounded-[1.2rem] border border-dashed border-black/12 bg-[#fafaf9] px-6 py-10 text-center text-sm text-[#6e7379]">
+                        Esta división todavía no tiene banners con versión móvil.
+                      </p>
+                    );
+                  }
+
                   return (
                     <div className="space-y-10">
                       {sections.map((section) => (
@@ -5620,9 +5657,7 @@ export default function AdminPage() {
                           </h3>
                           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                             {section.groups.map((group) => {
-                              const groupSlots = IMAGE_SLOTS.filter(
-                                (slot) => slot.group === group && slot.division === imageDivisionFilter,
-                              );
+                              const groupSlots = divisionSlots.filter((slot) => slot.group === group);
                               const previewSrc = siteImages[groupSlots[0]?.key] ?? groupSlots[0]?.defaultSrc;
                               const hasPreview = Boolean(previewSrc) && !isVideoUrl(previewSrc ?? "");
 
@@ -5688,11 +5723,17 @@ export default function AdminPage() {
                     </h3>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {IMAGE_SLOTS.filter(
-                        (slot) => slot.group === selectedImageGroup && slot.division === imageDivisionFilter,
+                        (slot) =>
+                          slot.group === selectedImageGroup &&
+                          slot.division === imageDivisionFilter &&
+                          Boolean(slot.isMobile) === isMobileTab,
                       ).map((slot) => {
                         const currentSrc = siteImages[slot.key] ?? slot.defaultSrc;
                         const isUploading = uploadingImageKey === slot.key;
                         const isSaved = savedImageKey === slot.key;
+                        const slotLabel = isMobileTab
+                          ? slot.label.replace(/\s*\(versión móvil\)\s*$/i, "")
+                          : slot.label;
                         return (
                           <div
                             key={slot.key}
@@ -5715,7 +5756,7 @@ export default function AdminPage() {
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                   src={currentSrc}
-                                  alt={slot.label}
+                                  alt={slotLabel}
                                   className="absolute inset-0 h-full w-full object-contain"
                                 />
                               )}
@@ -5739,15 +5780,10 @@ export default function AdminPage() {
                                   </div>
                                 </div>
                               )}
-                              {slot.isMobile && (
-                                <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#16384f] px-2 py-1 text-[10px] font-bold text-white shadow-sm">
-                                  📱 Móvil
-                                </span>
-                              )}
                             </div>
                             <div className="p-3">
                               <p className="truncate text-xs font-semibold text-[#1f2328]">
-                                {slot.label}
+                                {slotLabel}
                               </p>
                               <p className="mt-1 text-[10px] font-semibold text-[#8b8d91]">
                                 {slot.dims}
@@ -5804,7 +5840,8 @@ export default function AdminPage() {
                     </div>
                   </div>
                 </div>
-              )}
+                );
+              })()}
             </div>
           )}
 
