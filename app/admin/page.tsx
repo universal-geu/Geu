@@ -1443,6 +1443,17 @@ export default function AdminPage() {
   const [isLoadingVersions, setIsLoadingVersions] = useState(false);
   const [restoringVersionId, setRestoringVersionId] = useState<string | null>(null);
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (window.localStorage.getItem("geu-admin-sidebar-collapsed") === "1") {
+      setIsSidebarCollapsed(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("geu-admin-sidebar-collapsed", isSidebarCollapsed ? "1" : "0");
+  }, [isSidebarCollapsed]);
   const [settingsSection, setSettingsSection] = useState<
     "images" | "texts" | "colors" | "whatsapp" | "salesMode" | null
   >(null);
@@ -3253,8 +3264,34 @@ export default function AdminPage() {
       )}
 
       <div className="flex min-h-screen">
-        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
-          <Link href={adminBrand.siteHref} className="flex items-center gap-3 border-b border-slate-200 px-5 py-5">
+        <button
+          type="button"
+          onClick={() => setIsSidebarCollapsed((value) => !value)}
+          aria-label={isSidebarCollapsed ? "Mostrar menú" : "Ocultar menú"}
+          className={`fixed top-5 z-[60] hidden h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-[0_6px_16px_rgba(15,23,42,0.12)] transition-all duration-300 hover:border-[var(--admin-accent)] hover:text-[var(--admin-accent)] md:flex ${
+            isSidebarCollapsed ? "left-3" : "left-[236px]"
+          }`}
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className={`h-4 w-4 transition-transform duration-300 ${isSidebarCollapsed ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m14 6-6 6 6 6" />
+          </svg>
+        </button>
+
+        <aside
+          className={`sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden border-slate-200 bg-white transition-all duration-300 md:flex ${
+            isSidebarCollapsed ? "w-0 border-r-0" : "w-64 border-r"
+          }`}
+        >
+          <Link href={adminBrand.siteHref} className="flex w-64 items-center gap-3 border-b border-slate-200 px-5 py-5">
             <span
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]"
               style={{ backgroundColor: adminBrand.accent }}
@@ -3267,7 +3304,7 @@ export default function AdminPage() {
             </span>
           </Link>
 
-          <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <nav className="w-64 flex-1 overflow-y-auto px-3 py-4">
             <ul className="space-y-1">
               {sidebarNavItems.map((item) => {
                 const Icon = SIDEBAR_ICONS[item.key];
@@ -3366,7 +3403,7 @@ export default function AdminPage() {
             </ul>
           </nav>
 
-          <div className="border-t border-slate-200 p-3">
+          <div className="w-64 border-t border-slate-200 p-3">
             <button
               type="button"
               onClick={handleLogout}
