@@ -151,14 +151,24 @@ export default async function ImportPage() {
                 className="absolute inset-0 h-full w-full object-cover object-center"
               />
             ) : (
-              <Image
-                src={resolveImage("import-principal", siteImages)}
-                alt="GEU Import conecta proveedores y mercados internacionales"
-                fill
-                priority
-                sizes="(min-width: 1632px) 1632px, 100vw"
-                className="object-cover object-center"
-              />
+              <>
+                <Image
+                  src={resolveImage("import-principal-movil", siteImages)}
+                  alt="GEU Import conecta proveedores y mercados internacionales"
+                  fill
+                  priority
+                  sizes="100vw"
+                  className="block object-cover object-center md:hidden"
+                />
+                <Image
+                  src={resolveImage("import-principal", siteImages)}
+                  alt="GEU Import conecta proveedores y mercados internacionales"
+                  fill
+                  priority
+                  sizes="(min-width: 1632px) 1632px, 100vw"
+                  className="hidden object-cover object-center md:block"
+                />
+              </>
             )}
           </div>
         </div>
@@ -314,6 +324,7 @@ export default async function ImportPage() {
 
       <BrandClosingBanner
         imageKey="import-cierre"
+        mobileImageKey="import-cierre-movil"
         alt="Cierre GEU Import"
         siteImages={siteImages}
         maxWidth="1632px"

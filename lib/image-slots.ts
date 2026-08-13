@@ -5,10 +5,13 @@ export type ImageSlot = {
   division: "Cauchos" | "Import" | "Innovation" | "Plastic" | "Energy";
   defaultSrc: string;
   dims: string;
+  /** True for the mobile-only counterpart of a wide banner slot (same content, taller crop for small screens). */
+  isMobile?: boolean;
 };
 
 export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "banner-principal", label: "Banner principal", group: "Página de inicio", division: "Cauchos", defaultSrc: "/banner-geu-universal-de-cauchos.jpg", dims: "2048 × 768 px" },
+  { key: "banner-principal-movil", label: "Banner principal (versión móvil)", group: "Página de inicio", division: "Cauchos", defaultSrc: "/banner-geu-universal-de-cauchos.jpg", dims: "1024 × 1024 px", isMobile: true },
   { key: "banner-marcas-promo", label: "Promociones y marcas", group: "Página de inicio", division: "Cauchos", defaultSrc: "/banner-universal-cauchos-new.jpg", dims: "2048 × 768 px" },
   { key: "oferta-cauchos-productos", label: "Oferta 1 · Productos de caucho", group: "Ofertas", division: "Cauchos", defaultSrc: "/offer-productos-caucho.png", dims: "1024 × 1792 px" },
   { key: "oferta-cauchos-industriales", label: "Oferta 2 · Cauchos industriales", group: "Ofertas", division: "Cauchos", defaultSrc: "/offer-cauchos-industriales.png", dims: "1024 × 1792 px" },
@@ -23,6 +26,7 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "cauchos-nosotros-destacada-3", label: "Nosotros · Destacada 3", group: "Nosotros", division: "Cauchos", defaultSrc: "/cauchos-nosotros-galeria-3.jpg", dims: "900 × 675 px" },
   { key: "cauchos-nosotros-destacada-4", label: "Nosotros · Destacada 4", group: "Nosotros", division: "Cauchos", defaultSrc: "/cauchos-nosotros-galeria-4.jpg", dims: "900 × 675 px" },
   { key: "banner-categorias", label: "Banner de categorías", group: "Página de categorías", division: "Cauchos", defaultSrc: "/cauchos-category-banner.jpg", dims: "1920 × 217 px" },
+  { key: "banner-categorias-movil", label: "Banner de categorías (versión móvil)", group: "Página de categorías", division: "Cauchos", defaultSrc: "/cauchos-category-banner.jpg", dims: "800 × 360 px", isMobile: true },
   { key: "categoria-alimentos", label: "Categoría · Alimentos, Farmacéuticos y cosméticos", group: "Categorías", division: "Cauchos", defaultSrc: "/subcategorias/alimentos.jpg", dims: "600 × 600 px" },
   { key: "categoria-agroindustria", label: "Categoría · Agroindustria", group: "Categorías", division: "Cauchos", defaultSrc: "/subcategorias/agroindustria.jpg", dims: "600 × 600 px" },
   { key: "categoria-petroleo", label: "Categoría · Petróleo, minería, gas, energías renovables y petroquímica", group: "Categorías", division: "Cauchos", defaultSrc: "/subcategorias/petroleo.jpg", dims: "600 × 600 px" },
@@ -58,8 +62,10 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "subcategoria-ferreteria", label: "Subcategoría · Ferretería", group: "Subcategorías (menú)", division: "Cauchos", defaultSrc: "/subcategorias/ferreteria.jpg", dims: "600 × 600 px" },
   { key: "subcategoria-otros", label: "Subcategoría · Otros", group: "Subcategorías (menú)", division: "Cauchos", defaultSrc: "/subcategorias/otros.jpg", dims: "600 × 600 px" },
   { key: "import-principal", label: "Import · Banner principal", group: "Página de inicio", division: "Import", defaultSrc: "/geu-import-main-banner.png", dims: "1632 × 612 px" },
+  { key: "import-principal-movil", label: "Import · Banner principal (versión móvil)", group: "Página de inicio", division: "Import", defaultSrc: "/geu-import-main-banner.png", dims: "1024 × 1024 px", isMobile: true },
   { key: "import-marcas-promo", label: "Import · Promociones y marcas", group: "Página de inicio", division: "Import", defaultSrc: "/geu-import-main-banner.png", dims: "2048 × 768 px" },
   { key: "import-cierre", label: "Import · Banner de cierre", group: "Página de inicio", division: "Import", defaultSrc: "/geu-import-main-banner.png", dims: "1920 × 217 px" },
+  { key: "import-cierre-movil", label: "Import · Banner de cierre (versión móvil)", group: "Página de inicio", division: "Import", defaultSrc: "/geu-import-main-banner.png", dims: "800 × 360 px", isMobile: true },
   { key: "import-oferta-1", label: "Import · Oferta 1", group: "Ofertas", division: "Import", defaultSrc: "/geu-import-main-banner.png", dims: "1024 × 1792 px" },
   { key: "import-oferta-2", label: "Import · Oferta 2", group: "Ofertas", division: "Import", defaultSrc: "/home-import.png", dims: "1024 × 1792 px" },
   { key: "import-oferta-3", label: "Import · Oferta 3", group: "Ofertas", division: "Import", defaultSrc: "/import-hero-banner.png", dims: "1024 × 1792 px" },
@@ -95,11 +101,13 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "innovation-destacada-2", label: "Innovation · Destacada 2", group: "Innovation", division: "Innovation", defaultSrc: "/innovation-destacada-2.jpg", dims: "1792 × 1024 px" },
   { key: "innovation-destacada-3", label: "Innovation · Destacada 3", group: "Innovation", division: "Innovation", defaultSrc: "/innovation-destacada-3.jpg", dims: "1792 × 1024 px" },
   { key: "innovation-destacada-4", label: "Innovation · Destacada 4", group: "Innovation", division: "Innovation", defaultSrc: "/innovation-destacada-4.jpg", dims: "1792 × 1024 px" },
-  { key: "innovation-cierre", label: "Innovation · Banner de cierre", group: "Innovation", division: "Innovation", defaultSrc: "/home-innovation.png", dims: "1920 × 217 px" },
   { key: "plastic-principal", label: "Plastic · Banner principal", group: "Página de inicio", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.png", dims: "1632 × 612 px" },
+  { key: "plastic-principal-movil", label: "Plastic · Banner principal (versión móvil)", group: "Página de inicio", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.png", dims: "1024 × 1024 px", isMobile: true },
   { key: "plastic-marcas-promo", label: "Plastic · Promociones y marcas", group: "Página de inicio", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.png", dims: "2048 × 768 px" },
   { key: "plastic-cierre", label: "Plastic · Banner de cierre", group: "Página de inicio", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.png", dims: "1920 × 217 px" },
+  { key: "plastic-cierre-movil", label: "Plastic · Banner de cierre (versión móvil)", group: "Página de inicio", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.png", dims: "800 × 360 px", isMobile: true },
   { key: "plastic-banner-categorias", label: "Banner de categorías", group: "Página de categorías", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.png", dims: "1920 × 217 px" },
+  { key: "plastic-banner-categorias-movil", label: "Banner de categorías (versión móvil)", group: "Página de categorías", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.png", dims: "800 × 360 px", isMobile: true },
   { key: "plastic-oferta-1", label: "Plastic · Oferta 1", group: "Ofertas", division: "Plastic", defaultSrc: "/plastic-oferta-1.jpg", dims: "1024 × 1792 px" },
   { key: "plastic-oferta-2", label: "Plastic · Oferta 2", group: "Ofertas", division: "Plastic", defaultSrc: "/plastic-oferta-2.jpg", dims: "1024 × 1792 px" },
   { key: "plastic-oferta-3", label: "Plastic · Oferta 3", group: "Ofertas", division: "Plastic", defaultSrc: "/plastic-oferta-3.jpg", dims: "1024 × 1792 px" },
@@ -129,7 +137,6 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "energy-destacada-2", label: "Energy · Destacada 2", group: "Energy", division: "Energy", defaultSrc: "/geu-energy-wind-field.png", dims: "1792 × 1024 px" },
   { key: "energy-destacada-3", label: "Energy · Destacada 3", group: "Energy", division: "Energy", defaultSrc: "/geu-energy-engineering.png", dims: "1792 × 1024 px" },
   { key: "energy-destacada-4", label: "Energy · Destacada 4", group: "Energy", division: "Energy", defaultSrc: "/geu-energy-impact.png", dims: "1792 × 1024 px" },
-  { key: "energy-cierre", label: "Energy · Banner de cierre", group: "Energy", division: "Energy", defaultSrc: "/geu-energy-gus-home.png", dims: "1920 × 217 px" },
 ];
 
 export type SiteImages = Record<string, string>;

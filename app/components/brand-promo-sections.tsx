@@ -37,6 +37,7 @@ type FeaturedSectionProps = {
 
 type ClosingBannerProps = {
   imageKey: string;
+  mobileImageKey?: string;
   alt: string;
   siteImages: SiteImages;
   maxWidth?: string;
@@ -167,19 +168,28 @@ export function BrandFeaturedSection({
   );
 }
 
-export function BrandClosingBanner({ imageKey, alt, siteImages, maxWidth = "1500px" }: ClosingBannerProps) {
+export function BrandClosingBanner({ imageKey, mobileImageKey, alt, siteImages, maxWidth = "1500px" }: ClosingBannerProps) {
   return (
     <section className="bg-white px-5 py-8 md:px-8">
       <div
         className="mx-auto overflow-hidden rounded-[8px] border border-slate-200 shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
         style={{ maxWidth }}
       >
+        {mobileImageKey && (
+          <Image
+            src={resolveImage(mobileImageKey, siteImages)}
+            alt={alt}
+            width={800}
+            height={360}
+            className="block h-[220px] w-full object-cover sm:h-[260px] md:hidden"
+          />
+        )}
         <Image
           src={resolveImage(imageKey, siteImages)}
           alt={alt}
           width={1920}
           height={217}
-          className="h-[118px] w-full object-cover md:h-[150px]"
+          className={`w-full object-cover ${mobileImageKey ? "hidden md:block md:h-[150px]" : "h-[118px] md:h-[150px]"}`}
         />
       </div>
     </section>

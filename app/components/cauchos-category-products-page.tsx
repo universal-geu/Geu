@@ -38,6 +38,12 @@ const CATEGORY_BANNER_IMAGE_KEY: Partial<Record<DivisionName, string>> = {
   Plastic: "plastic-banner-categorias",
 };
 
+const CATEGORY_BANNER_MOBILE_IMAGE_KEY: Partial<Record<DivisionName, string>> = {
+  Cauchos: "banner-categorias-movil",
+  Import: "import-cierre-movil",
+  Plastic: "plastic-banner-categorias-movil",
+};
+
 export const FALLBACK_PRODUCT_IMAGE: Record<DivisionName, string> = {
   Cauchos: "/home-cauchos.png",
   Import: "/home-import.png",
@@ -293,9 +299,11 @@ export default function CauchosCategoryProductsPage({
   );
 
   const bannerImageKey = CATEGORY_BANNER_IMAGE_KEY[division];
+  const bannerMobileImageKey = CATEGORY_BANNER_MOBILE_IMAGE_KEY[division];
   const banner = bannerImageKey
     ? { src: resolveImage(bannerImageKey, siteImages), alt: CATEGORY_BANNER[division].alt }
     : CATEGORY_BANNER[division];
+  const bannerMobileSrc = bannerMobileImageKey ? resolveImage(bannerMobileImageKey, siteImages) : null;
   const fallbackProductImage = FALLBACK_PRODUCT_IMAGE[division];
 
   return (
@@ -307,12 +315,22 @@ export default function CauchosCategoryProductsPage({
 
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-[1632px] overflow-hidden rounded-[8px] px-5 pb-3 pt-5 md:px-8">
+          {bannerMobileSrc && (
+            <Image
+              src={bannerMobileSrc}
+              alt={banner.alt}
+              width={800}
+              height={360}
+              className="block h-[220px] w-full rounded-[8px] object-cover sm:h-[260px] md:hidden"
+              priority
+            />
+          )}
           <Image
             src={banner.src}
             alt={banner.alt}
             width={1920}
             height={217}
-            className="h-[118px] w-full rounded-[8px] object-cover md:h-[150px]"
+            className={`w-full rounded-[8px] object-cover ${bannerMobileSrc ? "hidden md:block md:h-[150px]" : "h-[118px] md:h-[150px]"}`}
             priority
           />
         </div>
