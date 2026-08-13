@@ -4923,18 +4923,6 @@ export default function AdminPage() {
               <div className="grid gap-8 xl:grid-cols-[360px_minmax(0,1fr)]">
                 <aside className="space-y-5">
                   <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
-                      Pedidos
-                    </p>
-                    <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                      Gestión de envíos
-                    </h2>
-                    <p className="mt-3 text-sm leading-7 text-[#6e7379]">
-                      Aquí controlas el estado logístico del pedido, la transportadora y el número de guía que verá el cliente.
-                    </p>
-                  </div>
-
-                  <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
                     <label className="space-y-2">
                       <span className="text-sm font-medium text-[#4f545a]">
                         Buscar por pedido, cliente o guía
