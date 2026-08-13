@@ -99,6 +99,7 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "plastic-principal", label: "Plastic · Banner principal", group: "Página de inicio", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.png", dims: "1632 × 612 px" },
   { key: "plastic-marcas-promo", label: "Plastic · Promociones y marcas", group: "Página de inicio", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.png", dims: "2048 × 768 px" },
   { key: "plastic-cierre", label: "Plastic · Banner de cierre", group: "Página de inicio", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.png", dims: "1920 × 217 px" },
+  { key: "plastic-banner-categorias", label: "Banner de categorías", group: "Página de categorías", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.png", dims: "1920 × 217 px" },
   { key: "plastic-oferta-1", label: "Plastic · Oferta 1", group: "Ofertas", division: "Plastic", defaultSrc: "/plastic-oferta-1.jpg", dims: "1024 × 1792 px" },
   { key: "plastic-oferta-2", label: "Plastic · Oferta 2", group: "Ofertas", division: "Plastic", defaultSrc: "/plastic-oferta-2.jpg", dims: "1024 × 1792 px" },
   { key: "plastic-oferta-3", label: "Plastic · Oferta 3", group: "Ofertas", division: "Plastic", defaultSrc: "/plastic-oferta-3.jpg", dims: "1024 × 1792 px" },

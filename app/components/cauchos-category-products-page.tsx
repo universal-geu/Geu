@@ -32,6 +32,12 @@ const CATEGORY_BANNER: Record<DivisionName, { src: string; alt: string }> = {
   Plastic: { src: "/geu-plastic-main-banner.png", alt: "GEU Plastic" },
 };
 
+const CATEGORY_BANNER_IMAGE_KEY: Partial<Record<DivisionName, string>> = {
+  Cauchos: "banner-categorias",
+  Import: "import-cierre",
+  Plastic: "plastic-banner-categorias",
+};
+
 export const FALLBACK_PRODUCT_IMAGE: Record<DivisionName, string> = {
   Cauchos: "/home-cauchos.png",
   Import: "/home-import.png",
@@ -286,10 +292,10 @@ export default function CauchosCategoryProductsPage({
     </label>
   );
 
-  const banner =
-    division === "Import"
-      ? { src: resolveImage("import-cierre", siteImages), alt: "GEU Import" }
-      : CATEGORY_BANNER[division];
+  const bannerImageKey = CATEGORY_BANNER_IMAGE_KEY[division];
+  const banner = bannerImageKey
+    ? { src: resolveImage(bannerImageKey, siteImages), alt: CATEGORY_BANNER[division].alt }
+    : CATEGORY_BANNER[division];
   const fallbackProductImage = FALLBACK_PRODUCT_IMAGE[division];
 
   return (
