@@ -393,6 +393,8 @@ export const ModelName = {
   InventoryMovement: 'InventoryMovement',
   SiteImage: 'SiteImage',
   SiteSetting: 'SiteSetting',
+  SiteContentDraft: 'SiteContentDraft',
+  SiteContentVersion: 'SiteContentVersion',
   Quote: 'Quote'
 } as const
 
@@ -409,7 +411,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "product" | "productVariant" | "user" | "cartItem" | "order" | "orderItem" | "inventoryMovement" | "siteImage" | "siteSetting" | "quote"
+    modelProps: "product" | "productVariant" | "user" | "cartItem" | "order" | "orderItem" | "inventoryMovement" | "siteImage" | "siteSetting" | "siteContentDraft" | "siteContentVersion" | "quote"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1079,6 +1081,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    SiteContentDraft: {
+      payload: Prisma.$SiteContentDraftPayload<ExtArgs>
+      fields: Prisma.SiteContentDraftFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SiteContentDraftFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentDraftPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SiteContentDraftFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentDraftPayload>
+        }
+        findFirst: {
+          args: Prisma.SiteContentDraftFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentDraftPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SiteContentDraftFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentDraftPayload>
+        }
+        findMany: {
+          args: Prisma.SiteContentDraftFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentDraftPayload>[]
+        }
+        create: {
+          args: Prisma.SiteContentDraftCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentDraftPayload>
+        }
+        createMany: {
+          args: Prisma.SiteContentDraftCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SiteContentDraftCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentDraftPayload>[]
+        }
+        delete: {
+          args: Prisma.SiteContentDraftDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentDraftPayload>
+        }
+        update: {
+          args: Prisma.SiteContentDraftUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentDraftPayload>
+        }
+        deleteMany: {
+          args: Prisma.SiteContentDraftDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SiteContentDraftUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SiteContentDraftUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentDraftPayload>[]
+        }
+        upsert: {
+          args: Prisma.SiteContentDraftUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentDraftPayload>
+        }
+        aggregate: {
+          args: Prisma.SiteContentDraftAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSiteContentDraft>
+        }
+        groupBy: {
+          args: Prisma.SiteContentDraftGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteContentDraftGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SiteContentDraftCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteContentDraftCountAggregateOutputType> | number
+        }
+      }
+    }
+    SiteContentVersion: {
+      payload: Prisma.$SiteContentVersionPayload<ExtArgs>
+      fields: Prisma.SiteContentVersionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SiteContentVersionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentVersionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SiteContentVersionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentVersionPayload>
+        }
+        findFirst: {
+          args: Prisma.SiteContentVersionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentVersionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SiteContentVersionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentVersionPayload>
+        }
+        findMany: {
+          args: Prisma.SiteContentVersionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentVersionPayload>[]
+        }
+        create: {
+          args: Prisma.SiteContentVersionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentVersionPayload>
+        }
+        createMany: {
+          args: Prisma.SiteContentVersionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SiteContentVersionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentVersionPayload>[]
+        }
+        delete: {
+          args: Prisma.SiteContentVersionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentVersionPayload>
+        }
+        update: {
+          args: Prisma.SiteContentVersionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentVersionPayload>
+        }
+        deleteMany: {
+          args: Prisma.SiteContentVersionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SiteContentVersionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SiteContentVersionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentVersionPayload>[]
+        }
+        upsert: {
+          args: Prisma.SiteContentVersionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteContentVersionPayload>
+        }
+        aggregate: {
+          args: Prisma.SiteContentVersionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSiteContentVersion>
+        }
+        groupBy: {
+          args: Prisma.SiteContentVersionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteContentVersionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SiteContentVersionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteContentVersionCountAggregateOutputType> | number
+        }
+      }
+    }
     Quote: {
       payload: Prisma.$QuotePayload<ExtArgs>
       fields: Prisma.QuoteFieldRefs
@@ -1361,6 +1511,31 @@ export const SiteSettingScalarFieldEnum = {
 export type SiteSettingScalarFieldEnum = (typeof SiteSettingScalarFieldEnum)[keyof typeof SiteSettingScalarFieldEnum]
 
 
+export const SiteContentDraftScalarFieldEnum = {
+  key: 'key',
+  kind: 'kind',
+  division: 'division',
+  value: 'value',
+  link: 'link',
+  updatedAt: 'updatedAt',
+  updatedBy: 'updatedBy'
+} as const
+
+export type SiteContentDraftScalarFieldEnum = (typeof SiteContentDraftScalarFieldEnum)[keyof typeof SiteContentDraftScalarFieldEnum]
+
+
+export const SiteContentVersionScalarFieldEnum = {
+  id: 'id',
+  createdAt: 'createdAt',
+  createdBy: 'createdBy',
+  division: 'division',
+  label: 'label',
+  snapshot: 'snapshot'
+} as const
+
+export type SiteContentVersionScalarFieldEnum = (typeof SiteContentVersionScalarFieldEnum)[keyof typeof SiteContentVersionScalarFieldEnum]
+
+
 export const QuoteScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -1397,6 +1572,13 @@ export const NullableJsonNullValueInput = {
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -1708,6 +1890,8 @@ export type GlobalOmitConfig = {
   inventoryMovement?: Prisma.InventoryMovementOmit
   siteImage?: Prisma.SiteImageOmit
   siteSetting?: Prisma.SiteSettingOmit
+  siteContentDraft?: Prisma.SiteContentDraftOmit
+  siteContentVersion?: Prisma.SiteContentVersionOmit
   quote?: Prisma.QuoteOmit
 }
 

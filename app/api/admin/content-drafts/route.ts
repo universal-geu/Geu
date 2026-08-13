@@ -1,0 +1,86 @@
+import { requireAdminUser } from "@/lib/admin";
+import { prisma } from "@/lib/prisma";
+import { IMAGE_SLOTS } from "@/lib/image-slots";
+import { TEXT_SLOTS } from "@/lib/text-slots";
+
+export async function GET() {
+  try {
+    await requireAdminUser();
+    if (!prisma) return Response.json({ drafts: [] });
+    const drafts = await prisma.siteContentDraft.findMany();
+    return Response.json({ drafts });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Error";
+    return Response.json({ error: msg }, { status: msg === "UNAUTHORIZED" || msg === "FORBIDDEN" ? 401 : 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const admin = await requireAdminUser();
+    if (!prisma) return Response.json({ error: "BD no disponible." }, { status: 503 });
+
+    const body = (await request.json()) as {
+      key?: string;
+      kind?: "image" | "text";
+      value?: string;
+      link?: string;
+    };
+    if (!body.key || !body.kind) {
+      return Response.json({ error: "key y kind son requeridos." }, { status: 400 });
+    }
+
+    if (body.kind === "image") {
+      const slot = IMAGE_SLOTS.find((s) => s.key === body.key);
+      if (!slot) return Response.json({ error: "key no válida." }, { status: 400 });
+      if (slot.division !== admin.division) {
+        return Response.json({ error: "No autorizado para esta división." }, { status: 403 });
+      }
+
+      const existing = await prisma.siteContentDraft.findUnique({ where: { key: body.key } });
+      const value = body.value ?? existing?.value ?? slot.defaultSrc;
+      const link = body.link !== undefined ? body.link.trim() || null : (existing?.link ?? null);
+
+      const draft = await prisma.siteContentDraft.upsert({
+        where: { key: body.key },
+        update: { value, link, updatedBy: admin.fullName },
+        create: {
+          key: body.key,
+          kind: "image",
+          division: slot.division,
+          value,
+          link,
+          updatedBy: admin.fullName,
+        },
+      });
+      return Response.json({ draft });
+    }
+
+    if (body.kind === "text") {
+      const slot = TEXT_SLOTS.find((s) => s.key === body.key);
+      if (!slot) return Response.json({ error: "key no válida." }, { status: 400 });
+      if (slot.division !== admin.division && slot.division !== "Global") {
+        return Response.json({ error: "No autorizado para esta división." }, { status: 403 });
+      }
+
+      const value = (body.value ?? "").trim();
+      const draft = await prisma.siteContentDraft.upsert({
+        where: { key: body.key },
+        update: { value, updatedBy: admin.fullName },
+        create: {
+          key: body.key,
+          kind: "text",
+          division: slot.division,
+          value,
+          updatedBy: admin.fullName,
+        },
+      });
+      return Response.json({ draft });
+    }
+
+    return Response.json({ error: "kind no válido." }, { status: 400 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Error";
+    return Response.json({ error: msg }, { status: msg === "UNAUTHORIZED" || msg === "FORBIDDEN" ? 401 : 500 });
+  }
+}

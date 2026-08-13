@@ -1407,6 +1407,18 @@ export default function AdminPage() {
   const [savingTextKey, setSavingTextKey] = useState<string | null>(null);
   const [savedTextKey, setSavedTextKey] = useState<string | null>(null);
   const [selectedTextGroup, setSelectedTextGroup] = useState<string | null>(null);
+  const [contentDrafts, setContentDrafts] = useState<
+    Record<string, { kind: "image" | "text"; division: string; value: string; link: string | null }>
+  >({});
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [publishNotice, setPublishNotice] = useState<string | null>(null);
+  const [contentVersions, setContentVersions] = useState<
+    { id: string; createdAt: string; createdBy: string | null; label: string | null; changedCount: number }[]
+  >([]);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isLoadingVersions, setIsLoadingVersions] = useState(false);
+  const [restoringVersionId, setRestoringVersionId] = useState<string | null>(null);
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<"images" | "texts" | "whatsapp" | "salesMode" | null>(null);
   const [editSearch, setEditSearch] = useState("");
@@ -2399,6 +2411,126 @@ export default function AdminPage() {
     void loadSalesReport();
   };
 
+  const loadContentDrafts = async () => {
+    try {
+      const response = await fetch("/api/admin/content-drafts");
+      const payload = (await response.json()) as {
+        drafts?: { key: string; kind: string; division: string; value: string; link: string | null }[];
+        error?: string;
+      };
+      if (!response.ok || !payload.drafts) return;
+      setContentDrafts(
+        Object.fromEntries(
+          payload.drafts.map((d) => [
+            d.key,
+            { kind: d.kind as "image" | "text", division: d.division, value: d.value, link: d.link },
+          ]),
+        ),
+      );
+    } catch {
+      // Non-fatal: the panel still works with live data if drafts fail to load.
+    }
+  };
+
+  const myContentDrafts = Object.entries(contentDrafts).filter(
+    ([, draft]) => draft.division === adminDivision || draft.division === "Global",
+  );
+
+  useEffect(() => {
+    if (myContentDrafts.length === 0) return;
+    const handler = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [myContentDrafts.length]);
+
+  const resolveAdminImageSrc = (key: string, fallback: string) => {
+    const draft = contentDrafts[key];
+    if (draft?.kind === "image") return draft.value;
+    return siteImages[key] ?? fallback;
+  };
+
+  const resolveAdminImageLink = (key: string) => {
+    const draft = contentDrafts[key];
+    if (draft?.kind === "image") return draft.link ?? "";
+    return siteImageLinks[key] ?? "";
+  };
+
+  const resolveAdminText = (key: string, fallback: string) => {
+    const draft = contentDrafts[key];
+    if (draft?.kind === "text") return draft.value;
+    return siteTextsAdmin[key] ?? fallback;
+  };
+
+  const handleDiscardDraft = async (key: string) => {
+    try {
+      await fetch("/api/admin/content-drafts/discard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key }),
+      });
+    } finally {
+      setContentDrafts((current) => {
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
+    }
+  };
+
+  const handlePublishDrafts = async () => {
+    setIsPublishing(true);
+    try {
+      const response = await fetch("/api/admin/content-drafts/publish", { method: "POST" });
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        published?: { key: string; kind: string; label: string }[];
+        error?: string;
+      };
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error || "No se pudieron publicar los cambios.");
+      }
+      setIsPublishModalOpen(false);
+      setPublishNotice(`✓ ${payload.published?.length ?? 0} cambios publicados`);
+      window.setTimeout(() => setPublishNotice(null), 3000);
+      await Promise.all([loadSiteImages(), loadSiteTexts(), loadContentDrafts()]);
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : "No se pudieron publicar los cambios.");
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const loadContentVersions = async () => {
+    setIsLoadingVersions(true);
+    try {
+      const response = await fetch("/api/admin/content-versions");
+      const payload = (await response.json()) as {
+        versions?: { id: string; createdAt: string; createdBy: string | null; label: string | null; changedCount: number }[];
+      };
+      setContentVersions(payload.versions ?? []);
+    } finally {
+      setIsLoadingVersions(false);
+    }
+  };
+
+  const handleRestoreVersion = async (versionId: string) => {
+    setRestoringVersionId(versionId);
+    try {
+      const response = await fetch(`/api/admin/content-versions/${versionId}/restore`, { method: "POST" });
+      if (!response.ok) throw new Error("No se pudo restaurar esta versión.");
+      setPublishNotice("✓ Versión restaurada");
+      window.setTimeout(() => setPublishNotice(null), 3000);
+      await Promise.all([loadSiteImages(), loadSiteTexts(), loadContentDrafts(), loadContentVersions()]);
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : "No se pudo restaurar esta versión.");
+    } finally {
+      setRestoringVersionId(null);
+    }
+  };
+
   const loadSiteImages = async () => {
     setIsLoadingImages(true);
     setImageError(null);
@@ -2425,15 +2557,19 @@ export default function AdminPage() {
     setSavingLinkKey(slotKey);
     setImageError(null);
     try {
-      const response = await fetch("/api/admin/images", {
+      const response = await fetch("/api/admin/content-drafts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: slotKey, link }),
+        body: JSON.stringify({ key: slotKey, kind: "image", link }),
       });
-      if (!response.ok) {
-        throw new Error("No se pudo guardar el enlace.");
+      const payload = (await response.json()) as {
+        draft?: { kind: "image"; division: string; value: string; link: string | null };
+        error?: string;
+      };
+      if (!response.ok || !payload.draft) {
+        throw new Error(payload.error || "No se pudo guardar el enlace.");
       }
-      setSiteImageLinks((current) => ({ ...current, [slotKey]: link.trim() }));
+      setContentDrafts((current) => ({ ...current, [slotKey]: payload.draft! }));
     } catch (error) {
       setImageError(error instanceof Error ? error.message : "No se pudo guardar el enlace.");
     } finally {
@@ -2539,16 +2675,19 @@ export default function AdminPage() {
     setSavingTextKey(key);
     setTextsError(null);
     try {
-      const response = await fetch("/api/admin/texts", {
+      const response = await fetch("/api/admin/content-drafts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key, value }),
+        body: JSON.stringify({ key, kind: "text", value }),
       });
-      const payload = (await response.json()) as { value?: string; error?: string };
-      if (!response.ok) {
+      const payload = (await response.json()) as {
+        draft?: { kind: "text"; division: string; value: string; link: string | null };
+        error?: string;
+      };
+      if (!response.ok || !payload.draft) {
         throw new Error(payload.error || "No se pudo guardar el texto.");
       }
-      setSiteTextsAdmin((current) => ({ ...current, [key]: payload.value ?? value }));
+      setContentDrafts((current) => ({ ...current, [key]: payload.draft! }));
       setSavedTextKey(key);
       setTimeout(() => setSavedTextKey((current) => (current === key ? null : current)), 1500);
     } catch (error) {
@@ -2568,8 +2707,14 @@ export default function AdminPage() {
     setSettingsSection(section);
     setSelectedImageGroup(null);
     setSelectedTextGroup(null);
-    if (section === "images") void loadSiteImages();
-    if (section === "texts") void loadSiteTexts();
+    if (section === "images") {
+      void loadSiteImages();
+      void loadContentDrafts();
+    }
+    if (section === "texts") {
+      void loadSiteTexts();
+      void loadContentDrafts();
+    }
     if (section === "whatsapp") void loadSiteSettings();
     if (section === "salesMode") void loadSiteSettings();
   };
@@ -2769,16 +2914,20 @@ export default function AdminPage() {
         throw new Error(uploadPayload?.error || "No se pudo subir la imagen.");
       }
 
-      const saveResponse = await fetch("/api/admin/images", {
+      const saveResponse = await fetch("/api/admin/content-drafts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: slotKey, url: uploadPayload.publicUrl }),
+        body: JSON.stringify({ key: slotKey, kind: "image", value: uploadPayload.publicUrl }),
       });
-      if (!saveResponse.ok) {
-        throw new Error("No se pudo guardar la imagen.");
+      const savePayload = (await saveResponse.json().catch(() => null)) as {
+        draft?: { kind: "image"; division: string; value: string; link: string | null };
+        error?: string;
+      } | null;
+      if (!saveResponse.ok || !savePayload?.draft) {
+        throw new Error(savePayload?.error || "No se pudo guardar la imagen.");
       }
 
-      setSiteImages((current) => ({ ...current, [slotKey]: uploadPayload.publicUrl! }));
+      setContentDrafts((current) => ({ ...current, [slotKey]: savePayload.draft! }));
       setSavedImageKey(slotKey);
       window.setTimeout(() => setSavedImageKey(null), 2500);
     } catch (error) {
@@ -5566,19 +5715,53 @@ export default function AdminPage() {
                     Sube o reemplaza las imágenes o videos del sitio público. JPG · PNG · WEBP · MP4 · WEBM · MOV · máx. 4 MB.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => void loadSiteImages()}
-                  className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
-                >
-                  Recargar
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void loadContentVersions();
+                      setIsHistoryModalOpen(true);
+                    }}
+                    className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                  >
+                    Historial
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void loadSiteImages()}
+                    className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                  >
+                    Recargar
+                  </button>
+                </div>
               </div>
 
               {imageError && (
                 <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
                   {imageError}
                 </p>
+              )}
+
+              {publishNotice && (
+                <p className="mb-6 rounded-xl bg-[#effaf2] px-4 py-3 text-sm font-semibold text-[#1f6b39]">
+                  {publishNotice}
+                </p>
+              )}
+
+              {myContentDrafts.length > 0 && (
+                <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-[#f3d9b1] bg-[#fff8ef] px-5 py-4">
+                  <p className="flex items-center gap-2 text-sm font-semibold text-[#92400e]">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-[#b45309]" />
+                    {myContentDrafts.length} cambio{myContentDrafts.length === 1 ? "" : "s"} sin publicar
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsPublishModalOpen(true)}
+                    className="inline-flex rounded-full bg-[#16384f] px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#0e2536]"
+                  >
+                    Publicar cambios
+                  </button>
+                </div>
               )}
 
               <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -5658,7 +5841,9 @@ export default function AdminPage() {
                           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                             {section.groups.map((group) => {
                               const groupSlots = divisionSlots.filter((slot) => slot.group === group);
-                              const previewSrc = siteImages[groupSlots[0]?.key] ?? groupSlots[0]?.defaultSrc;
+                              const previewSrc = groupSlots[0]
+                                ? resolveAdminImageSrc(groupSlots[0].key, groupSlots[0].defaultSrc)
+                                : undefined;
                               const hasPreview = Boolean(previewSrc) && !isVideoUrl(previewSrc ?? "");
 
                               return (
@@ -5728,7 +5913,8 @@ export default function AdminPage() {
                           slot.division === imageDivisionFilter &&
                           Boolean(slot.isMobile) === isMobileTab,
                       ).map((slot) => {
-                        const currentSrc = siteImages[slot.key] ?? slot.defaultSrc;
+                        const currentSrc = resolveAdminImageSrc(slot.key, slot.defaultSrc);
+                        const hasDraft = Boolean(contentDrafts[slot.key]);
                         const isUploading = uploadingImageKey === slot.key;
                         const isSaved = savedImageKey === slot.key;
                         const slotLabel = isMobileTab
@@ -5780,11 +5966,27 @@ export default function AdminPage() {
                                   </div>
                                 </div>
                               )}
+                              {hasDraft && (
+                                <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#b45309] px-2 py-1 text-[10px] font-bold text-white shadow-sm">
+                                  ● Sin publicar
+                                </span>
+                              )}
                             </div>
                             <div className="p-3">
-                              <p className="truncate text-xs font-semibold text-[#1f2328]">
-                                {slotLabel}
-                              </p>
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="truncate text-xs font-semibold text-[#1f2328]">
+                                  {slotLabel}
+                                </p>
+                                {hasDraft && (
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleDiscardDraft(slot.key)}
+                                    className="shrink-0 text-[10px] font-semibold text-[#8b8d91] hover:text-[var(--admin-accent)]"
+                                  >
+                                    ↺ Deshacer
+                                  </button>
+                                )}
+                              </div>
                               <p className="mt-1 text-[10px] font-semibold text-[#8b8d91]">
                                 {slot.dims}
                               </p>
@@ -5816,7 +6018,7 @@ export default function AdminPage() {
                                   <input
                                     type="text"
                                     placeholder="/producto/nombre-del-producto"
-                                    value={siteImageLinks[slot.key] ?? ""}
+                                    value={siteImageLinks[slot.key] ?? resolveAdminImageLink(slot.key)}
                                     onChange={(event) =>
                                       setSiteImageLinks((current) => ({
                                         ...current,
@@ -5859,13 +6061,25 @@ export default function AdminPage() {
                     Títulos, párrafos y botones de la página. Los cambios se guardan al salir del campo.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => void loadSiteTexts()}
-                  className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
-                >
-                  Recargar
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void loadContentVersions();
+                      setIsHistoryModalOpen(true);
+                    }}
+                    className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                  >
+                    Historial
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void loadSiteTexts()}
+                    className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                  >
+                    Recargar
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -5873,6 +6087,28 @@ export default function AdminPage() {
                   <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
                     {textsError}
                   </p>
+                )}
+
+                {publishNotice && (
+                  <p className="mb-6 rounded-xl bg-[#effaf2] px-4 py-3 text-sm font-semibold text-[#1f6b39]">
+                    {publishNotice}
+                  </p>
+                )}
+
+                {myContentDrafts.length > 0 && (
+                  <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-[#f3d9b1] bg-[#fff8ef] px-5 py-4">
+                    <p className="flex items-center gap-2 text-sm font-semibold text-[#92400e]">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-[#b45309]" />
+                      {myContentDrafts.length} cambio{myContentDrafts.length === 1 ? "" : "s"} sin publicar
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setIsPublishModalOpen(true)}
+                      className="inline-flex rounded-full bg-[#16384f] px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#0e2536]"
+                    >
+                      Publicar cambios
+                    </button>
+                  </div>
                 )}
 
                 {isLoadingTexts ? (
@@ -5932,19 +6168,39 @@ export default function AdminPage() {
                           slot.group === selectedTextGroup &&
                           (slot.division === adminDivision || slot.division === "Global"),
                       ).map((slot) => {
-                        const value = siteTextsAdmin[slot.key] ?? slot.defaultValue;
+                        const value = resolveAdminText(slot.key, slot.defaultValue);
                         const isSaving = savingTextKey === slot.key;
                         const isSaved = savedTextKey === slot.key;
+                        const hasDraft = Boolean(contentDrafts[slot.key]);
 
                         return (
                           <div key={slot.key} className="rounded-[1.2rem] border border-black/8 bg-white p-4 shadow-sm">
                             <label className="mb-1.5 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-[0.06em] text-[#8b8d91]">
-                              {slot.label}
-                              {isSaving && <span className="normal-case text-[#8b8d91]">Guardando...</span>}
-                              {isSaved && <span className="normal-case text-[#1f6b39]">✓ Guardado</span>}
+                              <span className="flex items-center gap-2">
+                                {slot.label}
+                                {hasDraft && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-[#b45309] px-2 py-0.5 text-[9px] font-bold normal-case text-white">
+                                    ● Sin publicar
+                                  </span>
+                                )}
+                              </span>
+                              <span className="flex items-center gap-2">
+                                {isSaving && <span className="normal-case text-[#8b8d91]">Guardando...</span>}
+                                {isSaved && <span className="normal-case text-[#1f6b39]">✓ Guardado</span>}
+                                {hasDraft && !isSaving && (
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleDiscardDraft(slot.key)}
+                                    className="normal-case text-[#8b8d91] hover:text-[var(--admin-accent)]"
+                                  >
+                                    ↺ Deshacer
+                                  </button>
+                                )}
+                              </span>
                             </label>
                             {slot.multiline ? (
                               <textarea
+                                key={`${slot.key}:${value}`}
                                 defaultValue={value}
                                 rows={3}
                                 onBlur={(event) => {
@@ -5954,6 +6210,7 @@ export default function AdminPage() {
                               />
                             ) : (
                               <input
+                                key={`${slot.key}:${value}`}
                                 type="text"
                                 defaultValue={value}
                                 onBlur={(event) => {
@@ -6297,6 +6554,105 @@ export default function AdminPage() {
       </section>
         </div>
       </div>
+
+      {isPublishModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md rounded-[1.4rem] bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold text-[#16384f]">
+              Estás a punto de publicar {myContentDrafts.length} cambio{myContentDrafts.length === 1 ? "" : "s"}
+            </h3>
+            <p className="mt-1 text-sm text-[#6e7379]">
+              Estos cambios se verán de inmediato en el sitio público.
+            </p>
+            <div className="mt-4 max-h-64 space-y-2 overflow-y-auto rounded-xl border border-black/8 bg-[#fafaf9] p-3">
+              {myContentDrafts.map(([key, draft]) => {
+                const label =
+                  draft.kind === "image"
+                    ? IMAGE_SLOTS.find((s) => s.key === key)?.label ?? key
+                    : TEXT_SLOTS.find((s) => s.key === key)?.label ?? key;
+                return (
+                  <p key={key} className="text-sm text-[#1f2328]">
+                    <span className="font-semibold">{draft.kind === "image" ? "Imagen" : "Texto"}</span> · {label}
+                  </p>
+                );
+              })}
+            </div>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsPublishModalOpen(false)}
+                disabled={isPublishing}
+                className="rounded-full border border-black/10 px-5 py-2 text-sm font-semibold text-[#4f545a] transition-colors duration-200 hover:bg-[#f5f5f4] disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void handlePublishDrafts()}
+                disabled={isPublishing}
+                className="rounded-full bg-[#16384f] px-5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#0e2536] disabled:opacity-50"
+              >
+                {isPublishing ? "Publicando..." : "Publicar cambios"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isHistoryModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-lg rounded-[1.4rem] bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-[#16384f]">Historial de publicaciones</h3>
+              <button
+                type="button"
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="text-xl text-[#8b8d91] hover:text-[#16384f]"
+                aria-label="Cerrar historial"
+              >
+                ×
+              </button>
+            </div>
+            <div className="mt-4 max-h-96 space-y-3 overflow-y-auto">
+              {isLoadingVersions ? (
+                <p className="text-sm text-[#6e7379]">Cargando historial...</p>
+              ) : contentVersions.length === 0 ? (
+                <p className="text-sm text-[#6e7379]">Todavía no hay publicaciones registradas.</p>
+              ) : (
+                contentVersions.map((version) => (
+                  <div
+                    key={version.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-black/8 bg-[#fafaf9] px-4 py-3"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-[#1f2328]">
+                        {version.label ?? "Publicación"}
+                      </p>
+                      <p className="mt-0.5 text-xs text-[#8b8d91]">
+                        {new Date(version.createdAt).toLocaleString("es-CO")}
+                        {version.createdBy ? ` · ${version.createdBy}` : ""} · {version.changedCount}{" "}
+                        {version.changedCount === 1 ? "elemento" : "elementos"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={restoringVersionId === version.id}
+                      onClick={() => {
+                        if (window.confirm("¿Restaurar el sitio al estado de esta versión?")) {
+                          void handleRestoreVersion(version.id);
+                        }
+                      }}
+                      className="shrink-0 rounded-full border border-black/10 px-4 py-2 text-xs font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white disabled:opacity-50"
+                    >
+                      {restoringVersionId === version.id ? "Restaurando..." : "Restaurar"}
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
