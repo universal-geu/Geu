@@ -161,7 +161,7 @@ export default async function ImportNosotrosPage() {
 
       <section className="border-b border-slate-200 bg-slate-50">
         <div className="mx-auto grid max-w-[1632px] grid-cols-2 gap-3 px-5 py-10 md:grid-cols-4 md:px-8">
-          {(["import-destacada-1", "import-destacada-2", "import-destacada-3", "import-destacada-4"] as const).map(
+          {(["import-nosotros-1", "import-nosotros-2", "import-nosotros-3", "import-nosotros-4"] as const).map(
             (key) => (
               <div key={key} className="relative aspect-[4/3] overflow-hidden rounded-[6px]">
                 <Image
