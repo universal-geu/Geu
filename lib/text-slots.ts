@@ -96,10 +96,6 @@ export const TEXT_SLOTS: TextSlot[] = [
   { key: "import-filosofia-texto", label: "Nosotros · Párrafo de filosofía", group: "Nosotros", division: "Import", defaultValue: "Creemos que una importación exitosa va más allá de traer productos; consiste en conectar la industria con tecnologías, soluciones y fabricantes de clase mundial que impulsen la productividad, la competitividad y el crecimiento sostenible de nuestros clientes.", multiline: true },
   { key: "import-promesa-titulo", label: "Nosotros · Título de cierre", group: "Nosotros", division: "Import", defaultValue: "Conectamos la industria con soluciones de clase mundial." },
 
-  // ---- Plastic · Home ----
-  { key: "plastic-lineas-eyebrow", label: "Líneas · Antetítulo", group: "Página de inicio", division: "Plastic", defaultValue: "Lineas Plastic" },
-  { key: "plastic-lineas-titulo", label: "Líneas · Título", group: "Página de inicio", division: "Plastic", defaultValue: "Materiales y piezas para producir mejor." },
-  { key: "plastic-lineas-subtitulo", label: "Líneas · Subtítulo", group: "Página de inicio", division: "Plastic", defaultValue: "Un catalogo pensado para compras tecnicas, abastecimiento empresarial y desarrollos por aplicacion.", multiline: true },
   { key: "plastic-productos-eyebrow", label: "Productos · Antetítulo", group: "Página de inicio", division: "Plastic", defaultValue: "Productos destacados" },
   { key: "plastic-productos-titulo", label: "Productos · Título", group: "Página de inicio", division: "Plastic", defaultValue: "Fichas de producto listas para cotizar." },
   { key: "plastic-productos-subtitulo", label: "Productos · Subtítulo", group: "Página de inicio", division: "Plastic", defaultValue: "Seleccion tecnica para compras recurrentes, proyectos especiales y desarrollo por aplicacion.", multiline: true },

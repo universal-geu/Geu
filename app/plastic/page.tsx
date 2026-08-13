@@ -26,27 +26,6 @@ const navItems = [
   { label: "Contacto", href: "#contacto" },
 ];
 
-const productLines = [
-  {
-    title: "Perfiles transparentes",
-    text: "Soluciones para vitrinas, protecciones, guias, divisiones y sistemas livianos.",
-    tag: "Extrusion",
-    imageKey: "plastic-linea-perfiles",
-  },
-  {
-    title: "Pellets y resinas",
-    text: "Materia prima para produccion industrial con seleccion segun aplicacion y volumen.",
-    tag: "Materia prima",
-    imageKey: "plastic-linea-resinas",
-  },
-  {
-    title: "Piezas bajo plano",
-    text: "Corte, mecanizado y acabado de piezas plasticas para reposicion o desarrollo.",
-    tag: "Tecnico",
-    imageKey: "plastic-linea-piezas",
-  },
-];
-
 const plasticOffers = [
   { title: "Extrusion PVC Rigido", href: "/plastic/categoria/extrusion-en-pvc-rigido", imageKey: "plastic-oferta-1" },
   { title: "Extrusion PVC Flexible", href: "/plastic/categoria/extrusion-en-pvc-flexible", imageKey: "plastic-oferta-2" },
@@ -76,8 +55,6 @@ const plasticFeatured = [
     imageKey: "plastic-destacada-4",
   },
 ];
-
-const specs = ["PVC", "Policarbonato", "Acrilico", "Polietileno", "Nylon", "ABS"];
 
 const PLASTIC_CATEGORY_IMAGE_KEYS: Record<string, string> = {
   "Extrusión en PVC Rígido": "plastic-categoria-pvc-rigido",
@@ -180,65 +157,6 @@ export default async function PlasticPage() {
               />
             </div>
           )}
-        </div>
-      </section>
-
-      <section id="lineas-plastic" className="scroll-mt-56 border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-[1632px] px-5 py-12 md:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-5">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-                {t("plastic-lineas-eyebrow")}
-              </p>
-              <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] md:text-5xl">
-                {t("plastic-lineas-titulo")}
-              </h2>
-              <p className="mt-3 max-w-2xl text-base font-semibold leading-7 text-slate-500">
-                {t("plastic-lineas-subtitulo")}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-[0.06em] text-slate-600">
-              {specs.map((tag) => (
-                <span key={tag} className="rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {productLines.map((item) => (
-              <article
-                key={item.title}
-                className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition hover:-translate-y-1 hover:border-[#a3a3a4] hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)]"
-              >
-                <div className="relative h-56 overflow-hidden bg-slate-200">
-                  <Image
-                    src={resolveImage(item.imageKey, siteImages)}
-                    alt={item.title}
-                    fill
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                    className="object-cover transition duration-500 group-hover:scale-105"
-                  />
-                  <span className="absolute left-4 top-4 rounded-full bg-white/92 px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-slate-700 shadow-sm">
-                    {item.tag}
-                  </span>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-2xl font-black tracking-[-0.02em]">{item.title}</h3>
-                  <p className="mt-3 min-h-20 text-sm font-semibold leading-6 text-slate-500">
-                    {item.text}
-                  </p>
-                  <Link
-                    href="#contacto"
-                    className="mt-6 inline-flex rounded-full border border-slate-300 px-5 py-2 text-xs font-black uppercase tracking-[0.08em] text-slate-700 hover:border-slate-700 hover:bg-slate-950 hover:text-white"
-                  >
-                    Cotizar →
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
         </div>
       </section>
 
