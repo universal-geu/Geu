@@ -163,10 +163,10 @@ export default async function PlasticNosotrosPage() {
         <div className="mx-auto grid max-w-[1632px] grid-cols-2 gap-3 px-5 py-10 md:grid-cols-4 md:px-8">
           {(
             [
-              "plastic-destacada-1",
-              "plastic-destacada-2",
-              "plastic-destacada-3",
-              "plastic-destacada-4",
+              "plastic-nosotros-1",
+              "plastic-nosotros-2",
+              "plastic-nosotros-3",
+              "plastic-nosotros-4",
             ] as const
           ).map((key) => (
             <div key={key} className="relative aspect-[4/3] overflow-hidden rounded-[6px]">
