@@ -2,6 +2,7 @@ import { requireAdminUser } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { IMAGE_SLOTS } from "@/lib/image-slots";
 import { TEXT_SLOTS } from "@/lib/text-slots";
+import { COLOR_SLOTS } from "@/lib/color-slots";
 
 export async function GET() {
   try {
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
 
     const body = (await request.json()) as {
       key?: string;
-      kind?: "image" | "text";
+      kind?: "image" | "text" | "color";
       value?: string;
       link?: string;
     };
@@ -70,6 +71,31 @@ export async function POST(request: Request) {
         create: {
           key: body.key,
           kind: "text",
+          division: slot.division,
+          value,
+          updatedBy: admin.fullName,
+        },
+      });
+      return Response.json({ draft });
+    }
+
+    if (body.kind === "color") {
+      const slot = COLOR_SLOTS.find((s) => s.key === body.key);
+      if (!slot) return Response.json({ error: "key no válida." }, { status: 400 });
+      if (slot.division !== admin.division) {
+        return Response.json({ error: "No autorizado para esta división." }, { status: 403 });
+      }
+
+      const value = (body.value ?? "").trim();
+      if (!/^#[0-9a-fA-F]{6}$/.test(value)) {
+        return Response.json({ error: "Color no válido. Usa formato #RRGGBB." }, { status: 400 });
+      }
+      const draft = await prisma.siteContentDraft.upsert({
+        where: { key: body.key },
+        update: { value, updatedBy: admin.fullName },
+        create: {
+          key: body.key,
+          kind: "color",
           division: slot.division,
           value,
           updatedBy: admin.fullName,

@@ -10,7 +10,10 @@ import CauchosMenuButton from "./cauchos-menu-button";
 import { CauchosMenuProvider, useCauchosMenu } from "./cauchos-menu-context";
 import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
 import { useSiteTexts } from "./use-site-texts";
+import { useSiteColors } from "./use-site-colors";
 import { resolveText } from "@/lib/text-slots";
+import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
+import { resolveColor } from "@/lib/color-slots";
 import { useCart } from "./cart-provider";
 import { useSalesSettings } from "./sales-settings-provider";
 import MobileBottomNav from "./mobile-bottom-nav";
@@ -46,10 +49,17 @@ type Props = {
 
 export default function CauchosHeader({ division = "Cauchos" }: Props) {
   const siteTexts = useSiteTexts();
+  const siteColors = useSiteColors();
+  const colorOverrideCss = buildDivisionColorOverrideCss(division, siteColors);
   const { cauchosSalesMode } = useSalesSettings();
   const showCart = !(division === "Cauchos" && cauchosSalesMode === "whatsapp");
   const phone = resolveText("header-phone", siteTexts);
   const brand = DIVISION_BRAND[division];
+  const resolvedAccent = resolveColor(
+    `color-${division.toLowerCase()}-accent`,
+    siteColors,
+    brand.accent,
+  );
   const cartAccent = CART_ACCENT[division];
   const brandParam = division === "Cauchos" ? undefined : division.toLowerCase();
   const cartHref = brandParam ? `/carrito?brand=${brandParam}` : "/carrito";
@@ -64,11 +74,12 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
 
   return (
     <CauchosMenuProvider>
+      {colorOverrideCss && <style dangerouslySetInnerHTML={{ __html: colorOverrideCss }} />}
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
         <div className="border-b border-slate-200 bg-slate-50">
           <div
             className="mx-auto flex h-8 max-w-[1632px] items-center justify-between px-5 text-[11px] font-bold uppercase tracking-[0.03em] text-slate-600 md:px-8"
-            style={{ "--brand-accent": brand.accent } as React.CSSProperties}
+            style={{ "--brand-accent": resolvedAccent } as React.CSSProperties}
           >
             <div className="hidden gap-3 md:flex">
               <span>{phone}</span>
@@ -114,7 +125,7 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
 
           <div
             className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end"
-            style={{ "--brand-accent": brand.accent } as React.CSSProperties}
+            style={{ "--brand-accent": resolvedAccent } as React.CSSProperties}
           >
             <Link href={nosotrosHref} className="font-bold hover:text-[var(--brand-accent)]">
               Nosotros
@@ -124,11 +135,11 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
           </div>
         </div>
 
-        <CauchosCategorySidebarMenu basePath={brand.basePath} division={division} accent={brand.accent} />
+        <CauchosCategorySidebarMenu basePath={brand.basePath} division={division} accent={resolvedAccent} />
 
         <CauchosBottomNav
           homeHref={brand.basePath}
-          accent={brand.accent}
+          accent={resolvedAccent}
           cartHref={cartHref}
           accountBrand={brandParam}
           showCart={showCart}
