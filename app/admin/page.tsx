@@ -3491,25 +3491,6 @@ export default function AdminPage() {
           </header>
 
           <section className="mx-auto w-full max-w-[1440px] px-6 py-12">
-        {activeTab && (
-          <div className="mb-10">
-            <p className="mb-3 text-xs font-medium uppercase tracking-[0.35em] text-[#8b8d91]">
-              {adminBrand.eyebrow}
-            </p>
-            <h1 className="text-4xl font-semibold tracking-[-0.04em] text-[#4f545a] md:text-6xl">
-              {adminBrand.title}
-            </h1>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-[#6e7379]">
-              {adminBrand.description}
-            </p>
-            {adminName && (
-              <p className="mt-3 text-sm font-medium text-[#16384f]">
-                Sesión activa: {adminName || adminBrand.sessionLabel}
-              </p>
-            )}
-          </div>
-        )}
-
         <div className="space-y-8">
           {!activeTab && (
             <div className="admin-fade-up space-y-8">
