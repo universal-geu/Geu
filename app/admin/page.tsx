@@ -41,7 +41,7 @@ const IMAGE_GROUP_SECTIONS: { label: string; groups: string[] }[] = [
   { label: "Quiénes somos", groups: ["Nosotros"] },
   {
     label: "Catálogo",
-    groups: ["Página de categorías", "Categorías", "Subcategorías (menú)", "Líneas de producto"],
+    groups: ["Página de categorías", "Categorías", "Subcategorías (menú)"],
   },
 ];
 
