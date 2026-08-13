@@ -209,6 +209,32 @@ model SiteSetting {
   updatedAt DateTime @updatedAt
 }
 
+// Pending, unpublished edits to SiteImage/SiteSetting content. The live site
+// only ever reads SiteImage/SiteSetting directly — this table never touches
+// production rendering. A row here means "this key has an unpublished
+// change"; publishing copies it into the live table and deletes the draft.
+model SiteContentDraft {
+  key       String   @id
+  kind      String
+  division  String
+  value     String
+  link      String?
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+// Snapshot of the full live SiteImage/SiteSetting content, taken right
+// before every publish (and before every restore, as a safety net), so an
+// admin can see history and roll back.
+model SiteContentVersion {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  createdBy String?
+  division  String
+  label     String?
+  snapshot  Json
+}
+
 model Quote {
   id                  String      @id @default(cuid())
   userId              String?

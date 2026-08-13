@@ -60,6 +60,8 @@ export const ModelName = {
   InventoryMovement: 'InventoryMovement',
   SiteImage: 'SiteImage',
   SiteSetting: 'SiteSetting',
+  SiteContentDraft: 'SiteContentDraft',
+  SiteContentVersion: 'SiteContentVersion',
   Quote: 'Quote'
 } as const
 
@@ -248,6 +250,31 @@ export const SiteSettingScalarFieldEnum = {
 export type SiteSettingScalarFieldEnum = (typeof SiteSettingScalarFieldEnum)[keyof typeof SiteSettingScalarFieldEnum]
 
 
+export const SiteContentDraftScalarFieldEnum = {
+  key: 'key',
+  kind: 'kind',
+  division: 'division',
+  value: 'value',
+  link: 'link',
+  updatedAt: 'updatedAt',
+  updatedBy: 'updatedBy'
+} as const
+
+export type SiteContentDraftScalarFieldEnum = (typeof SiteContentDraftScalarFieldEnum)[keyof typeof SiteContentDraftScalarFieldEnum]
+
+
+export const SiteContentVersionScalarFieldEnum = {
+  id: 'id',
+  createdAt: 'createdAt',
+  createdBy: 'createdBy',
+  division: 'division',
+  label: 'label',
+  snapshot: 'snapshot'
+} as const
+
+export type SiteContentVersionScalarFieldEnum = (typeof SiteContentVersionScalarFieldEnum)[keyof typeof SiteContentVersionScalarFieldEnum]
+
+
 export const QuoteScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -284,6 +311,13 @@ export const NullableJsonNullValueInput = {
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
