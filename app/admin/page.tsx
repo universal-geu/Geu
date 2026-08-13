@@ -36,6 +36,23 @@ import {
   type AdminToolKey,
 } from "@/lib/admin-permissions";
 
+const IMAGE_GROUP_SECTIONS: { label: string; groups: string[] }[] = [
+  { label: "Página principal", groups: ["Página de inicio", "Ofertas", "Marcas destacadas"] },
+  { label: "Quiénes somos", groups: ["Nosotros"] },
+  {
+    label: "Catálogo",
+    groups: ["Página de categorías", "Categorías", "Subcategorías (menú)", "Líneas de producto"],
+  },
+];
+
+const IMAGE_GROUP_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="3" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <path d="m21 15-5-5-11 11" />
+  </svg>
+);
+
 type AdminBrandConfig = {
   label: string;
   eyebrow: string;
@@ -5563,60 +5580,96 @@ export default function AdminPage() {
                 </p>
               )}
 
-              <div className="mb-8 flex flex-wrap gap-2">
-                <span className="rounded-full border border-[#16384f] bg-[#16384f] px-4 py-2 text-sm font-semibold text-white">
-                  {imageDivisionFilter}
-                </span>
-              </div>
+              <p className="mb-8 text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
+                Editando · <span className="text-[#16384f]">{imageDivisionFilter}</span>
+              </p>
 
               {isLoadingImages ? (
                 <p className="text-sm text-[#6e7379]">Cargando imágenes...</p>
               ) : !selectedImageGroup ? (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {Array.from(
+                (() => {
+                  const divisionGroups = Array.from(
                     new Set(
-                      IMAGE_SLOTS.filter(
-                        (slot) => slot.division === imageDivisionFilter,
-                      ).map((slot) => slot.group),
+                      IMAGE_SLOTS.filter((slot) => slot.division === imageDivisionFilter).map(
+                        (slot) => slot.group,
+                      ),
                     ),
-                  ).map((group) => {
-                    const groupSlots = IMAGE_SLOTS.filter(
-                      (slot) => slot.group === group && slot.division === imageDivisionFilter,
-                    );
-                    const previewSrc = siteImages[groupSlots[0]?.key] ?? groupSlots[0]?.defaultSrc;
+                  );
+                  const sections = [
+                    ...IMAGE_GROUP_SECTIONS.map((section) => ({
+                      label: section.label,
+                      groups: section.groups.filter((group) => divisionGroups.includes(group)),
+                    })),
+                    {
+                      label: "Otros",
+                      groups: divisionGroups.filter(
+                        (group) => !IMAGE_GROUP_SECTIONS.some((section) => section.groups.includes(group)),
+                      ),
+                    },
+                  ].filter((section) => section.groups.length > 0);
 
-                    return (
-                      <button
-                        key={group}
-                        type="button"
-                        onClick={() => setSelectedImageGroup(group)}
-                        className="flex items-center gap-4 overflow-hidden rounded-[1.2rem] border border-black/8 bg-white p-4 text-left shadow-sm transition-colors duration-200 hover:border-[var(--admin-accent)] hover:bg-[#f5f9ff]"
-                      >
-                        <span className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#f0f2f4]">
-                          {previewSrc && !isVideoUrl(previewSrc) && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={previewSrc}
-                              alt=""
-                              className="absolute inset-0 h-full w-full object-cover"
-                            />
-                          )}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold text-[#1f2328]">
-                            {group}
-                          </span>
-                          <span className="mt-0.5 block text-xs font-semibold text-[#8b8d91]">
-                            {groupSlots.length} {groupSlots.length === 1 ? "imagen" : "imágenes"}
-                          </span>
-                        </span>
-                        <span aria-hidden="true" className="shrink-0 text-xl text-[#8b8d91]">
-                          ›
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                  return (
+                    <div className="space-y-10">
+                      {sections.map((section) => (
+                        <div key={section.label}>
+                          <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">
+                            {section.label}
+                          </h3>
+                          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                            {section.groups.map((group) => {
+                              const groupSlots = IMAGE_SLOTS.filter(
+                                (slot) => slot.group === group && slot.division === imageDivisionFilter,
+                              );
+                              const previewSrc = siteImages[groupSlots[0]?.key] ?? groupSlots[0]?.defaultSrc;
+                              const hasPreview = Boolean(previewSrc) && !isVideoUrl(previewSrc ?? "");
+
+                              return (
+                                <button
+                                  key={group}
+                                  type="button"
+                                  onClick={() => setSelectedImageGroup(group)}
+                                  className="group overflow-hidden rounded-[1.4rem] border border-black/8 bg-white text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--admin-accent)] hover:shadow-[0_14px_28px_rgba(15,23,42,0.1)]"
+                                >
+                                  <span
+                                    className="relative block w-full overflow-hidden bg-gradient-to-br from-[#f0f2f4] to-[#e5e8eb]"
+                                    style={{ paddingBottom: "62%" }}
+                                  >
+                                    {hasPreview ? (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img
+                                        src={previewSrc}
+                                        alt=""
+                                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                                      />
+                                    ) : (
+                                      <span className="absolute inset-0 flex items-center justify-center text-[#c3c8cd]">
+                                        <span className="h-9 w-9">{IMAGE_GROUP_ICON}</span>
+                                      </span>
+                                    )}
+                                    <span className="absolute right-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+                                      {groupSlots.length} {groupSlots.length === 1 ? "imagen" : "imágenes"}
+                                    </span>
+                                  </span>
+                                  <span className="flex items-center justify-between gap-3 px-4 py-3.5">
+                                    <span className="truncate text-sm font-semibold text-[#1f2328]">
+                                      {group}
+                                    </span>
+                                    <span
+                                      aria-hidden="true"
+                                      className="shrink-0 text-lg text-[#8b8d91] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--admin-accent)]"
+                                    >
+                                      ›
+                                    </span>
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()
               ) : (
                 <div>
                   <button

@@ -273,19 +273,6 @@ export default async function ImportPage() {
           className="relative overflow-hidden rounded-[10px] border border-[#2b0b0b] bg-[#140505] shadow-[0_24px_70px_rgba(23,6,6,0.22)]"
           style={{ backgroundColor: "#140505", color: "#ffffff" }}
         >
-          <span
-            className="absolute inset-0 opacity-95"
-            aria-hidden="true"
-            style={{
-              background:
-                "linear-gradient(90deg, rgba(20,5,5,0.98) 0%, rgba(31,8,8,0.92) 42%, rgba(227,19,19,0.22) 100%), radial-gradient(circle at 82% 24%, rgba(227,19,19,0.36), transparent 32%)",
-            }}
-          />
-          <div
-            className="absolute inset-y-0 right-0 hidden w-[42%] bg-cover bg-center opacity-35 md:block"
-            style={{ backgroundImage: "url('/geu-import-main-banner.png')" }}
-            aria-hidden="true"
-          />
           <div className="relative grid gap-7 px-7 py-8 md:grid-cols-[1fr_auto] md:items-center md:px-10 md:py-10">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ffb3b3]">
