@@ -10,7 +10,7 @@ import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
-import { getProducts } from "@/lib/products";
+import { getProducts, productSellsInDivision } from "@/lib/products";
 import { importCategorias, slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
@@ -87,7 +87,7 @@ export default async function ImportPage() {
   const siteTexts = await getSiteTexts();
   const t = (key: string) => resolveText(key, siteTexts);
   const allProducts = await getProducts();
-  const importCatalog = allProducts.filter((product) => product.division === "Import");
+  const importCatalog = allProducts.filter((product) => productSellsInDivision(product, "Import"));
   const importFeaturedProducts = importCatalog.filter((product) => product.destacado);
   const importProducts = (importFeaturedProducts.length > 0 ? importFeaturedProducts : importCatalog).slice(0, 4);
   const importCategories = importCategoriesBase.map((category) => ({

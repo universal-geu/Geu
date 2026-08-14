@@ -184,6 +184,7 @@ export type ProductoCatalogo = {
   nombre: string;
   marca: string;
   division?: DivisionName;
+  divisionesAdicionales?: DivisionName[];
   precio: string;
   precioAnterior: string;
   precioValor: number;

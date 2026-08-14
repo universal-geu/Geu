@@ -5,6 +5,19 @@ function normalizeMatchKey(value: string | null | undefined) {
   return (value ?? "").trim().toLowerCase();
 }
 
+// Kept here (rather than lib/products.ts) because this file is safe to
+// import from "use client" components — see the note below on why
+// lib/products.ts's runtime code can't be.
+export function productSellsInDivision(
+  product: Pick<StoreProduct, "division" | "divisionesAdicionales">,
+  division: DivisionName,
+) {
+  return (
+    product.division === division ||
+    Boolean(product.divisionesAdicionales?.includes(division))
+  );
+}
+
 // A product tagged with additional categories (see the admin's "Este
 // producto también aplica para otra categoría") should show up when
 // browsing each of those categories too, not just its primary one. This
@@ -24,7 +37,7 @@ export function expandProductCategoryViews(
   const views: StoreProduct[] = [];
 
   for (const product of products) {
-    if (product.division !== division) continue;
+    if (!productSellsInDivision(product, division)) continue;
 
     views.push(product);
     const primaryKey = normalizeMatchKey(product.categoria);

@@ -104,6 +104,7 @@ export type ProductCountAggregateOutputType = {
   name: number
   brand: number
   division: number
+  additionalDivisions: number
   price: number
   previousPrice: number
   displayPriceOverride: number
@@ -205,6 +206,7 @@ export type ProductCountAggregateInputType = {
   name?: true
   brand?: true
   division?: true
+  additionalDivisions?: true
   price?: true
   previousPrice?: true
   displayPriceOverride?: true
@@ -323,6 +325,7 @@ export type ProductGroupByOutputType = {
   name: string
   brand: string
   division: $Enums.Division
+  additionalDivisions: $Enums.Division[]
   price: number
   previousPrice: number
   displayPriceOverride: string | null
@@ -377,6 +380,7 @@ export type ProductWhereInput = {
   name?: Prisma.StringFilter<"Product"> | string
   brand?: Prisma.StringFilter<"Product"> | string
   division?: Prisma.EnumDivisionFilter<"Product"> | $Enums.Division
+  additionalDivisions?: Prisma.EnumDivisionNullableListFilter<"Product">
   price?: Prisma.IntFilter<"Product"> | number
   previousPrice?: Prisma.IntFilter<"Product"> | number
   displayPriceOverride?: Prisma.StringNullableFilter<"Product"> | string | null
@@ -410,6 +414,7 @@ export type ProductOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   brand?: Prisma.SortOrder
   division?: Prisma.SortOrder
+  additionalDivisions?: Prisma.SortOrder
   price?: Prisma.SortOrder
   previousPrice?: Prisma.SortOrder
   displayPriceOverride?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -446,6 +451,7 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"Product"> | string
   brand?: Prisma.StringFilter<"Product"> | string
   division?: Prisma.EnumDivisionFilter<"Product"> | $Enums.Division
+  additionalDivisions?: Prisma.EnumDivisionNullableListFilter<"Product">
   price?: Prisma.IntFilter<"Product"> | number
   previousPrice?: Prisma.IntFilter<"Product"> | number
   displayPriceOverride?: Prisma.StringNullableFilter<"Product"> | string | null
@@ -479,6 +485,7 @@ export type ProductOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   brand?: Prisma.SortOrder
   division?: Prisma.SortOrder
+  additionalDivisions?: Prisma.SortOrder
   price?: Prisma.SortOrder
   previousPrice?: Prisma.SortOrder
   displayPriceOverride?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -518,6 +525,7 @@ export type ProductScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"Product"> | string
   brand?: Prisma.StringWithAggregatesFilter<"Product"> | string
   division?: Prisma.EnumDivisionWithAggregatesFilter<"Product"> | $Enums.Division
+  additionalDivisions?: Prisma.EnumDivisionNullableListFilter<"Product">
   price?: Prisma.IntWithAggregatesFilter<"Product"> | number
   previousPrice?: Prisma.IntWithAggregatesFilter<"Product"> | number
   displayPriceOverride?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
@@ -549,6 +557,7 @@ export type ProductCreateInput = {
   name: string
   brand: string
   division?: $Enums.Division
+  additionalDivisions?: Prisma.ProductCreateadditionalDivisionsInput | $Enums.Division[]
   price: number
   previousPrice: number
   displayPriceOverride?: string | null
@@ -582,6 +591,7 @@ export type ProductUncheckedCreateInput = {
   name: string
   brand: string
   division?: $Enums.Division
+  additionalDivisions?: Prisma.ProductCreateadditionalDivisionsInput | $Enums.Division[]
   price: number
   previousPrice: number
   displayPriceOverride?: string | null
@@ -615,6 +625,7 @@ export type ProductUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  additionalDivisions?: Prisma.ProductUpdateadditionalDivisionsInput | $Enums.Division[]
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
   displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -648,6 +659,7 @@ export type ProductUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  additionalDivisions?: Prisma.ProductUpdateadditionalDivisionsInput | $Enums.Division[]
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
   displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -681,6 +693,7 @@ export type ProductCreateManyInput = {
   name: string
   brand: string
   division?: $Enums.Division
+  additionalDivisions?: Prisma.ProductCreateadditionalDivisionsInput | $Enums.Division[]
   price: number
   previousPrice: number
   displayPriceOverride?: string | null
@@ -712,6 +725,7 @@ export type ProductUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  additionalDivisions?: Prisma.ProductUpdateadditionalDivisionsInput | $Enums.Division[]
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
   displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -743,6 +757,7 @@ export type ProductUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  additionalDivisions?: Prisma.ProductUpdateadditionalDivisionsInput | $Enums.Division[]
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
   displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -772,6 +787,14 @@ export type StringNullableListFilter<$PrismaModel = never> = {
   isEmpty?: boolean
 }
 
+export type EnumDivisionNullableListFilter<$PrismaModel = never> = {
+  equals?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel> | null
+  has?: $Enums.Division | Prisma.EnumDivisionFieldRefInput<$PrismaModel> | null
+  hasEvery?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel>
+  hasSome?: $Enums.Division[] | Prisma.ListEnumDivisionFieldRefInput<$PrismaModel>
+  isEmpty?: boolean
+}
+
 export type ProductCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   slug?: Prisma.SortOrder
@@ -782,6 +805,7 @@ export type ProductCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   brand?: Prisma.SortOrder
   division?: Prisma.SortOrder
+  additionalDivisions?: Prisma.SortOrder
   price?: Prisma.SortOrder
   previousPrice?: Prisma.SortOrder
   displayPriceOverride?: Prisma.SortOrder
@@ -880,6 +904,10 @@ export type ProductCreatealternativeReferencesInput = {
   set: string[]
 }
 
+export type ProductCreateadditionalDivisionsInput = {
+  set: $Enums.Division[]
+}
+
 export type ProductCreategalleryImagesInput = {
   set: string[]
 }
@@ -903,6 +931,11 @@ export type ProductUpdatealternativeReferencesInput = {
 
 export type EnumDivisionFieldUpdateOperationsInput = {
   set?: $Enums.Division
+}
+
+export type ProductUpdateadditionalDivisionsInput = {
+  set?: $Enums.Division[]
+  push?: $Enums.Division | $Enums.Division[]
 }
 
 export type IntFieldUpdateOperationsInput = {
@@ -969,6 +1002,7 @@ export type ProductCreateWithoutVariantsInput = {
   name: string
   brand: string
   division?: $Enums.Division
+  additionalDivisions?: Prisma.ProductCreateadditionalDivisionsInput | $Enums.Division[]
   price: number
   previousPrice: number
   displayPriceOverride?: string | null
@@ -1001,6 +1035,7 @@ export type ProductUncheckedCreateWithoutVariantsInput = {
   name: string
   brand: string
   division?: $Enums.Division
+  additionalDivisions?: Prisma.ProductCreateadditionalDivisionsInput | $Enums.Division[]
   price: number
   previousPrice: number
   displayPriceOverride?: string | null
@@ -1049,6 +1084,7 @@ export type ProductUpdateWithoutVariantsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  additionalDivisions?: Prisma.ProductUpdateadditionalDivisionsInput | $Enums.Division[]
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
   displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1081,6 +1117,7 @@ export type ProductUncheckedUpdateWithoutVariantsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  additionalDivisions?: Prisma.ProductUpdateadditionalDivisionsInput | $Enums.Division[]
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
   displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1113,6 +1150,7 @@ export type ProductCreateWithoutInventoryMovementsInput = {
   name: string
   brand: string
   division?: $Enums.Division
+  additionalDivisions?: Prisma.ProductCreateadditionalDivisionsInput | $Enums.Division[]
   price: number
   previousPrice: number
   displayPriceOverride?: string | null
@@ -1145,6 +1183,7 @@ export type ProductUncheckedCreateWithoutInventoryMovementsInput = {
   name: string
   brand: string
   division?: $Enums.Division
+  additionalDivisions?: Prisma.ProductCreateadditionalDivisionsInput | $Enums.Division[]
   price: number
   previousPrice: number
   displayPriceOverride?: string | null
@@ -1193,6 +1232,7 @@ export type ProductUpdateWithoutInventoryMovementsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  additionalDivisions?: Prisma.ProductUpdateadditionalDivisionsInput | $Enums.Division[]
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
   displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1225,6 +1265,7 @@ export type ProductUncheckedUpdateWithoutInventoryMovementsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   brand?: Prisma.StringFieldUpdateOperationsInput | string
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  additionalDivisions?: Prisma.ProductUpdateadditionalDivisionsInput | $Enums.Division[]
   price?: Prisma.IntFieldUpdateOperationsInput | number
   previousPrice?: Prisma.IntFieldUpdateOperationsInput | number
   displayPriceOverride?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1297,6 +1338,7 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   name?: boolean
   brand?: boolean
   division?: boolean
+  additionalDivisions?: boolean
   price?: boolean
   previousPrice?: boolean
   displayPriceOverride?: boolean
@@ -1331,6 +1373,7 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   name?: boolean
   brand?: boolean
   division?: boolean
+  additionalDivisions?: boolean
   price?: boolean
   previousPrice?: boolean
   displayPriceOverride?: boolean
@@ -1362,6 +1405,7 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   name?: boolean
   brand?: boolean
   division?: boolean
+  additionalDivisions?: boolean
   price?: boolean
   previousPrice?: boolean
   displayPriceOverride?: boolean
@@ -1393,6 +1437,7 @@ export type ProductSelectScalar = {
   name?: boolean
   brand?: boolean
   division?: boolean
+  additionalDivisions?: boolean
   price?: boolean
   previousPrice?: boolean
   displayPriceOverride?: boolean
@@ -1414,7 +1459,7 @@ export type ProductSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "sku" | "oemReference" | "alternativeReferences" | "category" | "name" | "brand" | "division" | "price" | "previousPrice" | "displayPriceOverride" | "displaySecondaryLabel" | "stock" | "minimumStock" | "image" | "galleryImages" | "availability" | "description" | "application" | "compatibility" | "warranty" | "technicalSheetUrl" | "technicalSpecs" | "featured" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "sku" | "oemReference" | "alternativeReferences" | "category" | "name" | "brand" | "division" | "additionalDivisions" | "price" | "previousPrice" | "displayPriceOverride" | "displaySecondaryLabel" | "stock" | "minimumStock" | "image" | "galleryImages" | "availability" | "description" | "application" | "compatibility" | "warranty" | "technicalSheetUrl" | "technicalSpecs" | "featured" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   inventoryMovements?: boolean | Prisma.Product$inventoryMovementsArgs<ExtArgs>
   variants?: boolean | Prisma.Product$variantsArgs<ExtArgs>
@@ -1439,6 +1484,7 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     name: string
     brand: string
     division: $Enums.Division
+    additionalDivisions: $Enums.Division[]
     price: number
     previousPrice: number
     displayPriceOverride: string | null
@@ -1892,6 +1938,7 @@ export interface ProductFieldRefs {
   readonly name: Prisma.FieldRef<"Product", 'String'>
   readonly brand: Prisma.FieldRef<"Product", 'String'>
   readonly division: Prisma.FieldRef<"Product", 'Division'>
+  readonly additionalDivisions: Prisma.FieldRef<"Product", 'Division[]'>
   readonly price: Prisma.FieldRef<"Product", 'Int'>
   readonly previousPrice: Prisma.FieldRef<"Product", 'Int'>
   readonly displayPriceOverride: Prisma.FieldRef<"Product", 'String'>
