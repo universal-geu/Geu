@@ -5,7 +5,7 @@ import EnergyHeader from "./energy-header";
 import EngineeringModelViewer from "./engineering-model-viewer";
 import GusChat from "./gus-chat";
 import SiteFooter from "../components/site-footer";
-import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { getSiteImages, resolveImage, type SiteImages } from "@/lib/site-images";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
 import { getWhatsAppNumber } from "@/lib/site-settings";
 
@@ -22,34 +22,30 @@ const navItems = [
   { label: "Contacto", href: "/energy#contacto" },
 ];
 
-const heroVideo = "/geu-energy-hero-field.mp4";
-const gusBgImage = "/geu-energy-gus-bg.jpg";
-const projectHouseImage = "/geu-energy-project-house.png";
-const projectHouseVideo = "/geu-energy-project-house.mp4";
-const structuresBannerImage = "/geu-energy-structures-banner.png";
-
-const solutions = [
-  {
-    title: "Monoposte",
-    text: "Un solo poste central por línea de módulos, ideal para terrenos con buena capacidad portante.",
-    image: "/energy-estructura-monoposte.jpg",
-  },
-  {
-    title: "Biposte",
-    text: "Dos hileras de postes que reparten mejor la carga, pensado para configuraciones más grandes.",
-    image: "/energy-estructura-biposte.jpg",
-  },
-  {
-    title: "Chinese hat",
-    text: "Estructura tipo carpa con paneles a dos aguas desde una cumbrera central.",
-    image: "/energy-estructura-chinesehat.jpg",
-  },
-  {
-    title: "Carport",
-    text: "Cubierta solar para parqueaderos: genera energía y da sombra al mismo tiempo.",
-    image: "/energy-estructura-carport.jpg",
-  },
-];
+function getSolutions(siteImages: SiteImages) {
+  return [
+    {
+      title: "Monoposte",
+      text: "Un solo poste central por línea de módulos, ideal para terrenos con buena capacidad portante.",
+      image: resolveImage("energy-solucion-monoposte", siteImages),
+    },
+    {
+      title: "Biposte",
+      text: "Dos hileras de postes que reparten mejor la carga, pensado para configuraciones más grandes.",
+      image: resolveImage("energy-solucion-biposte", siteImages),
+    },
+    {
+      title: "Chinese hat",
+      text: "Estructura tipo carpa con paneles a dos aguas desde una cumbrera central.",
+      image: resolveImage("energy-solucion-chinesehat", siteImages),
+    },
+    {
+      title: "Carport",
+      text: "Cubierta solar para parqueaderos: genera energía y da sombra al mismo tiempo.",
+      image: resolveImage("energy-solucion-carport", siteImages),
+    },
+  ];
+}
 
 function BoltIcon() {
   return (
@@ -117,6 +113,7 @@ export default async function EnergyPage() {
   const siteTexts = await getSiteTexts();
   const whatsappNumber = await getWhatsAppNumber();
   const t = (key: string) => resolveText(key, siteTexts);
+  const solutions = getSolutions(siteImages);
   const gusWhatsappHref = whatsappNumber
     ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
         "Hola Gus, quiero más información sobre energía solar.",
@@ -129,7 +126,7 @@ export default async function EnergyPage() {
 
       <section className="relative isolate flex min-h-screen flex-col overflow-hidden border-b border-white/10">
         <video
-          src={heroVideo}
+          src={resolveImage("energy-hero-video", siteImages)}
           poster={resolveImage("energy-principal", siteImages)}
           autoPlay
           muted
@@ -221,8 +218,8 @@ export default async function EnergyPage() {
 
       <section id="sistema" className="relative isolate overflow-hidden border-b border-white/10 bg-black">
         <video
-          src={projectHouseVideo}
-          poster={projectHouseImage}
+          src={resolveImage("energy-sistema-video", siteImages)}
+          poster={resolveImage("energy-sistema-video-poster", siteImages)}
           autoPlay
           muted
           loop
@@ -272,7 +269,7 @@ export default async function EnergyPage() {
 
       <section className="relative overflow-hidden bg-black">
         <Image
-          src={structuresBannerImage}
+          src={resolveImage("energy-estructuras-banner", siteImages)}
           alt="Estructuras solares diseñadas para sostener el futuro"
           width={2400}
           height={800}
@@ -283,7 +280,7 @@ export default async function EnergyPage() {
       <section id="contacto" className="relative overflow-hidden bg-black">
         <div className="relative aspect-[1672/941] w-full">
           <Image
-            src={gusBgImage}
+            src={resolveImage("energy-contacto-fondo", siteImages)}
             alt="Sistema fotovoltaico instalado por GEU Energy"
             fill
             sizes="100vw"
