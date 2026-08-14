@@ -158,6 +158,7 @@ model Order {
   carrier        String?
   trackingNumber String?
   adminNotes     String?
+  preparingAt    DateTime?
   shippedAt      DateTime?
   deliveredAt    DateTime?
   subtotal       Int

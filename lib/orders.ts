@@ -755,6 +755,7 @@ export async function updateOrderShipping(
       status: true,
       paymentStatus: true,
       shippingStatus: true,
+      preparingAt: true,
       customerName: true,
       customerEmail: true,
       division: true,
@@ -783,6 +784,10 @@ export async function updateOrderShipping(
       ? new Date()
       : null;
   const deliveredAt = shippingStatus === "DELIVERED" ? new Date() : null;
+  const preparingAt =
+    shippingStatus === "PREPARING" && !currentOrder.preparingAt
+      ? new Date()
+      : currentOrder.preparingAt;
 
   const updatedOrder = await prisma.order.update({
     where: { id: orderId },
@@ -793,6 +798,7 @@ export async function updateOrderShipping(
       carrier,
       trackingNumber,
       adminNotes,
+      preparingAt,
       shippedAt,
       deliveredAt,
     },
@@ -921,6 +927,10 @@ export async function confirmSimulatedOrderPayment(
       status: "PAID",
       shippingStatus:
         order.shippingStatus === "PENDING" ? "PREPARING" : order.shippingStatus,
+      preparingAt:
+        order.shippingStatus === "PENDING" && !order.preparingAt
+          ? new Date()
+          : order.preparingAt,
       adminNotes:
         order.adminNotes ||
         "Pago demo confirmado con código interno de validación.",

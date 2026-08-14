@@ -334,6 +334,7 @@ type AdminOrder = {
   carrier: string | null;
   trackingNumber: string | null;
   adminNotes: string | null;
+  preparingAt: string | Date | null;
   shippedAt: string | Date | null;
   deliveredAt: string | Date | null;
   totalItems: number;
@@ -457,6 +458,34 @@ const SHIPPING_STATUS_BADGE_CLASS: Record<ShippingStatus, string> = {
   DELIVERED: "bg-emerald-600 text-white",
   CANCELLED: "bg-slate-200 text-slate-600",
 };
+
+const PREPARATION_LIMIT_MS = 24 * 60 * 60 * 1000;
+const SHIPPING_LIMIT_MS = 3 * 24 * 60 * 60 * 1000;
+
+function isOrderDelayed(order: AdminOrder) {
+  if (
+    order.shippingStatus === "SHIPPED" ||
+    order.shippingStatus === "DELIVERED" ||
+    order.shippingStatus === "CANCELLED"
+  ) {
+    return false;
+  }
+
+  const now = Date.now();
+
+  if (now - new Date(order.createdAt).getTime() > SHIPPING_LIMIT_MS) {
+    return true;
+  }
+
+  if (
+    order.preparingAt &&
+    now - new Date(order.preparingAt).getTime() > PREPARATION_LIMIT_MS
+  ) {
+    return true;
+  }
+
+  return false;
+}
 
 function getPaymentStatusLabel(status: "PENDING" | "PAID" | "FAILED") {
   if (status === "PAID") return "Pago confirmado";
@@ -5065,6 +5094,11 @@ export default function AdminPage() {
                         <p className="mt-0.5 text-xs text-[#8b8d91]">
                           {order.city} · {formatCurrency(order.subtotal + order.shippingCost)}
                         </p>
+                        {isOrderDelayed(order) && (
+                          <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                            ⚠ Atrasado
+                          </span>
+                        )}
                       </button>
                     ))
                   )}
@@ -5097,6 +5131,11 @@ export default function AdminPage() {
                           >
                             {getShippingStatusLabel(selectedOrderPreview.shippingStatus)}
                           </span>
+                          {isOrderDelayed(selectedOrderPreview) && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white">
+                              ⚠ Pedido atrasado
+                            </span>
+                          )}
                         </div>
                         <button
                           type="button"
