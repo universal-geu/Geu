@@ -16,6 +16,8 @@ import {
 import { prisma } from "@/lib/prisma";
 import { DIVISION_BRAND, isServiceDivision, type DivisionName } from "@/lib/divisions";
 
+export { productSellsInDivision } from "@/lib/product-category-views";
+
 type ProductRecord = {
   id?: string;
   slug: string;
@@ -26,6 +28,7 @@ type ProductRecord = {
   name: string;
   brand: string;
   division: DivisionName;
+  additionalDivisions?: DivisionName[] | null;
   price: number;
   previousPrice: number;
   displayPriceOverride?: string | null;
@@ -73,6 +76,7 @@ export type ProductMutationInput = {
   nombre: string;
   marca: string;
   division: DivisionName;
+  divisionesAdicionales?: DivisionName[];
   precioValor: number;
   precioAnteriorValor: number;
   displayPriceOverride?: string;
@@ -90,6 +94,18 @@ export type ProductMutationInput = {
   especificacionesTecnicas?: ProductoEspecificacion[];
   variantes?: ProductoVariante[];
 };
+
+const SELLABLE_DIVISIONS: DivisionName[] = ["Cauchos", "Import", "Plastic"];
+
+function normalizeAdditionalDivisions(
+  value: DivisionName[] | undefined,
+  ownDivision: DivisionName,
+): DivisionName[] {
+  const unique = Array.from(new Set(value || []));
+  return unique.filter(
+    (division) => SELLABLE_DIVISIONS.includes(division) && division !== ownDivision,
+  );
+}
 
 function normalizeVariantes(variantes: unknown): ProductoVariante[] {
   if (!Array.isArray(variantes)) return [];
@@ -415,6 +431,7 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
     nombre: product.name,
     marca: product.brand,
     division: product.division,
+    divisionesAdicionales: product.additionalDivisions || [],
     displayPriceOverride: product.displayPriceOverride || undefined,
     displaySecondaryLabel: product.displaySecondaryLabel || undefined,
     precio: product.displayPriceOverride || formatearMoneda(product.price),
@@ -608,6 +625,9 @@ export async function createProduct(input: ProductMutationInput) {
       name: nombre,
       brand: marca,
       division: input.division,
+      additionalDivisions: {
+        set: normalizeAdditionalDivisions(input.divisionesAdicionales, input.division),
+      },
       price: precioValor,
       previousPrice: precioAnteriorValor,
       displayPriceOverride: input.displayPriceOverride?.trim() || null,
@@ -806,6 +826,9 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
           category: input.categoria,
           name: nombre,
           brand: marca,
+          additionalDivisions: {
+            set: normalizeAdditionalDivisions(input.divisionesAdicionales, input.division),
+          },
           price: precioValor,
           previousPrice: precioAnteriorValor,
           displayPriceOverride: input.displayPriceOverride?.trim() || null,

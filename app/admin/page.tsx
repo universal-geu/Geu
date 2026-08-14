@@ -26,7 +26,7 @@ import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
 import { TEXT_SLOTS } from "@/lib/text-slots";
 import { COLOR_SLOTS } from "@/lib/color-slots";
-import { getDivisionFromBrandParam, isServiceDivision, type DivisionName } from "@/lib/divisions";
+import { DIVISION_BRAND, getDivisionFromBrandParam, isServiceDivision, type DivisionName } from "@/lib/divisions";
 import type { CauchosSalesMode } from "@/lib/site-settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
@@ -188,6 +188,7 @@ type FormState = {
   subcategoria: string;
   categoriaMenor: string;
   categoriasAdicionales: AdditionalCategoryFormItem[];
+  divisionesAdicionales: DivisionName[];
   nombre: string;
   marca: string;
   precioValor: string;
@@ -211,6 +212,7 @@ const initialState: FormState = {
   subcategoria: "",
   categoriaMenor: "",
   categoriasAdicionales: [],
+  divisionesAdicionales: [],
   nombre: "",
   marca: "",
   precioValor: "",
@@ -1114,6 +1116,57 @@ function AdditionalCategoriesEditor({
               </button>
             </div>
           </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const SELLABLE_DIVISIONS: DivisionName[] = ["Cauchos", "Import", "Plastic"];
+
+function AdditionalDivisionsEditor({
+  currentDivision,
+  value,
+  onChange,
+}: {
+  currentDivision: DivisionName;
+  value: DivisionName[];
+  onChange: (value: DivisionName[]) => void;
+}) {
+  const options = SELLABLE_DIVISIONS.filter((division) => division !== currentDivision);
+
+  if (options.length === 0) return null;
+
+  const toggle = (division: DivisionName) => {
+    onChange(
+      value.includes(division)
+        ? value.filter((item) => item !== division)
+        : [...value, division],
+    );
+  };
+
+  return (
+    <div className="md:col-span-2 rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-5">
+      <p className="text-sm font-medium text-[#4f545a]">
+        Este producto también funciona para otra empresa GEU
+      </p>
+      <p className="mt-2 text-xs leading-6 text-[#6e7379]">
+        Márcalas si este mismo producto debe aparecer también en el catálogo de esas empresas, sin duplicarlo.
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-3">
+        {options.map((division) => (
+          <label
+            key={division}
+            className="flex cursor-pointer items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm text-[#4f545a] transition-colors duration-200 has-[:checked]:border-[var(--admin-accent)] has-[:checked]:text-[#16384f]"
+          >
+            <input
+              type="checkbox"
+              checked={value.includes(division)}
+              onChange={() => toggle(division)}
+            />
+            {DIVISION_BRAND[division].label}
+          </label>
         ))}
       </div>
     </div>
@@ -2060,6 +2113,7 @@ export default function AdminPage() {
         nombre: form.nombre,
         marca: form.marca,
         division: adminDivision,
+        divisionesAdicionales: form.divisionesAdicionales,
         precioValor: isServiceAdmin ? 1 : Number(form.precioValor),
         precioAnteriorValor: isServiceAdmin
           ? 1
@@ -2155,6 +2209,7 @@ export default function AdminPage() {
       categoriasAdicionales: (product.categoriasAdicionales || []).map((entry) =>
         createAdditionalCategoryItem(entry),
       ),
+      divisionesAdicionales: product.divisionesAdicionales || [],
       nombre: product.nombre,
       marca: product.marca,
       precioValor: String(product.precioValor),
@@ -3892,6 +3947,14 @@ export default function AdminPage() {
                     onChange={(items) => setForm((current) => ({ ...current, categoriasAdicionales: items }))}
                   />
 
+                  {!isServiceAdmin && (
+                    <AdditionalDivisionsEditor
+                      currentDivision={adminDivision}
+                      value={form.divisionesAdicionales}
+                      onChange={(value) => setForm((current) => ({ ...current, divisionesAdicionales: value }))}
+                    />
+                  )}
+
                 <label className="space-y-2">
                   <span className="text-sm font-medium text-[#4f545a]">Marca</span>
                   <input
@@ -4450,6 +4513,14 @@ export default function AdminPage() {
                       strictCategory={adminDivision === "Import" || adminDivision === "Plastic"}
                       onChange={(items) => setForm((current) => ({ ...current, categoriasAdicionales: items }))}
                     />
+
+                    {!isServiceAdmin && (
+                      <AdditionalDivisionsEditor
+                        currentDivision={adminDivision}
+                        value={form.divisionesAdicionales}
+                        onChange={(value) => setForm((current) => ({ ...current, divisionesAdicionales: value }))}
+                      />
+                    )}
 
                     <label className="space-y-2">
                       <span className="text-sm font-medium text-[#4f545a]">Marca</span>

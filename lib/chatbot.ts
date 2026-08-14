@@ -5,7 +5,7 @@ import {
   type Categoria,
 } from "@/app/data/catalog";
 import { DIVISIONS, type DivisionName } from "@/lib/divisions";
-import { getProducts, type StoreProduct } from "@/lib/products";
+import { getProducts, productSellsInDivision, type StoreProduct } from "@/lib/products";
 
 function normalizeDivision(value: string | undefined): DivisionName {
   return DIVISIONS.includes(value as DivisionName) ? (value as DivisionName) : "Cauchos";
@@ -85,7 +85,7 @@ export async function getCatalogSnapshot(
 ): Promise<CatalogSnapshot> {
   const division = normalizeDivision(divisionInput);
   const allProducts = await getProducts();
-  const products = allProducts.filter((product) => (product.division ?? "Cauchos") === division);
+  const products = allProducts.filter((product) => productSellsInDivision(product, division));
   const queryTokens = tokenize(query);
   const matchedCategories = getMatchedCategories(query, division);
 

@@ -29,6 +29,7 @@ export type AdminProductInput = {
   nombre: string;
   marca: string;
   division: DivisionName;
+  divisionesAdicionales?: DivisionName[];
   precioValor: number;
   precioAnteriorValor: number;
   displayPriceOverride?: string;
@@ -119,6 +120,7 @@ function createLocalProduct(
     nombre: input.nombre.trim(),
     marca: input.marca.trim(),
     division: input.division,
+    divisionesAdicionales: input.divisionesAdicionales || [],
     displayPriceOverride: input.displayPriceOverride?.trim() || undefined,
     displaySecondaryLabel: input.displaySecondaryLabel?.trim() || undefined,
     precio: input.displayPriceOverride?.trim() || formatearMoneda(precioValor),

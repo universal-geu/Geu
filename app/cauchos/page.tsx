@@ -10,7 +10,7 @@ import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
-import { getProducts } from "@/lib/products";
+import { getProducts, productSellsInDivision } from "@/lib/products";
 import { slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
@@ -136,7 +136,7 @@ export default async function CauchosPage() {
     image: resolveImage(category.imageKey, siteImages),
   }));
   const allProducts = await getProducts();
-  const cauchosCatalog = allProducts.filter((product) => product.division === "Cauchos");
+  const cauchosCatalog = allProducts.filter((product) => productSellsInDivision(product, "Cauchos"));
   const cauchosFeatured = cauchosCatalog.filter((product) => product.destacado);
   const cauchosProducts = (cauchosFeatured.length > 0 ? cauchosFeatured : cauchosCatalog).slice(0, 4);
   const featuredBrandsResolved = featuredBrands.map((brand) => ({

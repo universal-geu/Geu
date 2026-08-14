@@ -62,6 +62,7 @@ model Product {
   name                  String
   brand                 String
   division              Division            @default(Cauchos)
+  additionalDivisions   Division[]          @default([])
   price                 Int
   previousPrice         Int
   displayPriceOverride  String?

@@ -91,6 +91,7 @@ export const ProductScalarFieldEnum = {
   name: 'name',
   brand: 'brand',
   division: 'division',
+  additionalDivisions: 'additionalDivisions',
   price: 'price',
   previousPrice: 'previousPrice',
   displayPriceOverride: 'displayPriceOverride',

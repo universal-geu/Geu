@@ -10,7 +10,7 @@ import { useProducts } from "./products-provider";
 import { useSiteImages } from "./use-site-images";
 import { resolveImage } from "@/lib/image-slots";
 import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
-import { expandProductCategoryViews } from "@/lib/product-category-views";
+import { expandProductCategoryViews, productSellsInDivision } from "@/lib/product-category-views";
 
 type Props = {
   segments?: string[];
@@ -82,7 +82,7 @@ export default function CauchosCategoryProductsPage({
     if (isSearchMode) {
       const needle = trimmedSearchQuery.toLowerCase();
       return products.filter((product) => {
-        if (product.division !== division) return false;
+        if (!productSellsInDivision(product, division)) return false;
 
         return (
           product.nombre.toLowerCase().includes(needle) ||
