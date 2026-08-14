@@ -60,6 +60,7 @@ export type OrderMinAggregateOutputType = {
   carrier: string | null
   trackingNumber: string | null
   adminNotes: string | null
+  preparingAt: Date | null
   shippedAt: Date | null
   deliveredAt: Date | null
   subtotal: number | null
@@ -89,6 +90,7 @@ export type OrderMaxAggregateOutputType = {
   carrier: string | null
   trackingNumber: string | null
   adminNotes: string | null
+  preparingAt: Date | null
   shippedAt: Date | null
   deliveredAt: Date | null
   subtotal: number | null
@@ -118,6 +120,7 @@ export type OrderCountAggregateOutputType = {
   carrier: number
   trackingNumber: number
   adminNotes: number
+  preparingAt: number
   shippedAt: number
   deliveredAt: number
   subtotal: number
@@ -163,6 +166,7 @@ export type OrderMinAggregateInputType = {
   carrier?: true
   trackingNumber?: true
   adminNotes?: true
+  preparingAt?: true
   shippedAt?: true
   deliveredAt?: true
   subtotal?: true
@@ -192,6 +196,7 @@ export type OrderMaxAggregateInputType = {
   carrier?: true
   trackingNumber?: true
   adminNotes?: true
+  preparingAt?: true
   shippedAt?: true
   deliveredAt?: true
   subtotal?: true
@@ -221,6 +226,7 @@ export type OrderCountAggregateInputType = {
   carrier?: true
   trackingNumber?: true
   adminNotes?: true
+  preparingAt?: true
   shippedAt?: true
   deliveredAt?: true
   subtotal?: true
@@ -337,6 +343,7 @@ export type OrderGroupByOutputType = {
   carrier: string | null
   trackingNumber: string | null
   adminNotes: string | null
+  preparingAt: Date | null
   shippedAt: Date | null
   deliveredAt: Date | null
   subtotal: number
@@ -389,6 +396,7 @@ export type OrderWhereInput = {
   carrier?: Prisma.StringNullableFilter<"Order"> | string | null
   trackingNumber?: Prisma.StringNullableFilter<"Order"> | string | null
   adminNotes?: Prisma.StringNullableFilter<"Order"> | string | null
+  preparingAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   shippedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   subtotal?: Prisma.IntFilter<"Order"> | number
@@ -420,6 +428,7 @@ export type OrderOrderByWithRelationInput = {
   carrier?: Prisma.SortOrderInput | Prisma.SortOrder
   trackingNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   adminNotes?: Prisma.SortOrderInput | Prisma.SortOrder
+  preparingAt?: Prisma.SortOrderInput | Prisma.SortOrder
   shippedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   subtotal?: Prisma.SortOrder
@@ -454,6 +463,7 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   carrier?: Prisma.StringNullableFilter<"Order"> | string | null
   trackingNumber?: Prisma.StringNullableFilter<"Order"> | string | null
   adminNotes?: Prisma.StringNullableFilter<"Order"> | string | null
+  preparingAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   shippedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   subtotal?: Prisma.IntFilter<"Order"> | number
@@ -485,6 +495,7 @@ export type OrderOrderByWithAggregationInput = {
   carrier?: Prisma.SortOrderInput | Prisma.SortOrder
   trackingNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   adminNotes?: Prisma.SortOrderInput | Prisma.SortOrder
+  preparingAt?: Prisma.SortOrderInput | Prisma.SortOrder
   shippedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   subtotal?: Prisma.SortOrder
@@ -522,6 +533,7 @@ export type OrderScalarWhereWithAggregatesInput = {
   carrier?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   trackingNumber?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   adminNotes?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  preparingAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   shippedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   subtotal?: Prisma.IntWithAggregatesFilter<"Order"> | number
@@ -550,6 +562,7 @@ export type OrderCreateInput = {
   carrier?: string | null
   trackingNumber?: string | null
   adminNotes?: string | null
+  preparingAt?: Date | string | null
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
@@ -581,6 +594,7 @@ export type OrderUncheckedCreateInput = {
   carrier?: string | null
   trackingNumber?: string | null
   adminNotes?: string | null
+  preparingAt?: Date | string | null
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
@@ -609,6 +623,7 @@ export type OrderUpdateInput = {
   carrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preparingAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
@@ -640,6 +655,7 @@ export type OrderUncheckedUpdateInput = {
   carrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preparingAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
@@ -670,6 +686,7 @@ export type OrderCreateManyInput = {
   carrier?: string | null
   trackingNumber?: string | null
   adminNotes?: string | null
+  preparingAt?: Date | string | null
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
@@ -697,6 +714,7 @@ export type OrderUpdateManyMutationInput = {
   carrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preparingAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
@@ -726,6 +744,7 @@ export type OrderUncheckedUpdateManyInput = {
   carrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preparingAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
@@ -765,6 +784,7 @@ export type OrderCountOrderByAggregateInput = {
   carrier?: Prisma.SortOrder
   trackingNumber?: Prisma.SortOrder
   adminNotes?: Prisma.SortOrder
+  preparingAt?: Prisma.SortOrder
   shippedAt?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
@@ -801,6 +821,7 @@ export type OrderMaxOrderByAggregateInput = {
   carrier?: Prisma.SortOrder
   trackingNumber?: Prisma.SortOrder
   adminNotes?: Prisma.SortOrder
+  preparingAt?: Prisma.SortOrder
   shippedAt?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
@@ -830,6 +851,7 @@ export type OrderMinOrderByAggregateInput = {
   carrier?: Prisma.SortOrder
   trackingNumber?: Prisma.SortOrder
   adminNotes?: Prisma.SortOrder
+  preparingAt?: Prisma.SortOrder
   shippedAt?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
   subtotal?: Prisma.SortOrder
@@ -942,6 +964,7 @@ export type OrderCreateWithoutUserInput = {
   carrier?: string | null
   trackingNumber?: string | null
   adminNotes?: string | null
+  preparingAt?: Date | string | null
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
@@ -971,6 +994,7 @@ export type OrderUncheckedCreateWithoutUserInput = {
   carrier?: string | null
   trackingNumber?: string | null
   adminNotes?: string | null
+  preparingAt?: Date | string | null
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
@@ -1030,6 +1054,7 @@ export type OrderScalarWhereInput = {
   carrier?: Prisma.StringNullableFilter<"Order"> | string | null
   trackingNumber?: Prisma.StringNullableFilter<"Order"> | string | null
   adminNotes?: Prisma.StringNullableFilter<"Order"> | string | null
+  preparingAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   shippedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   deliveredAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   subtotal?: Prisma.IntFilter<"Order"> | number
@@ -1058,6 +1083,7 @@ export type OrderCreateWithoutItemsInput = {
   carrier?: string | null
   trackingNumber?: string | null
   adminNotes?: string | null
+  preparingAt?: Date | string | null
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
@@ -1088,6 +1114,7 @@ export type OrderUncheckedCreateWithoutItemsInput = {
   carrier?: string | null
   trackingNumber?: string | null
   adminNotes?: string | null
+  preparingAt?: Date | string | null
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
@@ -1131,6 +1158,7 @@ export type OrderUpdateWithoutItemsInput = {
   carrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preparingAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1161,6 +1189,7 @@ export type OrderUncheckedUpdateWithoutItemsInput = {
   carrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preparingAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1189,6 +1218,7 @@ export type OrderCreateManyUserInput = {
   carrier?: string | null
   trackingNumber?: string | null
   adminNotes?: string | null
+  preparingAt?: Date | string | null
   shippedAt?: Date | string | null
   deliveredAt?: Date | string | null
   subtotal: number
@@ -1216,6 +1246,7 @@ export type OrderUpdateWithoutUserInput = {
   carrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preparingAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1245,6 +1276,7 @@ export type OrderUncheckedUpdateWithoutUserInput = {
   carrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preparingAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1274,6 +1306,7 @@ export type OrderUncheckedUpdateManyWithoutUserInput = {
   carrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  preparingAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   shippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   subtotal?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1334,6 +1367,7 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   carrier?: boolean
   trackingNumber?: boolean
   adminNotes?: boolean
+  preparingAt?: boolean
   shippedAt?: boolean
   deliveredAt?: boolean
   subtotal?: boolean
@@ -1366,6 +1400,7 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   carrier?: boolean
   trackingNumber?: boolean
   adminNotes?: boolean
+  preparingAt?: boolean
   shippedAt?: boolean
   deliveredAt?: boolean
   subtotal?: boolean
@@ -1396,6 +1431,7 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   carrier?: boolean
   trackingNumber?: boolean
   adminNotes?: boolean
+  preparingAt?: boolean
   shippedAt?: boolean
   deliveredAt?: boolean
   subtotal?: boolean
@@ -1426,6 +1462,7 @@ export type OrderSelectScalar = {
   carrier?: boolean
   trackingNumber?: boolean
   adminNotes?: boolean
+  preparingAt?: boolean
   shippedAt?: boolean
   deliveredAt?: boolean
   subtotal?: boolean
@@ -1435,7 +1472,7 @@ export type OrderSelectScalar = {
   updatedAt?: boolean
 }
 
-export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderNumber" | "userId" | "status" | "paymentStatus" | "shippingStatus" | "division" | "customerName" | "customerEmail" | "customerPhone" | "company" | "department" | "city" | "addressLine1" | "addressLine2" | "notes" | "carrier" | "trackingNumber" | "adminNotes" | "shippedAt" | "deliveredAt" | "subtotal" | "shippingCost" | "totalItems" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderNumber" | "userId" | "status" | "paymentStatus" | "shippingStatus" | "division" | "customerName" | "customerEmail" | "customerPhone" | "company" | "department" | "city" | "addressLine1" | "addressLine2" | "notes" | "carrier" | "trackingNumber" | "adminNotes" | "preparingAt" | "shippedAt" | "deliveredAt" | "subtotal" | "shippingCost" | "totalItems" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
 export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   items?: boolean | Prisma.Order$itemsArgs<ExtArgs>
@@ -1474,6 +1511,7 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     carrier: string | null
     trackingNumber: string | null
     adminNotes: string | null
+    preparingAt: Date | null
     shippedAt: Date | null
     deliveredAt: Date | null
     subtotal: number
@@ -1925,6 +1963,7 @@ export interface OrderFieldRefs {
   readonly carrier: Prisma.FieldRef<"Order", 'String'>
   readonly trackingNumber: Prisma.FieldRef<"Order", 'String'>
   readonly adminNotes: Prisma.FieldRef<"Order", 'String'>
+  readonly preparingAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly shippedAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly deliveredAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly subtotal: Prisma.FieldRef<"Order", 'Int'>

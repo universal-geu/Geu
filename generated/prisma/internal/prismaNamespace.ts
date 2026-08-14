@@ -1449,6 +1449,7 @@ export const OrderScalarFieldEnum = {
   carrier: 'carrier',
   trackingNumber: 'trackingNumber',
   adminNotes: 'adminNotes',
+  preparingAt: 'preparingAt',
   shippedAt: 'shippedAt',
   deliveredAt: 'deliveredAt',
   subtotal: 'subtotal',
