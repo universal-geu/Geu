@@ -3,7 +3,7 @@ import Link from "next/link";
 import SolutionsCarousel from "../energy/solutions-carousel";
 import InnovationHeader from "./innovation-header";
 import SiteFooter from "../components/site-footer";
-import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { getSiteImages, resolveImage, type SiteImages } from "@/lib/site-images";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
 
 export const dynamic = "force-dynamic";
@@ -19,32 +19,30 @@ const navItems = [
   { label: "Contacto", href: "mailto:innovation@geu.com.co" },
 ];
 
-const heroVideo = "/geu-innovation-hero.mp4";
-const brandBannerImage = "/geu-innovation-brand-banner.png";
-const supportBannerImage = "/geu-innovation-support-banner.png";
-
-const solutions = [
-  {
-    title: "Autoservicio 24/7",
-    text: "Tu equipo se sirve solo: bebidas y snacks disponibles a cualquier hora, sin filas ni intermediarios.",
-    image: "/geu-innovation-card-autoservicio.png",
-  },
-  {
-    title: "Pago sin contacto",
-    text: "Cada producto se registra al instante: cobro automático y trazabilidad total del consumo.",
-    image: "/geu-innovation-card-pago.png",
-  },
-  {
-    title: "Asistente GEU",
-    text: "Un asistente siempre listo para reposición, mantenimiento y soporte técnico en sitio.",
-    image: "/geu-innovation-card-asistente.png",
-  },
-  {
-    title: "Espacios colaborativos",
-    text: "Puntos GEU Innovation pensados para integrarse al ritmo de tu oficina o punto de venta.",
-    image: brandBannerImage,
-  },
-];
+function getSolutions(siteImages: SiteImages) {
+  return [
+    {
+      title: "Autoservicio 24/7",
+      text: "Tu equipo se sirve solo: bebidas y snacks disponibles a cualquier hora, sin filas ni intermediarios.",
+      image: resolveImage("innovation-tarjeta-autoservicio", siteImages),
+    },
+    {
+      title: "Pago sin contacto",
+      text: "Cada producto se registra al instante: cobro automático y trazabilidad total del consumo.",
+      image: resolveImage("innovation-tarjeta-pago", siteImages),
+    },
+    {
+      title: "Asistente GEU",
+      text: "Un asistente siempre listo para reposición, mantenimiento y soporte técnico en sitio.",
+      image: resolveImage("innovation-tarjeta-asistente", siteImages),
+    },
+    {
+      title: "Espacios colaborativos",
+      text: "Puntos GEU Innovation pensados para integrarse al ritmo de tu oficina o punto de venta.",
+      image: resolveImage("innovation-tarjeta-espacios", siteImages),
+    },
+  ];
+}
 
 function SnowflakeIcon() {
   return (
@@ -97,6 +95,7 @@ export default async function InnovationPage() {
   const siteImages = await getSiteImages();
   const siteTexts = await getSiteTexts();
   const t = (key: string) => resolveText(key, siteTexts);
+  const solutions = getSolutions(siteImages);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -104,7 +103,7 @@ export default async function InnovationPage() {
 
       <section className="relative isolate flex min-h-screen flex-col overflow-hidden border-b border-white/10">
         <video
-          src={heroVideo}
+          src={resolveImage("innovation-hero-video", siteImages)}
           poster={resolveImage("innovation-principal", siteImages)}
           autoPlay
           muted
@@ -171,7 +170,7 @@ export default async function InnovationPage() {
       <section id="sistema" className="relative overflow-hidden border-b border-white/10 bg-black">
         <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
           <Image
-            src={supportBannerImage}
+            src={resolveImage("innovation-sistema-banner", siteImages)}
             alt="Asistente GEU Innovation junto a un punto inteligente, listo para dar soporte"
             fill
             sizes="100vw"
