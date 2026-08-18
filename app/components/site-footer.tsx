@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { resolveText, type SiteTexts } from "@/lib/text-slots";
 
 function isSafeHttpUrl(value: string): boolean {
@@ -108,8 +109,13 @@ export default function SiteFooter({
       style={isDark ? { backgroundColor: darkBg } : undefined}
     >
       <div
-        className="mx-auto grid gap-8 px-5 py-10 md:px-8"
-        style={{ maxWidth, gridTemplateColumns: `1.2fr repeat(${1 + columns.length}, 1fr)` }}
+        className="site-footer-grid mx-auto grid gap-8 px-5 py-10 md:px-8"
+        style={
+          {
+            maxWidth,
+            "--footer-cols": `1.2fr repeat(${1 + columns.length}, 1fr)`,
+          } as CSSProperties
+        }
       >
         <div>
           <Image

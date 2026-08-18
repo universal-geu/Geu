@@ -111,7 +111,7 @@ export default function Home() {
             priority
             style={{
               width: "min(56vw, 48rem)",
-              minWidth: "22rem",
+              minWidth: "min(22rem, 90vw)",
               height: "auto",
               objectFit: "contain",
             }}
