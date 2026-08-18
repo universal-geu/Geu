@@ -505,10 +505,47 @@ textarea {
 
   .geu-entry-grid {
     width: min(98vw, 46rem);
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
   }
 
   .geu-entry-card {
-    min-height: 18rem;
+    min-height: 9rem !important;
+    border-right: none !important;
+  }
+
+  .geu-entry-card:not(:last-child) {
+    border-bottom: 3px solid #ffffff;
+  }
+
+  .geu-entry-card-copy {
+    left: 1.15rem !important;
+    right: 1.15rem !important;
+    bottom: auto !important;
+    top: 50% !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: translateY(-50%) !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+  }
+
+  .geu-entry-description {
+    display: none;
+  }
+
+  .geu-entry-cta {
+    margin-top: 0.5rem !important;
+  }
+}
+
+.site-footer-grid {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .site-footer-grid {
+    grid-template-columns: var(--footer-cols);
   }
 }
 
