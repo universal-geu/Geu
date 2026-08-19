@@ -61,6 +61,7 @@ export const ModelName = {
   SiteImage: 'SiteImage',
   SiteSetting: 'SiteSetting',
   SiteContentDraft: 'SiteContentDraft',
+  SiteImageHistory: 'SiteImageHistory',
   SiteContentVersion: 'SiteContentVersion',
   Quote: 'Quote'
 } as const
@@ -264,6 +265,16 @@ export const SiteContentDraftScalarFieldEnum = {
 } as const
 
 export type SiteContentDraftScalarFieldEnum = (typeof SiteContentDraftScalarFieldEnum)[keyof typeof SiteContentDraftScalarFieldEnum]
+
+
+export const SiteImageHistoryScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  url: 'url',
+  createdAt: 'createdAt'
+} as const
+
+export type SiteImageHistoryScalarFieldEnum = (typeof SiteImageHistoryScalarFieldEnum)[keyof typeof SiteImageHistoryScalarFieldEnum]
 
 
 export const SiteContentVersionScalarFieldEnum = {

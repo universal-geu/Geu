@@ -1513,6 +1513,8 @@ export default function AdminPage() {
   const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(null);
   const [savedImageKey, setSavedImageKey] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [imageHistory, setImageHistory] = useState<Record<string, { url: string; createdAt: string }[]>>({});
+  const [restoringHistoryKey, setRestoringHistoryKey] = useState<string | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [cauchosSalesMode, setCauchosSalesMode] = useState<CauchosSalesMode>("precios");
   const [isSavingSalesMode, setIsSavingSalesMode] = useState(false);
@@ -2727,6 +2729,20 @@ export default function AdminPage() {
     }
   };
 
+  const loadImageHistory = async () => {
+    try {
+      const response = await fetch("/api/admin/images/history");
+      const payload = (await response.json()) as {
+        history?: Record<string, { url: string; createdAt: string }[]>;
+        error?: string;
+      };
+      if (!response.ok || !payload.history) return;
+      setImageHistory(payload.history);
+    } catch {
+      // Non-fatal: the panel still works without the history strip.
+    }
+  };
+
   const handleSiteImageLinkSave = async (slotKey: string, link: string) => {
     setSavingLinkKey(slotKey);
     setImageError(null);
@@ -2930,6 +2946,7 @@ export default function AdminPage() {
     if (section === "images") {
       void loadSiteImages();
       void loadContentDrafts();
+      void loadImageHistory();
     }
     if (section === "texts") {
       void loadSiteTexts();
@@ -3155,10 +3172,40 @@ export default function AdminPage() {
       setContentDrafts((current) => ({ ...current, [slotKey]: savePayload.draft! }));
       setSavedImageKey(slotKey);
       window.setTimeout(() => setSavedImageKey(null), 2500);
+      void loadImageHistory();
     } catch (error) {
       setImageError(error instanceof Error ? error.message : "No se pudo subir la imagen.");
     } finally {
       setUploadingImageKey(null);
+    }
+  };
+
+  const handleRestoreFromHistory = async (slotKey: string, url: string) => {
+    setRestoringHistoryKey(slotKey);
+    setImageError(null);
+    try {
+      const saveResponse = await fetch("/api/admin/content-drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: slotKey, kind: "image", value: url }),
+      });
+      const savePayload = (await saveResponse.json().catch(() => null)) as {
+        draft?: { kind: "image"; division: string; value: string; link: string | null };
+        error?: string;
+      } | null;
+      if (!saveResponse.ok || !savePayload?.draft) {
+        throw new Error(savePayload?.error || "No se pudo restaurar esta imagen.");
+      }
+
+      contentDraftsMutationRef.current += 1;
+      setContentDrafts((current) => ({ ...current, [slotKey]: savePayload.draft! }));
+      setSavedImageKey(slotKey);
+      window.setTimeout(() => setSavedImageKey(null), 2500);
+      void loadImageHistory();
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : "No se pudo restaurar esta imagen.");
+    } finally {
+      setRestoringHistoryKey(null);
     }
   };
 
@@ -6446,6 +6493,40 @@ export default function AdminPage() {
                                   }}
                                 />
                               </label>
+                              {(() => {
+                                const historyEntries = (imageHistory[slot.key] ?? []).filter(
+                                  (entry) => entry.url !== currentSrc,
+                                );
+                                if (historyEntries.length === 0) return null;
+                                return (
+                                <div className="mt-2">
+                                  <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#8b8d91]">
+                                    Historial
+                                  </p>
+                                  <div className="flex gap-1.5">
+                                    {historyEntries.map((entry) => (
+                                      <button
+                                        key={entry.url + entry.createdAt}
+                                        type="button"
+                                        title="Usar esta imagen"
+                                        disabled={isUploading || restoringHistoryKey === slot.key}
+                                        onClick={() => void handleRestoreFromHistory(slot.key, entry.url)}
+                                        className="h-9 w-9 shrink-0 overflow-hidden rounded-md border border-black/10 bg-[#f0f2f4] transition-colors duration-150 hover:border-[var(--admin-accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                                      >
+                                        {isVideoUrl(entry.url) ? (
+                                          <span className="flex h-full w-full items-center justify-center text-[8px] font-semibold text-[#8b8d91]">
+                                            Video
+                                          </span>
+                                        ) : (
+                                          // eslint-disable-next-line @next/next/no-img-element
+                                          <img src={entry.url} alt="" className="h-full w-full object-cover" />
+                                        )}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                                );
+                              })()}
                               {(selectedImageGroup === "Ofertas" || selectedImageGroup === "Marcas destacadas") && (
                                 <div className="mt-2">
                                   <label className="mb-1 block text-[10px] font-semibold text-[#8b8d91]">

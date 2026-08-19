@@ -42,6 +42,25 @@ export async function POST(request: Request) {
       const value = body.value ?? existing?.value ?? slot.defaultSrc;
       const link = body.link !== undefined ? body.link.trim() || null : (existing?.link ?? null);
 
+      // A new file was uploaded (not just the link field being edited): archive
+      // whatever image/video it's replacing so the admin can look back and
+      // reuse a recent version instead of only being able to undo once.
+      if (body.value !== undefined && body.value !== existing?.value) {
+        const previousUrl = existing?.value ?? (await prisma.siteImage.findUnique({ where: { key: body.key } }))?.url;
+        if (previousUrl && previousUrl !== value) {
+          await prisma.siteImageHistory.create({ data: { key: body.key, url: previousUrl } });
+          const excess = await prisma.siteImageHistory.findMany({
+            where: { key: body.key },
+            orderBy: { createdAt: "desc" },
+            skip: 3,
+            select: { id: true },
+          });
+          if (excess.length) {
+            await prisma.siteImageHistory.deleteMany({ where: { id: { in: excess.map((e) => e.id) } } });
+          }
+        }
+      }
+
       const draft = await prisma.siteContentDraft.upsert({
         where: { key: body.key },
         update: { value, link, updatedBy: admin.fullName },

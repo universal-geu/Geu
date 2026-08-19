@@ -92,6 +92,11 @@ export type SiteSetting = Prisma.SiteSettingModel
  */
 export type SiteContentDraft = Prisma.SiteContentDraftModel
 /**
+ * Model SiteImageHistory
+ * 
+ */
+export type SiteImageHistory = Prisma.SiteImageHistoryModel
+/**
  * Model SiteContentVersion
  * 
  */
