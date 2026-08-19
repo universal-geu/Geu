@@ -394,6 +394,7 @@ export const ModelName = {
   SiteImage: 'SiteImage',
   SiteSetting: 'SiteSetting',
   SiteContentDraft: 'SiteContentDraft',
+  SiteImageHistory: 'SiteImageHistory',
   SiteContentVersion: 'SiteContentVersion',
   Quote: 'Quote'
 } as const
@@ -411,7 +412,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "product" | "productVariant" | "user" | "cartItem" | "order" | "orderItem" | "inventoryMovement" | "siteImage" | "siteSetting" | "siteContentDraft" | "siteContentVersion" | "quote"
+    modelProps: "product" | "productVariant" | "user" | "cartItem" | "order" | "orderItem" | "inventoryMovement" | "siteImage" | "siteSetting" | "siteContentDraft" | "siteImageHistory" | "siteContentVersion" | "quote"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1155,6 +1156,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    SiteImageHistory: {
+      payload: Prisma.$SiteImageHistoryPayload<ExtArgs>
+      fields: Prisma.SiteImageHistoryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SiteImageHistoryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteImageHistoryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SiteImageHistoryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteImageHistoryPayload>
+        }
+        findFirst: {
+          args: Prisma.SiteImageHistoryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteImageHistoryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SiteImageHistoryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteImageHistoryPayload>
+        }
+        findMany: {
+          args: Prisma.SiteImageHistoryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteImageHistoryPayload>[]
+        }
+        create: {
+          args: Prisma.SiteImageHistoryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteImageHistoryPayload>
+        }
+        createMany: {
+          args: Prisma.SiteImageHistoryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SiteImageHistoryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteImageHistoryPayload>[]
+        }
+        delete: {
+          args: Prisma.SiteImageHistoryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteImageHistoryPayload>
+        }
+        update: {
+          args: Prisma.SiteImageHistoryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteImageHistoryPayload>
+        }
+        deleteMany: {
+          args: Prisma.SiteImageHistoryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SiteImageHistoryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SiteImageHistoryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteImageHistoryPayload>[]
+        }
+        upsert: {
+          args: Prisma.SiteImageHistoryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SiteImageHistoryPayload>
+        }
+        aggregate: {
+          args: Prisma.SiteImageHistoryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSiteImageHistory>
+        }
+        groupBy: {
+          args: Prisma.SiteImageHistoryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteImageHistoryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SiteImageHistoryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SiteImageHistoryCountAggregateOutputType> | number
+        }
+      }
+    }
     SiteContentVersion: {
       payload: Prisma.$SiteContentVersionPayload<ExtArgs>
       fields: Prisma.SiteContentVersionFieldRefs
@@ -1527,6 +1602,16 @@ export const SiteContentDraftScalarFieldEnum = {
 export type SiteContentDraftScalarFieldEnum = (typeof SiteContentDraftScalarFieldEnum)[keyof typeof SiteContentDraftScalarFieldEnum]
 
 
+export const SiteImageHistoryScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  url: 'url',
+  createdAt: 'createdAt'
+} as const
+
+export type SiteImageHistoryScalarFieldEnum = (typeof SiteImageHistoryScalarFieldEnum)[keyof typeof SiteImageHistoryScalarFieldEnum]
+
+
 export const SiteContentVersionScalarFieldEnum = {
   id: 'id',
   createdAt: 'createdAt',
@@ -1894,6 +1979,7 @@ export type GlobalOmitConfig = {
   siteImage?: Prisma.SiteImageOmit
   siteSetting?: Prisma.SiteSettingOmit
   siteContentDraft?: Prisma.SiteContentDraftOmit
+  siteImageHistory?: Prisma.SiteImageHistoryOmit
   siteContentVersion?: Prisma.SiteContentVersionOmit
   quote?: Prisma.QuoteOmit
 }

@@ -226,6 +226,18 @@ model SiteContentDraft {
   updatedBy String?
 }
 
+// Rotating history of previous images for a slot (most recent 3, oldest
+// dropped), captured whenever an upload replaces the current image/video —
+// lets an admin glance back and reuse a recent version, not just undo.
+model SiteImageHistory {
+  id        String   @id @default(cuid())
+  key       String
+  url       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
+
 // Snapshot of the full live SiteImage/SiteSetting content, taken right
 // before every publish (and before every restore, as a safety net), so an
 // admin can see history and roll back.
