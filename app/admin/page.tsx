@@ -1534,6 +1534,10 @@ export default function AdminPage() {
   const [contentDrafts, setContentDrafts] = useState<
     Record<string, { kind: "image" | "text" | "color"; division: string; value: string; link: string | null }>
   >({});
+  // Bumped on every draft save/discard so an in-flight loadContentDrafts()
+  // response (e.g. from just opening the tab) can detect it's now stale and
+  // skip overwriting the newer local state — see loadContentDrafts below.
+  const contentDraftsMutationRef = useRef(0);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [publishNotice, setPublishNotice] = useState<string | null>(null);
@@ -2564,6 +2568,7 @@ export default function AdminPage() {
   };
 
   const loadContentDrafts = async () => {
+    const snapshot = contentDraftsMutationRef.current;
     try {
       const response = await fetch("/api/admin/content-drafts");
       const payload = (await response.json()) as {
@@ -2571,6 +2576,10 @@ export default function AdminPage() {
         error?: string;
       };
       if (!response.ok || !payload.drafts) return;
+      // If a save/discard happened while this request was in flight, our local
+      // state is already newer than what this (now-stale) response reflects —
+      // applying it here would silently revert the user's most recent change.
+      if (contentDraftsMutationRef.current !== snapshot) return;
       setContentDrafts(
         Object.fromEntries(
           payload.drafts.map((d) => [
@@ -2630,6 +2639,7 @@ export default function AdminPage() {
         body: JSON.stringify({ key }),
       });
     } finally {
+      contentDraftsMutationRef.current += 1;
       setContentDrafts((current) => {
         const next = { ...current };
         delete next[key];
@@ -2733,6 +2743,7 @@ export default function AdminPage() {
       if (!response.ok || !payload.draft) {
         throw new Error(payload.error || "No se pudo guardar el enlace.");
       }
+      contentDraftsMutationRef.current += 1;
       setContentDrafts((current) => ({ ...current, [slotKey]: payload.draft! }));
     } catch (error) {
       setImageError(error instanceof Error ? error.message : "No se pudo guardar el enlace.");
@@ -2851,6 +2862,7 @@ export default function AdminPage() {
       if (!response.ok || !payload.draft) {
         throw new Error(payload.error || "No se pudo guardar el texto.");
       }
+      contentDraftsMutationRef.current += 1;
       setContentDrafts((current) => ({ ...current, [key]: payload.draft! }));
       setSavedTextKey(key);
       setTimeout(() => setSavedTextKey((current) => (current === key ? null : current)), 1500);
@@ -2894,6 +2906,7 @@ export default function AdminPage() {
       if (!response.ok || !payload.draft) {
         throw new Error(payload.error || "No se pudo guardar el color.");
       }
+      contentDraftsMutationRef.current += 1;
       setContentDrafts((current) => ({ ...current, [key]: payload.draft! }));
       setSavedColorKey(key);
       setTimeout(() => setSavedColorKey((current) => (current === key ? null : current)), 1500);
@@ -3138,6 +3151,7 @@ export default function AdminPage() {
         throw new Error(savePayload?.error || "No se pudo guardar la imagen.");
       }
 
+      contentDraftsMutationRef.current += 1;
       setContentDrafts((current) => ({ ...current, [slotKey]: savePayload.draft! }));
       setSavedImageKey(slotKey);
       window.setTimeout(() => setSavedImageKey(null), 2500);
