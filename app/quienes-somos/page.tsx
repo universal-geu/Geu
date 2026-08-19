@@ -28,13 +28,13 @@ const ecosystemLabels = [
     label: "Innovation",
     href: "/innovation",
     color: "#10b9c4",
-    className: "left-[6%] bottom-[12%]",
+    className: "right-[6%] top-[20%]",
   },
   {
     label: "Cauchos",
     href: "/cauchos",
     color: "#075ed8",
-    className: "right-[6%] top-[20%]",
+    className: "left-[6%] bottom-[12%]",
   },
   {
     label: "Plastic",
@@ -160,8 +160,8 @@ export default async function QuienesSomosPage() {
           <Image
             src="/about-geu-ecosystem.png"
             alt="Ecosistema industrial de las unidades de negocio GEU"
-            width={1983}
-            height={793}
+            width={1672}
+            height={941}
             className="geu-ecosystem-image h-auto w-full object-cover"
           />
           {ecosystemLabels.map((item) => (

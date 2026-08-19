@@ -26,7 +26,16 @@ import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
 import { TEXT_SLOTS } from "@/lib/text-slots";
 import { COLOR_SLOTS } from "@/lib/color-slots";
-import { DIVISION_BRAND, getDivisionFromBrandParam, isServiceDivision, type DivisionName } from "@/lib/divisions";
+import {
+  DIVISIONS,
+  DIVISION_ADMIN_EMAILS,
+  DIVISION_ADMIN_PASSWORD,
+  DIVISION_ADMIN_PIN,
+  DIVISION_BRAND,
+  getDivisionFromBrandParam,
+  isServiceDivision,
+  type DivisionName,
+} from "@/lib/divisions";
 import type { CauchosSalesMode } from "@/lib/site-settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
@@ -1582,6 +1591,9 @@ export default function AdminPage() {
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showDivisionSwitcher, setShowDivisionSwitcher] = useState(true);
+  const [isSwitchingDivision, setIsSwitchingDivision] = useState(false);
+  const [switchDivisionError, setSwitchDivisionError] = useState("");
   const [adminName, setAdminName] = useState("");
   const [adminPermissions, setAdminPermissions] = useState<string[]>([]);
   const [teamAccounts, setTeamAccounts] = useState<TeamAccount[]>([]);
@@ -3200,6 +3212,46 @@ export default function AdminPage() {
     router.refresh();
   };
 
+  const switchDivision = async (target: DivisionName) => {
+    if (target === adminDivision) {
+      setShowDivisionSwitcher(false);
+      return;
+    }
+
+    setSwitchDivisionError("");
+    setIsSwitchingDivision(true);
+
+    try {
+      const response = await fetch("/api/auth/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: DIVISION_ADMIN_EMAILS[target],
+          password: DIVISION_ADMIN_PASSWORD,
+          adminPin: DIVISION_ADMIN_PIN,
+        }),
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+        user?: { role: "CUSTOMER" | "ADMIN" };
+        requiresAdminPin?: boolean;
+      };
+
+      if (!response.ok || payload.requiresAdminPin || payload.user?.role !== "ADMIN") {
+        setSwitchDivisionError(payload.error || "No fue posible cambiar de unidad de negocio.");
+        setIsSwitchingDivision(false);
+        return;
+      }
+
+      const brandParam = target === "Cauchos" ? "" : `?brand=${target.toLowerCase()}`;
+      window.location.href = `/admin${brandParam}`;
+    } catch {
+      setSwitchDivisionError("No fue posible cambiar de unidad de negocio.");
+      setIsSwitchingDivision(false);
+    }
+  };
+
   if (isCheckingSession) {
     return (
       <main className="min-h-screen bg-[#f5f5f5] text-[#111]">
@@ -3367,6 +3419,88 @@ export default function AdminPage() {
         </div>
       )}
 
+      {showDivisionSwitcher && (
+        <div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#0f172a]/55 px-6 backdrop-blur-[2px]">
+          <div className="w-full max-w-3xl rounded-[1.8rem] border border-black/8 bg-white p-7 shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p
+                  className="text-xs font-semibold uppercase tracking-[0.24em]"
+                  style={{ color: "var(--admin-accent)" }}
+                >
+                  Panel maestro
+                </p>
+                <h2 className="mt-2 text-2xl font-black text-[#1f2328]">
+                  ¿En qué unidad de negocio quieres trabajar?
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDivisionSwitcher(false)}
+                disabled={isSwitchingDivision}
+                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors duration-200 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Cerrar"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            {switchDivisionError && (
+              <p className="mt-4 rounded-xl border border-[var(--admin-accent)]/25 bg-[var(--admin-accent-soft)] px-4 py-3 text-sm text-[var(--admin-accent)]">
+                {switchDivisionError}
+              </p>
+            )}
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {DIVISIONS.map((division) => {
+                const brand = ADMIN_BRAND_CONFIG[division];
+                const isCurrent = division === adminDivision;
+
+                return (
+                  <button
+                    key={division}
+                    type="button"
+                    onClick={() => void switchDivision(division)}
+                    disabled={isSwitchingDivision}
+                    className={`group flex flex-col items-start gap-3 rounded-[1.4rem] border p-5 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+                      isCurrent
+                        ? "border-transparent shadow-[0_14px_28px_rgba(15,23,42,0.14)]"
+                        : "border-black/8 bg-white hover:-translate-y-0.5 hover:border-black/16 hover:shadow-[0_14px_28px_rgba(15,23,42,0.1)]"
+                    }`}
+                    style={isCurrent ? { backgroundColor: brand.accent, color: "#ffffff" } : undefined}
+                  >
+                    <span
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]"
+                      style={{ backgroundColor: isCurrent ? "rgba(255,255,255,0.2)" : brand.accent }}
+                    >
+                      {brand.label.charAt(0)}
+                    </span>
+                    <span className="min-w-0">
+                      <span
+                        className={`block text-sm font-black ${isCurrent ? "text-white" : "text-[#1f2328]"}`}
+                      >
+                        {brand.label}
+                      </span>
+                      <span
+                        className={`mt-1 block text-xs font-semibold ${isCurrent ? "text-white/80" : "text-[#8b8d91]"}`}
+                      >
+                        {isCurrent ? "Estás aquí ahora" : "Entrar al panel"}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {isSwitchingDivision && (
+              <p className="mt-5 text-center text-sm font-semibold text-[#6e7379]">
+                Cambiando de unidad de negocio...
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex min-h-screen">
         <button
           type="button"
@@ -3395,18 +3529,30 @@ export default function AdminPage() {
             isSidebarCollapsed ? "w-0 border-r-0" : "w-64 border-r"
           }`}
         >
-          <Link href={adminBrand.siteHref} className="flex w-64 items-center gap-3 border-b border-slate-200 px-5 py-5">
-            <span
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]"
-              style={{ backgroundColor: adminBrand.accent }}
+          <div className="border-b border-slate-200 px-5 py-5">
+            <Link href={adminBrand.siteHref} className="flex items-center gap-3">
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]"
+                style={{ backgroundColor: adminBrand.accent }}
+              >
+                {adminBrand.label.charAt(0)}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-black text-[#1f2328]">Panel maestro</span>
+                <span className="block truncate text-xs font-semibold text-[#8b8d91]">{adminBrand.label}</span>
+              </span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setShowDivisionSwitcher(true)}
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors duration-200 hover:border-[var(--admin-accent)] hover:text-[var(--admin-accent)]"
             >
-              {adminBrand.label.charAt(0)}
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-black text-[#1f2328]">Panel maestro</span>
-              <span className="block truncate text-xs font-semibold text-[#8b8d91]">{adminBrand.label}</span>
-            </span>
-          </Link>
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" />
+              </svg>
+              Cambiar de unidad
+            </button>
+          </div>
 
           <nav className="w-64 flex-1 overflow-y-auto px-3 py-4">
             <ul className="space-y-1">
