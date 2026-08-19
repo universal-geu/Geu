@@ -10,7 +10,13 @@ type Solution = {
   image: string;
 };
 
-export default function SolutionsCarousel({ items }: { items: Solution[] }) {
+export default function SolutionsCarousel({
+  items,
+  hideDots = false,
+}: {
+  items: Solution[];
+  hideDots?: boolean;
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -148,19 +154,21 @@ export default function SolutionsCarousel({ items }: { items: Solution[] }) {
         </svg>
       </button>
 
-      <div className="mt-6 flex items-center justify-center gap-2">
-        {items.map((item, index) => (
-          <button
-            key={item.title}
-            type="button"
-            aria-label={`Ir a ${item.title}`}
-            onClick={() => scrollToIndex(index)}
-            className={`h-2 rounded-full transition-all ${
-              index === active ? "w-6 bg-slate-950" : "w-2 bg-slate-300"
-            }`}
-          />
-        ))}
-      </div>
+      {!hideDots && (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          {items.map((item, index) => (
+            <button
+              key={item.title}
+              type="button"
+              aria-label={`Ir a ${item.title}`}
+              onClick={() => scrollToIndex(index)}
+              className={`h-2 rounded-full transition-all ${
+                index === active ? "w-6 bg-slate-950" : "w-2 bg-slate-300"
+              }`}
+            />
+          ))}
+        </div>
+      )}
 
       {openIndex !== null && (
         <ImageLightbox

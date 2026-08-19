@@ -127,7 +127,7 @@ export default async function InnovationEstufasPage() {
             </p>
           </div>
           <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
-            <SolutionsCarousel items={stovesProject} />
+            <SolutionsCarousel items={stovesProject} hideDots />
           </div>
         </div>
       </section>
@@ -166,7 +166,7 @@ export default async function InnovationEstufasPage() {
             </p>
           </div>
           <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
-            <SolutionsCarousel items={manufacturing} />
+            <SolutionsCarousel items={manufacturing} hideDots />
           </div>
         </div>
       </section>

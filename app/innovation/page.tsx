@@ -162,7 +162,7 @@ export default async function InnovationPage() {
             {t("innovation-soluciones-titulo")}
           </h2>
           <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
-            <SolutionsCarousel items={solutions} />
+            <SolutionsCarousel items={solutions} hideDots />
           </div>
         </div>
       </section>
