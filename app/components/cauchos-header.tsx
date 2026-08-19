@@ -83,10 +83,6 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
           >
             <div className="hidden gap-3 md:flex">
               <span>{phone}</span>
-              <span className="text-slate-300">|</span>
-              <span>Ventas empresariales</span>
-              <span className="text-slate-300">|</span>
-              <span>Centro de ayuda</span>
             </div>
             <div className="flex w-full justify-between gap-3 md:w-auto md:justify-end">
               <Link href={`${brand.basePath}#contacto`} className="hover:text-[var(--brand-accent)]">
@@ -95,8 +91,14 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
               <Link href={`${brand.basePath}#productos`} className="hover:text-[var(--brand-accent)]">
                 Catalogos
               </Link>
-              <Link href="/quienes-somos" className="hover:text-[var(--brand-accent)]">
-                GEU empresas
+              <Link
+                href="/"
+                className="flex h-5 items-center gap-1 rounded-full bg-[var(--brand-accent)] px-2 text-[10px] font-bold uppercase leading-none tracking-[0.03em] text-white shadow-sm transition-transform duration-150 hover:scale-105 hover:text-white"
+              >
+                <svg viewBox="0 0 24 24" className="h-2.5 w-2.5 shrink-0 fill-current" aria-hidden="true">
+                  <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" />
+                </svg>
+                Todas las empresas
               </Link>
             </div>
           </div>
@@ -147,7 +149,7 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
             { label: "Nosotros", href: nosotrosHref },
             { label: "Cotizaciones", href: `${brand.basePath}#contacto` },
             { label: "Catálogos", href: `${brand.basePath}#productos` },
-            { label: "GEU empresas", href: "/quienes-somos" },
+            { label: "Todas las empresas", href: "/" },
           ]}
         />
       </header>

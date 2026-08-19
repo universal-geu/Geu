@@ -4,6 +4,7 @@ import SolutionsCarousel from "../../energy/solutions-carousel";
 import CountUpStats from "../count-up-stats";
 import SiteFooter from "../../components/site-footer";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import { getSiteImages, resolveImage } from "@/lib/site-images";
 
 export const dynamic = "force-dynamic";
 
@@ -18,69 +19,69 @@ const navItems = [
   { label: "Contacto", href: "/innovation/estufas#contacto" },
 ];
 
-const stovesProject = [
+const stovesProjectBase = [
   {
     title: "Encuentro con la comunidad",
     text: "Visitamos a las familias para entender sus necesidades antes de entregar cada estufa.",
-    image: "/geu-innovation-project-1.png",
+    key: "estufas-proyecto-1",
   },
   {
     title: "Transporte hasta la vereda",
     text: "Llevamos cada estufa hasta comunidades de dificil acceso en zonas rurales.",
-    image: "/geu-innovation-project-2.png",
+    key: "estufas-proyecto-2",
   },
   {
     title: "Instalación y capacitación",
     text: "Instalamos la estufa y capacitamos a la familia en su uso seguro y eficiente.",
-    image: "/geu-innovation-project-3.png",
+    key: "estufas-proyecto-3",
   },
   {
     title: "Estufa ecoeficiente GEU",
     text: "Un diseño pensado para reducir el consumo de leña y mejorar la calidad del aire en el hogar.",
-    image: "/geu-innovation-project-4.png",
+    key: "estufas-proyecto-4",
   },
   {
     title: "Acompañamiento en sitio",
     text: "Nuestro equipo resuelve dudas y ajusta la estufa junto a cada familia.",
-    image: "/geu-innovation-project-5.png",
+    key: "estufas-proyecto-5",
   },
   {
     title: "Comunidad conectada",
     text: "Cada entrega fortalece el vínculo entre GEU y las comunidades donde trabajamos.",
-    image: "/geu-innovation-project-6.png",
+    key: "estufas-proyecto-6",
   },
 ];
 
-const manufacturing = [
+const manufacturingBase = [
   {
     title: "Corte y armado del chasis",
     text: "Cortamos y armamos la estructura base de cada estufa en acero calibre industrial.",
-    image: "/geu-innovation-fabrica-1.jpg",
+    key: "estufas-fabrica-1",
   },
   {
     title: "Soldadura estructural",
     text: "Soldamos cada unión a mano para garantizar resistencia y durabilidad.",
-    image: "/geu-innovation-fabrica-2.jpg",
+    key: "estufas-fabrica-2",
   },
   {
     title: "Ensamble de puertas y detalles",
     text: "Ensamblamos puertas, bisagras y detalles funcionales de cada estufa.",
-    image: "/geu-innovation-fabrica-3.jpg",
+    key: "estufas-fabrica-3",
   },
   {
     title: "Acabados y pintura",
     text: "Aplicamos pintura de alta temperatura resistente al uso diario.",
-    image: "/geu-innovation-fabrica-4.jpg",
+    key: "estufas-fabrica-4",
   },
   {
     title: "Control de calidad",
     text: "Cada estufa lleva un sello de identificación y pasa control de calidad.",
-    image: "/geu-innovation-fabrica-5.jpg",
+    key: "estufas-fabrica-5",
   },
   {
     title: "Producto terminado",
     text: "Estufas listas para ser entregadas a las familias que las necesitan.",
-    image: "/geu-innovation-fabrica-6.jpg",
+    key: "estufas-fabrica-6",
   },
 ];
 
@@ -93,7 +94,18 @@ const stovesImpact = [
 
 export default async function InnovationEstufasPage() {
   const siteTexts = await getSiteTexts();
+  const siteImages = await getSiteImages();
   const t = (key: string) => resolveText(key, siteTexts);
+
+  const stovesProject = stovesProjectBase.map(({ key, ...item }) => ({
+    ...item,
+    image: resolveImage(key, siteImages),
+  }));
+
+  const manufacturing = manufacturingBase.map(({ key, ...item }) => ({
+    ...item,
+    image: resolveImage(key, siteImages),
+  }));
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -123,8 +135,8 @@ export default async function InnovationEstufasPage() {
       <section className="overflow-hidden border-b border-white/10 bg-black">
         <div className="relative mx-auto aspect-video w-full max-w-[1920px]">
           <video
-            src="/geu-innovation-fabrica-video.mp4"
-            poster="/geu-innovation-fabrica-video.png"
+            src={resolveImage("estufas-fabrica-video", siteImages)}
+            poster={resolveImage("estufas-fabrica-video-poster", siteImages)}
             autoPlay
             muted
             loop
@@ -162,7 +174,7 @@ export default async function InnovationEstufasPage() {
       <section id="contacto" className="overflow-hidden bg-black">
         <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
           <Image
-            src="/geu-innovation-project-6.png"
+            src={resolveImage("estufas-contacto-fondo", siteImages)}
             alt="Familia y equipo GEU reunidos junto a la estufa instalada, con vista a las montañas"
             fill
             sizes="100vw"

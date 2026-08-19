@@ -2,6 +2,7 @@ import Image from "next/image";
 import InnovationHeader from "../innovation-header";
 import SiteFooter from "../../components/site-footer";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import { getSiteImages, resolveImage } from "@/lib/site-images";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +17,10 @@ const navItems = [
   { label: "Contacto", href: "mailto:innovation@geu.com.co" },
 ];
 
-const stripPhotos = [
-  { src: "/geu-doypack-strip-home.jpg", alt: "Amigos compartiendo un doypack en una noche de juegos" },
-  { src: "/geu-doypack-festival.jpg", alt: "Pareja compartiendo un doypack en un festival de música" },
-  { src: "/geu-doypack-strip-rural.jpg", alt: "Grupo de amigos compartiendo un doypack en una finca" },
+const stripPhotosBase = [
+  { key: "doypack-galeria-1", alt: "Amigos compartiendo un doypack en una noche de juegos" },
+  { key: "doypack-galeria-2", alt: "Pareja compartiendo un doypack en un festival de música" },
+  { key: "doypack-galeria-3", alt: "Grupo de amigos compartiendo un doypack en una finca" },
 ];
 
 function Marquee({ label, count }: { label: string; count: number }) {
@@ -41,7 +42,14 @@ function Marquee({ label, count }: { label: string; count: number }) {
 
 export default async function InnovationDoypackPage() {
   const siteTexts = await getSiteTexts();
+  const siteImages = await getSiteImages();
   const t = (key: string) => resolveText(key, siteTexts);
+
+  const stripPhotos = stripPhotosBase.map(({ key, ...item }) => ({
+    ...item,
+    src: resolveImage(key, siteImages),
+    key,
+  }));
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -49,7 +57,7 @@ export default async function InnovationDoypackPage() {
 
       <section className="relative h-screen w-full overflow-hidden border-b border-white/10">
         <video
-          src="/geu-doypack-hero.mp4"
+          src={resolveImage("doypack-hero-video", siteImages)}
           autoPlay
           muted
           loop
@@ -68,7 +76,7 @@ export default async function InnovationDoypackPage() {
         <div className="mx-auto grid max-w-[1500px] grid-cols-3 px-5 py-3 md:px-8">
           {stripPhotos.map((photo) => (
             <span
-              key={photo.src}
+              key={photo.key}
               className="text-center text-xs font-black uppercase tracking-[0.16em] text-white/85"
             >
               Empaque
@@ -80,7 +88,7 @@ export default async function InnovationDoypackPage() {
       <section className="bg-white">
         <div className="mx-auto grid max-w-[1500px] grid-cols-1 gap-0.5 px-5 py-5 md:grid-cols-3 md:px-8">
           {stripPhotos.map((photo) => (
-            <div key={photo.src} className="relative aspect-[16/10]">
+            <div key={photo.key} className="relative aspect-[16/10]">
               <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" />
             </div>
           ))}
@@ -92,7 +100,7 @@ export default async function InnovationDoypackPage() {
           <div className="relative w-full shrink-0 md:w-[440px]">
             <div className="relative mx-auto aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-lg border border-[#0498b4]/40 bg-white">
               <Image
-                src="/geu-doypack-product.jpg"
+                src={resolveImage("doypack-producto", siteImages)}
                 alt="Doypack GEU Innovation, empaque flexible con tapa dosificadora"
                 fill
                 sizes="(min-width: 768px) 420px, 80vw"
@@ -103,7 +111,7 @@ export default async function InnovationDoypackPage() {
             <div className="absolute -bottom-6 right-6 h-24 w-32 overflow-hidden rounded-lg border-4 border-white shadow-[0_14px_28px_rgba(15,23,42,0.18)] md:right-0">
               <div className="relative h-full w-full">
                 <Image
-                  src="/geu-doypack-tapa-detalle.jpg"
+                  src={resolveImage("doypack-tapa-detalle", siteImages)}
                   alt="Detalle de la tapa dosificadora del doypack"
                   fill
                   sizes="128px"
@@ -139,7 +147,7 @@ export default async function InnovationDoypackPage() {
             <div className="relative w-full md:w-2/3">
               <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg">
                 <Image
-                  src="/geu-doypack-skate-main.jpg"
+                  src={resolveImage("doypack-skate-main", siteImages)}
                   alt="Persona patinando con un doypack en su cinturón"
                   fill
                   sizes="(min-width: 768px) 66vw, 100vw"
@@ -149,7 +157,7 @@ export default async function InnovationDoypackPage() {
 
               <div className="absolute -bottom-8 right-4 hidden h-32 w-40 overflow-hidden rounded-lg border-4 border-white shadow-[0_18px_34px_rgba(15,23,42,0.2)] sm:block md:right-10">
                 <Image
-                  src="/geu-doypack-skate-detail.jpg"
+                  src={resolveImage("doypack-skate-detail", siteImages)}
                   alt="Detalle del doypack sujeto al cinturón"
                   fill
                   sizes="160px"
@@ -171,7 +179,7 @@ export default async function InnovationDoypackPage() {
 
       <section className="relative aspect-[16/9] w-full overflow-hidden border-b border-white/10 md:aspect-[21/9]">
         <Image
-          src="/geu-doypack-festival.jpg"
+          src={resolveImage("doypack-cierre-festival", siteImages)}
           alt="Amigos disfrutando un doypack en un festival de música"
           fill
           sizes="100vw"
