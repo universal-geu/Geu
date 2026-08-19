@@ -16,6 +16,7 @@ const navItems = [
 const moreItems = [
   { label: "Nosotros", href: "/energy/nosotros" },
   { label: "Contacto", href: "/energy#contacto" },
+  { label: "Ver todo GEU", href: "/" },
 ];
 
 function EnergyMark() {
@@ -51,6 +52,15 @@ export default function EnergyHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-5 text-white">
+          <Link
+            href="/"
+            className="hidden items-center gap-1.5 rounded-full bg-[#d6006e] px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.08em] text-white shadow-sm transition-colors duration-150 hover:bg-[#b8005e] lg:inline-flex"
+          >
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-current" aria-hidden="true">
+              <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" />
+            </svg>
+            Ver todo GEU
+          </Link>
           <CauchosAccountLink
             brand="energy"
             className="hidden text-[11px] font-black uppercase tracking-[0.08em] hover:text-[#f5a623] lg:inline-flex"

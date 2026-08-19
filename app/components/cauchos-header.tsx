@@ -91,15 +91,6 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
               <Link href={`${brand.basePath}#productos`} className="hover:text-[var(--brand-accent)]">
                 Catalogos
               </Link>
-              <Link
-                href="/"
-                className="flex h-5 items-center gap-1 rounded-full bg-[var(--brand-accent)] px-2 text-[10px] font-bold uppercase leading-none tracking-[0.03em] text-white shadow-sm transition-transform duration-150 hover:scale-105 hover:text-white"
-              >
-                <svg viewBox="0 0 24 24" className="h-2.5 w-2.5 shrink-0 fill-current" aria-hidden="true">
-                  <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" />
-                </svg>
-                Todas las empresas
-              </Link>
             </div>
           </div>
         </div>
@@ -129,6 +120,15 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
             className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end"
             style={{ "--brand-accent": resolvedAccent } as React.CSSProperties}
           >
+            <Link
+              href="/"
+              className="hidden items-center gap-1.5 rounded-full bg-[#d6006e] px-3.5 py-2 text-xs font-black uppercase tracking-[0.03em] text-white shadow-sm transition-colors duration-150 hover:bg-[#b8005e] lg:inline-flex"
+            >
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-current" aria-hidden="true">
+                <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" />
+              </svg>
+              Ver todo GEU
+            </Link>
             <Link href={nosotrosHref} className="font-bold hover:text-[var(--brand-accent)]">
               Nosotros
             </Link>
@@ -149,7 +149,7 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
             { label: "Nosotros", href: nosotrosHref },
             { label: "Cotizaciones", href: `${brand.basePath}#contacto` },
             { label: "Catálogos", href: `${brand.basePath}#productos` },
-            { label: "Todas las empresas", href: "/" },
+            { label: "Ver todo GEU", href: "/" },
           ]}
         />
       </header>
