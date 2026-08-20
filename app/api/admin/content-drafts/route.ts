@@ -39,14 +39,15 @@ export async function POST(request: Request) {
       }
 
       const existing = await prisma.siteContentDraft.findUnique({ where: { key: body.key } });
-      const value = body.value ?? existing?.value ?? slot.defaultSrc;
+      const publishedUrl = existing ? undefined : (await prisma.siteImage.findUnique({ where: { key: body.key } }))?.url;
+      const value = body.value ?? existing?.value ?? publishedUrl ?? slot.defaultSrc;
       const link = body.link !== undefined ? body.link.trim() || null : (existing?.link ?? null);
 
       // A new file was uploaded (not just the link field being edited): archive
       // whatever image/video it's replacing so the admin can look back and
       // reuse a recent version instead of only being able to undo once.
       if (body.value !== undefined && body.value !== existing?.value) {
-        const previousUrl = existing?.value ?? (await prisma.siteImage.findUnique({ where: { key: body.key } }))?.url;
+        const previousUrl = existing?.value ?? publishedUrl;
         if (previousUrl && previousUrl !== value) {
           await prisma.siteImageHistory.create({ data: { key: body.key, url: previousUrl } });
           const excess = await prisma.siteImageHistory.findMany({
