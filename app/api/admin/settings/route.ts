@@ -1,13 +1,17 @@
 import { requireAdminUser } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
-import { CAUCHOS_SALES_MODE_KEY, WHATSAPP_NUMBER_KEY, type CauchosSalesMode } from "@/lib/site-settings";
+import {
+  CAUCHOS_SALES_MODE_KEY,
+  whatsappNumberKey,
+  type CauchosSalesMode,
+} from "@/lib/site-settings";
 
 export async function GET() {
   try {
-    await requireAdminUser("settings");
+    const admin = await requireAdminUser("settings");
     if (!prisma) return Response.json({ whatsappNumber: "", cauchosSalesMode: "precios" });
     const [whatsappRow, salesModeRow] = await Promise.all([
-      prisma.siteSetting.findUnique({ where: { key: WHATSAPP_NUMBER_KEY } }),
+      prisma.siteSetting.findUnique({ where: { key: whatsappNumberKey(admin.division) } }),
       prisma.siteSetting.findUnique({ where: { key: CAUCHOS_SALES_MODE_KEY } }),
     ]);
     return Response.json({
@@ -22,7 +26,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdminUser("settings");
+    const admin = await requireAdminUser("settings");
     if (!prisma) return Response.json({ error: "BD no disponible." }, { status: 503 });
 
     const body = (await request.json()) as {
@@ -49,10 +53,11 @@ export async function POST(request: Request) {
       return Response.json({ error: "Número inválido." }, { status: 400 });
     }
 
+    const key = whatsappNumberKey(admin.division);
     const setting = await prisma.siteSetting.upsert({
-      where: { key: WHATSAPP_NUMBER_KEY },
+      where: { key },
       update: { value: digitsOnly },
-      create: { key: WHATSAPP_NUMBER_KEY, value: digitsOnly },
+      create: { key, value: digitsOnly },
     });
     return Response.json({ whatsappNumber: setting.value });
   } catch (e) {

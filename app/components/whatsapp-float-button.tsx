@@ -1,17 +1,31 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { getDivisionFromBrandParam, type DivisionName } from "@/lib/divisions";
 
 type WhatsAppFloatButtonProps = {
-  whatsappNumber: string | null;
+  whatsappNumbers: Record<DivisionName, string | null>;
 };
 
-export default function WhatsAppFloatButton({ whatsappNumber }: WhatsAppFloatButtonProps) {
+function resolveDivision(pathname: string, brandParam: string | null): DivisionName {
+  if (brandParam) return getDivisionFromBrandParam(brandParam);
+  if (pathname.startsWith("/import")) return "Import";
+  if (pathname.startsWith("/plastic")) return "Plastic";
+  if (pathname.startsWith("/energy")) return "Energy";
+  if (pathname.startsWith("/innovation")) return "Innovation";
+  if (pathname.startsWith("/quienes-somos")) return "GEU";
+  return "Cauchos";
+}
+
+export default function WhatsAppFloatButton({ whatsappNumbers }: WhatsAppFloatButtonProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const division = resolveDivision(pathname, searchParams.get("brand"));
+  const whatsappNumber = whatsappNumbers[division];
 
   if (!whatsappNumber) return null;
-  // La página raíz de /energy ya trae su propio CTA de WhatsApp dentro del chat de Gus.
-  if (pathname === "/energy") return null;
+  // La página de Energy · Proyectos ya trae su propio CTA de WhatsApp dentro del chat de Gus.
+  if (pathname === "/energy/proyectos") return null;
 
   const href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
     "Hola GEU, quiero más información.",

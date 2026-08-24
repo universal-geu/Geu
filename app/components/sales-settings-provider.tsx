@@ -2,24 +2,27 @@
 
 import { createContext, useContext } from "react";
 import type { CauchosSalesMode } from "@/lib/site-settings";
+import type { DivisionName } from "@/lib/divisions";
 
 type SalesSettings = {
   cauchosSalesMode: CauchosSalesMode;
-  whatsappNumber: string | null;
+  whatsappNumbers: Record<DivisionName, string | null>;
 };
+
+const EMPTY_NUMBERS = {} as Record<DivisionName, string | null>;
 
 const SalesSettingsContext = createContext<SalesSettings>({
   cauchosSalesMode: "precios",
-  whatsappNumber: null,
+  whatsappNumbers: EMPTY_NUMBERS,
 });
 
 export function SalesSettingsProvider({
   cauchosSalesMode,
-  whatsappNumber,
+  whatsappNumbers,
   children,
 }: SalesSettings & { children: React.ReactNode }) {
   return (
-    <SalesSettingsContext.Provider value={{ cauchosSalesMode, whatsappNumber }}>
+    <SalesSettingsContext.Provider value={{ cauchosSalesMode, whatsappNumbers }}>
       {children}
     </SalesSettingsContext.Provider>
   );

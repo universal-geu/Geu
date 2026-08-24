@@ -6908,8 +6908,9 @@ export default function AdminPage() {
                   Número de WhatsApp
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
-                  Este número alimenta el botón flotante de WhatsApp visible en todo el sitio.
-                  Cuando lo dejes vacío, el botón no se muestra.
+                  Número de WhatsApp del botón flotante y los enlaces de compra de{" "}
+                  {ADMIN_BRAND_CONFIG[adminDivision].label}. Si lo dejas vacío, se usa el número
+                  general de GEU en su lugar; si tampoco hay uno general, el botón no se muestra.
                 </p>
               </div>
 
@@ -6930,6 +6931,7 @@ export default function AdminPage() {
                 />
                 <p className="mt-1.5 text-xs text-[#8b8d91]">
                   Formato internacional sin &quot;+&quot; (código de país + número). Ej. Colombia: 57 + número.
+                  Vacío = usar el número general.
                 </p>
                 <button
                   type="button"

@@ -3,7 +3,7 @@ import EnergyHeader from "../../energy-header";
 import StructureTypeGrid from "./structure-type-grid";
 import ApplicationsGallery from "./applications-gallery";
 import { CatalogMobileNav, CatalogSidebarNav, type CatalogNavItem } from "./catalog-nav";
-import { getWhatsAppNumber } from "@/lib/site-settings";
+import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
 
 const FALLBACK_WHATSAPP_NUMBER = "573017690955";
 
@@ -264,7 +264,7 @@ function Table({ rows }: { rows: { etiqueta: string; valor: string }[] }) {
 }
 
 export default async function EnergyCatalogoPage() {
-  const whatsappNumber = (await getWhatsAppNumber()) ?? FALLBACK_WHATSAPP_NUMBER;
+  const whatsappNumber = (await getWhatsAppNumberForDivision("Energy")) ?? FALLBACK_WHATSAPP_NUMBER;
   const whatsappHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
     "Hola, quiero solicitar una cotización de la estructura fija para paneles solares GEU-EF-14.6x5.5.",
   )}`;
