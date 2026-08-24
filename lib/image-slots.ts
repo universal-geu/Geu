@@ -174,7 +174,7 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "energy-categoria-accesorios-instalacion", label: "Categoría · Accesorios e instalación", group: "Categorías", division: "Energy", defaultSrc: "/home-energy.png", dims: "600 × 600 px" },
   { key: "energy-oferta-1", label: "Energy · Oferta 1", group: "Ofertas", division: "Energy", defaultSrc: "/geu-energy-hero-field.png", dims: "1200 × 900 px" },
   { key: "energy-oferta-2", label: "Energy · Oferta 2", group: "Ofertas", division: "Energy", defaultSrc: "/geu-energy-wind-field.png", dims: "1200 × 900 px" },
-  { key: "energy-oferta-3", label: "Energy · Oferta 3", group: "Ofertas", division: "Energy", defaultSrc: "/geu-energy-engineering.png", dims: "1200 × 900 px" },
+  { key: "energy-oferta-3", label: "Energy · Oferta 3", group: "Ofertas", division: "Energy", defaultSrc: "/energy-estructura-monoposte.jpg", dims: "1200 × 900 px" },
   { key: "energy-oferta-4", label: "Energy · Oferta 4", group: "Ofertas", division: "Energy", defaultSrc: "/geu-energy-impact.png", dims: "1200 × 900 px" },
   { key: "energy-destacada-1", label: "Energy · Destacada 1", group: "Marcas destacadas", division: "Energy", defaultSrc: "/energy-aplicacion-residencial.jpg", dims: "1792 × 1024 px" },
   { key: "energy-destacada-2", label: "Energy · Destacada 2", group: "Marcas destacadas", division: "Energy", defaultSrc: "/energy-aplicacion-parque.jpg", dims: "1792 × 1024 px" },
