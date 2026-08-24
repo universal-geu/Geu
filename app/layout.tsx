@@ -11,7 +11,7 @@ import { getProducts } from "@/lib/products";
 import { getDevAdminUserById, getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import { getCartItemsForUser } from "@/lib/cart";
-import { getCauchosSalesMode, getWhatsAppNumber } from "@/lib/site-settings";
+import { getAllWhatsAppNumbers, getCauchosSalesMode } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +38,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const initialProducts = await getProducts();
-  const whatsappNumber = await getWhatsAppNumber();
+  const whatsappNumbers = await getAllWhatsAppNumbers();
   const cauchosSalesMode = await getCauchosSalesMode();
   const session = await getSessionFromCookies();
   let currentUser = null;
@@ -78,7 +78,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ProductsProvider initialProducts={initialProducts}>
-          <SalesSettingsProvider cauchosSalesMode={cauchosSalesMode} whatsappNumber={whatsappNumber}>
+          <SalesSettingsProvider cauchosSalesMode={cauchosSalesMode} whatsappNumbers={whatsappNumbers}>
             <CartProvider
               key={cartProviderKey}
               initialItems={initialCartItems}
@@ -93,7 +93,7 @@ export default async function RootLayout({
               />
               {children}
               <SupportChat />
-              <WhatsAppFloatButton whatsappNumber={whatsappNumber} />
+              <WhatsAppFloatButton whatsappNumbers={whatsappNumbers} />
             </CartProvider>
           </SalesSettingsProvider>
         </ProductsProvider>

@@ -34,7 +34,7 @@ export default function CarritoPage() {
   const { items, incrementItem, decrementItem, removeItem, clearCart } =
     useCart();
   const { products } = useProducts();
-  const { cauchosSalesMode, whatsappNumber } = useSalesSettings();
+  const { cauchosSalesMode, whatsappNumbers } = useSalesSettings();
   const brandParam = searchParams.get("brand");
   const division = getDivisionFromBrandParam(brandParam);
   const brand = DIVISION_BRAND[division];
@@ -64,6 +64,7 @@ export default function CarritoPage() {
   );
 
   if (whatsappModeActive) {
+    const whatsappNumber = whatsappNumbers[division];
     const whatsappHref = whatsappNumber
       ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hola GEU, quiero comprar productos de Universal de Cauchos.")}`
       : undefined;

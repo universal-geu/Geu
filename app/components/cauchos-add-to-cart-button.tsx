@@ -42,13 +42,14 @@ export default function CauchosAddToCartButton({
   disabled = false,
 }: Props) {
   const { addItem } = useCart();
-  const { cauchosSalesMode, whatsappNumber } = useSalesSettings();
+  const { cauchosSalesMode, whatsappNumbers } = useSalesSettings();
   const [added, setAdded] = useState(false);
 
   const whatsappModeActive = division === "Cauchos" && cauchosSalesMode === "whatsapp";
 
   if (whatsappModeActive) {
     const message = `Hola GEU, quiero comprar: ${nombre} (x${cantidad}). Precio: ${precio}.`;
+    const whatsappNumber = whatsappNumbers[division];
     const href = whatsappNumber
       ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
       : undefined;
