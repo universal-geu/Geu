@@ -2,7 +2,7 @@ export type ImageSlot = {
   key: string;
   label: string;
   group: string;
-  division: "Cauchos" | "Import" | "Innovation" | "Plastic" | "Energy";
+  division: "Cauchos" | "Import" | "Innovation" | "Plastic" | "Energy" | "GEU";
   defaultSrc: string;
   dims: string;
   /** True for the mobile-only counterpart of a wide banner slot (same content, taller crop for small screens). */
@@ -192,6 +192,11 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "energy-solucion-biposte", label: "Energy · Estructura Biposte", group: "Proyectos", division: "Energy", defaultSrc: "/energy-estructura-biposte.jpg", dims: "1000 × 1000 px" },
   { key: "energy-solucion-chinesehat", label: "Energy · Estructura Chinese hat", group: "Proyectos", division: "Energy", defaultSrc: "/energy-estructura-chinesehat.jpg", dims: "1000 × 1000 px" },
   { key: "energy-solucion-carport", label: "Energy · Estructura Carport", group: "Proyectos", division: "Energy", defaultSrc: "/energy-estructura-carport.jpg", dims: "1000 × 1000 px" },
+
+  // ---- GEU · Nosotros (corporativo) ----
+  { key: "geu-nosotros-hero", label: "Nosotros · Fondo del héroe", group: "Nosotros", division: "GEU", defaultSrc: "/about-geu-logo-wall.png", dims: "1962 × 802 px" },
+  { key: "geu-nosotros-ecosistema", label: "Nosotros · Imagen de ecosistema", group: "Nosotros", division: "GEU", defaultSrc: "/about-geu-ecosystem.png", dims: "1672 × 941 px" },
+  { key: "geu-nosotros-contacto", label: "Nosotros · Fondo de cierre", group: "Nosotros", division: "GEU", defaultSrc: "/about-geu-industrial-night.png", dims: "1983 × 793 px" },
 ];
 
 export type SiteImages = Record<string, string>;

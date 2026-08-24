@@ -50,6 +50,7 @@ enum Division {
   Innovation
   Energy
   Plastic
+  GEU
 }
 
 model Product {

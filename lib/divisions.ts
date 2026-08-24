@@ -1,8 +1,8 @@
-export const DIVISIONS = ["Cauchos", "Import", "Innovation", "Energy", "Plastic"] as const;
+export const DIVISIONS = ["Cauchos", "Import", "Innovation", "Energy", "Plastic", "GEU"] as const;
 
 export type DivisionName = (typeof DIVISIONS)[number];
 
-const SERVICE_DIVISIONS: readonly DivisionName[] = ["Innovation"];
+const SERVICE_DIVISIONS: readonly DivisionName[] = ["Innovation", "GEU"];
 
 export function isServiceDivision(division: DivisionName) {
   return SERVICE_DIVISIONS.includes(division);
@@ -14,6 +14,7 @@ export const DIVISION_ADMIN_EMAILS: Record<DivisionName, string> = {
   Innovation: "admin.innovation@geu.com.co",
   Energy: "admin.energy@geu.com.co",
   Plastic: "admin.plastic@geu.com.co",
+  GEU: "admin.geu@geu.com.co",
 };
 
 export const DIVISION_ADMIN_PASSWORD = "123456789";
@@ -26,6 +27,7 @@ export const DIVISION_ADMIN_NAMES: Record<DivisionName, string> = {
   Innovation: "Administrador GEU Innovation",
   Energy: "Administrador GEU Energy",
   Plastic: "Administrador GEU Plastic",
+  GEU: "Administrador GEU Corporativo",
 };
 
 export type DivisionBrand = {
@@ -78,6 +80,14 @@ export const DIVISION_BRAND: Record<DivisionName, DivisionBrand> = {
     logoAlt: "GEU Plastic",
     basePath: "/plastic",
   },
+  GEU: {
+    label: "GEU",
+    accent: "#075ed8",
+    accentHover: "#064fb7",
+    logo: "/home-geu-logo.png",
+    logoAlt: "GEU Grupo Empresarial Universal",
+    basePath: "/quienes-somos",
+  },
 };
 
 export const CART_ACCENT: Record<DivisionName, "blue" | "red" | "gray" | "gold"> = {
@@ -86,6 +96,7 @@ export const CART_ACCENT: Record<DivisionName, "blue" | "red" | "gray" | "gold">
   Innovation: "blue",
   Energy: "gold",
   Plastic: "gray",
+  GEU: "blue",
 };
 
 export function getDivisionFromBrandParam(brand: string | null | undefined): DivisionName {
@@ -98,6 +109,8 @@ export function getDivisionFromBrandParam(brand: string | null | undefined): Div
       return "Energy";
     case "plastic":
       return "Plastic";
+    case "geu":
+      return "GEU";
     default:
       return "Cauchos";
   }

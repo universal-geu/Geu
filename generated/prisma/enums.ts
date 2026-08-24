@@ -69,7 +69,8 @@ export const Division = {
   Import: 'Import',
   Innovation: 'Innovation',
   Energy: 'Energy',
-  Plastic: 'Plastic'
+  Plastic: 'Plastic',
+  GEU: 'GEU'
 } as const
 
 export type Division = (typeof Division)[keyof typeof Division]

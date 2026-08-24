@@ -154,6 +154,21 @@ const ADMIN_BRAND_CONFIG: Record<DivisionName, AdminBrandConfig> = {
     accentHover: "#565c64",
     sessionLabel: "Administrador GEU Plastic",
   },
+  GEU: {
+    label: "GEU",
+    eyebrow: "GEU CORPORATIVO",
+    title: "Panel maestro GEU",
+    description:
+      "Desde aquí puedes editar las imágenes y textos de la página institucional \"Nosotros\" de GEU (grupoempresarialgeu.com).",
+    logo: "/home-geu-logo.png",
+    logoAlt: "GEU Grupo Empresarial Universal",
+    siteHref: "/quienes-somos",
+    productsHref: "/quienes-somos",
+    contactHref: "/quienes-somos#contacto",
+    accent: "#075ed8",
+    accentHover: "#064fb7",
+    sessionLabel: "Administrador GEU Corporativo",
+  },
 };
 
 function hexToRgb(hex: string): string {
