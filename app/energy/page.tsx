@@ -128,7 +128,7 @@ export default async function EnergyPage() {
               <HeroVideo
                 src={resolveImage("energy-tienda-principal", siteImages)}
                 wrapperClassName="relative h-full w-full"
-                className="absolute inset-0 h-full w-full object-cover object-top"
+                className="absolute inset-0 h-full w-full object-cover object-center"
               />
             ) : (
               <>
@@ -138,7 +138,7 @@ export default async function EnergyPage() {
                   fill
                   priority
                   sizes="100vw"
-                  className="block object-cover object-top md:hidden"
+                  className="block object-cover object-center md:hidden"
                 />
                 <Image
                   src={resolveImage("energy-tienda-principal", siteImages)}
@@ -146,7 +146,7 @@ export default async function EnergyPage() {
                   fill
                   priority
                   sizes="(min-width: 1632px) 1632px, 100vw"
-                  className="hidden object-cover object-top md:block"
+                  className="hidden object-cover object-center md:block"
                 />
               </>
             )}
