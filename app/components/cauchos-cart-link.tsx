@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCart } from "./cart-provider";
 
 type Props = {
-  accent?: "blue" | "red" | "gray";
+  accent?: "blue" | "red" | "gray" | "gold";
   href?: string;
 };
 
@@ -23,6 +23,11 @@ const accentClasses = {
     link: "hover:text-[#6b7280]",
     icon: "group-hover:border-[#6b7280]",
     badge: "bg-[#6b7280]",
+  },
+  gold: {
+    link: "hover:text-[#b38f00]",
+    icon: "group-hover:border-[#d4a900]",
+    badge: "bg-[#d4a900]",
   },
 };
 

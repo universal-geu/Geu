@@ -15,42 +15,49 @@ const ACCENT_TEXT_CLASS = {
   blue: "text-[#075ed8]",
   red: "text-[#e31313]",
   gray: "text-[#6b7280]",
+  gold: "text-[#b38f00]",
 } as const;
 
 const ACCENT_DECORATION_CLASS = {
   blue: "decoration-[#075ed8]/50",
   red: "decoration-[#e31313]/50",
   gray: "decoration-[#6b7280]/50",
+  gold: "decoration-[#d4a900]/50",
 } as const;
 
 const OUTLINE_BUTTON_CLASS = {
   blue: "border-[#075ed8] text-[#075ed8] hover:bg-[#075ed8] hover:text-white",
   red: "border-[#e31313] text-[#e31313] hover:bg-[#e31313] hover:text-white",
   gray: "border-[#6b7280] text-[#6b7280] hover:bg-[#6b7280] hover:text-white",
+  gold: "border-[#b38f00] text-[#b38f00] hover:bg-[#d4a900] hover:text-white",
 } as const;
 
 const GALLERY_ACTIVE_BORDER_CLASS = {
   blue: "border-[#2d7af0] shadow-[0_12px_24px_rgba(45,122,240,0.18)]",
   red: "border-[#e31313] shadow-[0_12px_24px_rgba(227,19,19,0.18)]",
   gray: "border-[#6b7280] shadow-[0_12px_24px_rgba(107,114,128,0.18)]",
+  gold: "border-[#d4a900] shadow-[0_12px_24px_rgba(212,169,0,0.18)]",
 } as const;
 
 const GALLERY_HOVER_BORDER_CLASS = {
   blue: "border-black/8 hover:border-[#2d7af0]/35",
   red: "border-black/8 hover:border-[#e31313]/35",
   gray: "border-black/8 hover:border-[#6b7280]/35",
+  gold: "border-black/8 hover:border-[#d4a900]/35",
 } as const;
 
 const GALLERY_LIGHTBOX_HOVER_BORDER_CLASS = {
   blue: "border-white/10 hover:border-[#2d7af0]/35",
   red: "border-white/10 hover:border-[#e31313]/35",
   gray: "border-white/10 hover:border-[#6b7280]/35",
+  gold: "border-white/10 hover:border-[#d4a900]/35",
 } as const;
 
 const GALLERY_BADGE_CLASS = {
   blue: "bg-[#edf4ff] text-[#2d7af0]",
   red: "bg-[#fff0f0] text-[#e31313]",
   gray: "bg-slate-100 text-[#6b7280]",
+  gold: "bg-[#fff9e5] text-[#b38f00]",
 } as const;
 
 function ProductImageGallery({
@@ -60,7 +67,7 @@ function ProductImageGallery({
 }: {
   nombre: string;
   images: string[];
-  accent?: "blue" | "red" | "gray";
+  accent?: "blue" | "red" | "gray" | "gold";
 }) {
   const [activeImage, setActiveImage] = useState(images[0] || "");
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);

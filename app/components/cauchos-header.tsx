@@ -45,9 +45,10 @@ function CauchosBottomNav({ homeHref, accent, cartHref, accountBrand, moreItems,
 
 type Props = {
   division?: DivisionName;
+  extraNavLink?: { label: string; href: string };
 };
 
-export default function CauchosHeader({ division = "Cauchos" }: Props) {
+export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Props) {
   const siteTexts = useSiteTexts();
   const siteColors = useSiteColors();
   const colorOverrideCss = buildDivisionColorOverrideCss(division, siteColors);
@@ -70,7 +71,9 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
         ? "/cauchos/nosotros"
         : division === "Plastic"
           ? "/plastic/nosotros"
-          : "/quienes-somos";
+          : division === "Energy"
+            ? "/energy/nosotros"
+            : "/quienes-somos";
 
   return (
     <CauchosMenuProvider>
@@ -132,6 +135,11 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
             <Link href={nosotrosHref} className="font-bold hover:text-[var(--brand-accent)]">
               Nosotros
             </Link>
+            {extraNavLink && (
+              <Link href={extraNavLink.href} className="font-bold hover:text-[var(--brand-accent)]">
+                {extraNavLink.label}
+              </Link>
+            )}
             {showCart && <CauchosCartLink accent={cartAccent} href={cartHref} />}
             <CauchosAccountLink className="font-bold hover:text-[var(--brand-accent)]" brand={brandParam} />
           </div>
@@ -147,6 +155,7 @@ export default function CauchosHeader({ division = "Cauchos" }: Props) {
           showCart={showCart}
           moreItems={[
             { label: "Nosotros", href: nosotrosHref },
+            ...(extraNavLink ? [extraNavLink] : []),
             { label: "Cotizaciones", href: `${brand.basePath}#contacto` },
             { label: "Catálogos", href: `${brand.basePath}#productos` },
             { label: "Ver todo GEU", href: "/" },

@@ -11,7 +11,7 @@ type Props = {
   precio: string;
   imagen: string;
   division?: DivisionName;
-  accent?: "blue" | "red" | "gray";
+  accent?: "blue" | "red" | "gray" | "gold";
   cantidad?: number;
   disabled?: boolean;
 };
@@ -20,6 +20,7 @@ const accentClasses = {
   blue: "border border-[#075ed8] bg-white text-[#075ed8] shadow-[0_10px_24px_rgba(7,94,216,0.08)] hover:bg-[#075ed8] hover:text-white hover:shadow-[0_16px_30px_rgba(7,94,216,0.18)]",
   red: "border border-[#e31313] bg-white text-[#e31313] shadow-[0_10px_24px_rgba(227,19,19,0.08)] hover:bg-[#e31313] hover:text-white hover:shadow-[0_16px_30px_rgba(227,19,19,0.18)]",
   gray: "border border-[#6b7280] bg-white text-[#6b7280] shadow-[0_10px_24px_rgba(107,114,128,0.08)] hover:bg-[#6b7280] hover:text-white hover:shadow-[0_16px_30px_rgba(107,114,128,0.18)]",
+  gold: "border border-[#b38f00] bg-white text-[#b38f00] shadow-[0_10px_24px_rgba(212,169,0,0.1)] hover:bg-[#d4a900] hover:text-white hover:shadow-[0_16px_30px_rgba(212,169,0,0.22)]",
 };
 
 function WhatsAppIcon({ className = "" }: { className?: string }) {

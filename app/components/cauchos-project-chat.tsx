@@ -22,6 +22,7 @@ type Message = {
 function buildSteps(brandLabel: string, division: DivisionName): Step[] {
   const isImport = division === "Import";
   const isPlastic = division === "Plastic";
+  const isEnergy = division === "Energy";
 
   const stepsByKey: Record<string, Step> = {
     contacto: {
@@ -45,31 +46,43 @@ function buildSteps(brandLabel: string, division: DivisionName): Step[] {
       label: "Tipo de solicitud",
       bot: isImport
         ? "Es una importacion nueva o una reposicion de una referencia que ya nos compras?"
-        : "Es un producto nuevo o una modificacion de uno existente?",
+        : isEnergy
+          ? "Es un proyecto nuevo o una ampliacion de una instalacion existente?"
+          : "Es un producto nuevo o una modificacion de uno existente?",
       type: "choice",
-      options: isImport ? ["Importacion nueva", "Reposicion"] : ["Producto nuevo", "Modificacion"],
+      options: isImport
+        ? ["Importacion nueva", "Reposicion"]
+        : isEnergy
+          ? ["Proyecto nuevo", "Ampliacion"]
+          : ["Producto nuevo", "Modificacion"],
     },
     producto: {
       key: "producto",
-      label: isImport ? "Referencia a importar" : "Producto",
+      label: isImport ? "Referencia a importar" : isEnergy ? "Proyecto" : "Producto",
       bot: isImport
         ? `Hola, soy el asistente de ${brandLabel}. Vamos a armar tu solicitud de importacion. Para empezar, ¿qué quieres importar? Cuéntame la referencia, especificaciones y para qué se usa.`
         : isPlastic
           ? "Cuentame de la pieza o perfil plastico: medidas, material y para que se usa."
-          : "Cuentame del producto: medidas, color y para que se usa.",
+          : isEnergy
+            ? "Cuentame de tu proyecto: consumo o valor de la factura mensual, tipo de predio y donde se instalaria."
+            : "Cuentame del producto: medidas, color y para que se usa.",
       type: "textarea",
       placeholder: isImport
         ? "Ej: Repuestos electronicos automotrices, 500 unidades, uso en linea de ensamble"
         : isPlastic
           ? "Ej: Perfil de PVC 40mm x 20mm, transparente, uso en vitrina"
-          : "Ej: Manguera diam. int. 33mm x 37mm d. ext, color negro, uso industrial",
+          : isEnergy
+            ? "Ej: Consumo mensual 800 kWh, bodega industrial, instalacion en cubierta"
+            : "Ej: Manguera diam. int. 33mm x 37mm d. ext, color negro, uso industrial",
     },
     proceso: {
       key: "proceso",
-      label: isImport ? "Modalidad de importacion" : "Proceso solicitado",
+      label: isImport ? "Modalidad de importacion" : isEnergy ? "Tipo de solucion" : "Proceso solicitado",
       bot: isImport
         ? "Que necesitas gestionar en esta importacion? Puedes elegir varias."
-        : "Que proceso de fabricacion necesita? Puedes elegir varios.",
+        : isEnergy
+          ? "Que tipo de solucion energetica necesitas? Puedes elegir varias."
+          : "Que proceso de fabricacion necesita? Puedes elegir varios.",
       type: "multichoice",
       options: isImport
         ? [
@@ -90,24 +103,37 @@ function buildSteps(brandLabel: string, division: DivisionName): Step[] {
               "Ensamble",
               "Otro",
             ]
-          : [
-              "Vulcanizado",
-              "Inyeccion plastico",
-              "Inyeccion caucho",
-              "Mecanizado",
-              "Mezcla",
-              "Poliuretano",
-              "Extrusion",
-              "Ensamble",
-              "Otro",
-            ],
+          : isEnergy
+            ? [
+                "Sistema solar fotovoltaico",
+                "Estructura monoposte",
+                "Estructura biposte",
+                "Carport solar",
+                "Chinese hat",
+                "Baterias / respaldo",
+                "Eficiencia energetica",
+                "Otro",
+              ]
+            : [
+                "Vulcanizado",
+                "Inyeccion plastico",
+                "Inyeccion caucho",
+                "Mecanizado",
+                "Mezcla",
+                "Poliuretano",
+                "Extrusion",
+                "Ensamble",
+                "Otro",
+              ],
     },
     condiciones: {
       key: "condiciones",
-      label: isImport ? "Requisitos de la importacion" : "Condiciones de trabajo",
+      label: isImport ? "Requisitos de la importacion" : isEnergy ? "Condiciones del proyecto" : "Condiciones de trabajo",
       bot: isImport
         ? "Que mas necesitas para esta importacion? Puedes elegir varias."
-        : "Bajo que condiciones de trabajo va a operar? Puedes elegir varias.",
+        : isEnergy
+          ? "Bajo que condiciones va a operar el proyecto? Puedes elegir varias."
+          : "Bajo que condiciones de trabajo va a operar? Puedes elegir varias.",
       type: "multichoice",
       options: isImport
         ? [
@@ -127,16 +153,25 @@ function buildSteps(brandLabel: string, division: DivisionName): Step[] {
               "Temperatura de trabajo",
               "Requisito legal",
             ]
-          : [
-              "Hidrocarburos",
-              "Abrasion",
-              "Impacto",
-              "Uso externo",
-              "Presion de trabajo",
-              "Temperatura de trabajo",
-              "Grado alimenticio",
-              "Requisito legal",
-            ],
+          : isEnergy
+            ? [
+                "Conexion a red (on-grid)",
+                "Sistema aislado (off-grid)",
+                "Respaldo con baterias",
+                "Techo o cubierta disponible",
+                "Terreno disponible",
+                "Requisito legal",
+              ]
+            : [
+                "Hidrocarburos",
+                "Abrasion",
+                "Impacto",
+                "Uso externo",
+                "Presion de trabajo",
+                "Temperatura de trabajo",
+                "Grado alimenticio",
+                "Requisito legal",
+              ],
     },
     comercial: {
       key: "comercial",

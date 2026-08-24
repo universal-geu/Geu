@@ -83,15 +83,32 @@ export const plasticCategoriasData = [
 ] as const;
 export const plasticCategorias: string[] = plasticCategoriasData.map((item) => item.nombre);
 
+// Energy's own category taxonomy (equipos e instalacion de energia solar) —
+// like Import and Plastic, each entry is already a single, specific product
+// line, with no further sub-sector breakdown.
+export const energyCategoriasData = [
+  { nombre: "Paneles solares", color: "#d4a900", icono: "◈" },
+  { nombre: "Inversores", color: "#1971c2", icono: "⚡" },
+  { nombre: "Baterías y respaldo", color: "#495057", icono: "▮" },
+  { nombre: "Estructuras de montaje", color: "#868e96", icono: "▲" },
+  { nombre: "Cableado y conectores", color: "#e8590c", icono: "⬢" },
+  { nombre: "Controladores de carga", color: "#0c8599", icono: "◎" },
+  { nombre: "Medición y monitoreo", color: "#5c940d", icono: "◆" },
+  { nombre: "Accesorios e instalación", color: "#c92a2a", icono: "⚙" },
+] as const;
+export const energyCategorias: string[] = energyCategoriasData.map((item) => item.nombre);
+
 export function getCategoriasForDivision(division: DivisionName): string[] {
   if (division === "Import") return importCategorias;
   if (division === "Plastic") return plasticCategorias;
+  if (division === "Energy") return energyCategorias;
   return categorias;
 }
 
 export function getCategoriasDataForDivision(division: DivisionName) {
   if (division === "Import") return importCategoriasData;
   if (division === "Plastic") return plasticCategoriasData;
+  if (division === "Energy") return energyCategoriasData;
   return categoriasData;
 }
 
