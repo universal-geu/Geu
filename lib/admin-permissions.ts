@@ -41,11 +41,10 @@ export function hasAdminPermission(
   return permissions.length === 0 || permissions.includes(tool);
 }
 
-// Energy and Innovation have no products for sale, so their admin panels only
-// need image, text/WhatsApp, and team-account management — the rest
-// (dashboard, product CRUD, orders, quotes, reports) has nothing to show.
+// Innovation has no products for sale, so its admin panel only needs image,
+// text/WhatsApp, and team-account management — the rest (dashboard, product
+// CRUD, orders, quotes, reports) has nothing to show.
 export const DIVISION_TOOL_RESTRICTIONS: Partial<Record<DivisionName, readonly AdminToolKey[]>> = {
-  Energy: ["images", "settings", "accounts"],
   Innovation: ["images", "settings", "accounts"],
 };
 
