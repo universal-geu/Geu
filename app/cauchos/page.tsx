@@ -180,11 +180,16 @@ export default async function CauchosPage() {
         </div>
         <div className="bg-white">
           {isVideoUrl(resolveImage("banner-principal", siteImages)) ? (
-            <HeroVideo
-              src={resolveImage("banner-principal", siteImages)}
-              className="mx-auto h-auto w-full object-contain"
+            <div
+              className="relative mx-auto aspect-[16/7] w-full overflow-hidden sm:aspect-[16/6]"
               style={{ maxWidth: "1632px" }}
-            />
+            >
+              <HeroVideo
+                src={resolveImage("banner-principal", siteImages)}
+                wrapperClassName="relative h-full w-full"
+                className="absolute inset-0 h-full w-full object-cover object-top"
+              />
+            </div>
           ) : (
             <>
               <Image
