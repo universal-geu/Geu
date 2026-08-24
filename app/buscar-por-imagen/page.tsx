@@ -11,7 +11,7 @@ export const metadata = {
   description: "Concepto visual de búsqueda de repuestos por imagen en GEU.",
 };
 
-const DIVISIONS_WITH_CATEGORY_ROUTE = new Set(["Cauchos", "Import", "Plastic"]);
+const DIVISIONS_WITH_CATEGORY_ROUTE = new Set(["Cauchos", "Import", "Plastic", "Energy"]);
 
 export default async function BuscarPorImagenPage() {
   const products = await getProducts();

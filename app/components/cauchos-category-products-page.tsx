@@ -28,19 +28,21 @@ const CATEGORY_BANNER: Record<DivisionName, { src: string; alt: string }> = {
   Cauchos: { src: "/cauchos-category-banner.jpg", alt: "Universal de Cauchos" },
   Import: { src: "/geu-import-main-banner.png", alt: "GEU Import" },
   Innovation: { src: "/cauchos-category-banner.jpg", alt: "GEU Innovation" },
-  Energy: { src: "/cauchos-category-banner.jpg", alt: "GEU Energy" },
+  Energy: { src: "/geu-energy-structures-banner.png", alt: "GEU Energy" },
   Plastic: { src: "/geu-plastic-main-banner.png", alt: "GEU Plastic" },
 };
 
 const CATEGORY_BANNER_IMAGE_KEY: Partial<Record<DivisionName, string>> = {
   Cauchos: "banner-categorias",
   Import: "import-cierre",
+  Energy: "energy-cierre",
   Plastic: "plastic-banner-categorias",
 };
 
 const CATEGORY_BANNER_MOBILE_IMAGE_KEY: Partial<Record<DivisionName, string>> = {
   Cauchos: "banner-categorias-movil",
   Import: "import-cierre-movil",
+  Energy: "energy-cierre-movil",
   Plastic: "plastic-banner-categorias-movil",
 };
 

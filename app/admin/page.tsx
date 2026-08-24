@@ -1588,7 +1588,7 @@ export default function AdminPage() {
   const [variantMode, setVariantMode] = useState(false);
   const [variantes, setVariantes] = useState<VariantFormItem[]>([]);
   const canUseVariantMode =
-    adminDivision === "Import" || adminDivision === "Plastic" || adminDivision === "Cauchos";
+    adminDivision === "Import" || adminDivision === "Plastic" || adminDivision === "Energy" || adminDivision === "Cauchos";
   const isVariantModeActive = canUseVariantMode && variantMode;
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -4111,18 +4111,18 @@ export default function AdminPage() {
                   )}
 
                   <CategoryComboBox
-                    label={adminDivision === "Import" || adminDivision === "Plastic" ? "Categoría" : "Crear categoría"}
+                    label={adminDivision === "Import" || adminDivision === "Plastic" || adminDivision === "Energy" ? "Categoría" : "Crear categoría"}
                     name="categoria"
                     value={form.categoria}
                     options={categoryOptions}
                     placeholder="Ej. Transporte, logística y puertos marítimos"
                     required
                     entityName="categoría"
-                    strict={adminDivision === "Import" || adminDivision === "Plastic"}
+                    strict={adminDivision === "Import" || adminDivision === "Plastic" || adminDivision === "Energy"}
                     onChange={(value) => setForm((current) => ({ ...current, categoria: value }))}
                   />
 
-                  {adminDivision !== "Import" && adminDivision !== "Plastic" && (
+                  {adminDivision !== "Import" && adminDivision !== "Plastic" && adminDivision !== "Energy" && (
                     <>
                       <CategoryComboBox
                         label="Sub categoría"
@@ -4150,7 +4150,7 @@ export default function AdminPage() {
                     items={form.categoriasAdicionales}
                     categoryOptions={categoryOptions}
                     adminProducts={adminProducts}
-                    strictCategory={adminDivision === "Import" || adminDivision === "Plastic"}
+                    strictCategory={adminDivision === "Import" || adminDivision === "Plastic" || adminDivision === "Energy"}
                     onChange={(items) => setForm((current) => ({ ...current, categoriasAdicionales: items }))}
                   />
 
@@ -4678,18 +4678,18 @@ export default function AdminPage() {
                     )}
 
                     <CategoryComboBox
-                      label={adminDivision === "Import" || adminDivision === "Plastic" ? "Categoría" : "Crear categoría"}
+                      label={adminDivision === "Import" || adminDivision === "Plastic" || adminDivision === "Energy" ? "Categoría" : "Crear categoría"}
                       name="categoria"
                       value={form.categoria}
                       options={categoryOptions}
                       placeholder="Ej. Transporte, logística y puertos marítimos"
                       required
                       entityName="categoría"
-                      strict={adminDivision === "Import" || adminDivision === "Plastic"}
+                      strict={adminDivision === "Import" || adminDivision === "Plastic" || adminDivision === "Energy"}
                       onChange={(value) => setForm((current) => ({ ...current, categoria: value }))}
                     />
 
-                    {adminDivision !== "Import" && adminDivision !== "Plastic" && (
+                    {adminDivision !== "Import" && adminDivision !== "Plastic" && adminDivision !== "Energy" && (
                       <>
                         <CategoryComboBox
                           label="Sub categoría"
@@ -4717,7 +4717,7 @@ export default function AdminPage() {
                       items={form.categoriasAdicionales}
                       categoryOptions={categoryOptions}
                       adminProducts={adminProducts}
-                      strictCategory={adminDivision === "Import" || adminDivision === "Plastic"}
+                      strictCategory={adminDivision === "Import" || adminDivision === "Plastic" || adminDivision === "Energy"}
                       onChange={(items) => setForm((current) => ({ ...current, categoriasAdicionales: items }))}
                     />
 

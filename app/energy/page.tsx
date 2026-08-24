@@ -256,6 +256,7 @@ export default async function EnergyPage() {
         items={energyOffersResolved}
         siteImages={siteImages}
         maxWidth="1632px"
+        cardClassName="aspect-[4/3] min-h-[220px]"
       />
 
       <section id="contacto" className="mx-auto max-w-[1632px] px-5 pb-8 md:px-8">

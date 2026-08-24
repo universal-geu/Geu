@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { DIVISION_BRAND, DIVISIONS, type DivisionName } from "@/lib/divisions";
 
-const DIVISIONS_WITH_CATEGORY_ROUTE = new Set<DivisionName>(["Cauchos", "Import", "Plastic"]);
+const DIVISIONS_WITH_CATEGORY_ROUTE = new Set<DivisionName>(["Cauchos", "Import", "Plastic", "Energy"]);
 
 function normalizeDivision(value: string | undefined): DivisionName {
   return DIVISIONS.includes(value as DivisionName) ? (value as DivisionName) : "Cauchos";

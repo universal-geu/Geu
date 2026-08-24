@@ -24,6 +24,8 @@ type OfferSectionProps = {
   siteImages: SiteImages;
   surface?: "light" | "dark";
   maxWidth?: string;
+  /** Card aspect ratio + min-height classes, e.g. "aspect-[4/3] min-h-[220px]". Defaults to the tall 9:16 promo card. */
+  cardClassName?: string;
 };
 
 type FeaturedSectionProps = {
@@ -53,6 +55,7 @@ export function BrandOfferSection({
   siteImages,
   surface = "light",
   maxWidth = "1500px",
+  cardClassName = "aspect-[9/16] min-h-[430px]",
 }: OfferSectionProps) {
   const isDark = surface === "dark";
 
@@ -79,7 +82,7 @@ export function BrandOfferSection({
               key={item.title}
               href={item.href}
               aria-label={item.title}
-              className="cauchos-offer-card group relative block aspect-[9/16] min-h-[430px] overflow-hidden rounded-[10px] border border-slate-200 bg-[#071225] shadow-[0_16px_40px_rgba(15,23,42,0.14)]"
+              className={`cauchos-offer-card group relative block overflow-hidden rounded-[10px] border border-slate-200 bg-[#071225] shadow-[0_16px_40px_rgba(15,23,42,0.14)] ${cardClassName}`}
             >
               <Image
                 src={resolveImage(item.imageKey, siteImages)}
