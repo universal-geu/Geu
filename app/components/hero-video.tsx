@@ -6,10 +6,12 @@ export default function HeroVideo({
   src,
   className,
   style,
+  wrapperClassName,
 }: {
   src: string;
   className?: string;
   style?: CSSProperties;
+  wrapperClassName?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
@@ -22,7 +24,7 @@ export default function HeroVideo({
   };
 
   return (
-    <div className="relative">
+    <div className={wrapperClassName ?? "relative"}>
       <video
         ref={videoRef}
         src={src}
