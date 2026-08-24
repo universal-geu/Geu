@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import SiteFooter from "../components/site-footer";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import { getSiteImages, resolveImage } from "@/lib/site-images";
 
 const navItems = [
   { label: "Inicio", href: "/" },
@@ -54,6 +55,7 @@ export const dynamic = "force-dynamic";
 
 export default async function QuienesSomosPage() {
   const siteTexts = await getSiteTexts();
+  const siteImages = await getSiteImages();
   const t = (key: string) => resolveText(key, siteTexts);
   const heroTitleLines = t("quienes-somos-hero-titulo").split("\n");
 
@@ -90,7 +92,7 @@ export default async function QuienesSomosPage() {
 
       <section className="relative min-h-[760px] overflow-hidden bg-[#f8fafc] pt-28 md:min-h-[820px]">
         <Image
-          src="/about-geu-logo-wall.png"
+          src={resolveImage("geu-nosotros-hero", siteImages)}
           alt="Logo tridimensional GEU en pared blanca"
           width={1962}
           height={802}
@@ -158,7 +160,7 @@ export default async function QuienesSomosPage() {
 
         <div className="geu-ecosystem-frame relative mx-auto mt-2 max-w-[1720px]">
           <Image
-            src="/about-geu-ecosystem.png"
+            src={resolveImage("geu-nosotros-ecosistema", siteImages)}
             alt="Ecosistema industrial de las unidades de negocio GEU"
             width={1672}
             height={941}
@@ -213,7 +215,7 @@ export default async function QuienesSomosPage() {
 
       <section id="contacto" className="relative min-h-[390px] overflow-hidden bg-[#061735] text-white">
         <Image
-          src="/about-geu-industrial-night.png"
+          src={resolveImage("geu-nosotros-contacto", siteImages)}
           alt="Complejo industrial iluminado de noche"
           width={1983}
           height={793}

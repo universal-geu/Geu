@@ -17,7 +17,7 @@ export type TextSlot = {
   key: string;
   label: string;
   group: string;
-  division: "Cauchos" | "Import" | "Innovation" | "Plastic" | "Energy" | "Global";
+  division: "Cauchos" | "Import" | "Innovation" | "Plastic" | "Energy" | "GEU" | "Global";
   defaultValue: string;
   multiline?: boolean;
 };
@@ -195,14 +195,14 @@ export const TEXT_SLOTS: TextSlot[] = [
   { key: "footer-innovation-tagline", label: "Footer · Frase de marca", group: "Footer", division: "Innovation", defaultValue: "Autoservicio inteligente para empresas en todo el país.", multiline: true },
 
   // ---- Quienes somos (corporativo) ----
-  { key: "quienes-somos-hero-titulo", label: "Título (usa salto de línea para 2 líneas)", group: "Quiénes somos", division: "Global", defaultValue: "Impulsamos industrias.\nConstruimos el futuro.", multiline: true },
-  { key: "quienes-somos-hero-subtitulo", label: "Párrafo introductorio", group: "Quiénes somos", division: "Global", defaultValue: "Somos una organización dedicada a consolidar, preservar y acrecentar la confianza de los clientes mediante soluciones integrales en caucho, importación, innovación, energía y plásticos, con procesos diseñados para generar valor sostenible.", multiline: true },
-  { key: "quienes-somos-mision-texto", label: "Párrafo de misión", group: "Quiénes somos", division: "Global", defaultValue: "Consolidar empresas industriales que creen soluciones confiables y eleven el estándar técnico del mercado colombiano.", multiline: true },
-  { key: "quienes-somos-vision-texto", label: "Párrafo de visión", group: "Quiénes somos", division: "Global", defaultValue: "Para el año 2035, ser uno de los grupos empresariales líderes en Latinoamérica en soluciones industriales y tecnológicas, reconocido por su innovación, excelencia y generación de valor para clientes, aliados y colaboradores.", multiline: true },
-  { key: "quienes-somos-ecosistema-titulo", label: "Título de ecosistema", group: "Quiénes somos", division: "Global", defaultValue: "Nuestro ecosistema" },
-  { key: "quienes-somos-contacto-titulo", label: "Título de cierre", group: "Quiénes somos", division: "Global", defaultValue: "Un ecosistema que trabaja como uno solo." },
-  { key: "quienes-somos-contacto-subtitulo", label: "Párrafo de cierre", group: "Quiénes somos", division: "Global", defaultValue: "Integramos capacidades, tecnología y talento para ofrecer soluciones completas y generar valor en cada industria donde participamos.", multiline: true },
-  { key: "footer-quienes-somos-tagline", label: "Footer · Frase de marca", group: "Quiénes somos", division: "Global", defaultValue: "Impulsamos industrias a través de soluciones integrales, innovación y compromiso con la excelencia.", multiline: true },
+  { key: "quienes-somos-hero-titulo", label: "Título (usa salto de línea para 2 líneas)", group: "Quiénes somos", division: "GEU", defaultValue: "Impulsamos industrias.\nConstruimos el futuro.", multiline: true },
+  { key: "quienes-somos-hero-subtitulo", label: "Párrafo introductorio", group: "Quiénes somos", division: "GEU", defaultValue: "Somos una organización dedicada a consolidar, preservar y acrecentar la confianza de los clientes mediante soluciones integrales en caucho, importación, innovación, energía y plásticos, con procesos diseñados para generar valor sostenible.", multiline: true },
+  { key: "quienes-somos-mision-texto", label: "Párrafo de misión", group: "Quiénes somos", division: "GEU", defaultValue: "Consolidar empresas industriales que creen soluciones confiables y eleven el estándar técnico del mercado colombiano.", multiline: true },
+  { key: "quienes-somos-vision-texto", label: "Párrafo de visión", group: "Quiénes somos", division: "GEU", defaultValue: "Para el año 2035, ser uno de los grupos empresariales líderes en Latinoamérica en soluciones industriales y tecnológicas, reconocido por su innovación, excelencia y generación de valor para clientes, aliados y colaboradores.", multiline: true },
+  { key: "quienes-somos-ecosistema-titulo", label: "Título de ecosistema", group: "Quiénes somos", division: "GEU", defaultValue: "Nuestro ecosistema" },
+  { key: "quienes-somos-contacto-titulo", label: "Título de cierre", group: "Quiénes somos", division: "GEU", defaultValue: "Un ecosistema que trabaja como uno solo." },
+  { key: "quienes-somos-contacto-subtitulo", label: "Párrafo de cierre", group: "Quiénes somos", division: "GEU", defaultValue: "Integramos capacidades, tecnología y talento para ofrecer soluciones completas y generar valor en cada industria donde participamos.", multiline: true },
+  { key: "footer-quienes-somos-tagline", label: "Footer · Frase de marca", group: "Quiénes somos", division: "GEU", defaultValue: "Impulsamos industrias a través de soluciones integrales, innovación y compromiso con la excelencia.", multiline: true },
 
   // ---- Nombres de categorías del menú (no cambian la URL ni el filtro de productos) ----
   ...categoriasData.map((category) => ({

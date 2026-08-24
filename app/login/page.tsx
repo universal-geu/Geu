@@ -18,6 +18,7 @@ const LOGIN_ACCENTS: Record<string, { accent: string; accentHover: string; brand
   Innovation: { accent: "#0498b4", accentHover: "#037c92", brandName: "GEU Innovation" },
   Energy: { accent: "#d4a900", accentHover: "#b38f00", brandName: "GEU Energy" },
   Plastic: { accent: "#6b7280", accentHover: "#565c64", brandName: "GEU Plastic" },
+  GEU: { accent: "#075ed8", accentHover: "#064bb0", brandName: "GEU" },
 };
 
 type LoginFormState = {

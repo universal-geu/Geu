@@ -30,6 +30,7 @@ const CATEGORY_BANNER: Record<DivisionName, { src: string; alt: string }> = {
   Innovation: { src: "/cauchos-category-banner.jpg", alt: "GEU Innovation" },
   Energy: { src: "/geu-energy-structures-banner.png", alt: "GEU Energy" },
   Plastic: { src: "/geu-plastic-main-banner.png", alt: "GEU Plastic" },
+  GEU: { src: "/about-geu-logo-wall.png", alt: "GEU" },
 };
 
 const CATEGORY_BANNER_IMAGE_KEY: Partial<Record<DivisionName, string>> = {
@@ -50,8 +51,9 @@ export const FALLBACK_PRODUCT_IMAGE: Record<DivisionName, string> = {
   Cauchos: "/home-cauchos.png",
   Import: "/home-import.png",
   Innovation: "/home-cauchos.png",
-  Energy: "/home-cauchos.png",
+  Energy: "/home-energy.png",
   Plastic: "/home-plastic.png",
+  GEU: "/home-geu-logo.png",
 };
 
 function humanizeSegment(value?: string) {
