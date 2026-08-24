@@ -83,9 +83,9 @@ VOCABULARIO TÉCNICO QUE PUEDES USAR CON CRITERIO (no lo fuerces si el usuario n
 Contacto: +57 301 769 0955 (WhatsApp/tel) · www.geuenergy.com · contacto@geuenergy.com · gerenciaproyectos@grupoempresarialgeu.com — Bogotá, Cra. 29 #10-25, Puente Aranda.`;
 
 const ENERGY_QUICK_LINKS: ChatSuggestion[] = [
-  { label: "Ver soluciones estructurales", href: "/energy#soluciones" },
-  { label: "Cómo trabajamos", href: "/energy#sistema" },
-  { label: "Hablar con el equipo", href: "/energy#contacto" },
+  { label: "Ver soluciones estructurales", href: "/energy/proyectos#soluciones" },
+  { label: "Cómo trabajamos", href: "/energy/proyectos#sistema" },
+  { label: "Hablar con el equipo", href: "/energy/proyectos#contacto" },
 ];
 
 function normalizeText(value: string) {
@@ -114,7 +114,7 @@ export function buildGusLocalReply(query: string): {
     return {
       message:
         "Por ahora GEU Energy está enfocado en proyectos industriales de 2 MW en adelante (granjas solares), no en instalaciones residenciales — esa línea la planeamos abrir en 2027. Si es tu caso, con gusto dejo tus datos para avisarte apenas esté disponible. Mientras tanto, si conoces algún proyecto de mayor escala, cuéntame la capacidad y ubicación y te ayudo con eso.",
-      suggestions: [{ label: "Dejar mis datos", href: "/energy#contacto" }],
+      suggestions: [{ label: "Dejar mis datos", href: "/energy/proyectos#contacto" }],
     };
   }
 
@@ -194,7 +194,7 @@ export function buildGusLocalReply(query: string): {
     return {
       message:
         "Para armar una cotización real necesito algunos datos del proyecto: ubicación, capacidad en MW, tipo y cantidad de paneles, si ya tienes topografía/estudio geotécnico, y si necesitas solo fabricación o también ingeniería y ensamble en sitio. Cuéntame lo que tengas y con eso el equipo comercial te contacta con una propuesta concreta.",
-      suggestions: [{ label: "Escribir al equipo comercial", href: "/energy#contacto" }],
+      suggestions: [{ label: "Escribir al equipo comercial", href: "/energy/proyectos#contacto" }],
     };
   }
 
@@ -218,7 +218,7 @@ export function buildGusLocalReply(query: string): {
     return {
       message:
         "Tenemos control de calidad interno en fabricación, galvanizado y montaje, con trazabilidad completa desde ingeniería hasta entrega. El respaldo técnico principal es el estudio de cargas de viento certificado que entregamos con cada proyecto. Si necesitas el detalle formal de garantía para tu contrato, te conecto con el equipo comercial.",
-      suggestions: [{ label: "Hablar con el equipo", href: "/energy#contacto" }],
+      suggestions: [{ label: "Hablar con el equipo", href: "/energy/proyectos#contacto" }],
     };
   }
 

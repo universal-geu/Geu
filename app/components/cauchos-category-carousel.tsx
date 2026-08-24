@@ -14,7 +14,7 @@ type CauchosCategory = {
 
 type Props = {
   categories: CauchosCategory[];
-  accent?: "blue" | "red" | "silver";
+  accent?: "blue" | "red" | "silver" | "gold";
 };
 
 const accentClasses = {
@@ -29,6 +29,10 @@ const accentClasses = {
   silver: {
     arrow: "text-[#666769] hover:border-[#a3a3a4]",
     card: "hover:border-[#a3a3a4]",
+  },
+  gold: {
+    arrow: "text-[#b38f00] hover:border-[#d4a900]",
+    card: "hover:border-[#d4a900]",
   },
 };
 

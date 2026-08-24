@@ -1,13 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
-import SolutionsCarousel from "./solutions-carousel";
-import EnergyHeader from "./energy-header";
-import EngineeringModelViewer from "./engineering-model-viewer";
-import GusChat from "./gus-chat";
+import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
+import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
+import CauchosHeader from "../components/cauchos-header";
+import CauchosProjectChat from "../components/cauchos-project-chat";
+import HeroVideo from "../components/hero-video";
+import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import SiteFooter from "../components/site-footer";
-import { getSiteImages, resolveImage, type SiteImages } from "@/lib/site-images";
+import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
+import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
-import { getWhatsAppNumber } from "@/lib/site-settings";
+import { getProducts, productSellsInDivision } from "@/lib/products";
+import { energyCategorias, slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -19,305 +23,306 @@ const navItems = [
   { label: "Energy", href: "/energy", active: true },
   { label: "Plastic", href: "/plastic" },
   { label: "Nosotros", href: "/energy/nosotros" },
-  { label: "Contacto", href: "/energy#contacto" },
+  { label: "Proyectos", href: "/energy/proyectos" },
+  { label: "Contacto", href: "#contacto" },
 ];
 
-function getSolutions(siteImages: SiteImages) {
-  return [
-    {
-      title: "Monoposte",
-      text: "Un solo poste central por línea de módulos, ideal para terrenos con buena capacidad portante.",
-      image: resolveImage("energy-solucion-monoposte", siteImages),
-    },
-    {
-      title: "Biposte",
-      text: "Dos hileras de postes que reparten mejor la carga, pensado para configuraciones más grandes.",
-      image: resolveImage("energy-solucion-biposte", siteImages),
-    },
-    {
-      title: "Chinese hat",
-      text: "Estructura tipo carpa con paneles a dos aguas desde una cumbrera central.",
-      image: resolveImage("energy-solucion-chinesehat", siteImages),
-    },
-    {
-      title: "Carport",
-      text: "Cubierta solar para parqueaderos: genera energía y da sombra al mismo tiempo.",
-      image: resolveImage("energy-solucion-carport", siteImages),
-    },
-  ];
-}
+const ENERGY_CATEGORY_IMAGE_KEYS: Record<string, string> = {
+  "Paneles solares": "energy-categoria-paneles-solares",
+  "Inversores": "energy-categoria-inversores",
+  "Baterías y respaldo": "energy-categoria-baterias-respaldo",
+  "Estructuras de montaje": "energy-categoria-estructuras-montaje",
+  "Cableado y conectores": "energy-categoria-cableado-conectores",
+  "Controladores de carga": "energy-categoria-controladores-carga",
+  "Medición y monitoreo": "energy-categoria-medicion-monitoreo",
+  "Accesorios e instalación": "energy-categoria-accesorios-instalacion",
+};
 
-function BoltIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7">
-      <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" />
-    </svg>
-  );
-}
+const energyCategoriesBase = energyCategorias.map((title) => ({
+  label: title,
+  title,
+  imageKey: ENERGY_CATEGORY_IMAGE_KEYS[title] ?? "energy-categoria-paneles-solares",
+  count: "Ver productos",
+  href: `/energy/categoria/${slugify(title)}`,
+}));
 
-function ClipboardCheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="5" y="4" width="14" height="17" rx="2" />
-      <path d="M9 4h6v2H9z" />
-      <path d="m9 13 2 2 4-4" />
-    </svg>
-  );
-}
-
-function LeafIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 4c0 9-6 15-15 15C5 10 11 4 20 4Z" />
-      <path d="M5 19 15 9" />
-    </svg>
-  );
-}
-
-function PeopleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
-      <circle cx="17.5" cy="9" r="2.4" />
-      <path d="M15.8 14.2c2.6.5 4.4 2.7 4.4 5.3" />
-    </svg>
-  );
-}
-
-const heroStats = [
-  { icon: BoltIcon, value: "120", unit: "MW", label: "Capacidad instalada" },
-  { icon: ClipboardCheckIcon, value: "350", unit: "+", label: "Proyectos ejecutados" },
-  { icon: LeafIcon, value: "18.500", unit: "", label: "Toneladas de CO2 evitadas al año" },
-  { icon: PeopleIcon, value: "25", unit: "+", label: "Años de experiencia en el sector" },
+const energyOffers = [
+  { title: "Paneles solares", href: "/energy/categoria/paneles-solares", imageKey: "energy-oferta-1" },
+  { title: "Baterías y respaldo", href: "/energy/categoria/baterias-y-respaldo", imageKey: "energy-oferta-2" },
+  { title: "Estructuras de montaje", href: "/energy/categoria/estructuras-de-montaje", imageKey: "energy-oferta-3" },
+  { title: "Instalación por proyecto", href: "#contacto", imageKey: "energy-oferta-4" },
 ];
 
-function StepIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <rect x="4" y="4" width="16" height="16" rx="4" />
-      <path d="M9 12h6M12 9v6" />
-    </svg>
-  );
-}
-
-const systemSteps = [
-  { number: "01", label: "Analizamos tu consumo" },
-  { number: "02", label: "Diseñamos tu sistema" },
-  { number: "03", label: "Optimizamos tu inversión" },
-  { number: "04", label: "Acompañamos tu proyecto" },
+const energyFeatured = [
+  { title: "Proyectos residenciales", href: "/energy", imageKey: "energy-destacada-1" },
+  { title: "Proyectos comerciales", href: "/energy", imageKey: "energy-destacada-2" },
+  { title: "Proyectos industriales", href: "/energy", imageKey: "energy-destacada-3" },
+  { title: "Mantenimiento y monitoreo", href: "#contacto", imageKey: "energy-destacada-4" },
 ];
 
 export default async function EnergyPage() {
   const siteImages = await getSiteImages();
+  const siteImageLinks = await getSiteImageLinks();
   const siteTexts = await getSiteTexts();
-  const whatsappNumber = await getWhatsAppNumber();
   const t = (key: string) => resolveText(key, siteTexts);
-  const solutions = getSolutions(siteImages);
-  const gusWhatsappHref = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        "Hola Gus, quiero más información sobre energía solar.",
-      )}`
-    : null;
+  const allProducts = await getProducts();
+  const energyCatalog = allProducts.filter((product) => productSellsInDivision(product, "Energy"));
+  const energyFeaturedProducts = energyCatalog.filter((product) => product.destacado);
+  const energyProducts = (energyFeaturedProducts.length > 0 ? energyFeaturedProducts : energyCatalog).slice(0, 4);
+  const energyCategories = energyCategoriesBase.map((category) => ({
+    ...category,
+    image: resolveImage(category.imageKey, siteImages),
+  }));
+  const energyOffersResolved = energyOffers.map((offer) => ({
+    ...offer,
+    title: t(offer.imageKey),
+    href: resolveLink(offer.imageKey, siteImageLinks, offer.href),
+  }));
+  const energyFeaturedResolved = energyFeatured.map((item) => ({
+    ...item,
+    title: t(item.imageKey),
+    href: resolveLink(item.imageKey, siteImageLinks, item.href),
+  }));
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
-      <EnergyHeader />
+    <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
+      <CauchosHeader division="Energy" extraNavLink={{ label: "Proyectos", href: "/energy/proyectos" }} />
 
-      <section className="relative isolate flex min-h-screen flex-col overflow-hidden border-b border-white/10">
-        <video
-          src={resolveImage("energy-hero-video", siteImages)}
-          poster={resolveImage("energy-principal", siteImages)}
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 h-full w-full object-cover object-[58%_28%]"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.34)_42%,rgba(0,0,0,0.04)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.1)_0%,rgba(0,0,0,0.06)_56%,rgba(0,0,0,0.55)_100%)]" />
-
-        <div className="relative z-10 mx-auto flex w-full max-w-[1500px] flex-1 flex-col justify-center px-5 md:px-8">
-          <div className="max-w-2xl">
-            <span className="block h-1 w-24 bg-[#ffd400] shadow-[0_0_28px_rgba(255,212,0,0.7)]" />
-            <p className="mt-6 text-sm font-black uppercase tracking-[0.18em] text-[#ffd400]">
-              {t("energy-hero-eyebrow")}
-            </p>
-            <h1 className="mt-4 font-[family:var(--font-display)] text-5xl font-black uppercase leading-none tracking-[0.02em] md:text-7xl">
-              {t("energy-hero-titulo")}
-            </h1>
-            <p className="mt-6 max-w-xl text-base font-semibold leading-7 text-white/78 md:text-lg">
-              {t("energy-hero-subtitulo")}
-            </p>
-            <Link
-              href="#soluciones"
-              className="mt-8 inline-flex items-center gap-3 rounded-[3px] border border-[#ffd400]/70 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-[#ffd400] hover:bg-[#ffd400] hover:text-black"
-            >
-              Explorar soluciones <span aria-hidden="true">→</span>
-            </Link>
-          </div>
+      <section className="border-b border-slate-200 bg-white text-slate-900">
+        <div className="mx-auto max-w-[1632px] px-5 py-7 md:px-8">
+          <CauchosCategoryCarousel categories={energyCategories} accent="gold" />
         </div>
-
-        <div className="relative z-10 border-t border-white/10 bg-black/55 backdrop-blur-sm">
-          <div className="mx-auto grid max-w-[1500px] grid-cols-4 gap-x-6 gap-y-8 px-5 py-7 max-[560px]:grid-cols-2 md:px-8">
-            {heroStats.map((stat) => (
-              <div key={stat.label} className="flex items-center gap-3">
-                <stat.icon />
-                <div>
-                  <p className="font-[family:var(--font-display)] text-2xl font-black leading-none text-white md:text-3xl">
-                    {stat.value}
-                    <span className="text-sm font-black uppercase text-white/70">{stat.unit}</span>
-                  </p>
-                  <p className="mt-1.5 max-w-[10rem] text-[10px] font-bold uppercase leading-tight tracking-[0.06em] text-white/60">
-                    {stat.label}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="pointer-events-none absolute bottom-[7.5rem] left-5 hidden flex-col items-center gap-3 md:left-8 lg:flex">
-          <span className="h-8 w-px bg-white/30" />
-          <span className="h-1.5 w-1.5 rounded-full border border-[#ffd400]" />
-          <span className="[writing-mode:vertical-rl] text-[9px] font-black uppercase tracking-[0.3em] text-white/45">
-            Scroll
-          </span>
-        </div>
-      </section>
-
-      <section className="flex flex-col border-b border-white/10 bg-black md:flex-row">
-        <div className="flex w-full shrink-0 items-center px-5 py-12 md:w-[30%] md:py-0 md:pl-[max(2rem,calc((100vw-1500px)/2+2rem))] md:pr-8">
-          <div>
-            <h2 className="font-[family:var(--font-display)] text-3xl font-black uppercase leading-[1.05] tracking-[-0.01em] text-white md:text-4xl">
-              Ingeniería
-              <br />
-              <span className="text-[#f5a623]">que sostiene</span>
-              <br />
-              el futuro.
-            </h2>
-            <span className="mt-5 block h-1 w-16 bg-[#f5a623]" />
-          </div>
-        </div>
-
-        <div className="relative w-full md:w-[70%]">
-          <EngineeringModelViewer />
-        </div>
-      </section>
-
-      <section id="soluciones" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
-        <div className="py-14">
-          <h2 className="mx-auto max-w-xl px-5 text-center text-3xl font-black tracking-[-0.02em] md:px-8 md:text-4xl">
-            {t("energy-soluciones-titulo")}
-          </h2>
-          <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
-            <SolutionsCarousel items={solutions} />
-          </div>
-        </div>
-      </section>
-
-      <section id="sistema" className="relative isolate overflow-hidden border-b border-white/10 bg-black">
-        <video
-          src={resolveImage("energy-sistema-video", siteImages)}
-          poster={resolveImage("energy-sistema-video-poster", siteImages)}
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.3)_45%,rgba(0,0,0,0.08)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_28%,rgba(0,0,0,0.05)_72%,rgba(0,0,0,0.4)_100%)]" />
-
-        <div className="relative mx-auto grid min-h-[640px] max-w-[1500px] items-center gap-10 px-5 py-16 md:px-8 lg:grid-cols-[1fr_0.85fr]">
-          <div className="max-w-xl">
-            <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.16em] text-[#ffd400]">
-              {t("energy-sistema-eyebrow")} <span className="h-px w-10 bg-[#ffd400]" />
-            </p>
-            <h2 className="mt-4 font-[family:var(--font-display)] text-4xl font-black leading-[1.05] tracking-[-0.02em] md:text-5xl">
-              {t("energy-sistema-titulo")}
-            </h2>
-            <p className="mt-5 max-w-sm text-sm font-semibold leading-6 text-white/75">
-              {t("energy-sistema-subtitulo")}
-            </p>
-            <Link
-              href="#contacto"
-              className="mt-7 inline-flex items-center gap-3 rounded-[3px] border border-[#ffd400]/70 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-[#ffd400] hover:bg-[#ffd400] hover:text-black"
-            >
-              Comenzar ahora <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:max-w-xs lg:grid-cols-1 lg:justify-self-end">
-            {systemSteps.map((step) => (
-              <div
-                key={step.number}
-                className="flex items-center justify-between gap-4 rounded-[6px] border border-white/10 bg-black/60 px-5 py-4 backdrop-blur-sm"
-              >
-                <div>
-                  <p className="flex items-center gap-2 text-[11px] font-black text-[#ffd400]">
-                    <StepIcon /> {step.number}
-                  </p>
-                  <p className="mt-1 text-sm font-black uppercase leading-tight text-white">{step.label}</p>
-                </div>
-                <span className="text-lg text-[#ffd400]" aria-hidden="true">→</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="relative overflow-hidden bg-black">
-        <Image
-          src={resolveImage("energy-estructuras-banner", siteImages)}
-          alt="Estructuras solares diseñadas para sostener el futuro"
-          width={2400}
-          height={800}
-          className="h-auto w-full object-cover"
-        />
-      </section>
-
-      <section id="contacto" className="relative overflow-hidden bg-black">
-        <div className="relative aspect-[1672/941] w-full">
-          <Image
-            src={resolveImage("energy-contacto-fondo", siteImages)}
-            alt="Sistema fotovoltaico instalado por GEU Energy"
-            fill
-            sizes="100vw"
-            className="object-cover"
+        <div className="mx-auto w-full overflow-hidden bg-[#d4a900]" style={{ maxWidth: "1632px" }}>
+          <CauchosProjectChat
+            division="Energy"
+            triggerLabel={
+              <>
+                <span className="sr-only">¿Qué proyecto energético tienes en mente?</span>
+                <span aria-hidden="true" className="geu-marquee-track flex w-max items-center">
+                  {[0, 1].map((groupIndex) => (
+                    <span key={groupIndex} className="flex items-center">
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <span
+                          key={i}
+                          className="flex items-center whitespace-nowrap px-5 text-xs font-black uppercase tracking-[0.14em] text-white"
+                        >
+                          ¿Qué proyecto energético tienes en mente?
+                          <span className="ml-2">→</span>
+                          <span className="ml-5 text-white/45">✦</span>
+                        </span>
+                      ))}
+                    </span>
+                  ))}
+                </span>
+              </>
+            }
+            triggerClassName="geu-marquee-btn block w-full cursor-pointer overflow-hidden py-2.5 text-left"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-black/10" />
+        </div>
+        <div className="bg-white">
+          <div
+            className="relative mx-auto aspect-[16/7] w-full overflow-hidden bg-slate-950 sm:aspect-[16/6]"
+            style={{ maxWidth: "1632px" }}
+          >
+            {isVideoUrl(resolveImage("energy-tienda-principal", siteImages)) ? (
+              <HeroVideo
+                src={resolveImage("energy-tienda-principal", siteImages)}
+                wrapperClassName="relative h-full w-full"
+                className="absolute inset-0 h-full w-full object-cover object-top"
+              />
+            ) : (
+              <>
+                <Image
+                  src={resolveImage("energy-tienda-principal-movil", siteImages)}
+                  alt="GEU Energy: soluciones solares para tu operación"
+                  fill
+                  priority
+                  sizes="100vw"
+                  className="block object-cover object-top md:hidden"
+                />
+                <Image
+                  src={resolveImage("energy-tienda-principal", siteImages)}
+                  alt="GEU Energy: soluciones solares para tu operación"
+                  fill
+                  priority
+                  sizes="(min-width: 1632px) 1632px, 100vw"
+                  className="hidden object-cover object-top md:block"
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </section>
 
-          <div className="absolute inset-0 flex items-center">
-            <div className="mx-auto w-full max-w-[1500px] px-5 md:px-8">
-              <h2 className="font-[family:var(--font-display)] text-4xl font-black uppercase leading-[1.05] tracking-[-0.01em] text-white md:text-5xl">
-                <span className="text-[#f5a623]">Gus,</span>
-                <br />
-                inteligencia que
-                <br />
-                <span className="text-[#f5a623]">impulsa tu energía.</span>
+      <section id="productos" className="scroll-mt-56 border-b border-slate-200 bg-slate-50 text-slate-950">
+        <div className="mx-auto max-w-[1632px] px-5 py-12 md:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#b38f00]">
+                {t("energy-productos-eyebrow")}
+              </p>
+              <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] md:text-5xl">
+                {t("energy-productos-titulo")}
               </h2>
-              <span className="mt-5 block h-1 w-16 bg-[#f5a623]" />
+              <p className="mt-3 max-w-2xl text-base font-semibold leading-7 text-slate-500">
+                {t("energy-productos-subtitulo")}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-[0.06em] text-slate-600">
+              {["Entrega inmediata", "Por proyecto", "Instalación incluida"].map((tag) => (
+                <span key={tag} className="rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
 
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {energyProducts.map((product) => {
+              const productImage = product.imagen === "/hero-unipars.jpg" ? "/home-energy.png" : product.imagen;
+
+              return (
+                <article
+                  key={product.slug}
+                  className="group flex min-h-[455px] flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#d4a900]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)]"
+                >
+                  <Link
+                    href={`/producto/${product.slug}`}
+                    className="relative block h-52 overflow-hidden bg-slate-200"
+                    style={{
+                      backgroundImage: `linear-gradient(180deg,rgba(2,6,23,0.04),rgba(2,6,23,0.34)),url('${productImage}')`,
+                      backgroundPosition: "center",
+                      backgroundSize: "cover",
+                    }}
+                  >
+                    <span className="absolute left-3 top-3 rounded-[4px] bg-[#d4a900] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(212,169,0,0.24)]">
+                      {product.descuento}
+                    </span>
+                    <span className="absolute bottom-3 right-3 rounded-full bg-white/92 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#b38f00] shadow-sm">
+                      Energy
+                    </span>
+                  </Link>
+                  <span className="flex flex-1 flex-col p-6">
+                    <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#b38f00]">
+                      {product.marca}
+                    </span>
+                    <Link
+                      href={`/producto/${product.slug}`}
+                      className="mt-2 min-h-14 text-xl font-black leading-7 text-slate-950 hover:text-[#b38f00]"
+                    >
+                      {product.nombre}
+                    </Link>
+                    <p className="mt-2 min-h-12 text-sm font-semibold leading-6 text-slate-500">
+                      {product.descripcion}
+                    </p>
+                    <span className="mt-3 inline-flex w-fit rounded-full bg-[#fff9e5] px-3 py-1 text-xs font-black text-slate-600">
+                      {product.disponibilidad}
+                    </span>
+                    <span className="mt-auto border-t border-slate-100 pt-5">
+                      <span className="block text-xs font-bold text-slate-400 line-through decoration-[#d4a900]/50">
+                        {product.precioAnterior}
+                      </span>
+                      <span className="mt-1 block text-2xl font-black tracking-[-0.02em] text-slate-950">
+                        {product.precio}
+                      </span>
+                    </span>
+                    <CauchosAddToCartButton
+                      id={product.slug}
+                      nombre={product.nombre}
+                      precio={product.precio}
+                      imagen={productImage}
+                      division="Energy"
+                      accent="gold"
+                    />
+                    <Link
+                      href={`/producto/${product.slug}`}
+                      className="mt-3 inline-flex justify-center rounded-full px-4 py-2 text-center text-xs font-black uppercase tracking-[0.08em] text-slate-500 hover:bg-[#fff9e5] hover:text-[#b38f00]"
+                    >
+                      Ver detalle
+                    </Link>
+                  </span>
+                </article>
+              );
+            })}
+          </div>
         </div>
       </section>
 
-      <GusChat whatsappHref={gusWhatsappHref} />
+      <BrandOfferSection
+        accent="#d4a900"
+        eyebrow={t("energy-ofertas-eyebrow")}
+        title={t("energy-ofertas-titulo")}
+        ctaHref="/energy"
+        items={energyOffersResolved}
+        siteImages={siteImages}
+        maxWidth="1632px"
+      />
+
+      <section id="contacto" className="mx-auto max-w-[1632px] px-5 pb-8 md:px-8">
+        <div
+          className="relative overflow-hidden rounded-[10px] border border-[#2b2205] bg-[#141005] shadow-[0_24px_70px_rgba(23,18,6,0.22)]"
+          style={{ backgroundColor: "#141005", color: "#ffffff" }}
+        >
+          <div className="relative grid gap-7 px-7 py-8 md:grid-cols-[1fr_auto] md:items-center md:px-10 md:py-10">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#ffe58a]">
+                {t("energy-contacto-eyebrow")}
+              </p>
+              <h2 className="mt-2 text-3xl font-black tracking-[-0.02em] text-white md:text-4xl">
+                {t("energy-contacto-titulo")}
+              </h2>
+              <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-white/74">
+                {t("energy-contacto-subtitulo")}
+              </p>
+            </div>
+            <CauchosProjectChat
+              division="Energy"
+              triggerLabel="Hablar con un experto →"
+              triggerClassName="inline-flex w-fit items-center justify-center rounded-[4px] border border-[#d4a900] bg-[#d4a900] px-7 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_16px_34px_rgba(212,169,0,0.28)] transition hover:border-white hover:bg-white hover:text-[#170606]"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[1632px] px-5 pb-10 md:px-8">
+        <Image
+          src={resolveImage("energy-marcas-promo", siteImages)}
+          alt="Promociones y soluciones GEU Energy"
+          width={2048}
+          height={768}
+          className="h-auto w-full rounded-[10px] border border-slate-200 shadow-[0_18px_44px_rgba(15,23,42,0.12)]"
+        />
+      </section>
+
+      <BrandFeaturedSection
+        title={t("energy-marcas-titulo")}
+        items={energyFeaturedResolved}
+        siteImages={siteImages}
+        compact
+        maxWidth="1632px"
+      />
+
+      <BrandClosingBanner
+        imageKey="energy-cierre"
+        mobileImageKey="energy-cierre-movil"
+        alt="Cierre GEU Energy"
+        siteImages={siteImages}
+        maxWidth="1632px"
+      />
 
       <SiteFooter
         logoSrc="/logo-geu-energy.png"
         logoAlt="GEU Energy"
-        logoWidth={220}
         tagline={t("footer-energy-tagline")}
         navItems={navItems}
-        accent="#ffd400"
-        variant="dark"
-        darkBg="#050505"
+        accent="#d4a900"
         siteTexts={siteTexts}
-        maxWidth="1500px"
-        columns={[]}
+        columns={[
+          {
+            title: t("footer-energy-col3-title"),
+            items: t("footer-energy-col3-items").split(",").map((s) => s.trim()).filter(Boolean),
+          },
+        ]}
       />
     </main>
   );

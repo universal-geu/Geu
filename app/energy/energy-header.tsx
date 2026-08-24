@@ -8,14 +8,16 @@ import { useSiteColors } from "../components/use-site-colors";
 import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
 
 const navItems = [
-  { label: "Catálogos", href: "/energy/catalogo" },
+  { label: "Tienda", href: "/energy" },
+  { label: "Catálogos", href: "/energy/proyectos/catalogo" },
   { label: "Nosotros", href: "/energy/nosotros" },
-  { label: "Contacto", href: "/energy#contacto" },
+  { label: "Contacto", href: "/energy/proyectos#contacto" },
 ];
 
 const moreItems = [
+  { label: "Tienda", href: "/energy" },
   { label: "Nosotros", href: "/energy/nosotros" },
-  { label: "Contacto", href: "/energy#contacto" },
+  { label: "Contacto", href: "/energy/proyectos#contacto" },
   { label: "Ver todo GEU", href: "/" },
 ];
 
@@ -72,7 +74,7 @@ export default function EnergyHeader() {
     <MobileBottomNav
       homeHref="/energy"
       accent="#d4a900"
-      categoriasHref="/energy/catalogo"
+      categoriasHref="/energy/proyectos/catalogo"
       categoriasLabel="Catálogo"
       accountBrand="energy"
       moreItems={moreItems}

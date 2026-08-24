@@ -1,5 +1,5 @@
 import Image from "next/image";
-import EnergyHeader from "../energy-header";
+import EnergyHeader from "../../energy-header";
 import StructureTypeGrid from "./structure-type-grid";
 import ApplicationsGallery from "./applications-gallery";
 import { CatalogMobileNav, CatalogSidebarNav, type CatalogNavItem } from "./catalog-nav";

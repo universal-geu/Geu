@@ -95,7 +95,7 @@ export type ProductMutationInput = {
   variantes?: ProductoVariante[];
 };
 
-const SELLABLE_DIVISIONS: DivisionName[] = ["Cauchos", "Import", "Plastic"];
+const SELLABLE_DIVISIONS: DivisionName[] = ["Cauchos", "Import", "Plastic", "Energy"];
 
 function normalizeAdditionalDivisions(
   value: DivisionName[] | undefined,

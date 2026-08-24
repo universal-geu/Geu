@@ -129,7 +129,7 @@ const ADMIN_BRAND_CONFIG: Record<DivisionName, AdminBrandConfig> = {
     eyebrow: "GEU ENERGY",
     title: "Panel maestro GEU Energy",
     description:
-      "Desde aquí puedes crear y editar las fichas de servicio de GEU Energy para que aparezcan en el sitio.",
+      "Desde aquí puedes crear, editar e inventariar productos de GEU Energy para que aparezcan en el catálogo.",
     logo: "/logo-geu-energy.png",
     logoAlt: "GEU Energy",
     siteHref: "/energy",
@@ -1131,7 +1131,7 @@ function AdditionalCategoriesEditor({
   );
 }
 
-const SELLABLE_DIVISIONS: DivisionName[] = ["Cauchos", "Import", "Plastic"];
+const SELLABLE_DIVISIONS: DivisionName[] = ["Cauchos", "Import", "Plastic", "Energy"];
 
 function AdditionalDivisionsEditor({
   currentDivision,

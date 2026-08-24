@@ -13,7 +13,8 @@ const navItems = [
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic" },
   { label: "Nosotros", href: "/energy/nosotros", active: true },
-  { label: "Contacto", href: "/energy#contacto" },
+  { label: "Proyectos", href: "/energy/proyectos" },
+  { label: "Contacto", href: "/energy/proyectos#contacto" },
 ];
 
 const pilares = [

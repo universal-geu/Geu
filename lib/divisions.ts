@@ -2,7 +2,7 @@ export const DIVISIONS = ["Cauchos", "Import", "Innovation", "Energy", "Plastic"
 
 export type DivisionName = (typeof DIVISIONS)[number];
 
-const SERVICE_DIVISIONS: readonly DivisionName[] = ["Innovation", "Energy"];
+const SERVICE_DIVISIONS: readonly DivisionName[] = ["Innovation"];
 
 export function isServiceDivision(division: DivisionName) {
   return SERVICE_DIVISIONS.includes(division);
@@ -80,11 +80,11 @@ export const DIVISION_BRAND: Record<DivisionName, DivisionBrand> = {
   },
 };
 
-export const CART_ACCENT: Record<DivisionName, "blue" | "red" | "gray"> = {
+export const CART_ACCENT: Record<DivisionName, "blue" | "red" | "gray" | "gold"> = {
   Cauchos: "blue",
   Import: "red",
   Innovation: "blue",
-  Energy: "blue",
+  Energy: "gold",
   Plastic: "gray",
 };
 
