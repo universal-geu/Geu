@@ -246,7 +246,7 @@ export default async function CauchosPage() {
                   return (
                   <article
                     key={product.slug}
-                    className="group flex min-h-[455px] w-[78%] shrink-0 snap-start flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#075ed8]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)] sm:w-auto sm:shrink"
+                    className="group flex min-h-[455px] w-full shrink-0 snap-start flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#075ed8]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)] sm:w-auto sm:shrink"
                   >
                     <Link
                       href={`/producto/${product.slug}`}
@@ -335,7 +335,7 @@ export default async function CauchosPage() {
                 key={offer.title}
                 href={resolveLink(offer.imageKey, siteImageLinks, offer.href)}
                 aria-label={t(offer.imageKey)}
-                className="cauchos-offer-card group relative block aspect-[9/16] w-[78%] min-h-[430px] shrink-0 snap-start overflow-hidden rounded-[10px] border border-slate-200 bg-[#071225] shadow-[0_16px_40px_rgba(15,23,42,0.14)] md:w-auto md:shrink"
+                className="cauchos-offer-card group relative block aspect-[9/16] w-full min-h-[430px] shrink-0 snap-start overflow-hidden rounded-[10px] border border-slate-200 bg-[#071225] shadow-[0_16px_40px_rgba(15,23,42,0.14)] md:w-auto md:shrink"
               >
                 <Image
                   src={resolveImage(offer.imageKey, siteImages)}

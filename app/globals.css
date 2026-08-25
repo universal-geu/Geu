@@ -69,10 +69,6 @@ textarea {
 }
 
 .geu-entry-about {
-  position: absolute;
-  top: clamp(1.2rem, 4.7vh, 2.1rem);
-  right: clamp(1rem, 2vw, 1.9rem);
-  z-index: 4;
   color: #0b419a;
   font-size: clamp(0.72rem, 0.86vw, 0.9rem);
   font-weight: 700;
@@ -493,8 +489,6 @@ textarea {
   }
 
   .geu-entry-about {
-    top: 1.2rem;
-    right: 1rem;
     font-size: 0.72rem;
   }
 
