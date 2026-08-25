@@ -184,7 +184,7 @@ export function BrandClosingBanner({ imageKey, mobileImageKey, alt, siteImages, 
             alt={alt}
             width={800}
             height={360}
-            className="block aspect-[800/360] w-full object-cover md:hidden"
+            className="block h-auto w-full md:hidden"
           />
         )}
         <Image
@@ -192,7 +192,7 @@ export function BrandClosingBanner({ imageKey, mobileImageKey, alt, siteImages, 
           alt={alt}
           width={1920}
           height={217}
-          className={`aspect-[1920/217] w-full object-cover ${mobileImageKey ? "hidden md:block" : ""}`}
+          className={`h-auto w-full ${mobileImageKey ? "hidden md:block" : ""}`}
         />
       </div>
     </section>

@@ -59,25 +59,15 @@ export default function Home() {
       >
         <Link
           href="/login"
-          className="geu-entry-login"
-          style={{
-            color: "#0b419a",
-            fontSize: "clamp(0.72rem, 0.86vw, 0.9rem)",
-            fontWeight: 700,
-            lineHeight: 1,
-          }}
+          className="rounded-full bg-[#0b419a] px-4 py-1.5 font-bold leading-none text-white shadow-sm transition-colors hover:bg-[#073174]"
+          style={{ fontSize: "clamp(0.72rem, 0.86vw, 0.9rem)" }}
         >
           Iniciar sesión
         </Link>
         <Link
           href="/quienes-somos"
-          className="geu-entry-about"
-          style={{
-            color: "#0b419a",
-            fontSize: "clamp(0.72rem, 0.86vw, 0.9rem)",
-            fontWeight: 700,
-            lineHeight: 1,
-          }}
+          className="rounded-full border border-[#0b419a]/25 px-4 py-1.5 font-bold leading-none text-[#0b419a] transition-colors hover:bg-[#0b419a]/[0.08]"
+          style={{ fontSize: "clamp(0.72rem, 0.86vw, 0.9rem)" }}
         >
           Nosotros
         </Link>
