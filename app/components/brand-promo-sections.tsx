@@ -82,7 +82,7 @@ export function BrandOfferSection({
               key={item.title}
               href={item.href}
               aria-label={item.title}
-              className={`cauchos-offer-card group relative block w-[78%] shrink-0 snap-start overflow-hidden rounded-[10px] border border-slate-200 bg-[#071225] shadow-[0_16px_40px_rgba(15,23,42,0.14)] md:w-auto md:shrink ${cardClassName}`}
+              className={`cauchos-offer-card group relative block w-full shrink-0 snap-start overflow-hidden rounded-[10px] border border-slate-200 bg-[#071225] shadow-[0_16px_40px_rgba(15,23,42,0.14)] md:w-auto md:shrink ${cardClassName}`}
             >
               <Image
                 src={resolveImage(item.imageKey, siteImages)}
