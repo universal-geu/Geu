@@ -96,7 +96,7 @@ export default function Home() {
           padding: "clamp(1.4rem, 4vh, 3rem) clamp(1rem, 3vw, 2rem) clamp(1.1rem, 3vh, 1.8rem)",
           flex: "0 0 auto",
           backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), url('/geu-home-texture.png')",
+            "linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), url('/geu-home-texture.jpg')",
           backgroundPosition: "center",
           backgroundSize: "cover",
           borderBottom: "1px solid rgba(15,23,42,0.12)",

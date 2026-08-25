@@ -57,7 +57,7 @@ export default function EngineeringModelViewer() {
       {createElement("model-viewer", {
         ref: modelRef,
         src: "/geu-energy-engineering-3d.glb",
-        poster: "/geu-energy-engineering.png",
+        poster: "/geu-energy-engineering.jpg",
         alt: "Modelo 3D interactivo de una estructura de montaje GEU Energy",
         loading: "eager",
         reveal: "auto",

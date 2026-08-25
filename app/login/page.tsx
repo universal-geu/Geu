@@ -278,7 +278,7 @@ export default function LoginPage() {
         className="relative flex min-h-screen items-center justify-center px-6 py-16"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.58), rgba(255,255,255,0.58)), url('/geu-home-texture.png')",
+            "linear-gradient(rgba(255,255,255,0.58), rgba(255,255,255,0.58)), url('/geu-home-texture.jpg')",
           backgroundPosition: "center",
           backgroundSize: "cover",
         }}
