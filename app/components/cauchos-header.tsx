@@ -120,7 +120,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
           </div>
 
           <div
-            className="flex items-center justify-between gap-5 text-sm text-slate-700 md:justify-end"
+            className="hidden items-center justify-end gap-5 text-sm text-slate-700 md:flex"
             style={{ "--brand-accent": resolvedAccent } as React.CSSProperties}
           >
             <Link

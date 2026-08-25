@@ -447,7 +447,7 @@ export default function ProductoDetallePage() {
             </div>
           </div>
 
-          <div className="space-y-5 rounded-[10px] border border-slate-200 bg-white p-8 shadow-[0_14px_36px_rgba(15,23,42,0.07)]">
+          <div className="order-first space-y-5 rounded-[10px] border border-slate-200 bg-white p-8 shadow-[0_14px_36px_rgba(15,23,42,0.07)] xl:order-none">
             <div className="flex items-start justify-between gap-6">
               <div>
                 <p className={`text-[11px] font-black uppercase tracking-[0.12em] ${accentTextClass}`}>
