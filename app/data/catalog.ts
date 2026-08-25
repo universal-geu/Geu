@@ -508,7 +508,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$182.000",
     precioValor: 148000,
     descuento: "-19%",
-    imagen: "/featured-laminas-caucho.png",
+    imagen: "/featured-laminas-caucho.jpg",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -522,7 +522,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$379.000",
     precioValor: 312000,
     descuento: "-18%",
-    imagen: "/featured-laminas-caucho.png",
+    imagen: "/featured-laminas-caucho.jpg",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -536,7 +536,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$249.000",
     precioValor: 198900,
     descuento: "-20%",
-    imagen: "/featured-mangueras-industriales.png",
+    imagen: "/featured-mangueras-industriales.jpg",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -550,7 +550,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$149.000",
     precioValor: 121500,
     descuento: "-18%",
-    imagen: "/featured-mangueras-industriales.png",
+    imagen: "/featured-mangueras-industriales.jpg",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -564,7 +564,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$118.000",
     precioValor: 96000,
     descuento: "-19%",
-    imagen: "/featured-perfiles-caucho.png",
+    imagen: "/featured-perfiles-caucho.jpg",
     disponibilidad: "Recoger en tienda",
   },
   {
@@ -578,7 +578,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$339.000",
     precioValor: 276000,
     descuento: "-19%",
-    imagen: "/featured-perfiles-caucho.png",
+    imagen: "/featured-perfiles-caucho.jpg",
     disponibilidad: "Disponible por pedido",
   },
   {
