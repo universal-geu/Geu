@@ -50,7 +50,7 @@ export default function Home() {
         style={{
           position: "absolute",
           top: "clamp(1.2rem, 4.7vh, 2.1rem)",
-          right: "clamp(1rem, 2vw, 1.9rem)",
+          right: "clamp(1.25rem, 2.5vw, 2.25rem)",
           zIndex: 4,
           display: "flex",
           alignItems: "center",
@@ -83,7 +83,10 @@ export default function Home() {
           justifyContent: "center",
           width: "100%",
           margin: 0,
-          padding: "clamp(1.4rem, 4vh, 3rem) clamp(1rem, 3vw, 2rem) clamp(1.1rem, 3vh, 1.8rem)",
+          paddingTop: "clamp(3rem, 10vh, 4.75rem)",
+          paddingLeft: "clamp(1rem, 3vw, 2rem)",
+          paddingRight: "clamp(1rem, 3vw, 2rem)",
+          paddingBottom: "clamp(1.1rem, 3vh, 1.8rem)",
           flex: "0 0 auto",
           backgroundImage:
             "linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), url('/geu-home-texture.jpg')",
