@@ -570,7 +570,7 @@ export default function CauchosCategoryProductsPage({
               </div>
 
               {visibleProducts.length > 0 ? (
-                <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="-mx-5 flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-3">
                   {visibleProducts.map((product) => {
               const productImage =
                 product.imagen === "/hero-unipars.jpg"
@@ -580,7 +580,7 @@ export default function CauchosCategoryProductsPage({
               return (
                 <article
                   key={product.slug}
-                  className="group flex min-h-[455px] flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[var(--brand-accent)]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)]"
+                  className="group flex min-h-[455px] w-[78%] shrink-0 snap-start flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[var(--brand-accent)]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)] sm:w-auto sm:shrink"
                 >
                   <Link
                     href={`/producto/${product.slug}`}
@@ -590,7 +590,7 @@ export default function CauchosCategoryProductsPage({
                       src={productImage}
                       alt={product.nombre}
                       fill
-                      sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, (min-width: 640px) 50vw, 78vw"
                       className="object-cover transition duration-500 group-hover:scale-105"
                     />
                     <span className="absolute left-3 top-3 rounded-[4px] bg-[#e4002b] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(228,0,43,0.24)]">

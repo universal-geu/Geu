@@ -76,13 +76,13 @@ export function BrandOfferSection({
           </Link>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-4">
           {items.map((item) => (
             <Link
               key={item.title}
               href={item.href}
               aria-label={item.title}
-              className={`cauchos-offer-card group relative block overflow-hidden rounded-[10px] border border-slate-200 bg-[#071225] shadow-[0_16px_40px_rgba(15,23,42,0.14)] ${cardClassName}`}
+              className={`cauchos-offer-card group relative block w-[78%] shrink-0 snap-start overflow-hidden rounded-[10px] border border-slate-200 bg-[#071225] shadow-[0_16px_40px_rgba(15,23,42,0.14)] md:w-auto md:shrink ${cardClassName}`}
             >
               <Image
                 src={resolveImage(item.imageKey, siteImages)}
@@ -184,7 +184,7 @@ export function BrandClosingBanner({ imageKey, mobileImageKey, alt, siteImages, 
             alt={alt}
             width={800}
             height={360}
-            className="block h-[220px] w-full object-cover sm:h-[260px] md:hidden"
+            className="block aspect-[800/360] w-full object-cover md:hidden"
           />
         )}
         <Image
@@ -192,7 +192,7 @@ export function BrandClosingBanner({ imageKey, mobileImageKey, alt, siteImages, 
           alt={alt}
           width={1920}
           height={217}
-          className={`w-full object-cover ${mobileImageKey ? "hidden md:block md:h-[150px]" : "h-[118px] md:h-[150px]"}`}
+          className={`aspect-[1920/217] w-full object-cover ${mobileImageKey ? "hidden md:block" : ""}`}
         />
       </div>
     </section>
