@@ -68,20 +68,6 @@ textarea {
   padding: clamp(0.65rem, 2.2vh, 1.3rem) clamp(0.35rem, 0.7vw, 0.65rem) 0.65rem;
 }
 
-.geu-entry-about {
-  color: #0b419a;
-  font-size: clamp(0.72rem, 0.86vw, 0.9rem);
-  font-weight: 700;
-  line-height: 1;
-}
-
-.geu-entry-about:hover,
-.geu-entry-about:focus-visible {
-  color: #073174;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
 .geu-entry-brand {
   display: flex;
   flex-direction: column;
@@ -486,10 +472,6 @@ textarea {
   .geu-entry-home {
     padding-top: 3.2rem;
     padding-bottom: 1rem;
-  }
-
-  .geu-entry-about {
-    font-size: 0.72rem;
   }
 
   .geu-entry-logo {
