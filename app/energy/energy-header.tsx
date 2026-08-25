@@ -43,7 +43,7 @@ export default function EnergyHeader() {
     {colorOverrideCss && <style dangerouslySetInnerHTML={{ __html: colorOverrideCss }} />}
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/85 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-5 md:px-8">
-        <Link href="/" className="shrink-0">
+        <Link href="/energy" className="shrink-0">
           <EnergyMark />
         </Link>
         <nav className="hidden items-center gap-7 text-[11px] font-black uppercase tracking-[0.08em] text-white/85 lg:flex">
