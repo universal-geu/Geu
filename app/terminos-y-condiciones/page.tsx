@@ -16,7 +16,7 @@ export default async function TerminosYCondicionesPage() {
         Estos términos y condiciones regulan el acceso y uso de los sitios web operados por{" "}
         <strong>Grupo Empresarial Universal</strong> (nombre comercial <strong>GEU</strong>), identificado
         con NIT <strong>830.085.540</strong>, con domicilio en Carrera 29 #10-25, Bogotá D.C., Colombia,
-        incluyendo sus unidades de negocio Universal de Cauchos, GEU Import, GEU Innovation, GEU Energy y
+        incluyendo sus unidades de negocio Universal de Cauchos, GEU Import, GEU Structure, GEU Energy y
         GEU Plastic (en conjunto, &quot;GEU&quot;, &quot;nosotros&quot; o &quot;la empresa&quot;).
       </p>
       <p>

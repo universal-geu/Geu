@@ -28,12 +28,12 @@ export const geuCompanies = [
     focus: ["Importaciones", "Logistica", "Proveedores", "Abastecimiento"],
   },
   {
-    name: "GEU Innovation",
-    shortName: "Innovation",
+    name: "GEU Structure",
+    shortName: "Structure",
     slug: "innovation",
     href: "/innovation",
     eyebrow: "GEU",
-    title: "Innovation",
+    title: "Structure",
     description: "Desarrollamos soluciones innovadoras para transformar ideas en valor.",
     longDescription:
       "Unidad enfocada en ideacion, desarrollo tecnologico y soluciones nuevas para impulsar proyectos del grupo.",

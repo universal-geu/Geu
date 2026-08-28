@@ -9,15 +9,15 @@ import { useSiteColors } from "../components/use-site-colors";
 import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
 
 const navItems = [
-  { label: "Nosotros", href: "/innovation/nosotros" },
-  { label: "Contacto", href: "/innovation#contacto" },
+  { label: "Nosotros", href: "/autoservicio-inteligente/nosotros" },
+  { label: "Contacto", href: "/autoservicio-inteligente#contacto" },
 ];
 
 const mobileMoreItems = [...navItems, { label: "Ver todo GEU", href: "/" }];
 
 const solutionsMenu = [
-  { label: "Estufas", href: "/innovation/estufas" },
-  { label: "Doypack", href: "/innovation/doypack" },
+  { label: "Estufas", href: "/autoservicio-inteligente/estufas" },
+  { label: "Doypack", href: "/autoservicio-inteligente/doypack" },
 ];
 
 function InnovationMark() {
@@ -53,7 +53,7 @@ export default function InnovationHeader() {
     {colorOverrideCss && <style dangerouslySetInnerHTML={{ __html: colorOverrideCss }} />}
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/85 backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-5 md:px-8">
-        <Link href="/innovation" className="shrink-0">
+        <Link href="/autoservicio-inteligente" className="shrink-0">
           <InnovationMark />
         </Link>
         <nav className="hidden items-center gap-7 text-[11px] font-black uppercase tracking-[0.08em] text-white/85 lg:flex">
@@ -150,7 +150,7 @@ export default function InnovationHeader() {
     </header>
 
     <MobileBottomNav
-      homeHref="/innovation"
+      homeHref="/autoservicio-inteligente"
       accent="#0498b4"
       onCategoriasClick={() => setIsMobileSolucionesOpen((current) => !current)}
       categoriasLabel="Soluciones"

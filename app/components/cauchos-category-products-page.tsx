@@ -27,7 +27,7 @@ const priceRanges = [
 const CATEGORY_BANNER: Record<DivisionName, { src: string; alt: string }> = {
   Cauchos: { src: "/cauchos-category-banner.jpg", alt: "Universal de Cauchos" },
   Import: { src: "/geu-import-main-banner.jpg", alt: "GEU Import" },
-  Innovation: { src: "/cauchos-category-banner.jpg", alt: "GEU Innovation" },
+  Innovation: { src: "/cauchos-category-banner.jpg", alt: "GEU Structure" },
   Energy: { src: "/geu-energy-structures-banner.png", alt: "GEU Energy" },
   Plastic: { src: "/geu-plastic-main-banner.jpg", alt: "GEU Plastic" },
   GEU: { src: "/about-geu-logo-wall.jpg", alt: "GEU" },

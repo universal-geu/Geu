@@ -12,11 +12,11 @@ const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Cauchos", href: "/cauchos" },
   { label: "Import", href: "/import" },
-  { label: "Innovation", href: "/innovation", active: true },
+  { label: "Structure", href: "/innovation" },
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/innovation/nosotros" },
-  { label: "Contacto", href: "/innovation/estufas#contacto" },
+  { label: "Nosotros", href: "/autoservicio-inteligente/nosotros" },
+  { label: "Contacto", href: "/autoservicio-inteligente/estufas#contacto" },
 ];
 
 const stovesProjectBase = [

@@ -1,10 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import SolutionsCarousel from "../energy/solutions-carousel";
-import InnovationHeader from "./innovation-header";
+import StructureHeader from "./structure-header";
 import SiteFooter from "../components/site-footer";
-import { getSiteImages, resolveImage, type SiteImages } from "@/lib/site-images";
-import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import { getSiteTexts } from "@/lib/site-texts";
 
 export const dynamic = "force-dynamic";
 
@@ -12,120 +10,130 @@ const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Cauchos", href: "/cauchos" },
   { label: "Import", href: "/import" },
-  { label: "Innovation", href: "/innovation", active: true },
+  { label: "Structure", href: "/innovation", active: true },
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/innovation/nosotros" },
   { label: "Contacto", href: "mailto:innovation@geu.com.co" },
 ];
 
-function getSolutions(siteImages: SiteImages) {
-  return [
-    {
-      title: "Autoservicio 24/7",
-      text: "Tu equipo se sirve solo: bebidas y snacks disponibles a cualquier hora, sin filas ni intermediarios.",
-      image: resolveImage("innovation-tarjeta-autoservicio", siteImages),
-    },
-    {
-      title: "Pago sin contacto",
-      text: "Cada producto se registra al instante: cobro automático y trazabilidad total del consumo.",
-      image: resolveImage("innovation-tarjeta-pago", siteImages),
-    },
-    {
-      title: "Asistente GEU",
-      text: "Un asistente siempre listo para reposición, mantenimiento y soporte técnico en sitio.",
-      image: resolveImage("innovation-tarjeta-asistente", siteImages),
-    },
-    {
-      title: "Espacios colaborativos",
-      text: "Puntos GEU Innovation pensados para integrarse al ritmo de tu oficina o punto de venta.",
-      image: resolveImage("innovation-tarjeta-espacios", siteImages),
-    },
-  ];
-}
-
-function SnowflakeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
-      <path d="M12 2v20M4.5 6.5l15 11M19.5 6.5l-15 11" />
-      <path d="M12 2 9.5 4.5M12 2l2.5 2.5M12 22l-2.5-2.5M12 22l2.5-2.5" />
-    </svg>
-  );
-}
-
-function WifiIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
-      <path d="M2.5 8.5a15 15 0 0 1 19 0" />
-      <path d="M5.8 12.3a10.5 10.5 0 0 1 12.4 0" />
-      <path d="M9 16a5.5 5.5 0 0 1 6 0" />
-      <circle cx="12" cy="19.5" r="1.1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function ClockIcon() {
+function ShieldIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3.5 2" />
+      <path d="M12 3l7 3v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6l7-3Z" />
+      <path d="m9 12 2 2 4-4" />
     </svg>
   );
 }
 
-function PeopleIcon() {
+function LayersIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
-      <circle cx="17.5" cy="9" r="2.4" />
-      <path d="M15.8 14.2c2.6.5 4.4 2.7 4.4 5.3" />
+      <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+      <path d="m3 13 9 5 9-5" />
+    </svg>
+  );
+}
+
+function RulerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 16 16 4l4 4L8 20 4 16Z" />
+      <path d="m9.5 10.5 1.5 1.5M12.5 7.5 14 9M6.5 13.5 8 15" />
+    </svg>
+  );
+}
+
+function ToolIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4L21 6l-3-3-3.3 3.3Z" />
     </svg>
   );
 }
 
 const heroStats = [
-  { icon: SnowflakeIcon, value: "150", unit: "+", label: "Puntos inteligentes instalados" },
-  { icon: WifiIcon, value: "99.2", unit: "%", label: "Disponibilidad del sistema" },
-  { icon: ClockIcon, value: "24/7", unit: "", label: "Autoservicio disponible" },
-  { icon: PeopleIcon, value: "40", unit: "+", label: "Empresas conectadas" },
+  { icon: ShieldIcon, value: "25", unit: "+", label: "Años de vida útil de protección" },
+  { icon: LayersIcon, value: "80–100", unit: "µm", label: "Espesor de zinc galvanizado" },
+  { icon: RulerIcon, value: "A36", unit: "", label: "Acero estructural ASTM certificado" },
+  { icon: ToolIcon, value: "07", unit: "", label: "Servicios técnicos en cada etapa" },
 ];
 
-export default async function InnovationPage() {
-  const siteImages = await getSiteImages();
+const propuesta = [
+  { num: "01", title: "Ingeniería", text: "Diseño estructural y análisis según las condiciones del proyecto." },
+  { num: "02", title: "Fabricación", text: "Perfiles, conexiones y componentes producidos con control y trazabilidad." },
+  { num: "03", title: "Protección", text: "Galvanizado por inmersión en caliente como estrategia de durabilidad." },
+  { num: "04", title: "Campo", text: "Estudio de suelos, pruebas, pilotaje, hincado y montaje estructural." },
+];
+
+const especificaciones = [
+  { label: "Dimensiones generales", value: "14,60 × 5,50 m" },
+  { label: "Inclinación", value: "8,13°" },
+  { label: "Columnas", value: "10 · 5 + 5" },
+  { label: "Apoyos · eje a eje", value: "3,40 m" },
+  { label: "Altura frontal / posterior", value: "1,00 / 1,50 m" },
+  { label: "Espesor de perfiles", value: "2,50 mm" },
+];
+
+const materialStats = [
+  { value: "250 MPa", label: "Fy · límite de fluencia" },
+  { value: "400–550 MPa", label: "Fu · resistencia a tracción" },
+  { value: "200 GPa", label: "Módulo de elasticidad" },
+  { value: "20 % mín.", label: "Alargamiento en 200 mm" },
+];
+
+const durabilidadStats = [
+  { value: "80–100", unit: "µm de zinc", label: "Estándar GEU Structure" },
+  { value: "450 °C", unit: "", label: "Inmersión en zinc fundido" },
+  { value: "Zn–Fe", unit: "", label: "Aleación metalúrgica con el acero" },
+  { value: "ASTM A123 / A153", unit: "", label: "Normas de referencia" },
+  { value: "25 años", unit: "", label: "Vida útil objetivo de protección*" },
+];
+
+const servicios = [
+  { num: "01", title: "Estudio de suelos", text: "Caracterización del terreno como insumo para la solución de cimentación." },
+  { num: "02", title: "Pull out test", text: "Validación en campo de la respuesta pilote–terreno." },
+  { num: "03", title: "Pilotaje", text: "Ejecución del sistema de apoyo definido." },
+  { num: "04", title: "Hincado", text: "Instalación controlada y alineada de pilotes." },
+  { num: "05", title: "Montaje", text: "Ensamble, alineación y nivelación estructural." },
+  { num: "06", title: "Lavado de paneles", text: "Apoyo a la operación del parque fotovoltaico." },
+  { num: "07", title: "Mantenimiento de campo", text: "Corte de césped y actividades complementarias." },
+];
+
+export default async function StructurePage() {
   const siteTexts = await getSiteTexts();
-  const t = (key: string) => resolveText(key, siteTexts);
-  const solutions = getSolutions(siteImages);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
-      <InnovationHeader />
+      <StructureHeader />
 
       <section className="relative isolate flex min-h-screen flex-col overflow-hidden border-b border-white/10">
-        <video
-          src={resolveImage("innovation-hero-video", siteImages)}
-          poster={resolveImage("innovation-principal", siteImages)}
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 h-full w-full object-cover object-[58%_28%]"
+        <Image
+          src="/geu-structure-hero.jpg"
+          alt="Estructura fotovoltaica galvanizada al amanecer en la montaña"
+          fill
+          priority
+          sizes="100vw"
+          className="absolute inset-0 object-cover object-[50%_65%]"
         />
-        <div className="absolute inset-0 bg-black/38" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.15)_0%,rgba(0,0,0,0.08)_56%,rgba(0,0,0,0.6)_100%)]" />
+        <div className="absolute inset-0 bg-black/45" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.25)_0%,rgba(0,0,0,0.1)_50%,rgba(0,0,0,0.65)_100%)]" />
 
         <div className="relative z-10 mx-auto flex w-full max-w-[1500px] flex-1 flex-col items-center justify-center px-5 text-center md:px-8">
-          <div className="innovation-hero-intro flex max-w-2xl flex-col items-center">
-            <h1 className="font-[family:var(--font-display)] text-5xl font-black uppercase leading-none tracking-[0.02em] text-white/85 md:text-7xl">
-              {t("innovation-hero-titulo")}
-            </h1>
-            <Link
-              href="#soluciones"
-              className="mt-8 inline-flex items-center gap-3 rounded-[3px] border border-[#0498b4]/70 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-[#0498b4] hover:bg-[#0498b4] hover:text-black"
-            >
-              Explorar soluciones <span aria-hidden="true">→</span>
-            </Link>
-          </div>
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#0498b4]">
+            Soluciones estructurales para proyectos fotovoltaicos
+          </p>
+          <h1 className="mt-4 font-[family:var(--font-display)] text-5xl font-black uppercase leading-none tracking-[0.02em] text-white/90 md:text-7xl">
+            Estructuras que sostienen el futuro
+          </h1>
+          <p className="mt-5 max-w-xl text-sm font-semibold uppercase tracking-[0.1em] text-white/70 md:text-base">
+            Ingeniería · Fabricación · Protección · Servicios en campo
+          </p>
+          <Link
+            href="#producto"
+            className="mt-8 inline-flex items-center gap-3 rounded-[3px] border border-[#0498b4]/70 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-[#0498b4] hover:bg-[#0498b4] hover:text-black"
+          >
+            Ver el producto M24 <span aria-hidden="true">→</span>
+          </Link>
         </div>
 
         <div className="relative z-10 border-t border-white/10 bg-black/55 backdrop-blur-sm">
@@ -146,68 +154,248 @@ export default async function InnovationPage() {
             ))}
           </div>
         </div>
-
-        <div className="pointer-events-none absolute bottom-[7.5rem] left-5 hidden flex-col items-center gap-3 md:left-8 lg:flex">
-          <span className="h-8 w-px bg-white/30" />
-          <span className="h-1.5 w-1.5 rounded-full border border-[#0498b4]" />
-          <span className="[writing-mode:vertical-rl] text-[9px] font-black uppercase tracking-[0.3em] text-white/45">
-            Scroll
-          </span>
-        </div>
       </section>
 
-      <section id="soluciones" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
-        <div className="py-14">
-          <h2 className="mx-auto max-w-xl px-5 text-center text-3xl font-black tracking-[-0.02em] md:px-8 md:text-4xl">
-            {t("innovation-soluciones-titulo")}
+      <section className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
+        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Propuesta de valor</p>
+          <h2 className="mt-3 max-w-2xl font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-4xl">
+            Una estructura. Un solo aliado técnico.
           </h2>
-          <div className="mx-auto mt-10 max-w-[1500px] px-5 md:px-8">
-            <SolutionsCarousel items={solutions} hideDots />
+          <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+            GEU Structure integra ingeniería, fabricación y servicios para acompañar el proyecto desde el
+            terreno hasta el montaje.
+          </p>
+
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {propuesta.map((item) => (
+              <div key={item.num} className="rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
+                <p className="text-xs font-black text-[#0498b4]">{item.num}</p>
+                <h3 className="mt-2 text-lg font-black uppercase tracking-[-0.01em] text-slate-950">{item.title}</h3>
+                <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{item.text}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section id="sistema" className="relative overflow-hidden border-b border-white/10 bg-black">
-        <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
+      <section id="producto" className="border-b border-white/10 bg-black">
+        <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 md:px-8 lg:grid-cols-2 lg:items-center">
+          <div className="overflow-hidden rounded-[10px] border border-white/10 bg-white">
+            <Image
+              src="/geu-structure-producto-m24.png"
+              alt="Estructura M24 biposte con módulos fotovoltaicos sobre pradera"
+              width={1536}
+              height={864}
+              className="h-auto w-full object-cover"
+            />
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Producto</p>
+            <h2 className="mt-3 font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] text-white md:text-4xl">
+              M24 | Estructura fija biposte
+            </h2>
+            <p className="mt-3 max-w-md text-sm font-semibold leading-6 text-white/70">
+              Configuración definida para proyectos fotovoltaicos de gran escala.
+            </p>
+
+            <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-white/10 pt-8">
+              {especificaciones.map((spec) => (
+                <div key={spec.label}>
+                  <dt className="text-[10px] font-bold uppercase tracking-[0.08em] text-white/50">{spec.label}</dt>
+                  <dd className="mt-1 text-lg font-black text-white">{spec.value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <p className="mt-8 inline-flex rounded-[3px] border border-[#0498b4]/40 bg-[#0498b4]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-[#0498b4]">
+              Acero estructural ASTM A36 · Galvanizado por inmersión en caliente
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="ingenieria" className="relative overflow-hidden border-b border-white/10 bg-black">
+        <div className="relative mx-auto aspect-[1536/998] w-full max-w-[1920px]">
           <Image
-            src={resolveImage("innovation-sistema-banner", siteImages)}
-            alt="Asistente GEU Innovation junto a un punto inteligente, listo para dar soporte"
+            src="/geu-structure-viento-cfd.png"
+            alt="Simulación CFD del flujo de viento sobre una estructura fotovoltaica"
             fill
             sizes="100vw"
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.02)_26%,rgba(0,0,0,0.02)_66%,rgba(0,0,0,0.78)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.85)_0%,rgba(0,0,0,0.35)_45%,rgba(0,0,0,0.05)_100%)]" />
 
-          <div className="absolute inset-0 flex items-center pb-24 md:pb-28">
+          <div className="absolute inset-0 flex items-center">
             <div className="mx-auto w-full max-w-[1500px] px-5 md:px-8">
               <div className="max-w-md">
                 <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">
-                  {t("innovation-sistema-eyebrow")} <span className="h-px w-10 bg-[#0498b4]" />
+                  Ingeniería <span className="h-px w-10 bg-[#0498b4]" />
                 </p>
                 <h2 className="mt-3 font-[family:var(--font-display)] text-2xl font-black leading-[1.05] tracking-[-0.02em] text-white md:text-4xl">
-                  {t("innovation-sistema-titulo")}
+                  El viento también se diseña, no se supone
                 </h2>
-                <p className="mt-3 hidden max-w-sm text-sm font-semibold leading-6 text-white/80 md:block">
-                  {t("innovation-sistema-subtitulo")}
+                <p className="mt-3 max-w-sm text-sm font-semibold leading-6 text-white/80">
+                  El análisis CFD permite visualizar el flujo y convertir presiones específicas en cargas para
+                  la verificación estructural.
                 </p>
-                <Link
-                  href="mailto:innovation@geu.com.co"
-                  className="mt-4 inline-flex items-center gap-3 rounded-[3px] border border-[#0498b4]/70 px-5 py-3 text-[11px] font-black uppercase tracking-[0.12em] text-[#0498b4] hover:bg-[#0498b4] hover:text-black md:px-6 md:py-3.5 md:text-[12px]"
-                >
-                  Comenzar ahora <span aria-hidden="true">→</span>
-                </Link>
+                <p className="mt-5 inline-flex rounded-[3px] border border-white/20 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-white/70">
+                  Software RWind 3 y RFEM 6
+                </p>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
+      <section id="material" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
+        <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 md:px-8 lg:grid-cols-[minmax(0,380px)_1fr] lg:items-center">
+          <div className="overflow-hidden rounded-[10px] border border-slate-200">
+            <Image
+              src="/geu-structure-material-perfiles.jpg"
+              alt="Perfiles y láminas de acero estructural apilados"
+              width={1024}
+              height={1536}
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Material</p>
+            <h2 className="mt-3 font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-4xl">
+              ASTM A36 | La base estructural del M24
+            </h2>
+            <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+              El ASTM A36 es la especificación de acero al carbono estructural de mayor difusión en la
+              construcción metálica. Su combinación de resistencia moderada, ductilidad alta y soldabilidad sin
+              precauciones especiales lo hace apropiado para elementos de conexión.
+            </p>
+
+            <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-4">
+              {materialStats.map((stat) => (
+                <div key={stat.label} className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+                  <p className="text-lg font-black text-slate-950">{stat.value}</p>
+                  <p className="mt-1 text-[10px] font-bold uppercase leading-tight tracking-[0.05em] text-slate-500">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="durabilidad" className="border-b border-white/10 bg-black">
+        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Durabilidad</p>
+          <h2 className="mt-3 max-w-2xl font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] text-white md:text-4xl">
+            Protección anticorrosiva diseñada para 25 años
+          </h2>
+          <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-white/70">
+            El galvanizado se incorpora desde la especificación del proyecto como parte de la estrategia de
+            vida útil.
+          </p>
+
+          <div className="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
+            {durabilidadStats.map((stat) => (
+              <div key={stat.label} className="rounded-[10px] border border-white/10 bg-white/5 p-4">
+                <p className="text-lg font-black text-white">
+                  {stat.value}
+                  {stat.unit && <span className="ml-1 text-xs font-bold text-white/60">{stat.unit}</span>}
+                </p>
+                <p className="mt-1 text-[10px] font-bold uppercase leading-tight tracking-[0.05em] text-white/50">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 overflow-hidden rounded-[10px] border border-white/10 bg-white p-4">
+            <Image
+              src="/geu-structure-galvanizado-proceso.jpg"
+              alt="Proceso de galvanizado por inmersión en caliente en seis pasos"
+              width={2184}
+              height={598}
+              className="h-auto w-full object-contain"
+            />
+          </div>
+          <p className="mt-4 max-w-2xl text-xs font-semibold leading-5 text-white/40">
+            *El espesor requerido se valida según la corrosividad y las condiciones específicas del proyecto;
+            ambientes severos pueden requerir una especificación superior. Proceso normalizado por ASTM A123
+            (perfilería) y ASTM A153 (herrajes y tornillería) · NTC 2076.
+          </p>
+        </div>
+      </section>
+
+      <section id="servicios" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
+        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Servicios</p>
+          <h2 className="mt-3 max-w-2xl font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-4xl">
+            GEU Structure en cada etapa del proyecto
+          </h2>
+          <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+            Servicios técnicos y operativos que complementan el suministro de la estructura.
+          </p>
+
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {servicios.map((item) => (
+              <div key={item.num} className="rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
+                <p className="text-xs font-black text-[#0498b4]">{item.num}</p>
+                <h3 className="mt-2 text-base font-black uppercase tracking-[-0.01em] text-slate-950">{item.title}</h3>
+                <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{item.text}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-10 text-sm font-black uppercase tracking-[0.04em] text-slate-500">
+            Del terreno al montaje: una solución estructural con acompañamiento técnico.
+          </p>
+        </div>
+      </section>
+
+      <section id="contacto" className="relative overflow-hidden border-b border-white/10">
+        <Image
+          src="/geu-structure-hero.jpg"
+          alt="Estructura fotovoltaica galvanizada en la montaña"
+          fill
+          sizes="100vw"
+          className="absolute inset-0 object-cover object-[70%_35%]"
+        />
+        <div className="absolute inset-0 bg-black/72" />
+
+        <div className="relative z-10 mx-auto max-w-[1500px] px-5 py-20 text-center md:px-8">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">GEU Structure</p>
+          <h2 className="mx-auto mt-3 max-w-2xl font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] text-white md:text-5xl">
+            Ingeniería que se convierte en estructura.
+          </h2>
+          <p className="mt-4 text-xs font-bold uppercase tracking-[0.1em] text-white/60">
+            M24 · Ingeniería estructural · Galvanizado · Servicios de campo
+          </p>
+          <Link
+            href="mailto:innovation@geu.com.co"
+            className="mt-8 inline-flex items-center gap-3 rounded-[3px] border border-[#0498b4]/70 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-[#0498b4] hover:bg-[#0498b4] hover:text-black"
+          >
+            Hablar con un ingeniero <span aria-hidden="true">→</span>
+          </Link>
+
+          <div className="mx-auto mt-16 flex max-w-xs flex-col items-center gap-3 border-t border-white/10 pt-10">
+            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-white/45">
+              ¿Buscas el autoservicio inteligente GEU?
+            </p>
+            <Link
+              href="/autoservicio-inteligente"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] text-white/80 hover:border-white/50 hover:text-white"
+            >
+              Innovation <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         </div>
       </section>
 
       <SiteFooter
-        logoSrc="/logo-geu-innovation.png"
-        logoAlt="GEU Innovation"
-        logoWidth={220}
-        tagline={t("footer-innovation-tagline")}
+        logoSrc="/logo-geu-structure.svg"
+        logoAlt="GEU Structure"
+        logoWidth={190}
+        tagline="Estructuras que sostienen el futuro."
         navItems={navItems}
         accent="#0498b4"
         variant="dark"

@@ -27,6 +27,7 @@ function getDivisionFromPathname(pathname: string | null): string {
   if (!pathname) return "Cauchos";
   if (pathname.startsWith("/import")) return "Import";
   if (pathname.startsWith("/innovation")) return "Innovation";
+  if (pathname.startsWith("/autoservicio-inteligente")) return "Innovation";
   if (pathname.startsWith("/energy")) return "Energy";
   if (pathname.startsWith("/plastic")) return "Plastic";
   return "Cauchos";

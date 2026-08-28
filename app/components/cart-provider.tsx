@@ -44,6 +44,9 @@ type CartContextValue = {
   decrementItem: (id: string) => void;
   removeItem: (id: string) => void;
   clearCart: () => void;
+  isDrawerOpen: boolean;
+  lastAddedItemId: string | null;
+  closeDrawer: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -79,6 +82,8 @@ export function CartProvider({
   const [hasLoadedGuestCart, setHasLoadedGuestCart] = useState(
     Boolean(currentUserId),
   );
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [lastAddedItemId, setLastAddedItemId] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentUserId) {
@@ -145,6 +150,8 @@ export function CartProvider({
       addItem: (item: Omit<CartItem, "cantidad"> & { cantidad?: number }) => {
         const normalizedId = normalizeCartId(item.id);
         const quantityToAdd = Math.max(1, Math.trunc(item.cantidad ?? 1));
+        setLastAddedItemId(normalizedId);
+        setIsDrawerOpen(true);
         const applyLocally = () => {
           setItems((current) => {
             const existing = current.find((entry) => entry.id === normalizedId);
@@ -306,8 +313,11 @@ export function CartProvider({
 
         setItems([]);
       },
+      isDrawerOpen,
+      lastAddedItemId,
+      closeDrawer: () => setIsDrawerOpen(false),
     }),
-    [currentUserId, items],
+    [currentUserId, items, isDrawerOpen, lastAddedItemId],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

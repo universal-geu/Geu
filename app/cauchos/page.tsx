@@ -19,7 +19,7 @@ const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Cauchos", href: "/cauchos", active: true },
   { label: "Import", href: "/import" },
-  { label: "Innovation", href: "/innovation" },
+  { label: "Structure", href: "/innovation" },
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic" },
   { label: "Nosotros", href: "/cauchos/nosotros" },

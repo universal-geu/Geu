@@ -10,11 +10,11 @@ const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Cauchos", href: "/cauchos" },
   { label: "Import", href: "/import" },
-  { label: "Innovation", href: "/innovation" },
+  { label: "Structure", href: "/innovation" },
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/innovation/nosotros", active: true },
-  { label: "Contacto", href: "/innovation#contacto" },
+  { label: "Nosotros", href: "/autoservicio-inteligente/nosotros", active: true },
+  { label: "Contacto", href: "/autoservicio-inteligente#contacto" },
 ];
 
 const pilares = [

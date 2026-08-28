@@ -17,7 +17,7 @@ const homeCards = [
   {
     ...geuCompanies[2],
     image: "/home-innovation.png",
-    alt: "Bombillo luminoso en entorno tecnologico.",
+    alt: "Estructura metalica industrial bajo un cielo despejado.",
   },
   {
     ...geuCompanies[3],

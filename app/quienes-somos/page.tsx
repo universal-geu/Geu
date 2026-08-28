@@ -26,7 +26,7 @@ const ecosystemLabels = [
     className: "left-[6%] top-[20%]",
   },
   {
-    label: "Innovation",
+    label: "Structure",
     href: "/innovation",
     color: "#10b9c4",
     className: "right-[6%] top-[20%]",
