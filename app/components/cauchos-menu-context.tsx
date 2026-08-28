@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 type CauchosMenuContextValue = {
@@ -18,10 +18,14 @@ export function CauchosMenuProvider({ children }: { children: ReactNode }) {
   // Guards against the menu staying visibly open after a client-side route
   // change — if React reuses this provider's instance across navigations
   // (same component shape at the same tree position), `isOpen` would
-  // otherwise carry over into the new page instead of resetting.
-  useEffect(() => {
+  // otherwise carry over into the new page instead of resetting. Adjusting
+  // state during render (the React-recommended pattern) instead of in an
+  // effect avoids an extra render pass with the stale open menu painted.
+  const [trackedPathname, setTrackedPathname] = useState(pathname);
+  if (pathname !== trackedPathname) {
+    setTrackedPathname(pathname);
     setIsOpen(false);
-  }, [pathname]);
+  }
 
   return (
     <CauchosMenuContext.Provider
