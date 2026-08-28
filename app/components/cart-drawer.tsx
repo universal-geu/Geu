@@ -36,8 +36,13 @@ export default function CartDrawer() {
       if (event.key === "Escape") closeDrawer();
     };
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [isDrawerOpen, closeDrawer]);
 
   const getItemDivision = (itemId: string): DivisionName =>

@@ -34,12 +34,12 @@ export const geuCompanies = [
     href: "/innovation",
     eyebrow: "GEU",
     title: "Structure",
-    description: "Desarrollamos soluciones innovadoras para transformar ideas en valor.",
+    description: "Estructuras metalicas galvanizadas para proyectos fotovoltaicos.",
     longDescription:
-      "Unidad enfocada en ideacion, desarrollo tecnologico y soluciones nuevas para impulsar proyectos del grupo.",
-    accent: "#16f6f2",
-    sector: "Innovacion y tecnologia",
-    focus: ["Prototipos", "Automatizacion", "Desarrollo", "Transformacion"],
+      "Unidad de soluciones estructurales para plantas solares: ingenieria, fabricacion de perfileria en acero, galvanizado por inmersion en caliente y servicios de campo, del terreno al montaje.",
+    accent: "#0498b4",
+    sector: "Estructuras para energia solar",
+    focus: ["Ingenieria estructural", "Fabricacion en acero", "Galvanizado", "Montaje en campo"],
   },
   {
     name: "GEU Energy",

@@ -103,9 +103,14 @@ export default function MobileBottomNav({
     };
   }, []);
 
-  useEffect(() => {
+  // Close the "más" sheet on route change by adjusting state during render
+  // (React-recommended) rather than in an effect, which would flash the open
+  // sheet on the new route for one frame.
+  const [trackedPathname, setTrackedPathname] = useState(pathname);
+  if (pathname !== trackedPathname) {
+    setTrackedPathname(pathname);
     setShowMore(false);
-  }, [pathname]);
+  }
 
   const brandQuery = accountBrand ? `?brand=${accountBrand}` : "";
   const accountHref = user
