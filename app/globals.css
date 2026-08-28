@@ -29,10 +29,12 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top left, rgba(31, 103, 255, 0.18), transparent 25%),
     radial-gradient(circle at top right, rgba(64, 244, 255, 0.14), transparent 24%),

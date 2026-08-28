@@ -22,7 +22,7 @@ export default async function TratamientoDeDatosPersonalesPage() {
       <p>
         <strong>Razón social:</strong> Grupo Empresarial Universal
         <br />
-        <strong>Nombre comercial:</strong> GEU (Universal de Cauchos, GEU Import, GEU Innovation, GEU Energy,
+        <strong>Nombre comercial:</strong> GEU (Universal de Cauchos, GEU Import, GEU Structure, GEU Energy,
         GEU Plastic)
         <br />
         <strong>NIT:</strong> 830.085.540

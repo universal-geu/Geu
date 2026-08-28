@@ -5,6 +5,7 @@ import { CartProvider } from "./components/cart-provider";
 import { ProductsProvider } from "./components/products-provider";
 import { SalesSettingsProvider } from "./components/sales-settings-provider";
 import HeaderShell from "./components/header-shell";
+import CartDrawer from "./components/cart-drawer";
 import SupportChat from "./components/support-chat";
 import WhatsAppFloatButton from "./components/whatsapp-float-button";
 import { getProducts } from "@/lib/products";
@@ -29,7 +30,7 @@ const rajdhani = Rajdhani({
 export const metadata: Metadata = {
   title: "GEU | Grupo Empresarial Universal",
   description:
-    "Consorcio empresarial GEU: Universal de Cauchos, GEU Import, GEU Innovation, GEU Energy y GEU Plastic.",
+    "Consorcio empresarial GEU: Universal de Cauchos, GEU Import, GEU Structure, GEU Energy y GEU Plastic.",
 };
 
 export default async function RootLayout({
@@ -92,6 +93,7 @@ export default async function RootLayout({
                 }
               />
               {children}
+              <CartDrawer />
               <SupportChat />
               <WhatsAppFloatButton whatsappNumbers={whatsappNumbers} />
             </CartProvider>

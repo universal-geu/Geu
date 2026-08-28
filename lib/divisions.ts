@@ -24,7 +24,7 @@ export const DIVISION_ADMIN_PIN = "1234";
 export const DIVISION_ADMIN_NAMES: Record<DivisionName, string> = {
   Cauchos: "Administrador GEU",
   Import: "Administrador GEU Import",
-  Innovation: "Administrador GEU Innovation",
+  Innovation: "Administrador GEU Structure",
   Energy: "Administrador GEU Energy",
   Plastic: "Administrador GEU Plastic",
   GEU: "Administrador GEU Corporativo",
@@ -57,11 +57,11 @@ export const DIVISION_BRAND: Record<DivisionName, DivisionBrand> = {
     basePath: "/import",
   },
   Innovation: {
-    label: "GEU Innovation",
+    label: "GEU Structure",
     accent: "#0498b4",
     accentHover: "#037c92",
     logo: "/logo-geu-innovation.png",
-    logoAlt: "GEU Innovation",
+    logoAlt: "GEU Structure",
     basePath: "/innovation",
   },
   Energy: {
