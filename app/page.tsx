@@ -65,6 +65,13 @@ export default function Home() {
           Iniciar sesión
         </Link>
         <Link
+          href="/autoservicio-inteligente"
+          className="rounded-full border border-[#0b419a]/25 px-4 py-1.5 font-bold leading-none text-[#0b419a] transition-colors hover:bg-[#0b419a]/[0.08]"
+          style={{ fontSize: "clamp(0.72rem, 0.86vw, 0.9rem)" }}
+        >
+          Novedades
+        </Link>
+        <Link
           href="/quienes-somos"
           className="rounded-full border border-[#0b419a]/25 px-4 py-1.5 font-bold leading-none text-[#0b419a] transition-colors hover:bg-[#0b419a]/[0.08]"
           style={{ fontSize: "clamp(0.72rem, 0.86vw, 0.9rem)" }}

@@ -1,8 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import StructureHeader from "./structure-header";
+import GalvanizingProcess from "./galvanizing-process";
+import ServiciosTimeline from "./servicios-timeline";
 import SiteFooter from "../components/site-footer";
 import { getSiteTexts } from "@/lib/site-texts";
+import { getSiteImages, resolveImage } from "@/lib/site-images";
 
 export const dynamic = "force-dynamic";
 
@@ -89,18 +92,9 @@ const durabilidadStats = [
   { value: "25 años", unit: "", label: "Vida útil objetivo de protección*" },
 ];
 
-const servicios = [
-  { num: "01", title: "Estudio de suelos", text: "Caracterización del terreno como insumo para la solución de cimentación." },
-  { num: "02", title: "Pull out test", text: "Validación en campo de la respuesta pilote–terreno." },
-  { num: "03", title: "Pilotaje", text: "Ejecución del sistema de apoyo definido." },
-  { num: "04", title: "Hincado", text: "Instalación controlada y alineada de pilotes." },
-  { num: "05", title: "Montaje", text: "Ensamble, alineación y nivelación estructural." },
-  { num: "06", title: "Lavado de paneles", text: "Apoyo a la operación del parque fotovoltaico." },
-  { num: "07", title: "Mantenimiento de campo", text: "Corte de césped y actividades complementarias." },
-];
-
 export default async function StructurePage() {
   const siteTexts = await getSiteTexts();
+  const siteImages = await getSiteImages();
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -108,7 +102,7 @@ export default async function StructurePage() {
 
       <section className="relative isolate flex min-h-screen flex-col overflow-hidden border-b border-white/10">
         <Image
-          src="/geu-structure-hero.jpg"
+          src={resolveImage("structure-hero", siteImages)}
           alt="Estructura fotovoltaica galvanizada al amanecer en la montaña"
           fill
           priority
@@ -183,7 +177,7 @@ export default async function StructurePage() {
         <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 md:px-8 lg:grid-cols-2 lg:items-center">
           <div className="overflow-hidden rounded-[10px] border border-white/10 bg-white">
             <Image
-              src="/geu-structure-producto-m24.png"
+              src={resolveImage("structure-producto-m24", siteImages)}
               alt="Estructura M24 biposte con módulos fotovoltaicos sobre pradera"
               width={1536}
               height={864}
@@ -218,7 +212,7 @@ export default async function StructurePage() {
       <section id="ingenieria" className="relative overflow-hidden border-b border-white/10 bg-black">
         <div className="relative mx-auto aspect-[1536/998] w-full max-w-[1920px]">
           <Image
-            src="/geu-structure-viento-cfd.png"
+            src={resolveImage("structure-viento-cfd", siteImages)}
             alt="Simulación CFD del flujo de viento sobre una estructura fotovoltaica"
             fill
             sizes="100vw"
@@ -226,16 +220,16 @@ export default async function StructurePage() {
           />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.85)_0%,rgba(0,0,0,0.35)_45%,rgba(0,0,0,0.05)_100%)]" />
 
-          <div className="absolute inset-0 flex items-center">
-            <div className="mx-auto w-full max-w-[1500px] px-5 md:px-8">
-              <div className="max-w-md">
-                <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">
+          <div className="absolute inset-0 flex items-start">
+            <div className="mx-auto w-full max-w-[1500px] px-5 pt-10 md:px-8 md:pt-16">
+              <div className="mx-auto max-w-5xl text-center">
+                <p className="flex items-center justify-center gap-3 text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">
                   Ingeniería <span className="h-px w-10 bg-[#0498b4]" />
                 </p>
-                <h2 className="mt-3 font-[family:var(--font-display)] text-2xl font-black leading-[1.05] tracking-[-0.02em] text-white md:text-4xl">
+                <h2 className="mt-3 font-[family:var(--font-display)] text-2xl font-black leading-[1.05] tracking-[-0.02em] text-white md:whitespace-nowrap md:text-4xl">
                   El viento también se diseña, no se supone
                 </h2>
-                <p className="mt-3 max-w-sm text-sm font-semibold leading-6 text-white/80">
+                <p className="mx-auto mt-3 max-w-sm text-sm font-semibold leading-6 text-white/80 lg:max-w-none lg:whitespace-nowrap">
                   El análisis CFD permite visualizar el flujo y convertir presiones específicas en cargas para
                   la verificación estructural.
                 </p>
@@ -252,7 +246,7 @@ export default async function StructurePage() {
         <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 md:px-8 lg:grid-cols-[minmax(0,380px)_1fr] lg:items-center">
           <div className="overflow-hidden rounded-[10px] border border-slate-200">
             <Image
-              src="/geu-structure-material-perfiles.jpg"
+              src={resolveImage("structure-material-perfiles", siteImages)}
               alt="Perfiles y láminas de acero estructural apilados"
               width={1024}
               height={1536}
@@ -309,19 +303,11 @@ export default async function StructurePage() {
             ))}
           </div>
 
-          <div className="mt-10 overflow-hidden rounded-[10px] border border-white/10 bg-white p-4">
-            <Image
-              src="/geu-structure-galvanizado-proceso.jpg"
-              alt="Proceso de galvanizado por inmersión en caliente en seis pasos"
-              width={2184}
-              height={598}
-              className="h-auto w-full object-contain"
-            />
-          </div>
+          <GalvanizingProcess />
+
           <p className="mt-4 max-w-2xl text-xs font-semibold leading-5 text-white/40">
             *El espesor requerido se valida según la corrosividad y las condiciones específicas del proyecto;
-            ambientes severos pueden requerir una especificación superior. Proceso normalizado por ASTM A123
-            (perfilería) y ASTM A153 (herrajes y tornillería) · NTC 2076.
+            ambientes severos pueden requerir una especificación superior.
           </p>
         </div>
       </section>
@@ -336,25 +322,13 @@ export default async function StructurePage() {
             Servicios técnicos y operativos que complementan el suministro de la estructura.
           </p>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {servicios.map((item) => (
-              <div key={item.num} className="rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
-                <p className="text-xs font-black text-[#0498b4]">{item.num}</p>
-                <h3 className="mt-2 text-base font-black uppercase tracking-[-0.01em] text-slate-950">{item.title}</h3>
-                <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{item.text}</p>
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-10 text-sm font-black uppercase tracking-[0.04em] text-slate-500">
-            Del terreno al montaje: una solución estructural con acompañamiento técnico.
-          </p>
+          <ServiciosTimeline />
         </div>
       </section>
 
       <section id="contacto" className="relative overflow-hidden border-b border-white/10">
         <Image
-          src="/geu-structure-hero.jpg"
+          src={resolveImage("structure-hero", siteImages)}
           alt="Estructura fotovoltaica galvanizada en la montaña"
           fill
           sizes="100vw"
@@ -392,7 +366,7 @@ export default async function StructurePage() {
       </section>
 
       <SiteFooter
-        logoSrc="/logo-geu-structure.svg"
+        logoSrc="/logo-geu-structure.png"
         logoAlt="GEU Structure"
         logoWidth={190}
         tagline="Estructuras que sostienen el futuro."

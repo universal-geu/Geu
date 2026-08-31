@@ -60,7 +60,7 @@ export const DIVISION_BRAND: Record<DivisionName, DivisionBrand> = {
     label: "GEU Structure",
     accent: "#0498b4",
     accentHover: "#037c92",
-    logo: "/logo-geu-structure-dark.svg",
+    logo: "/logo-geu-structure.png",
     logoAlt: "GEU Structure",
     basePath: "/innovation",
   },
