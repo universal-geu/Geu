@@ -19,10 +19,10 @@ const mobileMoreItems = [...navItems, { label: "Ver todo GEU", href: "/" }];
 function StructureMark() {
   return (
     <Image
-      src="/logo-geu-structure.svg"
+      src="/logo-geu-structure.png"
       alt="GEU Structure"
-      width={640}
-      height={120}
+      width={947}
+      height={162}
       priority
       className="h-auto w-[210px] max-w-full object-contain"
     />

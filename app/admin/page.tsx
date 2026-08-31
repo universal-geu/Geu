@@ -47,11 +47,21 @@ import {
 } from "@/lib/admin-permissions";
 
 const IMAGE_GROUP_SECTIONS: { label: string; groups: string[] }[] = [
+  { label: "Sitio GEU Structure", groups: ["Sitio Structure"] },
   { label: "Página principal", groups: ["Página de inicio", "Ofertas", "Marcas destacadas"] },
   { label: "Quiénes somos", groups: ["Nosotros"] },
   {
     label: "Catálogo",
     groups: ["Página de categorías", "Categorías", "Subcategorías (menú)"],
+  },
+  {
+    label: "Innovation · Autoservicio inteligente",
+    groups: [
+      "Autoservicio · Inicio",
+      "Autoservicio · Ofertas y destacadas",
+      "Estufas",
+      "Doypack",
+    ],
   },
 ];
 
@@ -110,19 +120,19 @@ const ADMIN_BRAND_CONFIG: Record<DivisionName, AdminBrandConfig> = {
     sessionLabel: "Administrador GEU Import",
   },
   Innovation: {
-    label: "GEU Innovation",
-    eyebrow: "GEU INNOVATION",
-    title: "Panel maestro GEU Innovation",
+    label: "GEU Structure",
+    eyebrow: "GEU STRUCTURE",
+    title: "Panel maestro GEU Structure",
     description:
-      "Desde aquí puedes crear y editar las fichas de servicio de GEU Innovation para que aparezcan en el sitio.",
-    logo: "/logo-geu-innovation.png",
-    logoAlt: "GEU Innovation",
-    siteHref: "/autoservicio-inteligente",
-    productsHref: "/autoservicio-inteligente/estufas#proyectos",
-    contactHref: "/autoservicio-inteligente/estufas#contacto",
+      "Desde aquí puedes crear y editar las fichas de servicio de GEU Structure para que aparezcan en el sitio.",
+    logo: "/logo-geu-structure.png",
+    logoAlt: "GEU Structure",
+    siteHref: "/innovation",
+    productsHref: "/innovation#producto",
+    contactHref: "/innovation#contacto",
     accent: "#0498b4",
     accentHover: "#037c92",
-    sessionLabel: "Administrador GEU Innovation",
+    sessionLabel: "Administrador GEU Structure",
   },
   Energy: {
     label: "GEU Energy",
@@ -6264,7 +6274,7 @@ export default function AdminPage() {
 
               <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
-                  Editando · <span className="text-[#16384f]">{imageDivisionFilter}</span>
+                  Editando · <span className="text-[#16384f]">{adminBrand.label}</span>
                 </p>
                 <div className="inline-flex rounded-full border border-black/10 bg-[#f5f5f4] p-1">
                   {(

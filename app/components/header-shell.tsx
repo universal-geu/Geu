@@ -38,6 +38,8 @@ export default function HeaderShell({ currentUser }: HeaderShellProps) {
     pathname.startsWith("/import/") ||
     pathname === "/innovation" ||
     pathname.startsWith("/innovation/") ||
+    pathname === "/autoservicio-inteligente" ||
+    pathname.startsWith("/autoservicio-inteligente/") ||
     pathname === "/energy" ||
     pathname.startsWith("/energy/") ||
     pathname === "/plastic" ||
