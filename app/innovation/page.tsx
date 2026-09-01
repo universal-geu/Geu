@@ -6,6 +6,7 @@ import ServiciosTimeline from "./servicios-timeline";
 import SiteFooter from "../components/site-footer";
 import { getSiteTexts } from "@/lib/site-texts";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { isVideoUrl } from "@/lib/image-slots";
 
 export const dynamic = "force-dynamic";
 
@@ -211,13 +212,25 @@ export default async function StructurePage() {
 
       <section id="ingenieria" className="relative overflow-hidden border-b border-white/10 bg-black">
         <div className="relative mx-auto aspect-[1536/998] w-full max-w-[1920px]">
-          <Image
-            src={resolveImage("structure-viento-cfd", siteImages)}
-            alt="Simulación CFD del flujo de viento sobre una estructura fotovoltaica"
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
+          {isVideoUrl(resolveImage("structure-viento-cfd", siteImages)) ? (
+            <video
+              src={resolveImage("structure-viento-cfd", siteImages)}
+              poster="/geu-structure-viento-cfd.png"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <Image
+              src={resolveImage("structure-viento-cfd", siteImages)}
+              alt="Simulación CFD del flujo de viento sobre una estructura fotovoltaica"
+              fill
+              sizes="100vw"
+              className="object-cover"
+            />
+          )}
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.85)_0%,rgba(0,0,0,0.35)_45%,rgba(0,0,0,0.05)_100%)]" />
 
           <div className="absolute inset-0 flex items-start">
@@ -322,7 +335,14 @@ export default async function StructurePage() {
             Servicios técnicos y operativos que complementan el suministro de la estructura.
           </p>
 
-          <ServiciosTimeline />
+          <ServiciosTimeline
+            images={{
+              "structure-servicio-terreno": resolveImage("structure-servicio-terreno", siteImages),
+              "structure-servicio-cimentacion": resolveImage("structure-servicio-cimentacion", siteImages),
+              "structure-servicio-montaje": resolveImage("structure-servicio-montaje", siteImages),
+              "structure-servicio-operacion": resolveImage("structure-servicio-operacion", siteImages),
+            }}
+          />
         </div>
       </section>
 

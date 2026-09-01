@@ -95,8 +95,12 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   // ---- GEU Structure · Sitio público (/innovation) ----
   { key: "structure-hero", label: "Structure · Imagen del héroe", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-hero.jpg", dims: "1920 × 1280 px" },
   { key: "structure-producto-m24", label: "Structure · Producto M24 biposte", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-producto-m24.png", dims: "1536 × 864 px" },
-  { key: "structure-viento-cfd", label: "Structure · Simulación CFD de viento", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-viento-cfd.png", dims: "1536 × 998 px" },
+  { key: "structure-viento-cfd", label: "Structure · Simulación CFD de viento (video o imagen)", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-viento-cfd.mp4", dims: "1536 × 998 px · MP4 o imagen" },
   { key: "structure-material-perfiles", label: "Structure · Perfiles de acero (Material)", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-material-perfiles.jpg", dims: "1024 × 1536 px" },
+  { key: "structure-servicio-terreno", label: "Structure · Servicios · Fase Terreno", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-servicio-terreno.jpg", dims: "800 × 450 px" },
+  { key: "structure-servicio-cimentacion", label: "Structure · Servicios · Fase Cimentación", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-servicio-cimentacion.jpg", dims: "800 × 450 px" },
+  { key: "structure-servicio-montaje", label: "Structure · Servicios · Fase Montaje", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-servicio-montaje.jpg", dims: "800 × 450 px" },
+  { key: "structure-servicio-operacion", label: "Structure · Servicios · Fase Operación", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-servicio-operacion.jpg", dims: "800 × 450 px" },
   { key: "innovation-principal", label: "Innovation · Imagen de portada del video", group: "Autoservicio · Inicio", division: "Innovation", defaultSrc: "/geu-innovation-hero.png", dims: "1920 × 1080 px" },
   { key: "innovation-hero-video", label: "Innovation · Video hero", group: "Autoservicio · Inicio", division: "Innovation", defaultSrc: "/geu-innovation-hero.mp4", dims: "1920 × 1080 px" },
   { key: "innovation-sistema-banner", label: "Innovation · Banner sección Sistema", group: "Autoservicio · Inicio", division: "Innovation", defaultSrc: "/geu-innovation-support-banner.jpg", dims: "1672 × 941 px" },

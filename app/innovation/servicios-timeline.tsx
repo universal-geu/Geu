@@ -7,6 +7,7 @@ type Fase = {
   fase: string;
   nombre: string;
   entregable: string;
+  imageKey: string;
   Icon: () => React.ReactElement;
   items: Servicio[];
 };
@@ -50,6 +51,7 @@ const fases: Fase[] = [
     fase: "01",
     nombre: "Terreno",
     entregable: "Informe geotécnico del sitio",
+    imageKey: "structure-servicio-terreno",
     Icon: IconTerreno,
     items: [
       { num: "01", title: "Estudio de suelos", text: "Caracterización del terreno como insumo para la solución de cimentación." },
@@ -60,6 +62,7 @@ const fases: Fase[] = [
     fase: "02",
     nombre: "Cimentación",
     entregable: "Pilotes instalados y verificados",
+    imageKey: "structure-servicio-cimentacion",
     Icon: IconCimentacion,
     items: [
       { num: "03", title: "Pilotaje", text: "Ejecución del sistema de apoyo definido." },
@@ -70,6 +73,7 @@ const fases: Fase[] = [
     fase: "03",
     nombre: "Montaje",
     entregable: "Estructura montada y nivelada",
+    imageKey: "structure-servicio-montaje",
     Icon: IconMontaje,
     items: [
       { num: "05", title: "Montaje", text: "Ensamble, alineación y nivelación estructural de la mesa fotovoltaica." },
@@ -79,6 +83,7 @@ const fases: Fase[] = [
     fase: "04",
     nombre: "Operación",
     entregable: "Servicio recurrente en sitio",
+    imageKey: "structure-servicio-operacion",
     Icon: IconOperacion,
     items: [
       { num: "06", title: "Lavado de paneles", text: "Apoyo a la operación del parque fotovoltaico." },
@@ -87,7 +92,11 @@ const fases: Fase[] = [
   },
 ];
 
-export default function ServiciosTimeline() {
+export default function ServiciosTimeline({
+  images = {},
+}: {
+  images?: Record<string, string>;
+}) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
 
@@ -125,13 +134,20 @@ export default function ServiciosTimeline() {
               transform: shown ? "translateY(0)" : "translateY(16px)",
             }}
           >
-            {/* watermark phase number */}
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-2 -top-4 select-none font-[family:var(--font-display)] text-[84px] font-black leading-none text-slate-900/[0.04]"
-            >
-              {fase.fase}
-            </span>
+            {/* photo banner */}
+            <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100">
+              {images[fase.imageKey] && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={images[fase.imageKey]}
+                  alt={`Fase ${fase.fase} · ${fase.nombre}`}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                />
+              )}
+              <span className="absolute left-3 top-3 inline-flex items-center rounded-md bg-[#0498b4] px-2 py-1 text-[11px] font-black tabular-nums tracking-[0.1em] text-white shadow-sm">
+                {fase.fase}
+              </span>
+            </div>
 
             <div className="relative flex flex-1 flex-col p-6">
               <div className="flex items-center gap-3">
@@ -176,7 +192,7 @@ export default function ServiciosTimeline() {
 
             {i < fases.length - 1 && (
               <span
-                className="pointer-events-none absolute right-[-15px] top-[46px] z-10 hidden text-[#0498b4] lg:block"
+                className="pointer-events-none absolute right-[-15px] top-1/2 z-10 hidden -translate-y-1/2 text-[#0498b4] lg:block"
                 aria-hidden="true"
               >
                 <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current drop-shadow-[0_2px_6px_rgba(4,152,180,0.4)]">
