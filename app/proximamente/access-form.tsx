@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 
 export default function AccessGate() {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -40,8 +38,8 @@ export default function AccessGate() {
         return;
       }
 
-      router.replace("/");
-      router.refresh();
+      // Navegación completa para que el proxy vea la cookie recién creada.
+      window.location.href = "/";
     } catch {
       setError("Error de conexión. Inténtalo de nuevo.");
       setLoading(false);
