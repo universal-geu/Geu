@@ -367,24 +367,19 @@ function cProfile(g, p1, p2, web, flange, m){
   g.add(strut(c, d, web + 0.06, 0.035, m));                               // ala inferior
 }
 
-// gusset triangular: cordón inferior desde el pie del gusset hasta la punta,
-// cerrado con un montante vertical en la línea de columna
-function gusset(g, x, cz, tipZ){
-  const foot = [x, yBot(cz) - 0.52, cz];
-  const tip  = [x, yTop(tipZ) - 0.02, tipZ];
-  cProfile(g, foot, tip, 0.08, 0.15, MAT.steel);
-  g.add(strut([x, yBot(cz) + 0.02, cz], foot, 0.08, 0.10, MAT.steelD));
-}
-
-// ===== vigas laterales en C, inclinadas, con gussets triangulares =====
+// ===== vigas laterales en C, inclinadas, con tornapunta en cada voladizo =====
 function buildRail(s){
   const g = new THREE.Group();
   const x = s * RX;
   cProfile(g, [x, yTop(Z_TIP_F), Z_TIP_F], [x, yTop(Z_TIP_B), Z_TIP_B], 0.10, RAIL_H, MAT.steel);
   // empalme de los dos tramos (~centro)
   g.add(boxAt(0.16, RAIL_H + 0.12, 0.18, MAT.steelD, x, yTop(-0.1), -0.1));
-  gusset(g, x, COL_Z[0], Z_TIP_F);   // voladizo delantero
-  gusset(g, x, COL_Z[1], Z_TIP_B);   // voladizo trasero
+  // tornapunta del voladizo delantero: del pie de la columna a la punta de la viga
+  g.add(strut([x, Math.max(0.12, yBot(COL_Z[0]) - 0.75), COL_Z[0]],
+              [x, yTop(Z_TIP_F) - 0.06, Z_TIP_F - 0.05], 0.09, 0.12, MAT.steel));
+  // tornapunta trasera (más corta)
+  g.add(strut([x, yBot(COL_Z[1]) - 0.55, COL_Z[1]],
+              [x, yTop(Z_TIP_B) - 0.05, Z_TIP_B + 0.05], 0.08, 0.11, MAT.steel));
   // tapas de punta (boca del perfil)
   g.add(boxAt(0.13, RAIL_H + 0.05, 0.05, MAT.steelD, x, yTop(Z_TIP_F), Z_TIP_F + 0.02));
   g.add(boxAt(0.13, RAIL_H + 0.05, 0.05, MAT.steelD, x, yTop(Z_TIP_B), Z_TIP_B - 0.02));
@@ -411,11 +406,6 @@ CZ.forEach(z => {
   [-1, 1].forEach(s => gCorreas.add(boxAt(0.05, 0.18, 0.15, MAT.steelD, s * CORREA_HX, y, z)));
   // empalme central
   gCorreas.add(boxAt(0.32, 0.22, 0.19, MAT.steelD, 0, y, z));
-});
-// diagonal de arriostramiento entre las dos primeras correas
-[1, -1].forEach(s => {
-  const y0 = yTop(CZ[0]) + RAIL_H / 2 + 0.09, y1 = yTop(CZ[1]) + RAIL_H / 2 + 0.09;
-  gCorreas.add(strut([s * (RX - 0.15), y0, CZ[0]], [s * 0.2, y1, CZ[1]], 0.05, 0.06, MAT.steelD));
 });
 
 // ===== paneles (grupo conmutable) =====
@@ -467,16 +457,15 @@ COL_Z.forEach(z => {
     gE.add(g);
   });
 });
-// D — conector viga externo (cruce correa / cordón superior)
+// D — conector viga externo (abraza el cruce correa / viga lateral)
 CZ.forEach(z => {
   [1, -1].forEach(s => {
     const g = new THREE.Group();
-    g.add(boxAt(0.20, 0.15, 0.22, matFor.D, 0, 0.0, 0));
-    g.add(boxAt(0.06, 0.20, 0.26, matFor.D, s * 0.10, 0.0, 0));
-    g.add(boxAt(0.26, 0.05, 0.24, matFor.D, -s * 0.03, -0.09, 0));
-    g.add(boxAt(0.13, 0.12, 0.13, matFor.D, -s * 0.15, 0.02, 0));   // cabezal sobre la punta del tubo
-    sideBolt(g, MAT.bolt, 0, 0.05, 0.0, 0.24);
-    g.position.set(s * RX, yTop(z) + 0.02, z);
+    g.add(boxAt(0.22, 0.22, 0.22, matFor.D, 0, 0.0, 0));            // cuerpo que abraza la viga
+    g.add(boxAt(0.05, 0.26, 0.26, matFor.D, s * 0.12, 0.0, 0));     // ala exterior contra la viga
+    g.add(boxAt(0.26, 0.05, 0.24, matFor.D, 0, 0.12, 0));           // tapa que recibe la correa
+    sideBolt(g, MAT.bolt, s * 0.02, 0.03, 0.0, 0.24);
+    g.position.set(s * RX, yTop(z), z);
     gD.add(g);
   });
 });
