@@ -201,7 +201,7 @@
   <div class="hud-head">
     <div class="eyebrow">GEU Structure · Ingeniería</div>
     <h1>Cómo funciona la M24</h1>
-    <p>La mesa M24 se apoya en <b>6 columnas escalonadas</b> ancladas con placa base. Sobre ellas corren
+    <p>La mesa M24 se apoya en <b>4 columnas escalonadas</b> ancladas con placa base. Sobre ellas corren
        <b>dos vigas laterales</b> en C que dan la inclinación, con gussets triangulares en las puntas;
        encima, <b>tres correas</b> reciben los paneles. Explótala y toca cada pieza.</p>
   </div>
@@ -233,14 +233,14 @@ const PARTS = [
   { k:'B', nm:'Conector perimetral', ct:'sobre las correas', ds:'Prensa el borde del panel a lo largo de la correa; se ensambla con el conector deslizante.' },
   { k:'C', nm:'Conector deslizante', ct:'3 uds · centro de cada correa', ds:'Nuestra joya. Une los dos tramos de la correa y deja correr la mesa varios centímetros para calzar con la obra civil — sin rehacer nada.' },
   { k:'D', nm:'Conector viga externo', ct:'6 uds · cruce correa / viga', ds:'Une la correa con la viga lateral inclinada — dos perfiles distintos — y concentra la mayor carga de la mesa.' },
-  { k:'E', nm:'Conector columna–mesa', ct:'6 uds · cabeza de columna', ds:'Une la cabeza de cada columna con el cordón inferior de la viga y fija el ángulo de inclinación.' },
-  { k:'F', nm:'Base anclada', ct:'6 uds · pie de columna', ds:'Placa pernada a la cimentación. Recibe toda la carga de la mesa y la transmite al terreno.' },
+  { k:'E', nm:'Conector columna–mesa', ct:'4 uds · cabeza de columna', ds:'Une la cabeza de cada columna con el cordón inferior de la viga y fija el ángulo de inclinación.' },
+  { k:'F', nm:'Base anclada', ct:'4 uds · pie de columna', ds:'Placa pernada a la cimentación. Recibe toda la carga de la mesa y la transmite al terreno.' },
 ];
 const STRUCT = [
   { key:'panels',  nm:'Paneles',         ct:'6 × 2' },
   { key:'correas', nm:'Correas',         ct:'× 3' },
   { key:'rails',   nm:'Vigas laterales', ct:'× 2' },
-  { key:'columns', nm:'Columnas',        ct:'× 6' },
+  { key:'columns', nm:'Columnas',        ct:'× 4' },
 ];
 
 const canvas = document.getElementById('stage3d');
@@ -321,7 +321,7 @@ function sideBolt(g, m, x, y, z, len = 0.28){
 }
 
 // ---------- geometría real de la mesa M24 ----------
-// 2 vigas laterales en C, inclinadas, sobre 6 columnas escalonadas (placa base).
+// 2 vigas laterales en C, inclinadas, sobre 4 columnas escalonadas (placa base).
 // 3 correas en C cruzan de viga a viga y reciben los paneles. Gussets triangulares
 // en las puntas de la viga.
 const RX = 2.3;                               // vigas laterales en ± x
@@ -333,8 +333,8 @@ const RAIL_H = 0.24;                           // canto del perfil de la viga
 const yTop = z => FRONT_Y + SLOPE * (Z_TIP_F - z);   // eje de la viga lateral
 const yBot = z => yTop(z) - RAIL_H;            // cara inferior de la viga
 
-const COL_Z = [1.85, -0.15, -2.05];           // z de las 3 líneas de columnas
-const CZ = [1.85, -0.15, -2.05];              // z de las 3 correas
+const COL_Z = [1.55, -1.95];                  // z de las 2 líneas de columnas (4 patas)
+const CZ = [1.95, -0.15, -2.20];              // z de las 3 correas
 const CORREA_HX = RX + 0.28;                   // media longitud de correa (con voladizo)
 const PED_H = 0;                               // sin pedestal: placa base sobre el suelo
 
@@ -379,7 +379,7 @@ function buildRail(s){
   cProfile(g, [x, yBot(cF) - 0.02, cF], [x, yTop(Z_TIP_F) - 0.04, Z_TIP_F], 0.09, 0.16, MAT.steel);          // cordón inferior inclinado
   g.add(strut([x, yBot(cF) - 0.02, cF], [x, yBot(cF) - 0.02, Z_TIP_F - 0.15], 0.07, 0.09, MAT.steelD));       // puntal
   // gusset triangular trasero (más corto)
-  const cB = COL_Z[2];
+  const cB = COL_Z[1];
   g.add(strut([x, yBot(cB) - 0.02, cB], [x, yTop(Z_TIP_B) - 0.03, Z_TIP_B], 0.08, 0.13, MAT.steel));
   // tapas de punta (perfil abierto)
   g.add(boxAt(0.13, RAIL_H + 0.05, 0.04, MAT.steelD, x, yTop(Z_TIP_F), Z_TIP_F + 0.02));
