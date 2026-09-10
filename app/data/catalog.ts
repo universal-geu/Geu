@@ -180,8 +180,18 @@ export type ProductoEspecificacion = {
 
 export type ProductoCategoriaAdicional = {
   categoria: string;
-  subcategoria?: string;
-  categoriaMenor?: string;
+  subcategorias?: string[];
+  categoriasMenores?: string[];
+};
+
+// Cuando un producto se cruza a otra empresa GEU (divisionesAdicionales),
+// esto fija bajo qué categoría de ESA empresa debe aparecer — su categoría
+// de origen normalmente no existe en la taxonomía de la empresa destino.
+export type ProductoDivisionCategoria = {
+  division: DivisionName;
+  categoria: string;
+  subcategorias?: string[];
+  categoriasMenores?: string[];
 };
 
 export type ProductoVariante = {
@@ -217,7 +227,10 @@ export type ProductoCatalogo = {
   disponibilidad: Disponibilidad;
   subcategoria?: string;
   categoriaMenor?: string;
+  subcategorias?: string[];
+  categoriasMenores?: string[];
   categoriasAdicionales?: ProductoCategoriaAdicional[];
+  categoriasPorDivision?: ProductoDivisionCategoria[];
   descripcion?: string;
   aplicacion?: string;
   compatibilidad?: string[];

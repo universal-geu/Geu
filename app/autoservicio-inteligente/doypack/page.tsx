@@ -132,50 +132,7 @@ export default async function InnovationDoypackPage() {
         </div>
       </section>
 
-      <Marquee label="Tetrapack" count={7} />
-
-      <section className="bg-white text-slate-950">
-        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8 md:py-24">
-          <h2 className="text-center text-3xl font-black tracking-[-0.02em] text-[#0498b4] md:text-4xl">
-            {t("innovation-doypack-uso-titulo")}
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-sm font-semibold leading-6 text-slate-500">
-            {t("innovation-doypack-uso-descripcion")}
-          </p>
-
-          <div className="mt-10 flex flex-col items-start gap-8 md:flex-row">
-            <div className="relative w-full md:w-2/3">
-              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg">
-                <Image
-                  src={resolveImage("doypack-skate-main", siteImages)}
-                  alt="Persona patinando con un doypack en su cinturón"
-                  fill
-                  sizes="(min-width: 768px) 66vw, 100vw"
-                  className="object-cover"
-                />
-              </div>
-
-              <div className="absolute -bottom-8 right-4 hidden h-32 w-40 overflow-hidden rounded-lg border-4 border-white shadow-[0_18px_34px_rgba(15,23,42,0.2)] sm:block md:right-10">
-                <Image
-                  src={resolveImage("doypack-skate-detail", siteImages)}
-                  alt="Detalle del doypack sujeto al cinturón"
-                  fill
-                  sizes="160px"
-                  className="object-cover"
-                />
-              </div>
-            </div>
-
-            <p className="max-w-sm text-sm font-semibold leading-6 text-slate-500 md:mt-2">
-              {t("innovation-doypack-uso-detalle")}
-            </p>
-          </div>
-
-          <p className="mt-14 text-right text-2xl font-black tracking-[-0.02em] text-[#0498b4] md:mt-10">
-            {t("innovation-doypack-uso-etiqueta")}
-          </p>
-        </div>
-      </section>
+      <Marquee label="Doypack" count={7} />
 
       <section className="relative aspect-[16/9] w-full overflow-hidden border-b border-white/10 md:aspect-[21/9]">
         <Image

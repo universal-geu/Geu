@@ -36,22 +36,71 @@ export function expandProductCategoryViews(
 ): StoreProduct[] {
   const views: StoreProduct[] = [];
 
+  // A product can sit in several subcategorías / categorías menores at once.
+  // Emit one flat view per (categoría × subcategoría × categoría menor) combo
+  // so category-grouping UI that reads single `subcategoria` / `categoriaMenor`
+  // keeps working — it just iterates more rows.
+  const pushCombos = (
+    base: StoreProduct,
+    categoria: string,
+    subcategorias: string[] | undefined,
+    categoriasMenores: string[] | undefined,
+  ) => {
+    const subs = subcategorias?.length ? subcategorias : [undefined];
+    const minors = categoriasMenores?.length ? categoriasMenores : [undefined];
+    for (const subcategoria of subs) {
+      for (const categoriaMenor of minors) {
+        views.push({ ...base, categoria, subcategoria, categoriaMenor });
+      }
+    }
+  };
+
   for (const product of products) {
     if (!productSellsInDivision(product, division)) continue;
 
-    views.push(product);
-    const primaryKey = normalizeMatchKey(product.categoria);
+    const seenCategoryKeys = new Set<string>();
+
+    if (product.division === division) {
+      pushCombos(
+        product,
+        product.categoria,
+        product.subcategorias,
+        product.categoriasMenores,
+      );
+      seenCategoryKeys.add(normalizeMatchKey(product.categoria));
+    } else {
+      // The product only reaches this division as a cross-listed "también
+      // funciona para otra empresa GEU" entry — its own-division categoría
+      // isn't part of this division's taxonomy. Use every categoría the admin
+      // picked for this division instead.
+      const overrides = (product.categoriasPorDivision || []).filter(
+        (entry) => entry.division === division,
+      );
+
+      if (overrides.length === 0) {
+        // Legacy data: cross-listed with no category assigned. Keep old
+        // behaviour (show it, carrying its origin categoría).
+        views.push(product);
+        seenCategoryKeys.add(normalizeMatchKey(product.categoria));
+      }
+
+      for (const override of overrides) {
+        pushCombos(
+          product,
+          override.categoria,
+          override.subcategorias,
+          override.categoriasMenores,
+        );
+        seenCategoryKeys.add(normalizeMatchKey(override.categoria));
+      }
+    }
 
     for (const extra of product.categoriasAdicionales || []) {
       const categoria = extra.categoria?.trim();
-      if (!categoria || normalizeMatchKey(categoria) === primaryKey) continue;
+      if (!categoria || seenCategoryKeys.has(normalizeMatchKey(categoria))) continue;
+      seenCategoryKeys.add(normalizeMatchKey(categoria));
 
-      views.push({
-        ...product,
-        categoria,
-        subcategoria: extra.subcategoria,
-        categoriaMenor: extra.categoriaMenor,
-      });
+      pushCombos(product, categoria, extra.subcategorias, extra.categoriasMenores);
     }
   }
 

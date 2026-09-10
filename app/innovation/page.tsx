@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import StructureHeader from "./structure-header";
+import ProductGallery from "./product-gallery";
+import ProductSpecs from "./product-specs";
 import GalvanizingProcess from "./galvanizing-process";
 import ServiciosTimeline from "./servicios-timeline";
 import SiteFooter from "../components/site-footer";
@@ -63,26 +65,51 @@ const heroStats = [
 ];
 
 const propuesta = [
-  { num: "01", title: "Ingeniería", text: "Diseño estructural y análisis según las condiciones del proyecto." },
-  { num: "02", title: "Fabricación", text: "Perfiles, conexiones y componentes producidos con control y trazabilidad." },
-  { num: "03", title: "Protección", text: "Galvanizado por inmersión en caliente como estrategia de durabilidad." },
-  { num: "04", title: "Campo", text: "Estudio de suelos, pruebas, pilotaje, hincado y montaje estructural." },
+  { num: "01", title: "Ingeniería", text: "Diseño estructural y análisis según las condiciones del proyecto.", icon: RulerIcon },
+  { num: "02", title: "Fabricación", text: "Perfiles, conexiones y componentes producidos con control y trazabilidad.", icon: LayersIcon },
+  { num: "03", title: "Protección", text: "Galvanizado por inmersión en caliente como estrategia de durabilidad.", icon: ShieldIcon },
+  { num: "04", title: "Campo", text: "Estudio de suelos, pruebas, pilotaje, hincado y montaje estructural.", icon: ToolIcon },
 ];
 
-const especificaciones = [
-  { label: "Dimensiones generales", value: "14,60 × 5,50 m" },
-  { label: "Inclinación", value: "8,13°" },
-  { label: "Columnas", value: "10 · 5 + 5" },
-  { label: "Apoyos · eje a eje", value: "3,40 m" },
-  { label: "Altura frontal / posterior", value: "1,00 / 1,50 m" },
-  { label: "Espesor de perfiles", value: "2,50 mm" },
-];
 
 const materialStats = [
   { value: "250 MPa", label: "Fy · límite de fluencia" },
   { value: "400–550 MPa", label: "Fu · resistencia a tracción" },
   { value: "200 GPa", label: "Módulo de elasticidad" },
   { value: "20 % mín.", label: "Alargamiento en 200 mm" },
+];
+
+const conexionesDetalle = [
+  { title: "Conector tipo abrazadera", slot: "structure-conexion-clamp" },
+  { title: "Nudo con platina de anclaje", slot: "structure-conexion-nodo" },
+  { title: "Columna sobre platina base", slot: "structure-conexion-columna" },
+];
+
+const fabricacion = [
+  {
+    num: "01",
+    title: "Corte",
+    text: "Perfiles estructurales cortados a medida según los planos de fabricación.",
+    slot: "structure-fab-corte",
+  },
+  {
+    num: "02",
+    title: "Punzonado",
+    text: "Platinas base y perforaciones ejecutadas en prensa para tolerancias repetibles.",
+    slot: "structure-fab-punzonado",
+  },
+  {
+    num: "03",
+    title: "Soldadura",
+    text: "Conectores y componentes armados y soldados con control de calidad interno.",
+    slot: "structure-fab-soldadura",
+  },
+  {
+    num: "04",
+    title: "Ensamble",
+    text: "Nudos resueltos con conectores tipo abrazadera: montaje en obra sin soldadura.",
+    slot: "structure-fab-conexion",
+  },
 ];
 
 const durabilidadStats = [
@@ -102,14 +129,28 @@ export default async function StructurePage() {
       <StructureHeader />
 
       <section className="relative isolate flex min-h-screen flex-col overflow-hidden border-b border-white/10">
-        <Image
-          src={resolveImage("structure-hero", siteImages)}
-          alt="Estructura fotovoltaica galvanizada al amanecer en la montaña"
-          fill
-          priority
-          sizes="100vw"
-          className="absolute inset-0 object-cover object-[50%_65%]"
-        />
+        {isVideoUrl(resolveImage("structure-hero-video", siteImages)) ? (
+          <video
+            src={resolveImage("structure-hero-video", siteImages)}
+            poster={resolveImage("structure-hero", siteImages)}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover object-[50%_65%]"
+          />
+        ) : (
+          <Image
+            src={resolveImage("structure-hero-video", siteImages)}
+            alt="Estructura fotovoltaica galvanizada al amanecer en la montaña"
+            fill
+            priority
+            sizes="100vw"
+            className="absolute inset-0 object-cover object-[50%_65%]"
+          />
+        )}
         <div className="absolute inset-0 bg-black/45" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.25)_0%,rgba(0,0,0,0.1)_50%,rgba(0,0,0,0.65)_100%)]" />
 
@@ -163,49 +204,105 @@ export default async function StructurePage() {
           </p>
 
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {propuesta.map((item) => (
-              <div key={item.num} className="rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
-                <p className="text-xs font-black text-[#0498b4]">{item.num}</p>
-                <h3 className="mt-2 text-lg font-black uppercase tracking-[-0.01em] text-slate-950">{item.title}</h3>
-                <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{item.text}</p>
-              </div>
-            ))}
+            {propuesta.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.num}
+                  className="group relative flex flex-col overflow-hidden rounded-[14px] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-1 hover:border-[#0498b4]/50 hover:shadow-[0_22px_48px_rgba(4,152,180,0.14)]"
+                >
+                  <span className="absolute inset-x-0 top-0 h-[3px] w-0 bg-[#0498b4] transition-all duration-300 group-hover:w-full" />
+                  <div className="flex items-center justify-between">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#0498b4]/10 text-[#0498b4] transition-colors group-hover:bg-[#0498b4] group-hover:text-white">
+                      <Icon />
+                    </span>
+                    <span className="font-[family:var(--font-display)] text-2xl font-black leading-none text-slate-200">
+                      {item.num}
+                    </span>
+                  </div>
+                  <h3 className="mt-5 text-lg font-black uppercase tracking-[-0.01em] text-slate-950">{item.title}</h3>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{item.text}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <section id="producto" className="border-b border-white/10 bg-black">
-        <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 md:px-8 lg:grid-cols-2 lg:items-center">
-          <div className="overflow-hidden rounded-[10px] border border-white/10 bg-white">
-            <Image
-              src={resolveImage("structure-producto-m24", siteImages)}
-              alt="Estructura M24 biposte con módulos fotovoltaicos sobre pradera"
-              width={1536}
-              height={864}
-              className="h-auto w-full object-cover"
-            />
-          </div>
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Producto</p>
-            <h2 className="mt-3 font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] text-white md:text-4xl">
-              M24 | Estructura fija biposte
-            </h2>
-            <p className="mt-3 max-w-md text-sm font-semibold leading-6 text-white/70">
-              Configuración definida para proyectos fotovoltaicos de gran escala.
-            </p>
+      <section id="producto" className="border-b border-black/10 bg-white">
+        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8 md:py-20">
+          <div className="grid gap-10 lg:grid-cols-2 lg:gap-x-14 lg:gap-y-12 lg:items-stretch">
+            <div>
+              <ProductGallery
+                theme="light"
+                sources={[
+                  resolveImage("structure-m24-05", siteImages),
+                  resolveImage("structure-m24-01", siteImages),
+                  resolveImage("structure-m24-02", siteImages),
+                  resolveImage("structure-m24-03", siteImages),
+                  resolveImage("structure-m24-04", siteImages),
+                ]}
+              />
+            </div>
 
-            <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-white/10 pt-8">
-              {especificaciones.map((spec) => (
-                <div key={spec.label}>
-                  <dt className="text-[10px] font-bold uppercase tracking-[0.08em] text-white/50">{spec.label}</dt>
-                  <dd className="mt-1 text-lg font-black text-white">{spec.value}</dd>
+            <div className="flex flex-col">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Producto</p>
+              <h2 className="mt-3 font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] text-neutral-900 md:text-[2.75rem] md:leading-[1.05]">
+                M24 | Estructura fija biposte
+              </h2>
+              <p className="mt-4 max-w-md text-[15px] font-semibold leading-7 text-neutral-600">
+                Configuración fija de un solo modelo para plantas fotovoltaicas sobre
+                terreno de gran escala. Acero ASTM A36 galvanizado en caliente, diseño
+                bajo AISC 360 · ASCE 7-16.
+              </p>
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                <span className="inline-flex rounded-full border border-[#0498b4]/40 bg-[#0498b4]/10 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#0498b4]">
+                  Galvanizado en caliente
+                </span>
+                <span className="inline-flex rounded-full border border-black/10 bg-black/[0.04] px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-neutral-500">
+                  Vida útil +25 años
+                </span>
+              </div>
+
+              <div className="mt-auto pt-10">
+                <dl className="grid grid-cols-3 gap-4 border-t border-black/10 pt-6">
+                  {[
+                    { value: "14,60 m", label: "Largo del marco" },
+                    { value: "8,13°", label: "Inclinación fija" },
+                    { value: "+25 años", label: "Vida útil galvanizado" },
+                  ].map((stat) => (
+                    <div key={stat.label}>
+                      <dd className="font-[family:var(--font-display)] text-2xl font-black tracking-[-0.02em] text-neutral-900 md:text-[1.75rem]">
+                        {stat.value}
+                      </dd>
+                      <dt className="mt-1 text-[10px] font-bold uppercase leading-tight tracking-[0.06em] text-neutral-400">
+                        {stat.label}
+                      </dt>
+                    </div>
+                  ))}
+                </dl>
+
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href="#contacto"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-[3px] bg-[#0498b4] px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#03809a]"
+                  >
+                    Solicitar cotización <span aria-hidden="true">→</span>
+                  </Link>
+                  <Link
+                    href="#ingenieria"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-[3px] border border-neutral-300 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:border-neutral-900 hover:text-neutral-900"
+                  >
+                    Ingeniería del viento
+                  </Link>
                 </div>
-              ))}
-            </dl>
+              </div>
+            </div>
 
-            <p className="mt-8 inline-flex rounded-[3px] border border-[#0498b4]/40 bg-[#0498b4]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.1em] text-[#0498b4]">
-              Acero estructural ASTM A36 · Galvanizado por inmersión en caliente
-            </p>
+            <div className="lg:col-span-2">
+              <ProductSpecs />
+            </div>
           </div>
         </div>
       </section>
@@ -256,38 +353,126 @@ export default async function StructurePage() {
       </section>
 
       <section id="material" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
-        <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 md:px-8 lg:grid-cols-[minmax(0,380px)_1fr] lg:items-center">
-          <div className="overflow-hidden rounded-[10px] border border-slate-200">
-            <Image
-              src={resolveImage("structure-material-perfiles", siteImages)}
-              alt="Perfiles y láminas de acero estructural apilados"
-              width={1024}
-              height={1536}
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Material</p>
-            <h2 className="mt-3 font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-4xl">
-              ASTM A36 | La base estructural del M24
-            </h2>
-            <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-slate-600">
-              El ASTM A36 es la especificación de acero al carbono estructural de mayor difusión en la
-              construcción metálica. Su combinación de resistencia moderada, ductilidad alta y soldabilidad sin
-              precauciones especiales lo hace apropiado para elementos de conexión.
-            </p>
+        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8 md:py-20">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,420px)_1fr] lg:gap-14 lg:items-stretch">
+            <div className="group relative min-h-[380px] overflow-hidden rounded-[16px] bg-neutral-900 shadow-[0_18px_44px_rgba(15,23,42,0.14)] ring-1 ring-black/5">
+              <Image
+                src={resolveImage("structure-material-perfil", siteImages)}
+                alt="Nudo galvanizado de la estructura M24 en acero ASTM A36"
+                fill
+                sizes="(min-width: 1024px) 420px, 100vw"
+                className="object-cover brightness-[0.85] contrast-[1.12] saturate-[0.8] grayscale-[0.3] transition-all duration-500 group-hover:scale-[1.05] group-hover:brightness-100 group-hover:grayscale-0 group-hover:saturate-100"
+              />
+              <div className="absolute inset-0 bg-[#0b3947] opacity-25 mix-blend-color transition-opacity duration-500 group-hover:opacity-0" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10" />
+              <span className="absolute bottom-4 left-4 text-[10px] font-black uppercase tracking-[0.1em] text-white/80">
+                Mesa M24 · Acero A36 galvanizado
+              </span>
+            </div>
 
-            <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-4">
-              {materialStats.map((stat) => (
-                <div key={stat.label} className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
-                  <p className="text-lg font-black text-slate-950">{stat.value}</p>
-                  <p className="mt-1 text-[10px] font-bold uppercase leading-tight tracking-[0.05em] text-slate-500">
-                    {stat.label}
-                  </p>
-                </div>
+            <div className="flex flex-col">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Material</p>
+              <h2 className="mt-3 font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-4xl">
+                ASTM A36 | La base estructural del M24
+              </h2>
+              <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+                El ASTM A36 es la especificación de acero al carbono estructural de mayor difusión en la
+                construcción metálica. Su combinación de resistencia moderada, ductilidad alta y soldabilidad sin
+                precauciones especiales lo hace apropiado para elementos de conexión.
+              </p>
+
+              <div className="mt-auto border-t border-slate-200 pt-8">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#0498b4]">Propiedades del acero</p>
+                <dl className="mt-4 grid grid-cols-2 gap-x-8 gap-y-5 sm:grid-cols-4">
+                  {materialStats.map((stat) => (
+                    <div key={stat.label}>
+                      <dt className="text-[10px] font-bold uppercase tracking-[0.06em] text-neutral-400">{stat.label}</dt>
+                      <dd className="mt-1 text-lg font-black tracking-[-0.01em] text-neutral-900">{stat.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 border-t border-slate-200 pt-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#0498b4]">Detalle de conexiones</p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              {conexionesDetalle.map((item) => (
+                <figure
+                  key={item.slot}
+                  className="group relative aspect-[3/2] overflow-hidden rounded-[14px] bg-neutral-900 shadow-[0_14px_36px_rgba(15,23,42,0.10)] ring-1 ring-black/5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(4,152,180,0.16)]"
+                >
+                  <Image
+                    src={resolveImage(item.slot, siteImages)}
+                    alt={item.title}
+                    fill
+                    sizes="(min-width: 640px) 440px, 100vw"
+                    className="object-cover brightness-[0.82] contrast-[1.12] saturate-[0.8] grayscale-[0.35] transition-all duration-500 group-hover:scale-[1.06] group-hover:brightness-100 group-hover:grayscale-0 group-hover:saturate-100"
+                  />
+                  <div className="absolute inset-0 bg-[#0b3947] opacity-30 mix-blend-color transition-opacity duration-500 group-hover:opacity-0" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                  <figcaption className="absolute inset-x-0 bottom-0 p-4">
+                    <span className="inline-block h-[3px] w-8 bg-[#0498b4]" />
+                    <span className="mt-2 block text-[12px] font-bold uppercase leading-tight tracking-[0.04em] text-white">
+                      {item.title}
+                    </span>
+                  </figcaption>
+                </figure>
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      <section id="fabricacion" className="border-b border-white/10 bg-white text-slate-950">
+        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8 md:py-20">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Fabricación</p>
+              <h2 className="mt-3 max-w-2xl font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-4xl">
+                Del perfil a la estructura, en planta propia
+              </h2>
+            </div>
+            <p className="max-w-sm text-sm font-semibold leading-6 text-slate-600">
+              Cada mesa M24 se corta, punzona, suelda y ensambla con control de calidad y
+              trazabilidad en cada etapa.
+            </p>
+          </div>
+
+          <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {fabricacion.map((step) => (
+              <li
+                key={step.num}
+                className="group relative aspect-[3/4] overflow-hidden rounded-[16px] bg-neutral-900 shadow-[0_18px_44px_rgba(15,23,42,0.14)] ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_60px_rgba(4,152,180,0.22)]"
+              >
+                <Image
+                  src={resolveImage(step.slot, siteImages)}
+                  alt={`${step.title} — proceso de fabricación de la estructura M24`}
+                  fill
+                  sizes="(min-width: 1024px) 340px, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover brightness-[0.82] contrast-[1.12] saturate-[0.8] grayscale-[0.35] transition-all duration-500 group-hover:scale-[1.06] group-hover:brightness-100 group-hover:grayscale-0 group-hover:saturate-100"
+                />
+                <div className="absolute inset-0 bg-[#0b3947] opacity-30 mix-blend-color transition-opacity duration-500 group-hover:opacity-0" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/10" />
+                <span className="absolute right-4 top-4 font-[family:var(--font-display)] text-4xl font-black leading-none text-white/25 transition-colors group-hover:text-[#0498b4]/70">
+                  {step.num}
+                </span>
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <span className="inline-block h-[3px] w-8 bg-[#0498b4]" />
+                  <h3 className="mt-3 text-base font-black uppercase tracking-[0.02em] text-white">{step.title}</h3>
+                  <p className="mt-1.5 text-[12px] font-semibold leading-[1.45] text-white/70">{step.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <a
+            href="#durabilidad"
+            className="mt-8 inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.12em] text-[#0498b4] transition-colors hover:text-[#03809a]"
+          >
+            Luego, galvanizado por inmersión en caliente <span aria-hidden="true">→</span>
+          </a>
         </div>
       </section>
 

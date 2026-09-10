@@ -376,14 +376,16 @@ export default function ProductoDetallePage() {
         </div>
 
         <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr] xl:items-start">
-          <div className={`rounded-[2rem] border bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)] ${isRed ? "border-slate-200" : "border-black/8"}`}>
+          <div className={`order-1 rounded-[2rem] border bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)] xl:col-start-1 xl:row-start-1 ${isRed ? "border-slate-200" : "border-black/8"}`}>
             <ProductImageGallery
               key={producto.slug}
               nombre={producto.nombre}
               images={galleryImages.map((image) => (image === "/hero-unipars.jpg" ? FALLBACK_PRODUCT_IMAGE[productDivision] : image))}
               accent={cartAccent}
             />
+          </div>
 
+          <div className="order-3 xl:col-start-1 xl:row-start-2">
             {producto.descripcion && (
               <div className={`mt-6 overflow-hidden rounded-[1.2rem] border ${isRed ? "border-slate-200" : "border-black/8"}`}>
                 <div className={`flex items-center justify-between border-b px-6 py-4 ${isRed ? "border-slate-200 bg-[#f8f8f7]" : "border-black/8 bg-[#f8f8f7]"}`}>
@@ -447,7 +449,7 @@ export default function ProductoDetallePage() {
             </div>
           </div>
 
-          <div className="order-first space-y-5 rounded-[10px] border border-slate-200 bg-white p-8 shadow-[0_14px_36px_rgba(15,23,42,0.07)] xl:order-none">
+          <div className="order-2 space-y-5 rounded-[10px] border border-slate-200 bg-white p-8 shadow-[0_14px_36px_rgba(15,23,42,0.07)] xl:col-start-2 xl:row-start-1 xl:row-span-2">
             <div className="flex items-start justify-between gap-6">
               <div>
                 <p className={`text-[11px] font-black uppercase tracking-[0.12em] ${accentTextClass}`}>

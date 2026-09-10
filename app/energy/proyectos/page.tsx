@@ -5,6 +5,7 @@ import EnergyHeader from "../energy-header";
 import EngineeringModelViewer from "../engineering-model-viewer";
 import GusChat from "../gus-chat";
 import SiteFooter from "../../components/site-footer";
+import { ResponsiveBanner } from "../../components/responsive-banner";
 import { getSiteImages, resolveImage, type SiteImages } from "@/lib/site-images";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
 import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
@@ -269,12 +270,14 @@ export default async function EnergyProyectosPage() {
       </section>
 
       <section className="relative overflow-hidden bg-black">
-        <Image
-          src={resolveImage("energy-estructuras-banner", siteImages)}
+        <ResponsiveBanner
+          imageKey="energy-estructuras-banner"
+          mobileImageKey="energy-estructuras-banner-movil"
           alt="Estructuras solares diseñadas para sostener el futuro"
+          siteImages={siteImages}
           width={2400}
           height={800}
-          className="h-auto w-full object-cover"
+          className="object-cover"
         />
       </section>
 

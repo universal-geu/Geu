@@ -129,7 +129,7 @@ export default async function InnovationPage() {
         </div>
 
         <div className="relative z-10 border-t border-white/10 bg-black/55 backdrop-blur-sm">
-          <div className="mx-auto grid max-w-[1500px] grid-cols-4 gap-x-6 gap-y-8 px-5 py-7 max-[560px]:grid-cols-2 md:px-8">
+          <div className="mx-auto grid max-w-[1500px] grid-cols-4 gap-x-6 gap-y-8 px-5 pb-24 pt-7 max-[560px]:grid-cols-2 md:px-8 md:pb-7">
             {heroStats.map((stat) => (
               <div key={stat.label} className="flex items-center gap-3">
                 <stat.icon />
@@ -168,7 +168,7 @@ export default async function InnovationPage() {
       </section>
 
       <section id="sistema" className="relative overflow-hidden border-b border-white/10 bg-black">
-        <div className="relative mx-auto aspect-[1672/941] w-full max-w-[1920px]">
+        <div className="relative mx-auto aspect-[4/5] w-full max-w-[1920px] sm:aspect-[3/2] md:aspect-[1672/941]">
           <Image
             src={resolveImage("innovation-sistema-banner", siteImages)}
             alt="Asistente GEU Innovation junto a un punto inteligente, listo para dar soporte"
@@ -178,7 +178,7 @@ export default async function InnovationPage() {
           />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.02)_26%,rgba(0,0,0,0.02)_66%,rgba(0,0,0,0.78)_100%)]" />
 
-          <div className="absolute inset-0 flex items-center pb-24 md:pb-28">
+          <div className="absolute inset-0 flex items-center pb-6 sm:pb-16 md:pb-28">
             <div className="mx-auto w-full max-w-[1500px] px-5 md:px-8">
               <div className="max-w-md">
                 <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">
