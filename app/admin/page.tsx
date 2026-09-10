@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProducts } from "../components/products-provider";
 import CategoryComboBox from "./category-combobox";
+import MultiCategoryComboBox from "./multi-category-combobox";
 import {
   cauchosCategorySubcategories,
   getCategoriasForDivision,
@@ -21,6 +22,7 @@ import {
   type ProductoEspecificacion,
 } from "../data/catalog";
 import type { InventoryMovementSummary, StoreProduct } from "@/lib/products";
+import { expandProductCategoryViews } from "@/lib/product-category-views";
 import type { DashboardMetrics, SalesReport, ShippingStatus } from "@/lib/orders";
 import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
@@ -214,15 +216,33 @@ function createAdditionalCategoryItem(
   };
 }
 
+type DivisionCategoriaFormItem = {
+  division: DivisionName;
+  categorias: string[];
+  subcategorias: string[];
+  categoriasMenores: string[];
+};
+
+function createDivisionCategoriaItem(
+  entry: Partial<DivisionCategoriaFormItem> & { division: DivisionName },
+): DivisionCategoriaFormItem {
+  return {
+    division: entry.division,
+    categorias: entry.categorias || [],
+    subcategorias: entry.subcategorias || [],
+    categoriasMenores: entry.categoriasMenores || [],
+  };
+}
+
 type FormState = {
   sku: string;
   oemReferencia: string;
   referenciasAlternas: string;
   categoria: string;
-  subcategoria: string;
-  categoriaMenor: string;
+  subcategorias: string[];
+  categoriasMenores: string[];
   categoriasAdicionales: AdditionalCategoryFormItem[];
-  divisionesAdicionales: DivisionName[];
+  categoriasPorDivision: DivisionCategoriaFormItem[];
   nombre: string;
   marca: string;
   precioValor: string;
@@ -243,10 +263,10 @@ const initialState: FormState = {
   oemReferencia: "",
   referenciasAlternas: "",
   categoria: "",
-  subcategoria: "",
-  categoriaMenor: "",
+  subcategorias: [],
+  categoriasMenores: [],
   categoriasAdicionales: [],
-  divisionesAdicionales: [],
+  categoriasPorDivision: [],
   nombre: "",
   marca: "",
   precioValor: "",
@@ -1018,14 +1038,25 @@ function VariantesEditor({
   );
 }
 
+function productSubcategoriesList(product: StoreProduct) {
+  return product.subcategorias?.length
+    ? product.subcategorias
+    : [product.subcategoria].filter((v): v is string => Boolean(v));
+}
+
+function productMinorCategoriesList(product: StoreProduct) {
+  return product.categoriasMenores?.length
+    ? product.categoriasMenores
+    : [product.categoriaMenor].filter((v): v is string => Boolean(v));
+}
+
 function getSubcategoryOptionsFor(categoria: string, adminProducts: StoreProduct[]) {
   const normalizedCategoria = normalizeMatchKey(categoria);
   const menuGroups = cauchosCategorySubcategories[categoria] ?? [];
   const fromMenu = menuGroups.map((group) => group.name);
   const fromProducts = adminProducts
     .filter((product) => normalizeMatchKey(product.categoria) === normalizedCategoria)
-    .map((product) => product.subcategoria)
-    .filter((value): value is string => Boolean(value));
+    .flatMap(productSubcategoriesList);
 
   return Array.from(new Set([...fromMenu, ...fromProducts]));
 }
@@ -1044,10 +1075,12 @@ function getCategoriaMenorOptionsFor(
     .filter(
       (product) =>
         normalizeMatchKey(product.categoria) === normalizedCategoria &&
-        normalizeMatchKey(product.subcategoria) === normalizedSubcategoria,
+        (!normalizedSubcategoria ||
+          productSubcategoriesList(product).some(
+            (value) => normalizeMatchKey(value) === normalizedSubcategoria,
+          )),
     )
-    .map((product) => product.categoriaMenor)
-    .filter((value): value is string => Boolean(value));
+    .flatMap(productMinorCategoriesList);
 
   return Array.from(new Set([...fromMenu, ...fromProducts]));
 }
@@ -1160,12 +1193,14 @@ const SELLABLE_DIVISIONS: DivisionName[] = ["Cauchos", "Import", "Plastic", "Ene
 
 function AdditionalDivisionsEditor({
   currentDivision,
-  value,
+  items,
+  allProducts,
   onChange,
 }: {
   currentDivision: DivisionName;
-  value: DivisionName[];
-  onChange: (value: DivisionName[]) => void;
+  items: DivisionCategoriaFormItem[];
+  allProducts: StoreProduct[];
+  onChange: (items: DivisionCategoriaFormItem[]) => void;
 }) {
   const options = SELLABLE_DIVISIONS.filter((division) => division !== currentDivision);
 
@@ -1173,9 +1208,20 @@ function AdditionalDivisionsEditor({
 
   const toggle = (division: DivisionName) => {
     onChange(
-      value.includes(division)
-        ? value.filter((item) => item !== division)
-        : [...value, division],
+      items.some((item) => item.division === division)
+        ? items.filter((item) => item.division !== division)
+        : [...items, createDivisionCategoriaItem({ division })],
+    );
+  };
+
+  const updateItem = (
+    division: DivisionName,
+    patch: Partial<Omit<DivisionCategoriaFormItem, "division">>,
+  ) => {
+    onChange(
+      items.map((item) =>
+        item.division === division ? { ...item, ...patch } : item,
+      ),
     );
   };
 
@@ -1186,6 +1232,7 @@ function AdditionalDivisionsEditor({
       </p>
       <p className="mt-2 text-xs leading-6 text-[#6e7379]">
         Márcalas si este mismo producto debe aparecer también en el catálogo de esas empresas, sin duplicarlo.
+        Elige en qué categoría de esa empresa debe aparecer.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-3">
@@ -1196,13 +1243,88 @@ function AdditionalDivisionsEditor({
           >
             <input
               type="checkbox"
-              checked={value.includes(division)}
+              checked={items.some((item) => item.division === division)}
               onChange={() => toggle(division)}
             />
             {DIVISION_BRAND[division].label}
           </label>
         ))}
       </div>
+
+      {items.length > 0 && (
+        <div className="mt-4 space-y-4">
+          {items.map((item) => {
+            const isCauchos = item.division === "Cauchos";
+            // Sugerencias tomadas del catálogo REAL de la empresa destino
+            // (no de la empresa que se está editando).
+            const targetViews = isCauchos
+              ? expandProductCategoryViews(allProducts, item.division)
+              : [];
+            const subcategoryOptionsForItem = Array.from(
+              new Set(
+                (item.categorias.length ? item.categorias : [""]).flatMap((categoria) =>
+                  getSubcategoryOptionsFor(categoria, targetViews),
+                ),
+              ),
+            );
+            const minorOptionsForItem = Array.from(
+              new Set(
+                (item.categorias.length ? item.categorias : [""]).flatMap((categoria) =>
+                  (item.subcategorias.length ? item.subcategorias : [""]).flatMap((subcategoria) =>
+                    getCategoriaMenorOptionsFor(categoria, subcategoria, targetViews),
+                  ),
+                ),
+              ),
+            );
+            return (
+              <div
+                key={item.division}
+                className="rounded-[1.25rem] border border-black/8 bg-white p-4"
+              >
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#6e7379]">
+                  {DIVISION_BRAND[item.division].label}
+                </p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <MultiCategoryComboBox
+                    label={`Categorías en ${DIVISION_BRAND[item.division].label}`}
+                    name={`categoriaDivision-${item.division}`}
+                    value={item.categorias}
+                    options={getCategoriasForDivision(item.division)}
+                    placeholder="Elige una o varias"
+                    entityName="categoría"
+                    strict={!isCauchos}
+                    onChange={(value) => updateItem(item.division, { categorias: value })}
+                  />
+
+                  {isCauchos && (
+                    <>
+                      <MultiCategoryComboBox
+                        label="Sub categorías"
+                        name={`subcategoriaDivision-${item.division}`}
+                        value={item.subcategorias}
+                        options={subcategoryOptionsForItem}
+                        entityName="subcategoría"
+                        onChange={(value) => updateItem(item.division, { subcategorias: value })}
+                      />
+
+                      <MultiCategoryComboBox
+                        label="Categorías menores"
+                        name={`categoriaMenorDivision-${item.division}`}
+                        value={item.categoriasMenores}
+                        options={minorOptionsForItem}
+                        entityName="categoría menor"
+                        onChange={(value) =>
+                          updateItem(item.division, { categoriasMenores: value })
+                        }
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1212,6 +1334,19 @@ function splitCommaSeparatedValues(value: string) {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+// Trim, drop empties, dedupe (case-insensitive) — for multi-select lists.
+function cleanList(values: string[]) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const trimmed = value.trim();
+    if (!trimmed || seen.has(trimmed.toLowerCase())) continue;
+    seen.add(trimmed.toLowerCase());
+    result.push(trimmed);
+  }
+  return result;
 }
 
 function SidebarIconShell({ children }: { children: React.ReactNode }) {
@@ -1738,29 +1873,32 @@ export default function AdminPage() {
     const fromMenu = menuGroups.map((group) => group.name);
     const fromProducts = adminProducts
       .filter((product) => normalizeMatchKey(product.categoria) === normalizedCategoria)
-      .map((product) => product.subcategoria)
+      .flatMap((product) => product.subcategorias || [product.subcategoria])
       .filter((value): value is string => Boolean(value));
 
     return Array.from(new Set([...fromMenu, ...fromProducts]));
   }, [adminProducts, form.categoria]);
   const categoriaMenorOptions = useMemo(() => {
     const normalizedCategoria = normalizeMatchKey(form.categoria);
-    const normalizedSubcategoria = normalizeMatchKey(form.subcategoria);
+    const selectedSubcategorias = new Set(form.subcategorias.map(normalizeMatchKey));
     const menuGroups = cauchosCategorySubcategories[form.categoria] ?? [];
-    const fromMenu =
-      menuGroups.find((group) => normalizeMatchKey(group.name) === normalizedSubcategoria)
-        ?.items ?? [];
+    const fromMenu = menuGroups
+      .filter((group) => selectedSubcategorias.has(normalizeMatchKey(group.name)))
+      .flatMap((group) => group.items);
     const fromProducts = adminProducts
       .filter(
         (product) =>
           normalizeMatchKey(product.categoria) === normalizedCategoria &&
-          normalizeMatchKey(product.subcategoria) === normalizedSubcategoria,
+          (selectedSubcategorias.size === 0 ||
+            (product.subcategorias || [product.subcategoria]).some(
+              (value) => value && selectedSubcategorias.has(normalizeMatchKey(value)),
+            )),
       )
-      .map((product) => product.categoriaMenor)
+      .flatMap((product) => product.categoriasMenores || [])
       .filter((value): value is string => Boolean(value));
 
     return Array.from(new Set([...fromMenu, ...fromProducts]));
-  }, [adminProducts, form.categoria, form.subcategoria]);
+  }, [adminProducts, form.categoria, form.subcategorias]);
   const stockAlerts = useMemo(() => {
     const divisionProducts = adminProducts.filter((product) => product.division === adminDivision);
     return {
@@ -2071,6 +2209,18 @@ export default function AdminPage() {
     setToast(null);
     const isEditing = Boolean(editingSlug);
 
+    const divisionSinCategoria = form.categoriasPorDivision.find(
+      (item) => cleanList(item.categorias).length === 0,
+    );
+    if (divisionSinCategoria) {
+      setIsSavingProduct(false);
+      const label = DIVISION_BRAND[divisionSinCategoria.division].label;
+      const message = `Elige al menos una categoría de ${label} para este producto.`;
+      setRequestError(message);
+      setToast({ tone: "error", message });
+      return;
+    }
+
     if (!editingSlug && !selectedImage) {
       setIsSavingProduct(false);
       setRequestError("Selecciona una imagen para el producto.");
@@ -2144,19 +2294,27 @@ export default function AdminPage() {
         oemReferencia: form.oemReferencia,
         referenciasAlternas: splitCommaSeparatedValues(form.referenciasAlternas),
         categoria: form.categoria,
-        subcategoria: form.subcategoria,
-        categoriaMenor: form.categoriaMenor,
+        subcategorias: cleanList(form.subcategorias),
+        categoriasMenores: cleanList(form.categoriasMenores),
         categoriasAdicionales: form.categoriasAdicionales
           .filter((item) => item.categoria.trim())
           .map((item) => ({
             categoria: item.categoria.trim(),
-            subcategoria: item.subcategoria.trim() || undefined,
-            categoriaMenor: item.categoriaMenor.trim() || undefined,
+            subcategorias: item.subcategoria.trim() ? [item.subcategoria.trim()] : undefined,
+            categoriasMenores: item.categoriaMenor.trim() ? [item.categoriaMenor.trim()] : undefined,
           })),
         nombre: form.nombre,
         marca: form.marca,
         division: adminDivision,
-        divisionesAdicionales: form.divisionesAdicionales,
+        divisionesAdicionales: form.categoriasPorDivision.map((item) => item.division),
+        categoriasPorDivision: form.categoriasPorDivision.flatMap((item) =>
+          cleanList(item.categorias).map((categoria) => ({
+            division: item.division,
+            categoria,
+            subcategorias: cleanList(item.subcategorias),
+            categoriasMenores: cleanList(item.categoriasMenores),
+          })),
+        ),
         precioValor: isServiceAdmin ? 1 : Number(form.precioValor),
         precioAnteriorValor: isServiceAdmin
           ? 1
@@ -2247,12 +2405,30 @@ export default function AdminPage() {
       oemReferencia: product.oemReferencia || "",
       referenciasAlternas: (product.referenciasAlternas || []).join(", "),
       categoria: product.categoria,
-      subcategoria: product.subcategoria || "",
-      categoriaMenor: product.categoriaMenor || "",
+      subcategorias: product.subcategorias?.length
+        ? product.subcategorias
+        : [product.subcategoria].filter((v): v is string => Boolean(v)),
+      categoriasMenores: product.categoriasMenores?.length
+        ? product.categoriasMenores
+        : [product.categoriaMenor].filter((v): v is string => Boolean(v)),
       categoriasAdicionales: (product.categoriasAdicionales || []).map((entry) =>
-        createAdditionalCategoryItem(entry),
+        createAdditionalCategoryItem({
+          categoria: entry.categoria,
+          subcategoria: entry.subcategorias?.[0] || "",
+          categoriaMenor: entry.categoriasMenores?.[0] || "",
+        }),
       ),
-      divisionesAdicionales: product.divisionesAdicionales || [],
+      categoriasPorDivision: (product.divisionesAdicionales || []).map((division) => {
+        const entries = (product.categoriasPorDivision || []).filter(
+          (entry) => entry.division === division,
+        );
+        return createDivisionCategoriaItem({
+          division,
+          categorias: cleanList(entries.map((entry) => entry.categoria)),
+          subcategorias: cleanList(entries.flatMap((entry) => entry.subcategorias || [])),
+          categoriasMenores: cleanList(entries.flatMap((entry) => entry.categoriasMenores || [])),
+        });
+      }),
       nombre: product.nombre,
       marca: product.marca,
       precioValor: String(product.precioValor),
@@ -3821,6 +3997,14 @@ export default function AdminPage() {
                 >
                   Ver sitio
                 </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  aria-label="Cerrar sesión"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition-colors duration-200 hover:bg-red-100 md:hidden"
+                >
+                  <LogoutIcon />
+                </button>
               </div>
             </div>
 
@@ -3851,13 +4035,6 @@ export default function AdminPage() {
                   className="flex min-w-max items-center border-b-2 border-transparent px-3 py-3 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700 transition-colors duration-200"
                 >
                   Catálogo
-                </button>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex min-w-max items-center border-b-2 border-transparent px-3 py-3 text-[11px] font-black uppercase tracking-[0.04em] text-red-600 transition-colors duration-200"
-                >
-                  Cerrar sesión
                 </button>
               </div>
             </nav>
@@ -4149,24 +4326,24 @@ export default function AdminPage() {
 
                   {adminDivision !== "Import" && adminDivision !== "Plastic" && adminDivision !== "Energy" && (
                     <>
-                      <CategoryComboBox
-                        label="Sub categoría"
+                      <MultiCategoryComboBox
+                        label="Sub categorías"
                         name="subcategoria"
-                        value={form.subcategoria}
+                        value={form.subcategorias}
                         options={subcategoryOptions}
                         placeholder="Ej. O-rings, Neopreno, EPDM"
                         entityName="subcategoría"
-                        onChange={(value) => setForm((current) => ({ ...current, subcategoria: value }))}
+                        onChange={(value) => setForm((current) => ({ ...current, subcategorias: value }))}
                       />
 
-                      <CategoryComboBox
-                        label="Categoría menor"
+                      <MultiCategoryComboBox
+                        label="Categorías menores"
                         name="categoriaMenor"
-                        value={form.categoriaMenor}
+                        value={form.categoriasMenores}
                         options={categoriaMenorOptions}
                         placeholder="Ej. Pintura para interior"
                         entityName="categoría menor"
-                        onChange={(value) => setForm((current) => ({ ...current, categoriaMenor: value }))}
+                        onChange={(value) => setForm((current) => ({ ...current, categoriasMenores: value }))}
                       />
                     </>
                   )}
@@ -4182,8 +4359,9 @@ export default function AdminPage() {
                   {!isServiceAdmin && (
                     <AdditionalDivisionsEditor
                       currentDivision={adminDivision}
-                      value={form.divisionesAdicionales}
-                      onChange={(value) => setForm((current) => ({ ...current, divisionesAdicionales: value }))}
+                      items={form.categoriasPorDivision}
+                      allProducts={allAdminProducts}
+                      onChange={(items) => setForm((current) => ({ ...current, categoriasPorDivision: items }))}
                     />
                   )}
 
@@ -4716,24 +4894,24 @@ export default function AdminPage() {
 
                     {adminDivision !== "Import" && adminDivision !== "Plastic" && adminDivision !== "Energy" && (
                       <>
-                        <CategoryComboBox
-                          label="Sub categoría"
+                        <MultiCategoryComboBox
+                          label="Sub categorías"
                           name="subcategoria"
-                          value={form.subcategoria}
+                          value={form.subcategorias}
                           options={subcategoryOptions}
                           placeholder="Ej. O-rings, Neopreno, EPDM"
                           entityName="subcategoría"
-                          onChange={(value) => setForm((current) => ({ ...current, subcategoria: value }))}
+                          onChange={(value) => setForm((current) => ({ ...current, subcategorias: value }))}
                         />
 
-                        <CategoryComboBox
-                          label="Categoría menor"
+                        <MultiCategoryComboBox
+                          label="Categorías menores"
                           name="categoriaMenor"
-                          value={form.categoriaMenor}
+                          value={form.categoriasMenores}
                           options={categoriaMenorOptions}
                           placeholder="Ej. Pintura para interior"
                           entityName="categoría menor"
-                          onChange={(value) => setForm((current) => ({ ...current, categoriaMenor: value }))}
+                          onChange={(value) => setForm((current) => ({ ...current, categoriasMenores: value }))}
                         />
                       </>
                     )}
@@ -4749,8 +4927,9 @@ export default function AdminPage() {
                     {!isServiceAdmin && (
                       <AdditionalDivisionsEditor
                         currentDivision={adminDivision}
-                        value={form.divisionesAdicionales}
-                        onChange={(value) => setForm((current) => ({ ...current, divisionesAdicionales: value }))}
+                        items={form.categoriasPorDivision}
+                        allProducts={allAdminProducts}
+                        onChange={(items) => setForm((current) => ({ ...current, categoriasPorDivision: items }))}
                       />
                     )}
 

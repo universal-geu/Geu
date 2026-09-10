@@ -6,6 +6,7 @@ import CauchosHeader from "../components/cauchos-header";
 import CauchosTechnicalForm from "../components/cauchos-technical-form";
 import HeroVideo from "../components/hero-video";
 import { BrandFeaturedSection } from "../components/brand-promo-sections";
+import { ResponsiveBanner } from "../components/responsive-banner";
 import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
@@ -381,23 +382,30 @@ export default async function CauchosPage() {
       </section>
 
       <section className="mx-auto max-w-[1632px] px-5 pb-10 md:px-8">
-        <Image
-          src={resolveImage("banner-marcas-promo", siteImages)}
+        <ResponsiveBanner
+          imageKey="banner-marcas-promo"
+          mobileImageKey="banner-marcas-promo-movil"
           alt="Promociones y marcas destacadas"
-          width={2048}
-          height={768}
-          className="h-auto w-full rounded-[10px] border border-slate-200 shadow-[0_18px_44px_rgba(15,23,42,0.12)]"
+          siteImages={siteImages}
+          className="rounded-[10px] border border-slate-200 shadow-[0_18px_44px_rgba(15,23,42,0.12)]"
         />
       </section>
 
       <section className="bg-white px-5 py-8 md:px-8">
         <div className="mx-auto max-w-[1632px] overflow-hidden rounded-[8px] border border-slate-200 shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
           <Image
+            src={resolveImage("banner-cierre-movil", siteImages)}
+            alt="Cierre Universal de Cauchos"
+            width={800}
+            height={360}
+            className="block h-auto w-full md:hidden"
+          />
+          <Image
             src={resolveImage("banner-categorias", siteImages)}
             alt="Cierre Universal de Cauchos"
             width={1920}
             height={217}
-            className="h-[118px] w-full object-cover md:h-[150px]"
+            className="hidden h-[150px] w-full object-cover md:block"
           />
         </div>
       </section>

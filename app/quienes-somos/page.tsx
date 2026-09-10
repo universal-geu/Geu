@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import SiteFooter from "../components/site-footer";
+import NosotrosMobileNav from "./nosotros-mobile-nav";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 
@@ -62,7 +63,7 @@ export default async function QuienesSomosPage() {
   return (
     <main className="min-h-screen bg-white text-[#071832]">
       <header className="absolute inset-x-0 top-0 z-20">
-        <div className="mx-auto flex max-w-[1720px] items-center justify-between px-7 py-8 md:px-12">
+        <div className="relative mx-auto flex max-w-[1720px] items-center justify-between px-7 py-8 md:px-12">
           <Link href="/" className="flex items-center">
             <Image
               src="/home-geu-logo.png"
@@ -87,26 +88,28 @@ export default async function QuienesSomosPage() {
               </Link>
             ))}
           </nav>
+
+          <NosotrosMobileNav navItems={navItems} />
         </div>
       </header>
 
-      <section className="relative min-h-[760px] overflow-hidden bg-[#f8fafc] pt-28 md:min-h-[820px]">
+      <section className="relative overflow-hidden bg-[#f8fafc] pt-28 md:min-h-[820px]">
         <Image
           src={resolveImage("geu-nosotros-hero", siteImages)}
           alt="Logo tridimensional GEU en pared blanca"
           width={1962}
           height={802}
           priority
-          className="absolute inset-0 h-full w-full object-cover object-center"
+          className="relative block h-64 w-full object-cover object-[78%_38%] sm:h-80 md:absolute md:inset-0 md:h-full md:object-center"
         />
 
-        <div className="relative z-10 mx-auto flex min-h-[650px] max-w-[1720px] items-center px-7 md:px-12">
-          <div className="max-w-[520px] pt-16">
+        <div className="relative z-10 mx-auto max-w-[1720px] px-7 py-10 md:flex md:min-h-[650px] md:items-center md:px-12 md:py-0">
+          <div className="max-w-[520px] md:pt-16">
             <p className="text-xs font-black uppercase tracking-[0.14em] text-[#075ed8]">
               Nosotros
             </p>
             <span className="mt-3 block h-[2px] w-16 bg-[#075ed8]" />
-            <h1 className="mt-8 text-[clamp(3rem,5vw,5.7rem)] font-black leading-[0.95] tracking-[-0.04em]">
+            <h1 className="mt-8 text-[clamp(2.4rem,5vw,5.7rem)] font-black leading-[0.95] tracking-[-0.04em]">
               {heroTitleLines[0]}
               {heroTitleLines[1] && <span className="block text-black">{heroTitleLines[1]}</span>}
             </h1>

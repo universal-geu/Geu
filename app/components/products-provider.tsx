@@ -16,20 +16,25 @@ import {
 } from "../data/catalog";
 import type { StoreProduct } from "@/lib/products";
 import { DIVISION_BRAND, isServiceDivision, type DivisionName } from "@/lib/divisions";
-import type { ProductoCategoriaAdicional, ProductoVariante } from "../data/catalog";
+import type {
+  ProductoCategoriaAdicional,
+  ProductoDivisionCategoria,
+  ProductoVariante,
+} from "../data/catalog";
 
 export type AdminProductInput = {
   sku?: string;
   oemReferencia?: string;
   referenciasAlternas?: string[];
   categoria: string;
-  subcategoria?: string;
-  categoriaMenor?: string;
+  subcategorias?: string[];
+  categoriasMenores?: string[];
   categoriasAdicionales?: ProductoCategoriaAdicional[];
   nombre: string;
   marca: string;
   division: DivisionName;
   divisionesAdicionales?: DivisionName[];
+  categoriasPorDivision?: ProductoDivisionCategoria[];
   precioValor: number;
   precioAnteriorValor: number;
   displayPriceOverride?: string;
@@ -114,13 +119,16 @@ function createLocalProduct(
     oemReferencia: input.oemReferencia?.trim() || undefined,
     referenciasAlternas: input.referenciasAlternas || [],
     categoria: input.categoria,
-    subcategoria: input.subcategoria?.trim() || undefined,
-    categoriaMenor: input.categoriaMenor?.trim() || undefined,
+    subcategoria: input.subcategorias?.[0]?.trim() || undefined,
+    categoriaMenor: input.categoriasMenores?.[0]?.trim() || undefined,
+    subcategorias: (input.subcategorias || []).map((v) => v.trim()).filter(Boolean),
+    categoriasMenores: (input.categoriasMenores || []).map((v) => v.trim()).filter(Boolean),
     categoriasAdicionales: input.categoriasAdicionales || [],
     nombre: input.nombre.trim(),
     marca: input.marca.trim(),
     division: input.division,
     divisionesAdicionales: input.divisionesAdicionales || [],
+    categoriasPorDivision: input.categoriasPorDivision || [],
     displayPriceOverride: input.displayPriceOverride?.trim() || undefined,
     displaySecondaryLabel: input.displaySecondaryLabel?.trim() || undefined,
     precio: input.displayPriceOverride?.trim() || formatearMoneda(precioValor),

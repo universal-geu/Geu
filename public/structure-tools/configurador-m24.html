@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEU Structure — Configurador de estructuras M24</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --geu:#1FA0BD; --geu-d:#14687B; --geu-dd:#0B4450; --geu-l:#E5F3F7; --geu-l2:#F2FAFC;
+    --ink:#1c1c1e; --ink2:#5b5f66; --ink3:#8a9099;
+    --line:#E7EAEE; --line2:#D7DCE2; --sheet:#F6F8FA; --panel:#FFFFFF;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 12px 32px -12px rgba(16,24,40,.12);
+    --shadow-lg:0 1px 3px rgba(16,24,40,.06), 0 24px 56px -20px rgba(11,68,80,.28);
+    --sans:'Manrope','Montserrat',-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    --disp:'Montserrat',var(--sans);
+  }
+  *{box-sizing:border-box;}
+  :root{ --top:46px; --hud-w:440px; --sheet-h:52vh; }
+  html,body{height:100%;}
+  body{
+    margin:0; padding:0; overflow:hidden;
+    font-family:var(--sans); font-size:15px; line-height:1.6; color:var(--ink);
+    background:radial-gradient(135% 105% at 26% -5%, #0b2735 0%, #061a26 42%, #030f16 100%);
+    -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums;
+  }
+
+  /* ---------- escena 3D a pantalla completa ---------- */
+  #mesa3d{
+    position:fixed; top:var(--top); left:0;
+    width:calc(100vw - var(--hud-w));
+    height:calc(100vh - var(--top)); height:calc(100dvh - var(--top));
+    display:block; z-index:0; touch-action:none;
+  }
+  .stage-ui{
+    position:fixed; top:var(--top); left:0;
+    width:calc(100vw - var(--hud-w));
+    height:calc(100vh - var(--top)); height:calc(100dvh - var(--top));
+    z-index:5; pointer-events:none;
+  }
+  .stage-ui > *{pointer-events:auto;}
+  .mv-hint{
+    position:absolute; left:20px; top:18px; font-size:9px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    color:rgba(255,255,255,.7); background:rgba(4,20,25,.55); border:1px solid rgba(255,255,255,.12);
+    border-radius:999px; padding:7px 13px; backdrop-filter:blur(6px);
+  }
+  .fs-btn{
+    position:absolute; right:20px; top:16px; display:inline-flex; align-items:center; gap:8px;
+    background:rgba(4,20,25,.6); border:1px solid rgba(255,255,255,.16); color:#fff;
+    font:800 10px/1 var(--sans); letter-spacing:.08em; text-transform:uppercase; padding:9px 14px;
+    border-radius:10px; cursor:pointer; backdrop-filter:blur(6px); transition:border-color .15s ease, color .15s ease;
+  }
+  .fs-btn:hover{border-color:var(--geu); color:#5fd0e6;}
+  .mv-badge{
+    position:absolute; left:20px; bottom:20px; display:flex; align-items:center; gap:11px;
+    background:rgba(4,20,25,.62); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.14);
+    border-radius:12px; padding:10px 14px; color:#fff;
+  }
+  .mv-badge .mv-lbl{font-family:var(--disp); font-weight:800; font-size:15px; letter-spacing:-.01em;}
+  .mv-badge .mv-lbl small{display:block; font-size:8.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:#9fd8e4; margin-top:2px;}
+  .mv-loader{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:11px;
+    font-size:10px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:rgba(255,255,255,.72);
+    transition:opacity .5s ease; pointer-events:none;
+  }
+  .stage-ui.ready .mv-loader{opacity:0;}
+  .mv-loader .dot{width:9px; height:9px; border-radius:50%; background:#3fc9e4; box-shadow:0 0 16px #3fc9e4; animation:mvpulse 1s ease-in-out infinite;}
+  @keyframes mvpulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.3;transform:scale(.65);}}
+
+  /* ---------- panel lateral (HUD) ---------- */
+  .hud{
+    position:fixed; top:var(--top); right:0; bottom:0; width:var(--hud-w); z-index:10;
+    overflow-y:auto; overscroll-behavior:contain;
+    background:var(--panel); color:var(--ink);
+    border-left:1px solid var(--line);
+    box-shadow:-24px 0 60px -24px rgba(3,15,22,.55);
+    padding:24px 26px 40px;
+  }
+  .hud::-webkit-scrollbar{width:9px;}
+  .hud::-webkit-scrollbar-thumb{background:var(--line2); border-radius:9px;}
+  .hud-head{margin-bottom:8px;}
+  .hud-head .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; font-size:9.5px; letter-spacing:.2em;
+    color:var(--geu-d); font-weight:800; text-transform:uppercase; margin-bottom:9px;
+  }
+  .hud-head .eyebrow::before{content:""; width:22px; height:2px; background:var(--geu);}
+  .hud-head h1{margin:0; font-family:var(--disp); font-weight:800; font-size:24px; letter-spacing:-.02em; color:var(--ink);}
+  .hud-head p{margin:8px 0 0; font-size:12px; color:var(--ink2); line-height:1.55;}
+
+  h2{
+    font-family:var(--disp); font-size:11.5px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
+    color:var(--geu-d); margin:30px 0 14px; display:flex; align-items:center; gap:10px;
+  }
+  h2::before{content:""; width:7px; height:7px; border-radius:2px; background:var(--geu); flex:none; transform:rotate(45deg);}
+  h2::after{content:""; flex:1; height:1px; background:var(--line2);}
+
+  /* tarjetas de modulación */
+  .cards{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .card{
+    position:relative; display:flex; flex-direction:column; align-items:center; gap:5px;
+    border:1px solid var(--line); border-radius:12px; padding:14px 10px 12px; text-align:center;
+    cursor:pointer; background:var(--panel); box-shadow:var(--shadow); transition:all .15s ease;
+  }
+  .card:hover{border-color:var(--geu); transform:translateY(-2px); box-shadow:var(--shadow-lg);}
+  .card.on{border-color:var(--geu); box-shadow:0 0 0 1.5px var(--geu), var(--shadow-lg); background:linear-gradient(180deg,var(--geu-l2),#fff);}
+  .card.on::after{
+    content:"\2713"; position:absolute; top:7px; right:7px; width:16px; height:16px; border-radius:50%;
+    background:var(--geu); color:#fff; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;
+  }
+  .card .grid-prev{height:24px; display:flex; align-items:center;}
+  .card .grid-prev svg rect{fill:var(--geu) !important;}
+  .card b{font-family:var(--disp); font-size:16px; font-weight:800; letter-spacing:-.01em; color:var(--ink);}
+  .card .mods{font-size:9.5px; color:var(--ink2); font-weight:600;}
+  .card .mods .ref{color:var(--geu-d); font-weight:800;}
+  .card .mw-badge{
+    margin-top:3px; display:inline-block; background:var(--geu-dd); color:#fff;
+    font-size:9px; font-weight:700; padding:3px 8px; border-radius:999px;
+  }
+
+  /* supuestos (sliders) */
+  .assum-group{display:flex; flex-direction:column; gap:12px;}
+  .assum-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px;}
+  .assum-card .ac-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px;}
+  .assum-card .ac-label{font-size:12.5px; font-weight:700; color:var(--ink); line-height:1.3;}
+  .assum-card .ac-label small{display:block; font-weight:700; color:var(--ink3); font-size:9px; letter-spacing:.05em; text-transform:uppercase; margin-top:2px;}
+  .assum-card .ac-val{font-family:var(--disp); font-weight:800; font-size:18px; color:var(--geu-d); white-space:nowrap;}
+  .assum-card .ac-scale{display:flex; justify-content:space-between; font-size:9px; color:var(--ink3); font-weight:600; margin-top:5px;}
+  .assum-card .ac-hint{font-size:11px; color:var(--ink2); margin-top:10px; line-height:1.5;}
+
+  input[type=range]{
+    -webkit-appearance:none; appearance:none; width:100%; height:7px; border-radius:999px; margin-top:2px;
+    background:linear-gradient(to right,var(--geu) 0%,var(--geu) var(--fill,50%),#e3e7ec var(--fill,50%),#e3e7ec 100%);
+    cursor:pointer; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%;
+    background:#fff; border:3px solid var(--geu); box-shadow:0 3px 10px rgba(11,68,80,.32); margin-top:-1px;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:20px; height:20px; border-radius:50%; background:#fff; border:3px solid var(--geu);
+  }
+
+  /* detalle / specs */
+  .detail-info h3{margin:0 0 4px; font-family:var(--disp); font-size:17px; font-weight:800; letter-spacing:-.01em; color:var(--ink);}
+  .detail-info .sub{font-size:11.5px; color:var(--ink2); margin-bottom:14px; line-height:1.55;}
+  .detail-info .sub b{color:var(--geu-d);}
+  .specs{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .spec{background:var(--sheet); border:1px solid var(--line); border-radius:10px; padding:11px 13px;}
+  .spec .l{font-size:9px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink3); font-weight:700;}
+  .spec .v{font-family:var(--disp); font-size:16px; font-weight:800; color:var(--ink); margin-top:4px;}
+  .spec.hl{background:var(--geu-l); border-color:#bfe2ea;}
+  .spec.hl .v{color:var(--geu-d);}
+
+  /* energía */
+  .energy-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .energy-card{
+    position:relative; overflow:hidden; background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; padding:13px 14px; box-shadow:var(--shadow);
+  }
+  .energy-card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--geu);}
+  .energy-card .l{font-size:9px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink3); font-weight:700; margin-bottom:7px;}
+  .energy-card .v{font-family:var(--disp); font-size:19px; font-weight:800; letter-spacing:-.02em; color:var(--geu-d);}
+
+  /* comparativo */
+  .bar-row{display:flex; align-items:center; gap:11px; margin-bottom:8px;}
+  .bar-row:last-child{margin-bottom:0;}
+  .bar-row .lbl{width:42px; font-family:var(--disp); font-size:11px; font-weight:800; text-align:right; color:var(--ink2);}
+  .bar-track{flex:1; background:var(--sheet); border-radius:7px; height:22px; overflow:hidden; box-shadow:inset 0 0 0 1px var(--line);}
+  .bar-fill{
+    background:linear-gradient(90deg,#3fc9e4,var(--geu)); height:100%; border-radius:7px;
+    display:flex; align-items:center; justify-content:flex-end; padding-right:8px;
+    transition:width .4s cubic-bezier(.4,0,.2,1);
+  }
+  .bar-fill span{color:#fff; font-family:var(--disp); font-size:10.5px; font-weight:800;}
+  .bar-fill.best{background:linear-gradient(90deg,var(--geu),var(--geu-dd));}
+  .bar-row.best .lbl{color:var(--geu-d);}
+  .bar-row .flag{font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--geu-d); background:var(--geu-l); border-radius:999px; padding:3px 7px; white-space:nowrap;}
+
+  /* notas */
+  .note{
+    background:var(--geu-l2); border:1px solid var(--line); border-left:3px solid var(--geu);
+    padding:11px 14px; font-size:11px; line-height:1.55; margin:12px 0 0; border-radius:9px; color:var(--ink2);
+  }
+  .note b{color:var(--geu-d);}
+  .note.foot-note{border-left-color:var(--line2); background:var(--sheet); margin-top:24px;}
+
+  body.is-fs{ --top:0px; }
+  body.is-fs > a{ display:none !important; }
+
+  @media (max-width:900px){
+    :root{ --hud-w:0px; }
+    #mesa3d, .stage-ui{
+      width:100vw;
+      height:calc(100vh - var(--top) - var(--sheet-h));
+      height:calc(100dvh - var(--top) - var(--sheet-h));
+    }
+    .hud{
+      top:auto; left:0; right:0; bottom:0; width:auto; height:var(--sheet-h);
+      border-left:none; border-top:1px solid var(--line);
+      box-shadow:0 -24px 60px -24px rgba(3,15,22,.5); padding:16px 18px 30px;
+    }
+    .fs-btn{top:auto; bottom:16px;}
+    .mv-badge{bottom:16px;}
+    .cards{grid-template-columns:repeat(3,1fr);}
+  }
+  @media (max-width:520px){
+    .cards{grid-template-columns:1fr 1fr;}
+    .energy-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="mesa3d"></canvas>
+
+<div class="stage-ui" id="detailViewer">
+  <div class="mv-hint">Arrastra para rotar · scroll para acercar</div>
+  <button class="fs-btn" id="fsBtn" type="button">⛶ Pantalla completa</button>
+  <div class="mv-badge">
+    <span id="mvMini"></span>
+    <span class="mv-lbl" id="mvLayout">6 × 4<small>modulación</small></span>
+  </div>
+  <div class="mv-loader"><span class="dot"></span> Cargando modelo 3D</div>
+</div>
+
+<aside class="hud" id="hud">
+  <div class="hud-head">
+    <div class="eyebrow">GEU Structure · Ingeniería</div>
+    <h1>Configurador M24</h1>
+    <p>Cinco modulaciones validadas de la mesa M24 — misma familia de perfiles, distinta cantidad de módulos por estructura.</p>
+  </div>
+
+  <h2>Elige la modulación</h2>
+  <div class="cards" id="cards"></div>
+
+  <h2>La modulación seleccionada</h2>
+  <div class="detail-info" id="detailInfo"></div>
+
+  <h2>Supuestos de generación</h2>
+  <div class="assum-group">
+    <div class="assum-card">
+      <div class="ac-head">
+        <div class="ac-label">Potencia de cada panel<small>Wp</small></div>
+        <div class="ac-val" id="wpVal">710 Wp</div>
+      </div>
+      <input type="range" id="wp" min="400" max="800" step="5" value="710">
+      <div class="ac-scale"><span>400</span><span>800 Wp</span></div>
+      <div class="ac-hint">Potencia nominal de cada módulo fotovoltaico que se monta sobre la estructura.</div>
+    </div>
+    <div class="assum-card">
+      <div class="ac-head">
+        <div class="ac-label">Sol útil al día<small>Horas Sol Pico · HSP</small></div>
+        <div class="ac-val" id="hspVal">4,5 h</div>
+      </div>
+      <input type="range" id="hsp" min="3" max="6" step="0.1" value="4.5">
+      <div class="ac-scale"><span>3,0</span><span>6,0 h</span></div>
+      <div class="ac-hint">Horas de sol "a plena potencia" del sitio. Referencia regional — validar con el Atlas del IDEAM.</div>
+    </div>
+    <div class="assum-card">
+      <div class="ac-head">
+        <div class="ac-label">Rendimiento del sistema<small>Performance Ratio · PR</small></div>
+        <div class="ac-val" id="prVal">80%</div>
+      </div>
+      <input type="range" id="pr" min="0.7" max="0.9" step="0.01" value="0.80">
+      <div class="ac-scale"><span>70%</span><span>90%</span></div>
+      <div class="ac-hint">Energía que llega a la red tras pérdidas por cableado, inversor, temperatura y suciedad.</div>
+    </div>
+  </div>
+
+  <h2>Energía estimada</h2>
+  <div class="energy-grid" id="energyGrid"></div>
+  <div class="note">
+    <b>Cálculo:</b> kWp por mesa × HSP × Performance Ratio × 365 días. Es una estimación de referencia; la generación
+    real depende de la radiación específica del sitio (validar con IDEAM) y de pérdidas propias del proyecto.
+  </div>
+
+  <h2>Comparativo · kg de acero por kWp</h2>
+  <div id="bars"></div>
+  <div class="note">
+    A menor kg/kWp, menos acero por unidad de potencia instalada — <b>más eficiente</b>. La modulación 6×4 (referencia M24)
+    es la más eficiente de las cinco.
+  </div>
+
+  <div class="note foot-note">
+    Las cinco modulaciones comparten la misma familia de perfiles y detalles constructivos M24. Los pesos de acero y
+    las eficiencias provienen del dimensionamiento estructural validado por Ingeniería de GEU Structure. La energía
+    estimada es un cálculo de referencia y no reemplaza un estudio de generación del proyecto.
+  </div>
+</aside>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const canvas = document.getElementById('mesa3d');
+const viewer = document.getElementById('detailViewer');
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+renderer.shadowMap.enabled = false;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.05).texture;
+
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 500);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.55;
+controls.minPolarAngle = 0.35;
+controls.maxPolarAngle = 1.15;
+controls.enablePan = false;
+
+// luces (sin shadow map — el campo puede tener 40+ mesas)
+scene.add(new THREE.HemisphereLight(0xf0f6ff, 0x2a3a44, 1.25));
+const sun = new THREE.DirectionalLight(0xffffff, 2.3);
+sun.position.set(9, 14, 7);
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0x74d2e8, 0.8);
+rim.position.set(-11, 5, -9);
+scene.add(rim);
+
+// sombra falsa (elipse difusa) que se clona bajo cada mesa
+const shadowTexCv = document.createElement('canvas'); shadowTexCv.width = shadowTexCv.height = 128;
+{
+  const sx = shadowTexCv.getContext('2d');
+  const rg = sx.createRadialGradient(64, 64, 4, 64, 64, 62);
+  rg.addColorStop(0, 'rgba(0,0,0,0.34)'); rg.addColorStop(1, 'rgba(0,0,0,0)');
+  sx.fillStyle = rg; sx.fillRect(0, 0, 128, 128);
+}
+const shadowTex = new THREE.CanvasTexture(shadowTexCv);
+const shadowMat = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false });
+function fakeShadow(w, d) {
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(w, d), shadowMat);
+  s.rotation.x = -Math.PI / 2;
+  s.position.y = 0.02;
+  s.renderOrder = -1;
+  return s;
+}
+
+let mesaGroup = null;
+let currentCols = 6, currentRows = 4;
+
+const TILT = 8.13 * Math.PI / 180;
+
+// materiales (acero galvanizado + módulo FV)
+const steelMat = new THREE.MeshStandardMaterial({ color: 0x9aa1a9, metalness: 0.92, roughness: 0.4 });
+const steelDarkMat = new THREE.MeshStandardMaterial({ color: 0x7e858d, metalness: 0.9, roughness: 0.45 });
+const panelMat = new THREE.MeshStandardMaterial({ color: 0x1e3a63, metalness: 0.35, roughness: 0.28 });
+const panelEdgeMat = new THREE.MeshStandardMaterial({ color: 0xcdd2d8, metalness: 0.8, roughness: 0.4 });
+
+const shadowGeo = new THREE.PlaneGeometry(1, 1);
+shadowGeo.rotateX(-Math.PI / 2);
+
+const _boxGeo = new THREE.BoxGeometry(1, 1, 1);
+function bar(w, h, d, mat, x, y, z, group) {
+  const m = new THREE.Mesh(_boxGeo, mat);
+  m.scale.set(w, h, d);
+  m.position.set(x, y, z);
+  group.add(m);
+  return m;
+}
+
+// --- construye UNA mesa M24 con cols x rows módulos ---
+function buildMesa(cols, rows) {
+  currentCols = cols; currentRows = rows;
+  if (mesaGroup) {
+    scene.remove(mesaGroup);
+    mesaGroup.traverse((o) => { if (o.isInstancedMesh && o.dispose) o.dispose(); });
+  }
+  mesaGroup = new THREE.Group();
+
+  // dimensiones del arreglo de módulos
+  const cw = 2.24, ct = 0.05, gap = 0.07;        // módulo: ancho, grosor, junta
+  const cl = 1.34;                               // largo del módulo (sobre la pendiente)
+  const fieldW  = cols * cw + (cols - 1) * gap;  // ancho total (eje X)
+  const slope   = rows * cl + (rows - 1) * gap;  // largo sobre la pendiente
+  const frontH  = 1.00;                          // altura frontal M24
+  const rise    = slope * Math.sin(TILT);
+  const run     = slope * Math.cos(TILT);
+  const backH   = frontH + rise;
+  const midH    = (frontH + backH) / 2;
+  const zFront  = run / 2, zBack = -run / 2;
+
+  // --- plano de módulos (grupo inclinado) ---
+  const array = new THREE.Group();
+  array.rotation.x = TILT;           // atrás arriba, frente abajo
+  array.position.set(0, midH, 0);
+
+  // placa de fondo oscura: las juntas entre módulos se leen como líneas
+  bar(fieldW, 0.02, slope, steelDarkMat, 0, -0.04, 0, array);
+
+  const panelGeo = new THREE.BoxGeometry(cw, ct, cl);
+  const panels = new THREE.InstancedMesh(panelGeo, panelMat, cols * rows);
+  panels.frustumCulled = false;
+  const m4 = new THREE.Matrix4();
+  let k = 0;
+  for (let ix = 0; ix < cols; ix++) {
+    for (let iy = 0; iy < rows; iy++) {
+      const x = -fieldW / 2 + cw / 2 + ix * (cw + gap);
+      const z = -slope / 2 + cl / 2 + iy * (cl + gap);
+      m4.makeTranslation(x, 0, z);
+      panels.setMatrixAt(k++, m4);
+    }
+  }
+  panels.instanceMatrix.needsUpdate = true;
+  array.add(panels);
+
+  // marco perimetral del arreglo
+  const ft = 0.06;
+  bar(fieldW + ft, ct * 1.6, ft, panelEdgeMat, 0, 0, -slope / 2, array);
+  bar(fieldW + ft, ct * 1.6, ft, panelEdgeMat, 0, 0,  slope / 2, array);
+  bar(ft, ct * 1.6, slope, panelEdgeMat, -fieldW / 2, 0, 0, array);
+  bar(ft, ct * 1.6, slope, panelEdgeMat,  fieldW / 2, 0, 0, array);
+
+  // 3 correas bajo los módulos (recorren X sobre el plano inclinado)
+  for (const f of [-0.34, 0, 0.34]) {
+    bar(fieldW, 0.09, 0.13, steelMat, 0, -0.10, f * slope, array);
+  }
+  mesaGroup.add(array);
+
+  // --- subestructura: bipostes + vigas longitudinales ---
+  const nLines = Math.min(cols + 1, Math.max(3, Math.round(cols / 2.2) + 1));
+  const postW = 0.12;
+  const zF = zFront - 0.15;              // eje del poste frontal
+  const zB = zBack + 0.15;               // eje del poste posterior
+  const railFY = frontH - 0.11;          // viga bajo el borde frontal
+  const railBY = backH  - 0.11;          // viga bajo el borde posterior
+  for (let i = 0; i < nLines; i++) {
+    const t = nLines === 1 ? 0.5 : i / (nLines - 1);
+    const x = -fieldW / 2 + 0.35 + t * (fieldW - 0.70);
+    // biposte: poste frontal (corto) + poste posterior (alto)
+    bar(postW, railFY, postW, steelMat, x, railFY / 2, zF, mesaGroup);
+    bar(postW, railBY, postW, steelMat, x, railBY / 2, zB, mesaGroup);
+    // cabio inclinado que une ambos postes, por DEBAJO de los módulos
+    const rafLen = Math.hypot(zB - zF, railBY - railFY);
+    const rafter = bar(0.09, 0.11, rafLen, steelDarkMat, x, (railFY + railBY) / 2 - 0.06, (zF + zB) / 2, mesaGroup);
+    rafter.rotation.x = Math.atan2(railBY - railFY, zF - zB);
+  }
+  // vigas longitudinales, apoyadas sobre los postes
+  bar(fieldW + 0.4, 0.12, 0.12, steelMat, 0, railFY, zF, mesaGroup);
+  bar(fieldW + 0.4, 0.12, 0.12, steelMat, 0, railBY, zB, mesaGroup);
+  // platinas base
+  for (let i = 0; i < nLines; i++) {
+    const t = nLines === 1 ? 0.5 : i / (nLines - 1);
+    const x = -fieldW / 2 + 0.35 + t * (fieldW - 0.70);
+    bar(0.3, 0.03, 0.3, panelEdgeMat, x, 0.015, zF, mesaGroup);
+    bar(0.3, 0.03, 0.3, panelEdgeMat, x, 0.015, zB, mesaGroup);
+  }
+
+  // sombra de contacto (una sola, bajo toda la mesa)
+  const sh = new THREE.Mesh(shadowGeo, shadowMat);
+  sh.position.set(0, 0.02, 0);
+  sh.scale.set(fieldW * 1.15, 1, (run + 1.2) * 1.5);
+  sh.renderOrder = -1;
+  mesaGroup.add(sh);
+
+  scene.add(mesaGroup);
+
+  // ---- encuadre de cámara ----
+  const box3 = new THREE.Box3().setFromObject(mesaGroup);
+  const c = box3.getCenter(new THREE.Vector3());
+  const size = box3.getSize(new THREE.Vector3());
+  const spread = Math.max(size.x, size.z);
+  const radius = spread * 0.9 + size.y * 1.2 + 4;
+  controls.target.copy(c);
+  const dir = new THREE.Vector3(0.38, 0.72, 0.58).normalize();
+  camera.position.copy(c).addScaledVector(dir, radius);
+  controls.minDistance = radius * 0.32;
+  controls.maxDistance = radius * 2.8;
+  controls.update();
+  viewer.classList.add('ready');
+  document.querySelector('.mv-loader')?.remove();
+}
+
+buildMesa(6, 4);
+
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(canvas);
+window.addEventListener('resize', resize);
+resize();
+
+function loop() {
+  requestAnimationFrame(loop);
+  controls.update();
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(loop);
+
+// pantalla completa
+const fsBtn = document.getElementById('fsBtn');
+fsBtn.addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.();
+});
+document.addEventListener('fullscreenchange', () => {
+  document.body.classList.toggle('is-fs', !!document.fullscreenElement);
+  fsBtn.textContent = document.fullscreenElement ? '⤢ Salir' : '⛶ Pantalla completa';
+  requestAnimationFrame(resize);
+});
+
+window.__setMesa = (cols, rows) => buildMesa(cols, rows);
+</script>
+
+<script>
+const configs = [
+  { cols: 6, rows: 2, paneles: 12, largo: 14.60, fondo: 2.75, kg: 429.8, kgkwp: 50.4 },
+  { cols: 10, rows: 2, paneles: 20, largo: 24.33, fondo: 2.75, kg: 699.4, kgkwp: 49.3 },
+  { cols: 12, rows: 2, paneles: 24, largo: 29.20, fondo: 2.75, kg: 810.7, kgkwp: 47.6 },
+  { cols: 20, rows: 2, paneles: 40, largo: 48.67, fondo: 2.75, kg: 1349.8, kgkwp: 47.5 },
+  { cols: 6, rows: 4, paneles: 24, largo: 14.60, fondo: 5.50, kg: 633.1, kgkwp: 37.2, ref: true },
+];
+
+function miniGrid(cols, rows, cellW, cellH, gap, light){
+  const w = cols*cellW + (cols-1)*gap, h = rows*cellH + (rows-1)*gap;
+  let s = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const x = c*(cellW+gap), y = r*(cellH+gap);
+      s += `<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" rx="1.5" fill="${light?'#eaf6f9':'var(--geu)'}" opacity="${light?1:.9}"/>`;
+    }
+  }
+  s += `</svg>`;
+  return s;
+}
+
+let selected = 4; // 6x4 por defecto (referencia)
+
+const sliders = [
+  { id:'wp',  fmt:v => Math.round(v).toLocaleString('es-CO') + ' Wp' },
+  { id:'hsp', fmt:v => v.toLocaleString('es-CO',{minimumFractionDigits:1,maximumFractionDigits:1}) + ' h' },
+  { id:'pr',  fmt:v => Math.round(v*100) + '%' },
+];
+function paintSliders(){
+  sliders.forEach(f => {
+    const el = document.getElementById(f.id);
+    const out = document.getElementById(f.id + 'Val');
+    const pct = (el.value - el.min) / (el.max - el.min) * 100;
+    el.style.setProperty('--fill', pct + '%');
+    if (out) out.textContent = f.fmt(parseFloat(el.value));
+  });
+}
+
+function render(){
+  const wp = parseFloat(document.getElementById('wp').value) || 0;
+  const hsp = parseFloat(document.getElementById('hsp').value) || 0;
+  const pr = parseFloat(document.getElementById('pr').value) || 0;
+
+  paintSliders();
+
+  const cardsEl = document.getElementById('cards');
+  cardsEl.innerHTML = configs.map((c,i) => {
+    const kwpMesa = c.paneles * wp / 1000;
+    const mesasPara1MW = kwpMesa > 0 ? Math.ceil(1000 / kwpMesa) : 0;
+    return `
+    <div class="card ${i===selected?'on':''}" data-i="${i}">
+      <div class="grid-prev">${miniGrid(c.cols, c.rows, 8, 8, 2)}</div>
+      <b>${c.cols} × ${c.rows}</b>
+      <span class="mods">${c.paneles} módulos${c.ref ? ' <span class="ref">· referencia</span>' : ''}</span>
+      <span class="mw-badge">${mesasPara1MW} mesas / MW</span>
+    </div>`;
+  }).join('');
+  cardsEl.querySelectorAll('.card').forEach(el => el.addEventListener('click', () => {
+    selected = parseInt(el.dataset.i, 10); render();
+  }));
+
+  const c = configs[selected];
+  const kwpMesa = c.paneles * wp / 1000;
+  const eDiaMesa = kwpMesa * hsp * pr;
+  const eAnioMesa = eDiaMesa * 365;
+  const mesasPara1MW = kwpMesa > 0 ? Math.ceil(1000 / kwpMesa) : 0;
+
+  document.getElementById('mvMini').innerHTML = miniGrid(c.cols, c.rows, 5, 5, 1.5, true);
+  document.getElementById('mvLayout').innerHTML =
+    `${c.cols} × ${c.rows}<small>modulación${c.ref ? ' · referencia' : ''}</small>`;
+
+  pushMesa();
+
+  document.getElementById('detailInfo').innerHTML = `
+    <h3>Modulación ${c.cols} × ${c.rows}${c.ref ? ' — referencia M24' : ''}</h3>
+    <div class="sub">Una sola estructura M24 con <b>${c.paneles} módulos</b> (${c.cols} a lo largo × ${c.rows} sobre la pendiente). El esquema 3D muestra la mesa M24 con esa cantidad de módulos.</div>
+    <div class="specs">
+      <div class="spec"><div class="l">Módulos</div><div class="v">${c.paneles}</div></div>
+      <div class="spec"><div class="l">Dimensiones</div><div class="v">${c.largo.toFixed(2)} × ${c.fondo.toFixed(2)} m</div></div>
+      <div class="spec"><div class="l">Peso de acero</div><div class="v">${c.kg.toLocaleString('es-CO',{minimumFractionDigits:1,maximumFractionDigits:1})} kg</div></div>
+      <div class="spec hl"><div class="l">Eficiencia</div><div class="v">${c.kgkwp.toFixed(1)} kg/kWp</div></div>
+    </div>`;
+
+  document.getElementById('energyGrid').innerHTML = `
+    <div class="energy-card"><div class="l">Potencia por mesa</div><div class="v">${kwpMesa.toFixed(2)} kWp</div></div>
+    <div class="energy-card"><div class="l">Generación diaria / mesa</div><div class="v">${eDiaMesa.toFixed(1)} kWh</div></div>
+    <div class="energy-card"><div class="l">Generación anual / mesa</div><div class="v">${Math.round(eAnioMesa).toLocaleString('es-CO')} kWh</div></div>
+    <div class="energy-card"><div class="l">Mesas para 1 MW</div><div class="v">${mesasPara1MW}</div></div>`;
+
+  const maxKgKwp = Math.max(...configs.map(x => x.kgkwp));
+  const minKgKwp = Math.min(...configs.map(x => x.kgkwp));
+  document.getElementById('bars').innerHTML = configs.map(x => {
+    const pct = (x.kgkwp / maxKgKwp) * 100;
+    const isBest = x.kgkwp === minKgKwp;
+    return `
+      <div class="bar-row ${isBest?'best':''}">
+        <div class="lbl">${x.cols}×${x.rows}</div>
+        <div class="bar-track"><div class="bar-fill ${isBest?'best':''}" style="width:${pct}%"><span>${x.kgkwp.toFixed(1)}</span></div></div>
+        ${isBest ? '<span class="flag">más eficiente</span>' : ''}
+      </div>`;
+  }).join('');
+}
+
+// Empuja la modulación seleccionada al modelo 3D (reintenta hasta que el
+// módulo Three.js haya definido window.__setMesa).
+let lastMesa = -1;
+function pushMesa(){
+  if (lastMesa === selected) return;
+  if (typeof window.__setMesa !== 'function') { setTimeout(pushMesa, 120); return; }
+  const c = configs[selected];
+  lastMesa = selected;
+  window.__setMesa(c.cols, c.rows, c.largo, c.fondo);
+}
+
+['wp','hsp','pr'].forEach(id => document.getElementById(id).addEventListener('input', render));
+render();
+</script>
+
+</body>
+</html>

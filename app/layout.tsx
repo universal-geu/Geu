@@ -85,13 +85,7 @@ export default async function RootLayout({
               initialItems={initialCartItems}
               currentUserId={currentUser?.id ?? null}
             >
-              <HeaderShell
-                currentUser={
-                  currentUser
-                    ? { fullName: currentUser.fullName, role: currentUser.role }
-                    : null
-                }
-              />
+              <HeaderShell />
               {children}
               <CartDrawer />
               <SupportChat />

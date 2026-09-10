@@ -88,12 +88,12 @@ export default async function ImportNosotrosPage() {
         <Image
           src="/geu-import-puerto-banner.jpg"
           alt="Logística portuaria GEU Import"
-          fill
+          width={1920}
+          height={463}
           priority
-          sizes="100vw"
-          className="object-cover object-center"
+          className="relative block h-64 w-full object-cover object-center sm:h-80 md:absolute md:inset-0 md:h-full md:w-full"
         />
-        <div className="relative mx-auto max-w-[1632px] px-5 py-24 md:px-8 md:py-32">
+        <div className="relative mx-auto max-w-[1632px] px-5 py-10 md:px-8 md:py-32">
           <h1 className="max-w-2xl text-4xl font-medium leading-[1.15] tracking-[-0.01em] text-slate-950 md:text-6xl">
             {t("import-nosotros-hero-titulo")}
           </h1>

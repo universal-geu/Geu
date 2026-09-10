@@ -144,7 +144,7 @@ export default async function InnovationEstufasPage() {
             className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_35%,rgba(0,0,0,0.05)_65%,rgba(0,0,0,0.55)_100%)]" />
-          <div className="absolute inset-0 flex items-center justify-center px-6">
+          <div className="absolute inset-0 hidden items-center justify-center px-6 md:flex">
             <div className="w-full max-w-[1500px]">
               <CountUpStats items={stovesImpact} />
             </div>

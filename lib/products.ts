@@ -10,6 +10,7 @@ import {
   type Disponibilidad,
   type ProductoCatalogo,
   type ProductoCategoriaAdicional,
+  type ProductoDivisionCategoria,
   type ProductoEspecificacion,
   type ProductoVariante,
 } from "@/app/data/catalog";
@@ -70,9 +71,10 @@ export type ProductMutationInput = {
   oemReferencia?: string;
   referenciasAlternas?: string[];
   categoria: string;
-  subcategoria?: string;
-  categoriaMenor?: string;
+  subcategorias?: string[];
+  categoriasMenores?: string[];
   categoriasAdicionales?: ProductoCategoriaAdicional[];
+  categoriasPorDivision?: ProductoDivisionCategoria[];
   nombre: string;
   marca: string;
   division: DivisionName;
@@ -105,6 +107,37 @@ function normalizeAdditionalDivisions(
   return unique.filter(
     (division) => SELLABLE_DIVISIONS.includes(division) && division !== ownDivision,
   );
+}
+
+function normalizeDivisionCategories(
+  value: ProductoDivisionCategoria[] | undefined,
+  divisionesAdicionales: DivisionName[] | undefined,
+  ownDivision: DivisionName,
+): ProductoDivisionCategoria[] {
+  const allowed = new Set(
+    normalizeAdditionalDivisions(divisionesAdicionales, ownDivision),
+  );
+  const seen = new Set<string>();
+  const result: ProductoDivisionCategoria[] = [];
+
+  for (const entry of value || []) {
+    const categoria = entry?.categoria?.trim() || "";
+    if (!categoria || !allowed.has(entry.division)) continue;
+    // Varias categorías por empresa están permitidas; solo evita el duplicado exacto.
+    const key = `${entry.division}::${categoria.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const subcategorias = uniqueTrimmed(entry.subcategorias || []);
+    const categoriasMenores = uniqueTrimmed(entry.categoriasMenores || []);
+    result.push({
+      division: entry.division,
+      categoria,
+      subcategorias: subcategorias.length ? subcategorias : undefined,
+      categoriasMenores: categoriasMenores.length ? categoriasMenores : undefined,
+    });
+  }
+
+  return result;
 }
 
 function normalizeVariantes(variantes: unknown): ProductoVariante[] {
@@ -280,6 +313,69 @@ function getMinorCategoryMarker(value: string) {
   return `${INTERNAL_MARKER_PREFIX}categoria-menor:${value.trim()}`;
 }
 
+function getSubcategoriesMarker(values: string[]) {
+  return `${INTERNAL_MARKER_PREFIX}subcategorias:${JSON.stringify(values)}`;
+}
+
+function getMinorCategoriesMarker(values: string[]) {
+  return `${INTERNAL_MARKER_PREFIX}categorias-menores:${JSON.stringify(values)}`;
+}
+
+function uniqueTrimmed(values: Array<string | null | undefined>): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const trimmed = (value || "").trim();
+    if (!trimmed || seen.has(trimmed.toLowerCase())) continue;
+    seen.add(trimmed.toLowerCase());
+    result.push(trimmed);
+  }
+  return result;
+}
+
+function extractJsonStringArrayMarker(
+  values: Array<string | null | undefined>,
+  key: string,
+): string[] | undefined {
+  const list = normalizeTextList(values);
+  const prefix = `${INTERNAL_MARKER_PREFIX}${key}:`;
+  const marker = list.find((value) => value.startsWith(prefix));
+  if (!marker) return undefined;
+  try {
+    const parsed = JSON.parse(marker.slice(prefix.length).trim());
+    if (!Array.isArray(parsed)) return undefined;
+    return uniqueTrimmed(parsed.filter((item): item is string => typeof item === "string"));
+  } catch {
+    return undefined;
+  }
+}
+
+function extractSubcategories(values: Array<string | null | undefined>): string[] {
+  const fromMarker = extractJsonStringArrayMarker(values, "subcategorias");
+  if (fromMarker) return fromMarker;
+  const single = extractSubcategory(values);
+  return single ? [single] : [];
+}
+
+function extractMinorCategories(values: Array<string | null | undefined>): string[] {
+  const fromMarker = extractJsonStringArrayMarker(values, "categorias-menores");
+  if (fromMarker) return fromMarker;
+  const single = extractMinorCategory(values);
+  return single ? [single] : [];
+}
+
+// Retro-compat: entradas viejas guardan `subcategoria`/`categoriaMenor` como
+// string; las nuevas usan arrays `subcategorias`/`categoriasMenores`.
+function readNestedStringList(item: Record<string, unknown>, key: string): string[] {
+  const pluralKey = key === "subcategoria" ? "subcategorias" : "categoriasMenores";
+  const plural = item[pluralKey];
+  if (Array.isArray(plural)) {
+    return uniqueTrimmed(plural.filter((v): v is string => typeof v === "string"));
+  }
+  const single = item[key];
+  return typeof single === "string" && single.trim() ? [single.trim()] : [];
+}
+
 function isInternalMarker(value: string) {
   const normalized = value.toLowerCase();
   return (
@@ -326,6 +422,53 @@ function getAdditionalCategoriesMarker(entries: ProductoCategoriaAdicional[]) {
   return `${INTERNAL_MARKER_PREFIX}categorias-adicionales:${JSON.stringify(entries)}`;
 }
 
+function getDivisionCategoriesMarker(entries: ProductoDivisionCategoria[]) {
+  return `${INTERNAL_MARKER_PREFIX}division-categorias:${JSON.stringify(entries)}`;
+}
+
+function extractDivisionCategories(
+  values: Array<string | null | undefined>,
+): ProductoDivisionCategoria[] {
+  const list = normalizeTextList(values);
+  const sentinelPrefix = `${INTERNAL_MARKER_PREFIX}division-categorias:`;
+  const marker = list.find((value) => value.startsWith(sentinelPrefix));
+  if (!marker) return [];
+
+  try {
+    const parsed = JSON.parse(marker.slice(sentinelPrefix.length).trim());
+    if (!Array.isArray(parsed)) return [];
+
+    const result: ProductoDivisionCategoria[] = [];
+
+    for (const item of parsed) {
+      if (!item || typeof item !== "object") continue;
+      const division =
+        "division" in item && typeof item.division === "string"
+          ? (item.division as DivisionName)
+          : null;
+      if (!division || !SELLABLE_DIVISIONS.includes(division)) continue;
+
+      const categoria =
+        "categoria" in item && typeof item.categoria === "string" ? item.categoria.trim() : "";
+      if (!categoria) continue;
+
+      const subcategorias = readNestedStringList(item, "subcategoria");
+      const categoriasMenores = readNestedStringList(item, "categoriaMenor");
+
+      result.push({
+        division,
+        categoria,
+        subcategorias: subcategorias.length ? subcategorias : undefined,
+        categoriasMenores: categoriasMenores.length ? categoriasMenores : undefined,
+      });
+    }
+
+    return result;
+  } catch {
+    return [];
+  }
+}
+
 function extractAdditionalCategories(
   values: Array<string | null | undefined>,
 ): ProductoCategoriaAdicional[] {
@@ -353,16 +496,14 @@ function extractAdditionalCategories(
         "categoria" in item && typeof item.categoria === "string" ? item.categoria.trim() : "";
       if (!categoria) continue;
 
-      const subcategoria =
-        "subcategoria" in item && typeof item.subcategoria === "string"
-          ? item.subcategoria.trim() || undefined
-          : undefined;
-      const categoriaMenor =
-        "categoriaMenor" in item && typeof item.categoriaMenor === "string"
-          ? item.categoriaMenor.trim() || undefined
-          : undefined;
+      const subcategorias = readNestedStringList(item, "subcategoria");
+      const categoriasMenores = readNestedStringList(item, "categoriaMenor");
 
-      result.push({ categoria, subcategoria, categoriaMenor });
+      result.push({
+        categoria,
+        subcategorias: subcategorias.length ? subcategorias : undefined,
+        categoriasMenores: categoriasMenores.length ? categoriasMenores : undefined,
+      });
     }
 
     return result;
@@ -373,31 +514,62 @@ function extractAdditionalCategories(
 
 function normalizeCompatibilityList(
   values: Array<string | null | undefined>,
-  subcategoria?: string,
-  categoriaMenor?: string,
+  subcategorias?: string[],
+  categoriasMenores?: string[],
   categoriasAdicionales?: ProductoCategoriaAdicional[],
+  categoriasPorDivision?: ProductoDivisionCategoria[],
 ) {
   const withoutMarkers = normalizeTextList(values).filter((value) => !isInternalMarker(value));
   const nextValues = [...withoutMarkers];
 
-  if (subcategoria?.trim()) {
-    nextValues.push(getSubcategoryMarker(subcategoria));
+  const subcats = uniqueTrimmed(subcategorias || []);
+  const minors = uniqueTrimmed(categoriasMenores || []);
+
+  if (subcats.length > 0) {
+    // Marcador singular = primer valor, para lectores/versiones antiguas.
+    nextValues.push(getSubcategoryMarker(subcats[0]));
+    if (subcats.length > 1) nextValues.push(getSubcategoriesMarker(subcats));
   }
 
-  if (categoriaMenor?.trim()) {
-    nextValues.push(getMinorCategoryMarker(categoriaMenor));
+  if (minors.length > 0) {
+    nextValues.push(getMinorCategoryMarker(minors[0]));
+    if (minors.length > 1) nextValues.push(getMinorCategoriesMarker(minors));
   }
 
   const validAdditionalCategories = (categoriasAdicionales || [])
     .map((entry) => ({
       categoria: entry.categoria?.trim() || "",
-      subcategoria: entry.subcategoria?.trim() || undefined,
-      categoriaMenor: entry.categoriaMenor?.trim() || undefined,
+      subcategorias: uniqueTrimmed(entry.subcategorias || []),
+      categoriasMenores: uniqueTrimmed(entry.categoriasMenores || []),
     }))
-    .filter((entry) => entry.categoria);
+    .filter((entry) => entry.categoria)
+    .map((entry) => ({
+      categoria: entry.categoria,
+      subcategorias: entry.subcategorias.length ? entry.subcategorias : undefined,
+      categoriasMenores: entry.categoriasMenores.length ? entry.categoriasMenores : undefined,
+    }));
 
   if (validAdditionalCategories.length > 0) {
     nextValues.push(getAdditionalCategoriesMarker(validAdditionalCategories));
+  }
+
+  const validDivisionCategories = (categoriasPorDivision || [])
+    .map((entry) => ({
+      division: entry.division,
+      categoria: entry.categoria?.trim() || "",
+      subcategorias: uniqueTrimmed(entry.subcategorias || []),
+      categoriasMenores: uniqueTrimmed(entry.categoriasMenores || []),
+    }))
+    .filter((entry) => Boolean(entry.categoria) && SELLABLE_DIVISIONS.includes(entry.division))
+    .map((entry) => ({
+      division: entry.division,
+      categoria: entry.categoria,
+      subcategorias: entry.subcategorias.length ? entry.subcategorias : undefined,
+      categoriasMenores: entry.categoriasMenores.length ? entry.categoriasMenores : undefined,
+    }));
+
+  if (validDivisionCategories.length > 0) {
+    nextValues.push(getDivisionCategoriesMarker(validDivisionCategories));
   }
 
   return nextValues;
@@ -411,8 +583,10 @@ function normalizeDisponibilidad(value: string): Disponibilidad {
 
 function toStoreProduct(product: ProductRecord): StoreProduct {
   const categoria = normalizeCategoria(product.category);
-  const subcategoria = extractSubcategory(product.compatibility || []);
-  const categoriaMenor = extractMinorCategory(product.compatibility || []);
+  const subcategorias = extractSubcategories(product.compatibility || []);
+  const categoriasMenores = extractMinorCategories(product.compatibility || []);
+  const subcategoria = subcategorias[0];
+  const categoriaMenor = categoriasMenores[0];
   const isService = isServiceDivision(product.division);
   const disponibilidad = normalizeStockAvailability(
     product.availability,
@@ -447,7 +621,10 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
     disponibilidad,
     subcategoria,
     categoriaMenor,
+    subcategorias,
+    categoriasMenores,
     categoriasAdicionales: extractAdditionalCategories(product.compatibility || []),
+    categoriasPorDivision: extractDivisionCategories(product.compatibility || []),
     descripcion:
       product.description ||
       descripcionProducto({
@@ -650,9 +827,14 @@ export async function createProduct(input: ProductMutationInput) {
       compatibility: {
         set: normalizeCompatibilityList(
           input.compatibilidad || [],
-          input.subcategoria,
-          input.categoriaMenor,
+          input.subcategorias,
+          input.categoriasMenores,
           input.categoriasAdicionales,
+          normalizeDivisionCategories(
+            input.categoriasPorDivision,
+            input.divisionesAdicionales,
+            input.division,
+          ),
         ),
       },
       warranty: input.garantia?.trim() || "1 año de garantía del fabricante",
@@ -851,9 +1033,14 @@ export async function updateProduct(slug: string, input: ProductMutationInput) {
           compatibility: {
             set: normalizeCompatibilityList(
               input.compatibilidad || [],
-              input.subcategoria,
-              input.categoriaMenor,
+              input.subcategorias,
+              input.categoriasMenores,
               input.categoriasAdicionales,
+              normalizeDivisionCategories(
+                input.categoriasPorDivision,
+                input.divisionesAdicionales,
+                input.division,
+              ),
             ),
           },
           warranty: input.garantia?.trim() || "1 año de garantía del fabricante",

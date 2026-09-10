@@ -94,12 +94,12 @@ export default async function EnergyNosotrosPage() {
         <Image
           src="/energy-nosotros-hero.png"
           alt="GEU Energy, infraestructura para granjas solares"
-          fill
+          width={1983}
+          height={793}
           priority
-          sizes="100vw"
-          className="object-cover object-center"
+          className="relative block h-64 w-full object-cover object-center sm:h-80 md:absolute md:inset-0 md:h-full md:w-full"
         />
-        <div className="relative mx-auto max-w-[1632px] px-5 py-24 md:px-8 md:py-32">
+        <div className="relative mx-auto max-w-[1632px] px-5 py-10 md:px-8 md:py-32">
           <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.34em] text-[#b38f00]">
             <span className="h-px w-8 bg-[#ffd400]" />
             Nosotros

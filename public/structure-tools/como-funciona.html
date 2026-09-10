@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEU Structure — Cómo funciona la estructura M24</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --geu:#1FA0BD; --geu-d:#14687B; --geu-dd:#0B4450; --geu-l:#E5F3F7; --geu-l2:#F2FAFC;
+    --ink:#1c1c1e; --ink2:#5b5f66; --ink3:#8a9099;
+    --line:#E7EAEE; --line2:#D7DCE2; --sheet:#F6F8FA; --panel:#FFFFFF;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 12px 32px -12px rgba(16,24,40,.12);
+    --shadow-lg:0 1px 3px rgba(16,24,40,.06), 0 24px 56px -20px rgba(11,68,80,.28);
+    --sans:'Manrope','Montserrat',-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    --disp:'Montserrat',var(--sans);
+    --top:46px; --hud-w:440px; --sheet-h:56vh;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; padding:0; overflow:hidden;
+    font-family:var(--sans); font-size:15px; line-height:1.6; color:var(--ink);
+    background:radial-gradient(135% 105% at 26% -5%, #0b2735 0%, #061a26 42%, #030f16 100%);
+    -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums;
+  }
+
+  #stage3d{
+    position:fixed; top:var(--top); left:0;
+    width:calc(100vw - var(--hud-w)); height:calc(100vh - var(--top)); height:calc(100dvh - var(--top));
+    display:block; z-index:0; touch-action:none;
+  }
+  .stage-ui{
+    position:fixed; top:var(--top); left:0;
+    width:calc(100vw - var(--hud-w)); height:calc(100vh - var(--top)); height:calc(100dvh - var(--top));
+    z-index:5; pointer-events:none;
+  }
+  .stage-ui > *{pointer-events:auto;}
+  .mv-hint{
+    position:absolute; left:20px; top:18px; font-size:9px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    color:rgba(255,255,255,.7); background:rgba(4,20,25,.55); border:1px solid rgba(255,255,255,.12);
+    border-radius:999px; padding:7px 13px; backdrop-filter:blur(6px);
+  }
+  .fs-btn{
+    position:absolute; right:20px; top:16px; display:inline-flex; align-items:center; gap:8px;
+    background:rgba(4,20,25,.6); border:1px solid rgba(255,255,255,.16); color:#fff;
+    font:800 10px/1 var(--sans); letter-spacing:.08em; text-transform:uppercase; padding:9px 14px;
+    border-radius:10px; cursor:pointer; backdrop-filter:blur(6px);
+  }
+  .fs-btn:hover{border-color:var(--geu); color:#5fd0e6;}
+
+  .stage-dock{
+    position:absolute; left:20px; bottom:20px; display:flex; flex-direction:column; gap:10px; width:min(430px, 62vw);
+  }
+  .explode-ctl{
+    display:flex; align-items:center; gap:14px;
+    background:rgba(4,20,25,.62); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.14);
+    border-radius:12px; padding:12px 16px; color:#fff;
+  }
+  .explode-ctl .lbl{font-size:9px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#9fd8e4; white-space:nowrap;}
+  .explode-ctl input[type=range]{flex:1;}
+  .toggle-row{display:flex; gap:8px;}
+  .chip{
+    background:rgba(4,20,25,.62); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.14);
+    color:rgba(255,255,255,.78); font:800 9px/1 var(--sans); letter-spacing:.09em; text-transform:uppercase;
+    padding:9px 13px; border-radius:999px; cursor:pointer;
+  }
+  .chip[aria-pressed="true"]{border-color:var(--geu); color:#fff; background:rgba(31,160,189,.24);}
+
+  .mv-loader{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:11px;
+    font-size:10px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:rgba(255,255,255,.72);
+    transition:opacity .5s ease; pointer-events:none;
+  }
+  .stage-ui.ready .mv-loader{opacity:0;}
+  .mv-loader .dot{width:9px; height:9px; border-radius:50%; background:#3fc9e4; box-shadow:0 0 16px #3fc9e4; animation:mvpulse 1s ease-in-out infinite;}
+  @keyframes mvpulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.3;transform:scale(.65);}}
+
+  .callout{
+    position:absolute; z-index:6; transform:translate(-50%,-100%);
+    background:#fff; color:var(--ink); border-radius:10px; padding:8px 12px; max-width:240px;
+    font-size:11.5px; line-height:1.45; box-shadow:0 12px 30px -8px rgba(0,0,0,.5);
+    pointer-events:none; opacity:0; transition:opacity .2s ease;
+  }
+  .callout.on{opacity:1;}
+  .callout b{color:var(--geu-d);}
+  .callout::after{content:""; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%);
+    border:7px solid transparent; border-top-color:#fff;}
+
+  .hud{
+    position:fixed; top:var(--top); right:0; bottom:0; width:var(--hud-w); z-index:10;
+    overflow-y:auto; overscroll-behavior:contain;
+    background:var(--panel); border-left:1px solid var(--line);
+    box-shadow:-24px 0 60px -24px rgba(3,15,22,.55);
+    padding:24px 26px 40px;
+  }
+  .hud::-webkit-scrollbar{width:9px;}
+  .hud::-webkit-scrollbar-thumb{background:var(--line2); border-radius:9px;}
+  .hud-head .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; font-size:9.5px; letter-spacing:.2em;
+    color:var(--geu-d); font-weight:800; text-transform:uppercase; margin-bottom:9px;
+  }
+  .hud-head .eyebrow::before{content:""; width:22px; height:2px; background:var(--geu);}
+  .hud-head h1{margin:0; font-family:var(--disp); font-weight:800; font-size:23px; letter-spacing:-.02em; color:var(--ink);}
+  .hud-head p{margin:9px 0 0; font-size:12px; color:var(--ink2); line-height:1.55;}
+
+  h2{
+    font-family:var(--disp); font-size:11.5px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
+    color:var(--geu-d); margin:28px 0 14px; display:flex; align-items:center; gap:10px;
+  }
+  h2::before{content:""; width:7px; height:7px; border-radius:2px; background:var(--geu); flex:none; transform:rotate(45deg);}
+  h2::after{content:""; flex:1; height:1px; background:var(--line2);}
+
+  input[type=range]{
+    -webkit-appearance:none; appearance:none; width:100%; height:7px; border-radius:999px;
+    background:linear-gradient(to right,var(--geu) 0%,var(--geu) var(--fill,0%),#e3e7ec var(--fill,0%),#e3e7ec 100%);
+    cursor:pointer; outline:none;
+  }
+  input[type=range]:focus,input[type=range]:focus-visible{outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:#fff; border:3px solid var(--geu); box-shadow:0 3px 10px rgba(11,68,80,.32);}
+  input[type=range]::-moz-range-thumb{width:20px; height:20px; border-radius:50%; background:#fff; border:3px solid var(--geu);}
+
+  .struct-list{display:flex; flex-direction:column; gap:6px; margin-bottom:6px;}
+  .struct{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left; font:inherit; color:var(--ink2);
+    border:1px solid var(--line); border-radius:10px; padding:9px 12px; background:var(--sheet); cursor:pointer;
+  }
+  .struct:hover{border-color:var(--geu);}
+  .struct.off{opacity:.5;}
+  .struct .sw{width:12px; height:12px; border-radius:3px; flex:none; background:var(--geu-d);}
+  .struct.off .sw{background:var(--ink3);}
+  .struct .snm{font-size:12px; font-weight:700;}
+  .struct .sct{margin-left:auto; font-size:10px; color:var(--ink3); font-weight:700;}
+
+  .parts{display:flex; flex-direction:column; gap:8px;}
+  .part{
+    display:flex; gap:12px; align-items:flex-start; text-align:left; width:100%;
+    border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:var(--panel);
+    cursor:pointer; box-shadow:var(--shadow); transition:all .15s ease; font:inherit; color:inherit;
+  }
+  .part:hover{border-color:var(--geu); transform:translateY(-1px);}
+  .part.on{border-color:var(--geu); box-shadow:0 0 0 1.5px var(--geu), var(--shadow-lg); background:linear-gradient(180deg,var(--geu-l2),#fff);}
+  .part .k{
+    flex:none; width:26px; height:26px; border-radius:8px; background:var(--geu-dd); color:#fff;
+    font-family:var(--disp); font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center;
+  }
+  .part.on .k{background:var(--geu);}
+  .part .txt .nm{font-family:var(--disp); font-weight:800; font-size:13px; color:var(--ink); letter-spacing:-.01em;}
+  .part .txt .ct{font-size:10px; font-weight:700; color:var(--ink3); text-transform:uppercase; letter-spacing:.06em; margin-top:1px;}
+  .part .txt .ds{font-size:11px; color:var(--ink2); line-height:1.5; margin-top:5px; display:none;}
+  .part.on .txt .ds{display:block;}
+
+  .reset-btn{
+    margin-top:12px; width:100%; border:1px solid var(--line2); background:var(--sheet); color:var(--geu-d);
+    font:800 10px/1 var(--sans); letter-spacing:.08em; text-transform:uppercase; padding:11px; border-radius:10px; cursor:pointer;
+  }
+  .reset-btn:hover{border-color:var(--geu); color:var(--geu);}
+
+  .note{
+    background:var(--geu-l2); border:1px solid var(--line); border-left:3px solid var(--geu);
+    padding:11px 14px; font-size:11px; line-height:1.55; margin:20px 0 0; border-radius:9px; color:var(--ink2);
+  }
+  .note b{color:var(--geu-d);}
+
+  body.is-fs{ --top:0px; }
+  body.is-fs > a{ display:none !important; }
+
+  @media (max-width:900px){
+    :root{ --hud-w:0px; }
+    #stage3d, .stage-ui{ width:100vw; height:calc(100vh - var(--top) - var(--sheet-h)); height:calc(100dvh - var(--top) - var(--sheet-h)); }
+    .hud{ top:auto; left:0; right:0; bottom:0; width:auto; height:var(--sheet-h); border-left:none; border-top:1px solid var(--line); padding:16px 18px 30px; }
+    .stage-dock{ width:calc(100% - 40px); bottom:14px; }
+    .fs-btn{top:auto; bottom:118px;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stage3d"></canvas>
+
+<div class="stage-ui" id="stageUi">
+  <div class="mv-hint">Arrastra para rotar · scroll para acercar</div>
+  <button class="fs-btn" id="fsBtn" type="button">⛶ Pantalla completa</button>
+  <div class="stage-dock">
+    <div class="explode-ctl">
+      <span class="lbl">Vista explotada</span>
+      <input type="range" id="explode" min="0" max="100" value="0">
+    </div>
+    <div class="toggle-row">
+      <button class="chip" id="tglPanels" type="button" aria-pressed="false">Paneles</button>
+      <button class="chip" id="tglRotate" type="button" aria-pressed="true">Girar</button>
+    </div>
+  </div>
+  <div class="callout" id="callout"></div>
+  <div class="mv-loader"><span class="dot"></span> Armando la estructura</div>
+</div>
+
+<aside class="hud" id="hud">
+  <div class="hud-head">
+    <div class="eyebrow">GEU Structure · Ingeniería</div>
+    <h1>Cómo funciona la M24</h1>
+    <p>La mesa M24 se apoya en <b>6 columnas escalonadas</b> ancladas al suelo. Sobre ellas corren
+       <b>dos vigas laterales</b> en celosía que dan la inclinación, y encima <b>tres correas</b>
+       reciben los paneles. Explótala y toca cada pieza.</p>
+  </div>
+
+  <h2>La estructura</h2>
+  <div class="struct-list" id="structList"></div>
+
+  <h2>Los conectores</h2>
+  <div class="parts" id="parts"></div>
+  <button class="reset-btn" id="resetBtn" type="button">Ver la estructura completa</button>
+
+  <div class="note">
+    <b>Una sola familia de perfiles.</b> Todas las modulaciones M24 usan estos mismos conectores;
+    cambia la cantidad de mesas, no las piezas. El <b>conector deslizante (C)</b> une los dos tramos
+    de cada correa y deja correr la mesa varios centímetros para calzar con la obra civil.
+  </div>
+</aside>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const PARTS = [
+  { k:'A', nm:'Esquinero', ct:'6 uds · extremos de correa', ds:'Remata cada extremo de correa y sujeta la esquina del panel contra el perfil.' },
+  { k:'B', nm:'Conector perimetral', ct:'sobre las correas', ds:'Prensa el borde del panel a lo largo de la correa; se ensambla con el conector deslizante.' },
+  { k:'C', nm:'Conector deslizante', ct:'3 uds · centro de cada correa', ds:'Nuestra joya. Une los dos tramos de la correa y deja correr la mesa varios centímetros para calzar con la obra civil — sin rehacer nada.' },
+  { k:'D', nm:'Conector viga externo', ct:'6 uds · cruce correa / viga', ds:'Une la correa con la viga lateral inclinada — dos perfiles distintos — y concentra la mayor carga de la mesa.' },
+  { k:'E', nm:'Conector columna–mesa', ct:'6 uds · cabeza de columna', ds:'Une la cabeza de cada columna con el cordón inferior de la viga y fija el ángulo de inclinación.' },
+  { k:'F', nm:'Base anclada', ct:'6 uds · pie de columna', ds:'Placa pernada a la cimentación. Recibe toda la carga de la mesa y la transmite al terreno.' },
+];
+const STRUCT = [
+  { key:'panels',  nm:'Paneles',         ct:'6 × 2' },
+  { key:'correas', nm:'Correas',         ct:'× 3' },
+  { key:'rails',   nm:'Vigas laterales', ct:'× 2' },
+  { key:'columns', nm:'Columnas',        ct:'× 6' },
+];
+
+const canvas = document.getElementById('stage3d');
+const stageUi = document.getElementById('stageUi');
+const callout = document.getElementById('callout');
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.9));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.22;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.05).texture;
+
+const camera = new THREE.PerspectiveCamera(37, 1, 0.1, 400);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.6;
+controls.minPolarAngle = 0.15;
+controls.maxPolarAngle = Math.PI / 2 - 0.015;
+controls.enablePan = false;
+
+scene.add(new THREE.HemisphereLight(0xeef6ff, 0x33404a, 1.5));
+const sun = new THREE.DirectionalLight(0xffffff, 2.6); sun.position.set(9, 14, 7); scene.add(sun);
+const rim = new THREE.DirectionalLight(0x9fe0ef, 1.15); rim.position.set(-10, 5, -9); scene.add(rim);
+const fill = new THREE.DirectionalLight(0xffffff, 0.55); fill.position.set(0, 3, 12); scene.add(fill);
+
+// ---------- materiales ----------
+const MAT = {
+  steel:  new THREE.MeshStandardMaterial({ color:0xb4babe, metalness:0.82, roughness:0.5 }),
+  steelD: new THREE.MeshStandardMaterial({ color:0x9aa1a6, metalness:0.8, roughness:0.58 }),
+  bolt:   new THREE.MeshStandardMaterial({ color:0x5c6367, metalness:0.9, roughness:0.4 }),
+  panel:  new THREE.MeshPhysicalMaterial({ color:0x111d38, metalness:0.18, roughness:0.17, clearcoat:1, clearcoatRoughness:0.22, envMapIntensity:1.1 }),
+  frame:  new THREE.MeshStandardMaterial({ color:0xd6dade, metalness:0.75, roughness:0.3 }),
+  grid:   new THREE.MeshBasicMaterial({ color:0x283a63 }),
+};
+const connBase = { color:0xd7dbde, metalness:0.5, roughness:0.36 };
+const matFor = { A:0,B:0,C:0,D:0,E:0,F:0 };
+Object.keys(matFor).forEach(k => { matFor[k] = new THREE.MeshStandardMaterial(connBase); matFor[k].emissiveIntensity = 1.4; });
+const selectableMats = Object.values(matFor);
+const contextMats = [MAT.steel, MAT.steelD, MAT.bolt, MAT.panel, MAT.frame, MAT.grid];
+// declarar transparencia desde el inicio: cambiarla en runtime exigiría needsUpdate
+[...contextMats, ...selectableMats].forEach(m => { m.transparent = true; });
+
+// ---------- helpers ----------
+function boxAt(w, h, d, m, x, y, z){
+  const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+  b.position.set(x, y, z);
+  return b;
+}
+const _X = new THREE.Vector3(1, 0, 0);
+function strut(p1, p2, w, h, m){
+  const a = new THREE.Vector3(p1[0], p1[1], p1[2]);
+  const b = new THREE.Vector3(p2[0], p2[1], p2[2]);
+  const dir = new THREE.Vector3().subVectors(b, a);
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(dir.length(), h, w), m);
+  mesh.position.copy(a).lerp(b, 0.5);
+  mesh.quaternion.setFromUnitVectors(_X, dir.normalize());
+  return mesh;
+}
+function plateBolts(g, m, r = 0.02){
+  [[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]].forEach(([a,c]) => {
+    const bo = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.05, 8), m);
+    bo.position.set(a * 0.12, 0.035, c * 0.12);
+    g.add(bo);
+  });
+}
+function sideBolt(g, m, x, y, z, len = 0.28){
+  const bo = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, len, 8), m);
+  bo.rotation.z = Math.PI / 2;
+  bo.position.set(x, y, z);
+  g.add(bo);
+}
+
+// ---------- geometría de la viga lateral (celosía tipo lente) ----------
+const RX = 2.5;                              // plano de las vigas (± x)
+const Z_TIP_F = 2.78, Z_TIP_B = -2.18;       // puntas de la viga (voladizo en ambos extremos)
+const Z_CTR = (Z_TIP_F + Z_TIP_B) / 2;
+const SLOPE = 0.25;
+const TH = Math.atan(SLOPE);                 // ángulo de inclinación (~14°)
+const yTop = z => 1.12 - SLOPE * z;          // cordón superior
+const belly = z => {
+  const t = (z - Z_CTR) / ((Z_TIP_F - Z_TIP_B) / 2);
+  return Math.max(0, 0.40 * (1 - t * t));
+};
+const yBot = z => yTop(z) - belly(z);        // cordón inferior (panza)
+
+const COL_Z = [1.95, -0.15, -1.75];          // z de las 3 columnas
+const CZ = [2.0, -0.15, -1.75];              // z de las 3 correas
+const CORREA_HX = 3.15;                       // media longitud de correa
+
+const layers = {};
+function layer(key, dir, dist){
+  const g = new THREE.Group();
+  g.userData = { key, dir:new THREE.Vector3(dir[0], dir[1], dir[2]).normalize(), dist };
+  scene.add(g);
+  layers[key] = g;
+  return g;
+}
+const gPanels  = layer('panels',  [0, 1, 0],  2.9);
+const gA       = layer('A',       [0, 1, 0],  2.3);
+const gB       = layer('B',       [0, 1, 0],  1.85);
+const gCorreas = layer('correas', [0, 1, 0],  1.35);
+const gC       = layer('C',       [0, 1, 0],  0.9);
+const gD       = layer('D',       [0, 1, 0],  0.48);
+const gRails   = layer('rails',   [0, 1, 0],  0);
+const gE       = layer('E',       [0, -1, 0], 0.62);
+const gColumns = layer('columns', [0, -1, 0], 1.75);
+const gF       = layer('F',       [0, -1, 0], 2.85);
+
+// ===== vigas laterales =====
+function buildRail(s){
+  const g = new THREE.Group();
+  const x = s * RX;
+  // cordón superior (recto)
+  g.add(strut([x, yTop(Z_TIP_F), Z_TIP_F], [x, yTop(Z_TIP_B), Z_TIP_B], 0.10, 0.15, MAT.steel));
+  // cordón inferior (polilínea curva que forma la panza)
+  const zs = [2.66, 1.8, 0.9, 0.0, -0.9, -1.7, -2.06];
+  for(let i = 0; i < zs.length - 1; i++){
+    g.add(strut([x, yBot(zs[i]), zs[i]], [x, yBot(zs[i+1]), zs[i+1]], 0.085, 0.11, MAT.steel));
+  }
+  // alma: montantes + diagonales
+  const webZ = [1.8, 0.9, 0.0, -0.9, -1.7];
+  webZ.forEach(z => g.add(strut([x, yBot(z), z], [x, yTop(z), z], 0.05, 0.05, MAT.steel)));
+  for(let i = 0; i < webZ.length - 1; i++){
+    g.add(strut([x, yBot(webZ[i]), webZ[i]], [x, yTop(webZ[i+1]), webZ[i+1]], 0.042, 0.042, MAT.steel));
+  }
+  // remates de punta
+  g.add(boxAt(0.13, 0.13, 0.15, MAT.steelD, x, yTop(Z_TIP_F), Z_TIP_F + 0.04));
+  g.add(boxAt(0.13, 0.13, 0.15, MAT.steelD, x, yTop(Z_TIP_B), Z_TIP_B - 0.04));
+  return g;
+}
+gRails.add(buildRail(1), buildRail(-1));
+
+// ===== columnas =====
+COL_Z.forEach(z => {
+  [1, -1].forEach(s => {
+    const topY = yBot(z) - 0.05;
+    gColumns.add(boxAt(0.12, topY, 0.12, MAT.steel, s * RX, topY / 2, z));
+  });
+});
+
+// ===== correas (2 tramos empalmados al centro) =====
+CZ.forEach(z => {
+  const y = yTop(z) + 0.13;
+  [-1, 1].forEach(s => {
+    gCorreas.add(boxAt(CORREA_HX, 0.09, 0.09, MAT.steel, s * (CORREA_HX / 2 + 0.03), y, z));
+  });
+});
+
+// ===== paneles (grupo conmutable) =====
+function buildPanels(){
+  const g = new THREE.Group();
+  const PC = 6;
+  const stepX = 0.98, panW = 0.92;
+  const bands = [ { z: 1.0, len: 1.5 }, { z: -0.55, len: 1.5 } ];
+  for(let i = 0; i < PC; i++){
+    const px = (i - (PC - 1) / 2) * stepX;
+    bands.forEach(b => {
+      const y = yTop(b.z) + 0.17;
+      const mod = new THREE.Group();
+      mod.add(boxAt(panW, 0.028, b.len, MAT.panel, 0, 0.02, 0));
+      mod.add(boxAt(panW + 0.05, 0.05, b.len + 0.05, MAT.frame, 0, 0, 0));
+      mod.add(boxAt(panW, 0.032, 0.012, MAT.grid, 0, 0.03, b.len / 4));
+      mod.add(boxAt(panW, 0.032, 0.012, MAT.grid, 0, 0.03, -b.len / 4));
+      mod.add(boxAt(0.012, 0.032, b.len, MAT.grid, 0, 0.03, 0));
+      mod.position.set(px, y, b.z);
+      mod.rotation.x = TH;
+      g.add(mod);
+    });
+  }
+  return g;
+}
+gPanels.add(buildPanels());
+
+// ===== conectores =====
+// F — base anclada
+COL_Z.forEach(z => {
+  [1, -1].forEach(s => {
+    const g = new THREE.Group();
+    g.add(boxAt(0.34, 0.03, 0.34, matFor.F, 0, 0.016, 0));
+    plateBolts(g, MAT.bolt);
+    g.position.set(s * RX, 0, z);
+    gF.add(g);
+  });
+});
+// E — conector columna–mesa (silla en la cabeza de la columna, toma el cordón inferior)
+COL_Z.forEach(z => {
+  [1, -1].forEach(s => {
+    const g = new THREE.Group();
+    g.add(boxAt(0.19, 0.07, 0.24, matFor.E, 0, 0.06, 0));
+    g.add(boxAt(0.05, 0.24, 0.24, matFor.E, -0.09, -0.03, 0));
+    g.add(boxAt(0.05, 0.24, 0.24, matFor.E, 0.09, -0.03, 0));
+    g.add(boxAt(0.22, 0.05, 0.06, matFor.E, 0, 0.0, 0.14));
+    sideBolt(g, MAT.bolt, 0, 0.02, 0.0, 0.26);
+    g.position.set(s * RX, yBot(z) - 0.02, z);
+    gE.add(g);
+  });
+});
+// D — conector viga externo (cruce correa / cordón superior)
+CZ.forEach(z => {
+  [1, -1].forEach(s => {
+    const g = new THREE.Group();
+    g.add(boxAt(0.20, 0.15, 0.22, matFor.D, 0, 0.0, 0));
+    g.add(boxAt(0.06, 0.20, 0.26, matFor.D, s * 0.10, 0.0, 0));
+    g.add(boxAt(0.26, 0.05, 0.24, matFor.D, -s * 0.03, -0.09, 0));
+    g.add(boxAt(0.13, 0.12, 0.13, matFor.D, -s * 0.15, 0.02, 0));   // cabezal sobre la punta del tubo
+    sideBolt(g, MAT.bolt, 0, 0.05, 0.0, 0.24);
+    g.position.set(s * RX, yTop(z) + 0.02, z);
+    gD.add(g);
+  });
+});
+// C — conector deslizante (empalme central, canal en C)
+CZ.forEach(z => {
+  const g = new THREE.Group();
+  g.add(boxAt(0.34, 0.03, 0.15, matFor.C, 0, 0.07, 0));
+  g.add(boxAt(0.34, 0.03, 0.15, matFor.C, 0, -0.07, 0));
+  g.add(boxAt(0.34, 0.15, 0.03, matFor.C, 0, 0, -0.08));
+  [-0.11, 0.11].forEach(sx => {
+    g.add(boxAt(0.06, 0.02, 0.10, matFor.C, sx, 0.075, 0.02));      // ranura de ajuste
+    const bo = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.12, 8), MAT.bolt);
+    bo.position.set(sx, 0, 0.02);
+    g.add(bo);
+  });
+  g.position.set(0, yTop(z) + 0.13, z);
+  gC.add(g);
+});
+// A — esquinero / remate en los 6 extremos de correa
+CZ.forEach(z => {
+  [1, -1].forEach(s => {
+    const g = new THREE.Group();
+    g.add(boxAt(0.13, 0.12, 0.14, matFor.A, 0, 0, 0));
+    g.add(boxAt(0.06, 0.13, 0.16, matFor.A, s * 0.06, 0.01, 0));
+    g.add(boxAt(0.14, 0.04, 0.12, matFor.A, 0, 0.08, 0));           // pestaña que sujeta el panel
+    g.position.set(s * CORREA_HX, yTop(z) + 0.13, z);
+    gA.add(g);
+  });
+});
+// B — conector perimetral (prensas sobre las correas)
+CZ.forEach((z, ci) => {
+  const spots = ci === 1 ? [-2.0, -0.68, 0.68, 2.0] : [-2.35, -0.95, 0.95, 2.35];
+  spots.forEach(bx => {
+    const g = new THREE.Group();
+    g.add(boxAt(0.10, 0.05, 0.13, matFor.B, 0, 0, 0));
+    g.add(boxAt(0.10, 0.08, 0.03, matFor.B, 0, 0.045, 0.055));
+    const bo = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.09, 8), MAT.bolt);
+    bo.position.set(0, 0.05, 0);
+    g.add(bo);
+    g.position.set(bx, yTop(z) + 0.19, z);
+    gB.add(g);
+  });
+});
+
+// ---------- suelo / sombra ----------
+const shTex = (() => {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const x = cv.getContext('2d');
+  const r = x.createRadialGradient(64, 64, 6, 64, 64, 62);
+  r.addColorStop(0, 'rgba(0,0,0,.34)'); r.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = r; x.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(cv);
+})();
+const sh = new THREE.Mesh(
+  new THREE.PlaneGeometry(9, 8.5),
+  new THREE.MeshBasicMaterial({ map: shTex, transparent: true, depthWrite: false })
+);
+sh.rotation.x = -Math.PI / 2; sh.position.y = 0.012;
+scene.add(sh);
+
+// ---------- encuadre de cámara ----------
+const bb = new THREE.Box3();
+Object.values(layers).forEach(g => bb.expandByObject(g));
+const worldC = bb.getCenter(new THREE.Vector3());
+const worldS = bb.getSize(new THREE.Vector3());
+const fitR = Math.max(worldS.x, worldS.z) * 0.7 + worldS.y + 3.4;
+const camDir = new THREE.Vector3(0.66, 0.36, 0.78).normalize();
+const homeTarget = worldC.clone();
+const homeCam = worldC.clone().addScaledVector(camDir, fitR);
+function goHome(){
+  controls.target.copy(homeTarget);
+  camera.position.copy(homeCam);
+}
+goHome();
+
+// ---------- explosión ----------
+let explodeT = 0;
+function applyExplode(){
+  for(const key in layers){
+    const g = layers[key];
+    g.position.copy(g.userData.dir).multiplyScalar(g.userData.dist * explodeT);
+  }
+}
+const explodeEl = document.getElementById('explode');
+function setExplode(v){
+  explodeT = v / 100;
+  explodeEl.value = v;
+  explodeEl.style.setProperty('--fill', v + '%');
+  applyExplode();
+}
+explodeEl.addEventListener('input', () => {
+  setExplode(+explodeEl.value);
+  if(explodeT > 0.02) setRotate(false);
+});
+
+// ---------- paneles / rotación ----------
+let panelsOn = false;
+gPanels.visible = false;
+const tglPanels = document.getElementById('tglPanels');
+const tglRotate = document.getElementById('tglRotate');
+function setPanels(on){
+  panelsOn = on;
+  gPanels.visible = on && selected == null;
+  tglPanels.setAttribute('aria-pressed', String(on));
+  const b = structList.querySelector('[data-key="panels"]');
+  if(b) b.classList.toggle('off', !on);
+}
+function setRotate(on){
+  controls.autoRotate = on;
+  tglRotate.setAttribute('aria-pressed', String(on));
+}
+tglPanels.addEventListener('click', () => setPanels(!panelsOn));
+tglRotate.addEventListener('click', () => setRotate(!controls.autoRotate));
+
+// ---------- selección / resaltado ----------
+let selected = null;
+
+function setSelected(key){
+  selected = key;
+  contextMats.forEach(m => { m.transparent = true; m.opacity = key ? 0.09 : 1; });
+  selectableMats.forEach(m => { m.transparent = true; m.opacity = 1; m.emissive.setHex(0x000000); });
+  if(key){
+    Object.keys(matFor).forEach(k => {
+      if(k === key){ matFor[k].emissive.setHex(0x1fa0bd); matFor[k].color.setHex(0xe8f6fa); }
+      else { matFor[k].opacity = 0.07; matFor[k].color.setHex(0xd7dbde); }
+    });
+  } else {
+    Object.keys(matFor).forEach(k => matFor[k].color.setHex(0xd7dbde));
+  }
+  document.querySelectorAll('.part').forEach(p => p.classList.toggle('on', p.dataset.k === key));
+  gPanels.visible = panelsOn && key == null;
+  if(key){
+    setRotate(false);
+    if(explodeT < 0.22) setExplode(34);
+    focusOn(key);
+  } else {
+    callout.classList.remove('on');
+  }
+}
+
+const _c = new THREE.Vector3();
+function layerCenter(key){
+  return new THREE.Box3().setFromObject(layers[key]).getCenter(_c.clone());
+}
+function focusOn(key){
+  const g = layers[key];
+  if(!g) return;
+  const box = new THREE.Box3().setFromObject(g);
+  const c = box.getCenter(new THREE.Vector3());
+  controls.target.copy(c);
+  const dist = Math.max(box.getSize(new THREE.Vector3()).length() * 1.8, 3.6);
+  camera.position.copy(c).addScaledVector(new THREE.Vector3(0.58, 0.4, 0.72).normalize(), dist);
+  updateCallout(key, c);
+}
+const _p = new THREE.Vector3();
+function updateCallout(key, worldPos){
+  const p = PARTS.find(x => x.k === key);
+  if(!p) return;
+  callout.innerHTML = `<b>${p.k}.</b> ${p.nm}. ${p.ds}`;
+  _p.copy(worldPos).project(camera);
+  if(_p.z > 1){ callout.classList.remove('on'); return; }
+  callout.style.left = (_p.x * 0.5 + 0.5) * canvas.clientWidth + 'px';
+  callout.style.top = ((-_p.y * 0.5 + 0.5) * canvas.clientHeight - 14) + 'px';
+  callout.classList.add('on');
+}
+
+// ---------- HUD ----------
+const structList = document.getElementById('structList');
+structList.innerHTML = STRUCT.map(s => `
+  <button class="struct" data-key="${s.key}" type="button">
+    <span class="sw"></span><span class="snm">${s.nm}</span><span class="sct">${s.ct}</span>
+  </button>`).join('');
+structList.querySelector('[data-key="panels"]').classList.add('off');
+structList.querySelectorAll('.struct').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if(btn.dataset.key === 'panels'){ setPanels(!panelsOn); return; }
+    const g = layers[btn.dataset.key];
+    g.visible = !g.visible;
+    btn.classList.toggle('off', !g.visible);
+  });
+});
+
+const partsEl = document.getElementById('parts');
+partsEl.innerHTML = PARTS.map(p => `
+  <button class="part" data-k="${p.k}" type="button">
+    <span class="k">${p.k}</span>
+    <span class="txt"><span class="nm">${p.nm}</span><span class="ct">${p.ct}</span><span class="ds">${p.ds}</span></span>
+  </button>`).join('');
+partsEl.querySelectorAll('.part').forEach(btn => {
+  btn.addEventListener('click', () => setSelected(selected === btn.dataset.k ? null : btn.dataset.k));
+});
+document.getElementById('resetBtn').addEventListener('click', () => {
+  setSelected(null);
+  setExplode(0);
+  Object.values(layers).forEach(g => { if(g !== gPanels) g.visible = true; });
+  structList.querySelectorAll('.struct').forEach(b => b.classList.toggle('off', b.dataset.key === 'panels'));
+  setPanels(false);
+  setRotate(true);
+  goHome();
+});
+
+// ---------- pantalla completa ----------
+const fsBtn = document.getElementById('fsBtn');
+fsBtn.addEventListener('click', () => {
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.();
+});
+document.addEventListener('fullscreenchange', () => {
+  document.body.classList.toggle('is-fs', !!document.fullscreenElement);
+  fsBtn.textContent = document.fullscreenElement ? '⤢ Salir' : '⛶ Pantalla completa';
+  requestAnimationFrame(resize);
+});
+
+function resize(){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if(!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(canvas);
+window.addEventListener('resize', resize);
+resize();
+stageUi.classList.add('ready');
+
+function loop(){
+  requestAnimationFrame(loop);
+  controls.update();
+  if(selected) updateCallout(selected, layerCenter(selected));
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>

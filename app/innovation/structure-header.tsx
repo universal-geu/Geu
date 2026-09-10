@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CauchosAccountLink from "../components/cauchos-account-link";
@@ -9,12 +10,21 @@ import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
 
 const navItems = [
   { label: "Producto", href: "/innovation#producto" },
+  { label: "Fabricación", href: "/innovation#fabricacion" },
   { label: "Ingeniería", href: "/innovation#ingenieria" },
   { label: "Servicios", href: "/innovation#servicios" },
   { label: "Contacto", href: "/innovation#contacto" },
 ];
 
-const mobileMoreItems = [...navItems, { label: "Ver todo GEU", href: "/" }];
+const toolItems = [
+  { label: "Cómo funciona la M24", href: "/innovation/herramientas/como-funciona" },
+  { label: "Configurador M24", href: "/innovation/herramientas/configurador-m24" },
+  { label: "Simulador de inversión", href: "/innovation/herramientas/simulador-inversion" },
+  { label: "Asesor Técnico", href: "/innovation/herramientas/asesor-tecnico" },
+  { label: "Asesor Técnico · carrito", href: "/innovation/herramientas/asesor-tecnico-carrito" },
+];
+
+const mobileMoreItems = [...navItems, ...toolItems, { label: "Ver todo GEU", href: "/" }];
 
 function StructureMark() {
   return (
@@ -26,6 +36,52 @@ function StructureMark() {
       priority
       className="h-auto w-[210px] max-w-full object-contain"
     />
+  );
+}
+
+function ToolsMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="inline-flex items-center gap-1 border-b border-transparent py-2 uppercase hover:border-[#0498b4] hover:text-[#0498b4]"
+      >
+        Herramientas
+        <svg viewBox="0 0 24 24" className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-lg border border-white/10 bg-[#0b0b0b] py-1.5 shadow-[0_20px_44px_rgba(0,0,0,0.5)]">
+          {toolItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.06em] text-white/80 transition-colors hover:bg-white/5 hover:text-[#0498b4]"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -51,6 +107,7 @@ export default function StructureHeader() {
                 {item.label}
               </Link>
             ))}
+            <ToolsMenu />
           </nav>
           <div className="flex items-center gap-5 text-white">
             <Link

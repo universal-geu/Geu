@@ -6,6 +6,7 @@ import CauchosHeader from "../components/cauchos-header";
 import CauchosProjectChat from "../components/cauchos-project-chat";
 import HeroVideo from "../components/hero-video";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
+import { ResponsiveBanner } from "../components/responsive-banner";
 import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
@@ -285,12 +286,12 @@ export default async function EnergyPage() {
       </section>
 
       <section className="mx-auto max-w-[1632px] px-5 pb-10 md:px-8">
-        <Image
-          src={resolveImage("energy-marcas-promo", siteImages)}
+        <ResponsiveBanner
+          imageKey="energy-marcas-promo"
+          mobileImageKey="energy-marcas-promo-movil"
           alt="Promociones y soluciones GEU Energy"
-          width={2048}
-          height={768}
-          className="h-auto w-full rounded-[10px] border border-slate-200 shadow-[0_18px_44px_rgba(15,23,42,0.12)]"
+          siteImages={siteImages}
+          className="rounded-[10px] border border-slate-200 shadow-[0_18px_44px_rgba(15,23,42,0.12)]"
         />
       </section>
 

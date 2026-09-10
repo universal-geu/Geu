@@ -78,6 +78,7 @@ export default function CauchosCategoryProductsPage({
   const [selectedAvailability, setSelectedAvailability] = useState("Todas");
   const [selectedPriceRange, setSelectedPriceRange] = useState("Todos");
   const [sortBy, setSortBy] = useState("relevance");
+  const [showFilters, setShowFilters] = useState(false);
 
   const trimmedSearchQuery = searchQuery?.trim() ?? "";
   const isSearchMode = trimmedSearchQuery.length > 0;
@@ -92,12 +93,14 @@ export default function CauchosCategoryProductsPage({
           product.nombre.toLowerCase().includes(needle) ||
           product.marca.toLowerCase().includes(needle) ||
           product.categoria.toLowerCase().includes(needle) ||
-          (product.subcategoria?.toLowerCase().includes(needle) ?? false) ||
+          ((product.subcategorias ?? [product.subcategoria]).some(
+            (value) => value?.toLowerCase().includes(needle) ?? false,
+          )) ||
           (product.sku?.toLowerCase().includes(needle) ?? false) ||
           (product.categoriasAdicionales?.some(
             (entry) =>
               entry.categoria.toLowerCase().includes(needle) ||
-              (entry.subcategoria?.toLowerCase().includes(needle) ?? false),
+              (entry.subcategorias?.some((value) => value.toLowerCase().includes(needle)) ?? false),
           ) ?? false)
         );
       });
@@ -438,8 +441,20 @@ export default function CauchosCategoryProductsPage({
               </div>
             )}
 
+            {showFilters ? (
+              <div
+                className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+                onClick={() => setShowFilters(false)}
+                aria-hidden="true"
+              />
+            ) : null}
+
             <div className="grid gap-8 lg:grid-cols-[310px_1fr]">
-              <aside className="h-fit overflow-hidden rounded-[4px] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.06)]">
+              <aside
+                className={`fixed inset-y-0 right-0 z-50 w-[88%] max-w-[360px] overflow-y-auto bg-white shadow-[0_0_40px_rgba(15,23,42,0.25)] transition-transform duration-300 ${
+                  showFilters ? "translate-x-0" : "translate-x-full"
+                } lg:sticky lg:top-5 lg:z-auto lg:h-fit lg:w-auto lg:max-w-none lg:translate-x-0 lg:overflow-visible lg:rounded-[4px] lg:border lg:border-slate-200 lg:shadow-[0_14px_34px_rgba(15,23,42,0.06)]`}
+              >
               <div className="border-b border-slate-200 px-5 py-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -448,19 +463,29 @@ export default function CauchosCategoryProductsPage({
                       {visibleProducts.length} resultados
                     </p>
                   </div>
-                  {hasActiveFilters ? (
+                  <div className="flex items-center gap-3">
+                    {hasActiveFilters ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedBrand("Todas");
+                          setSelectedAvailability("Todas");
+                          setSelectedPriceRange("Todos");
+                        }}
+                        className="text-xs font-black uppercase tracking-[0.08em] text-[var(--brand-accent)] hover:underline"
+                      >
+                        Limpiar
+                      </button>
+                    ) : null}
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedBrand("Todas");
-                        setSelectedAvailability("Todas");
-                        setSelectedPriceRange("Todos");
-                      }}
-                      className="text-xs font-black uppercase tracking-[0.08em] text-[var(--brand-accent)] hover:underline"
+                      onClick={() => setShowFilters(false)}
+                      aria-label="Cerrar filtros"
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 lg:hidden"
                     >
-                      Limpiar
+                      ✕
                     </button>
-                  ) : null}
+                  </div>
                 </div>
               </div>
 
@@ -551,9 +576,21 @@ export default function CauchosCategoryProductsPage({
 
               <div>
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-slate-200 bg-white px-5 py-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
-                <p className="text-sm font-bold text-slate-500">
-                  Mostrando <span className="text-slate-950">{visibleProducts.length}</span> de {categoryProducts.length} productos
-                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowFilters(true)}
+                    className="flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-black text-slate-700 hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] lg:hidden"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M4 6h16M7 12h10M10 18h4" />
+                    </svg>
+                    Filtros
+                  </button>
+                  <p className="text-sm font-bold text-slate-500">
+                    Mostrando <span className="text-slate-950">{visibleProducts.length}</span> de {categoryProducts.length} productos
+                  </p>
+                </div>
                 <label className="flex items-center gap-3 text-sm font-bold text-slate-600">
                   Ordenar
                   <select

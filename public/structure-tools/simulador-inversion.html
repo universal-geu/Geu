@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GEU Structure — Simulador de inversión y retorno M24</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --geu:#1FA0BD;
+    --geu-d:#14687B;
+    --geu-dd:#0B4450;
+    --geu-l:#E5F3F7;
+    --geu-l2:#F2FAFC;
+    --ink:#1c1c1e;
+    --ink2:#5b5f66;
+    --ink3:#8a9099;
+    --line:#E7EAEE;
+    --line2:#D7DCE2;
+    --sheet:#F6F8FA;
+    --panel:#FFFFFF;
+    --input-ink:#0B4FA0;
+    --ok:#1E7B34;
+    --ok-bg:#E6F4E9;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 12px 32px -12px rgba(16,24,40,.12);
+    --shadow-lg:0 1px 3px rgba(16,24,40,.06), 0 24px 56px -20px rgba(11,68,80,.28);
+    --sans:'Manrope','Montserrat',-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    --disp:'Montserrat',var(--sans);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; padding:0;
+    font-family:var(--sans);
+    font-size:15px; line-height:1.6;
+    color:var(--ink);
+    background:var(--sheet);
+    -webkit-font-smoothing:antialiased;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ---------- portada ---------- */
+  .cover{
+    position:relative; overflow:hidden;
+    color:#fff;
+    padding:60px 40px 58px;
+    border-bottom:3px solid var(--geu);
+    background:
+      linear-gradient(94deg,#040404 0%,rgba(4,4,4,.95) 30%,rgba(5,7,9,.82) 50%,rgba(6,12,16,.5) 68%,rgba(8,16,22,.22) 100%),
+      radial-gradient(760px 340px at 8% -22%,rgba(31,160,189,.28),transparent 62%),
+      url('/geu-structure-simulador-hero.png') 74% 32%/cover no-repeat #050505;
+  }
+  .cover::after{
+    content:""; position:absolute; left:0; right:0; bottom:0; height:90px;
+    background:linear-gradient(0deg,rgba(5,5,5,.9),transparent);
+  }
+  .cover-inner{max-width:1180px; margin:0 auto; position:relative; z-index:1;}
+  .cover .eyebrow{
+    display:inline-flex; align-items:center; gap:9px;
+    font-size:10.5px; letter-spacing:.2em; color:#8fdcea; font-weight:800; text-transform:uppercase; margin-bottom:18px;
+  }
+  .cover .eyebrow::before{content:""; width:26px; height:2px; background:var(--geu); display:inline-block;}
+  .cover h1{
+    margin:0 0 16px; font-family:var(--disp); font-weight:800;
+    font-size:clamp(28px,3.6vw,42px); letter-spacing:-.025em; line-height:1.1; color:#fff;
+    text-shadow:0 2px 24px rgba(0,0,0,.55); max-width:22ch;
+  }
+  .cover h1 span{color:var(--geu);}
+  .cover p{
+    margin:0; font-size:15px; font-weight:500; color:#e6e9ec; max-width:44ch; line-height:1.6;
+    text-shadow:0 1px 3px rgba(0,0,0,.9), 0 1px 20px rgba(0,0,0,.8);
+  }
+
+  /* ---------- barra fija de resumen ---------- */
+  .stickybar{
+    position:fixed; left:0; right:0; top:0; z-index:60;
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    padding:11px 24px; background:rgba(9,10,11,.94); backdrop-filter:blur(10px);
+    color:#fff; border-bottom:1px solid rgba(255,255,255,.12);
+    transform:translateY(-105%); transition:transform .28s ease; pointer-events:none;
+  }
+  .stickybar.on{transform:translateY(0); pointer-events:auto;}
+  .stickybar .chip{font-family:var(--disp); font-weight:700; font-size:13px; letter-spacing:.01em;}
+  .stickybar .chip small{display:block; font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:#8a9199; font-weight:600; margin-bottom:1px;}
+  .stickybar .chip.geu{color:var(--geu);}
+  .stickybar .up{
+    margin-left:auto; border:1px solid rgba(255,255,255,.25); color:#fff; background:none;
+    font:600 11px/1 var(--sans); letter-spacing:.06em; text-transform:uppercase; padding:8px 12px; border-radius:8px; cursor:pointer;
+  }
+  .stickybar .up:hover{border-color:var(--geu); color:var(--geu);}
+  @media (max-width:640px){ .stickybar .chip:nth-child(3){display:none;} }
+
+  .wrap{padding:0 40px 56px; max-width:1180px; margin:0 auto;}
+
+  /* ---------- selector de capacidad ---------- */
+  .selector{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    margin-top:-30px; padding:22px 28px; box-shadow:var(--shadow-lg);
+    display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:14px 26px;
+  }
+  .selector .lbl{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink3); white-space:nowrap;}
+  .selector .mwval{
+    font-family:var(--disp); background:linear-gradient(135deg,var(--geu),var(--geu-d)); color:#fff; font-weight:800; font-size:22px;
+    padding:10px 18px; border-radius:12px; min-width:118px; text-align:center;
+    box-shadow:0 8px 20px -8px rgba(31,160,189,.6);
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .selector .mwval .bolt{width:16px; height:16px; fill:#eaffff; flex:none; filter:drop-shadow(0 0 5px rgba(255,255,255,.5));}
+  .slider-wrap{position:relative; display:flex; flex-direction:column; gap:8px;}
+  .slider-ticks{display:flex; justify-content:space-between; font-size:10px; color:var(--ink3); font-weight:600; padding:0 2px;}
+
+  input[type=range]{
+    -webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:999px;
+    background:linear-gradient(to right,var(--geu) 0%,var(--geu) var(--fill,21%),#e3e7ec var(--fill,21%),#e3e7ec 100%);
+    cursor:pointer; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:22px; height:22px; border-radius:50%;
+    background:#fff; border:3px solid var(--geu); box-shadow:0 3px 10px rgba(11,68,80,.35); margin-top:-1px;
+    transition:transform .12s ease;
+  }
+  input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.12);}
+  input[type=range]::-moz-range-thumb{
+    width:22px; height:22px; border-radius:50%; background:#fff; border:3px solid var(--geu); box-shadow:0 3px 10px rgba(11,68,80,.35);
+  }
+
+  /* ---------- pila de capacidad ---------- */
+  .battery{
+    position:relative; display:flex; align-items:stretch;
+    height:44px; padding:5px; border:2px solid var(--line2); border-radius:10px;
+    background:var(--sheet); box-shadow:inset 0 1px 3px rgba(16,24,40,.06);
+    cursor:pointer; transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .battery::after{
+    content:""; position:absolute; right:-9px; top:50%; transform:translateY(-50%);
+    width:7px; height:18px; border-radius:0 4px 4px 0; background:var(--line2);
+  }
+  .battery:hover, .battery:focus-within{border-color:var(--geu); box-shadow:inset 0 1px 3px rgba(16,24,40,.06), 0 0 0 3px rgba(31,160,189,.14);}
+  .batt-cells{display:flex; gap:3px; flex:1; min-width:0;}
+  .batt-cell{
+    flex:1; border-radius:3px; background:#e4e9ee;
+    transition:background .18s ease, box-shadow .18s ease;
+  }
+  .batt-cell.on{
+    background:linear-gradient(180deg,#3fc9e4 0%,var(--geu) 45%,var(--geu-d) 100%);
+    box-shadow:0 0 6px rgba(31,160,189,.45);
+  }
+  .batt-cell.charging{ animation:battpulse 1.15s ease-in-out infinite; }
+  @keyframes battpulse{ 0%,100%{opacity:1;} 50%{opacity:.4; box-shadow:0 0 14px rgba(31,160,189,.8);} }
+  .battery input[type=range]{
+    position:absolute; inset:0; width:100%; height:100%; margin:0; background:transparent; opacity:0;
+  }
+  .battery input[type=range]:focus{outline:none;}
+  .battery input[type=range]:focus-visible{outline:none;}
+  .battery input[type=range]::-webkit-slider-thumb{width:28px; height:44px; border-radius:0; border:0; box-shadow:none; background:transparent; cursor:ew-resize;}
+  .battery input[type=range]::-moz-range-thumb{width:28px; height:44px; border-radius:0; border:0; background:transparent; cursor:ew-resize;}
+
+  /* ---------- secciones ---------- */
+  h2{
+    font-family:var(--disp); font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--geu-d); margin:48px 0 18px; display:flex; align-items:center; gap:12px;
+  }
+  h2::before{content:""; width:8px; height:8px; border-radius:2px; background:var(--geu); flex:none; transform:rotate(45deg);}
+  h2::after{content:""; flex:1; height:1px; background:var(--line2);}
+
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);}
+
+  /* ---------- tarjetas de resumen ---------- */
+  .hero-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:18px;}
+  .hero-card{
+    position:relative; overflow:hidden;
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px 20px 18px;
+    box-shadow:var(--shadow); transition:transform .16s ease, box-shadow .16s ease;
+  }
+  .hero-card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--line2);}
+  .hero-card:hover{transform:translateY(-3px); box-shadow:var(--shadow-lg);}
+  .hero-card .l{font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink3); font-weight:700; margin-bottom:10px;}
+  .hero-card .v{font-family:var(--disp); font-size:26px; font-weight:800; letter-spacing:-.02em; line-height:1.1; color:var(--ink);}
+  .hero-card .sub{font-size:11px; color:var(--ink2); margin-top:8px;}
+  .hero-card.accent{background:linear-gradient(150deg,var(--geu) 0%,var(--geu-d) 100%); border-color:transparent; color:#fff;}
+  .hero-card.accent::before{background:rgba(255,255,255,.5);}
+  .hero-card.accent .l{color:#d6f1f7;}
+  .hero-card.accent .v{color:#fff;}
+  .hero-card.accent .sub{color:#d6f1f7;}
+
+  /* ---------- composición + escenarios ---------- */
+  .split{display:grid; grid-template-columns:1.2fr .8fr; gap:20px; margin-top:20px; align-items:start;}
+  .composition{padding:22px 24px;}
+  .composition .barlabel{display:flex; justify-content:space-between; align-items:baseline; font-size:12px; font-weight:600; color:var(--ink2); margin-bottom:12px;}
+  .composition .barlabel b{font-family:var(--disp); font-size:17px; font-weight:800; color:var(--ink);}
+  .compbar{height:30px; border-radius:8px; overflow:hidden; display:flex; background:var(--sheet); box-shadow:inset 0 0 0 1px var(--line);}
+  .compbar .seg1{background:linear-gradient(180deg,var(--geu),var(--geu-d)); transition:width .5s cubic-bezier(.4,0,.2,1);}
+  .compbar .seg2{background:linear-gradient(180deg,#4a4d52,#333438); transition:width .5s cubic-bezier(.4,0,.2,1);}
+  .complegend{display:flex; flex-direction:column; gap:8px; margin-top:14px; font-size:12px; color:var(--ink2);}
+  .complegend .dot{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:8px; vertical-align:middle;}
+  .complegend b{color:var(--ink); font-family:var(--disp);}
+
+  .scenario-card{padding:18px 20px; margin-bottom:14px; border-left:4px solid var(--geu);}
+  .scenario-card:last-child{margin-bottom:0; border-left-color:var(--geu-dd);}
+  .scenario-card .stitle{font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink3); margin-bottom:8px;}
+  .scenario-card .sval{font-family:var(--disp); font-size:32px; font-weight:800; letter-spacing:-.02em; color:var(--geu-d);}
+  .scenario-card .sunit{font-size:13px; color:var(--ink3); font-weight:600;}
+  .scenario-card .sdetail{font-size:11.5px; color:var(--ink2); margin-top:8px;}
+
+  /* ---------- tarjetas explicativas ---------- */
+  .explain-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:8px;}
+  .explain-card{padding:20px 22px; position:relative; border-radius:var(--radius); border:1px solid var(--line); background:var(--panel); box-shadow:var(--shadow);}
+  .explain-card.confirmed{border-color:#cfe6d4; background:linear-gradient(180deg,#f4fbf5,#fff);}
+  .explain-card.assumed{border-color:#bfe2ea; background:linear-gradient(180deg,#f1fafc,#fff);}
+  .tag{
+    display:inline-block; font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.06em;
+    padding:4px 10px; border-radius:999px; margin-bottom:12px;
+  }
+  .tag.confirmed{background:var(--ok-bg); color:var(--ok);}
+  .tag.assumed{background:#D6ECF2; color:var(--geu-d);}
+  .explain-card h3{margin:0 0 8px; font-family:var(--disp); font-size:15px; font-weight:700;}
+  .explain-card p{margin:0; font-size:12.5px; color:var(--ink2); line-height:1.6;}
+
+  /* ---------- campos editables ---------- */
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-top:10px; align-items:start;}
+  .field{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 15px; transition:border-color .15s ease, box-shadow .15s ease;}
+  .field:focus-within{border-color:var(--geu); box-shadow:0 0 0 3px rgba(31,160,189,.14);}
+  .field label{display:block; font-size:11px; font-weight:700; color:var(--ink); margin-bottom:8px; line-height:1.35;}
+  .field small{display:block; font-size:9.5px; color:var(--ink3); margin-top:6px; line-height:1.45;}
+  .field input{
+    width:100%; padding:9px 10px; font-size:14px; font-weight:700; font-family:var(--disp);
+    color:var(--input-ink); border:1px solid var(--line2); border-radius:8px; background:var(--geu-l2);
+    transition:border-color .15s ease;
+  }
+  .field input:focus{outline:none; border-color:var(--geu);}
+  .field .echo{display:block; font-size:11px; font-weight:700; color:var(--geu-d); margin-top:6px; font-family:var(--disp);}
+  .field.readonly{background:var(--sheet);}
+  .field.readonly input{color:var(--ink2); background:#fff; font-weight:600;}
+
+  /* ---------- supuestos amables ---------- */
+  .assum-intro{font-size:13.5px; color:var(--ink2); margin:6px 0 22px; max-width:74ch; line-height:1.6;}
+  .assum-group{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; align-items:start;}
+  .assum-card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 20px; box-shadow:var(--shadow);}
+  .assum-card .ac-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px;}
+  .assum-card .ac-label{font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.3;}
+  .assum-card .ac-label small{display:block; font-weight:700; color:var(--ink3); font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; margin-top:3px;}
+  .assum-card .ac-val{font-family:var(--disp); font-weight:800; font-size:20px; letter-spacing:-.01em; color:var(--geu-d); white-space:nowrap;}
+  .assum-card input[type=range]{margin-top:2px;}
+  .assum-card .ac-scale{display:flex; justify-content:space-between; font-size:9.5px; color:var(--ink3); font-weight:600; margin-top:6px;}
+  .assum-card .ac-hint{font-size:11.5px; color:var(--ink2); margin-top:12px; line-height:1.5;}
+  .assum-card .ac-src{margin-top:9px;}
+  .assum-card .ac-src summary{font-size:10.5px; color:var(--geu-d); cursor:pointer; font-weight:700; list-style:none;}
+  .assum-card .ac-src summary::-webkit-details-marker{display:none;}
+  .assum-card .ac-src summary::before{content:"\24D8  ";}
+  .assum-card .ac-src p{font-size:10.5px; color:var(--ink3); margin:7px 0 0; line-height:1.55;}
+
+  .assum-advanced{margin-top:18px; border:1px solid var(--line); border-radius:14px; background:var(--panel); box-shadow:var(--shadow);}
+  .assum-advanced > summary{
+    list-style:none; cursor:pointer; padding:15px 20px; font-size:12px; font-weight:800; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--geu-d); display:flex; align-items:center; gap:10px;
+  }
+  .assum-advanced > summary::-webkit-details-marker{display:none;}
+  .assum-advanced > summary .muted{font-weight:600; text-transform:none; letter-spacing:0; color:var(--ink3); font-size:11.5px;}
+  .assum-advanced > summary::after{content:"\25BE"; margin-left:auto; transition:transform .2s ease; color:var(--ink3);}
+  .assum-advanced[open] > summary::after{transform:rotate(180deg);}
+  .assum-advanced .adv-body{padding:2px 20px 20px; border-top:1px solid var(--line);}
+
+  /* ---------- tablas ---------- */
+  .tablewrap{max-height:480px; overflow:auto; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); background:var(--panel);}
+  table{border-collapse:separate; border-spacing:0; width:100%; font-size:12.5px; }
+  thead th{
+    background:var(--geu-dd); color:#fff; padding:12px 10px; text-align:right; font-size:10px; font-weight:700;
+    letter-spacing:.04em; text-transform:uppercase; position:sticky; top:0; white-space:nowrap;
+  }
+  thead th:first-child{text-align:left; padding-left:16px;}
+  tbody td{padding:10px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap;}
+  tbody td:first-child{text-align:left; padding-left:16px; white-space:normal;}
+  tbody tr:nth-child(even){background:var(--sheet);}
+  tbody tr:hover{background:var(--geu-l);}
+  tbody tr:last-child td{border-bottom:0;}
+  tbody tr.selected{background:var(--geu-l) !important; font-weight:700; box-shadow:inset 3px 0 0 var(--geu);}
+  tbody tr.totalrow{background:var(--sheet) !important; font-weight:800;}
+
+  /* ---------- gráficas ---------- */
+  .charts{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:18px;}
+  .chartbox{padding:18px 20px; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); box-shadow:var(--shadow);}
+  .chartbox h3{margin:0 0 10px; font-size:11px; font-weight:700; color:var(--geu-d); text-transform:uppercase; letter-spacing:.05em;}
+  svg text{font-family:var(--sans);}
+
+  /* ---------- notas ---------- */
+  .note{
+    background:var(--geu-l2); border:1px solid var(--line); border-left:4px solid var(--geu);
+    padding:13px 17px; font-size:12px; line-height:1.6; margin:16px 0; border-radius:10px; color:var(--ink2);
+  }
+  .note.warn{border-left-color:#c2410c; background:#fff7ed; border-color:#fed7aa;}
+  .note b{color:var(--geu-d);}
+  .note.warn b{color:#c2410c;}
+
+  /* ---------- pie ---------- */
+  .foot{
+    padding:34px 40px;
+    background:linear-gradient(135deg,#0f1112,#050505); color:#8a9199;
+    font-size:10.5px; line-height:1.8; border-top:3px solid var(--geu);
+  }
+  .foot .foot-inner{max-width:1100px; margin:0 auto;}
+  .foot b{color:#cfd4da;}
+
+  @media (max-width:900px){
+    .hero-grid{grid-template-columns:repeat(2,1fr);}
+    .split{grid-template-columns:1fr;}
+    .explain-grid{grid-template-columns:1fr;}
+    .charts{grid-template-columns:1fr;}
+  }
+  @media (max-width:760px){
+    .cover{
+      padding:36px 22px 34px;
+      background:
+        linear-gradient(180deg, rgba(4,4,4,.68) 0%, rgba(4,4,4,.82) 55%, rgba(4,4,4,.95) 100%),
+        radial-gradient(560px 260px at 0% -10%, rgba(31,160,189,.26), transparent 60%),
+        url('/geu-structure-simulador-hero.png') 58% 30%/cover no-repeat #050505;
+    }
+    .cover h1{max-width:none; font-size:26px;}
+    .cover p{font-size:14px; color:#eceef1; max-width:none; text-shadow:0 1px 10px rgba(0,0,0,.9);}
+    .cover .eyebrow{margin-bottom:14px;}
+  }
+  @media (max-width:600px){
+    .wrap{padding:0 18px 56px;}
+    .selector{grid-template-columns:1fr; text-align:center; padding:20px;}
+    .hero-grid{grid-template-columns:1fr;}
+    .foot{padding:28px 22px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="stickybar" id="stickyBar">
+  <span class="chip"><small>Capacidad</small><span id="sbMw">5 MW</span></span>
+  <span class="chip geu"><small>Inversión total</small><span id="sbInv">—</span></span>
+  <span class="chip"><small>Retorno autoconsumo</small><span id="sbPay">—</span></span>
+  <button class="up" id="sbUp" type="button">Ajustar ↑</button>
+</div>
+
+<div class="cover">
+  <div class="cover-inner">
+    <div class="eyebrow">Presentación para inversionista</div>
+    <h1>GEU <span>STRUCTURE</span><br>Simulador de inversión y retorno</h1>
+    <p>Proyección financiera de un proyecto solar utility-scale con estructura M24, desde 1 hasta 20 MW de capacidad instalada.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="selector" id="selector">
+    <span class="lbl">Capacidad<br>del proyecto</span>
+    <div class="slider-wrap">
+      <div class="battery" id="battery">
+        <div class="batt-cells" id="battCells"></div>
+        <input type="range" id="mwSlider" min="1" max="20" step="1" value="5" aria-label="Capacidad del proyecto en megavatios">
+      </div>
+      <div class="slider-ticks"><span>1 MW</span><span>5</span><span>10</span><span>15</span><span>20 MW</span></div>
+    </div>
+    <span class="mwval">
+      <svg class="bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/></svg>
+      <span><span id="mwLabel">5</span> MW</span>
+    </span>
+  </div>
+
+  <h2>Resumen para el proyecto seleccionado</h2>
+  <div class="hero-grid" id="heroGrid"></div>
+  <div id="extrapNote"></div>
+
+  <div class="split">
+    <div class="composition panel">
+      <div class="barlabel"><span>Composición de la inversión</span><b id="compTotal"></b></div>
+      <div class="compbar">
+        <div class="seg1" id="segEstructura"></div>
+        <div class="seg2" id="segResto"></div>
+      </div>
+      <div class="complegend">
+        <span><span class="dot" style="background:var(--naranja)"></span>Estructura GEU (dato confirmado) — <b id="pctEstructura"></b></span>
+        <span><span class="dot" style="background:var(--gris)"></span>Resto del proyecto (dato real de cliente) — <b id="pctResto"></b></span>
+      </div>
+    </div>
+    <div>
+      <div class="scenario-card panel">
+        <div class="stitle">Retorno — autoconsumo</div>
+        <span class="sval" id="paybackAutoVal"></span><span class="sunit"> años</span>
+        <div class="sdetail" id="paybackAutoDet"></div>
+      </div>
+      <div class="scenario-card panel">
+        <div class="stitle">Retorno — venta a comercializador / PPA</div>
+        <span class="sval" id="paybackPPAVal"></span><span class="sunit"> años</span>
+        <div class="sdetail" id="paybackPPADet"></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>De qué se compone el "resto del proyecto" — referencia real de cliente</h2>
+  <div class="tablewrap" style="max-height:none;">
+    <table>
+      <thead><tr><th>Categoría</th><th>Chiquinquirá (144 mesas)</th><th>% del total</th><th>Puerto Boyacá (233 mesas)</th><th>% del total</th></tr></thead>
+      <tbody>
+        <tr><td>Equipos principales (paneles, inversores, transformadores)</td><td>$1.935.021.984</td><td>47,9%</td><td>$3.041.173.546</td><td>51,4%</td></tr>
+        <tr><td>Mano de obra</td><td>$1.057.195.572</td><td>26,2%</td><td>$1.254.692.808</td><td>21,2%</td></tr>
+        <tr><td>Área eléctrica (cableado, puesta a tierra, iluminación)</td><td>$384.490.713</td><td>9,5%</td><td>$593.041.927</td><td>10,0%</td></tr>
+        <tr><td>Subestación</td><td>$266.157.687</td><td>6,6%</td><td>$397.654.676</td><td>6,7%</td></tr>
+        <tr><td>Cimentación y obra civil de paneles (sin estructura)</td><td>$157.261.984</td><td>3,9%</td><td>$270.338.176</td><td>4,6%</td></tr>
+        <tr><td>Cerramiento perimetral</td><td>$47.868.505</td><td>1,2%</td><td>$94.579.463</td><td>1,6%</td></tr>
+        <tr><td>Logística, herramientas, seguridad, SST y otros</td><td>$193.051.617</td><td>4,8%</td><td>$260.514.187</td><td>4,4%</td></tr>
+        <tr class="totalrow"><td>Total (sin estructura metálica)</td><td>$4.041.048.062</td><td>100%</td><td>$5.912.194.783</td><td>100%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">
+    De aquí salen las dos referencias de "resto del proyecto" que usa el cálculo (más abajo, en "Datos técnicos"). Viene de los presupuestos reales de cliente para Chiquinquirá (144 mesas) y Puerto Boyacá (233 mesas), <b>ya excluyendo la línea de estructura metálica</b> (que en ambos presupuestos GEU reemplaza con su propio precio confirmado de $6.230.000/mesa). Fuente: hoja "MATERIALES" de cada presupuesto.
+  </div>
+
+  <h2>Plan de pagos sugerido</h2>
+  <div class="grid" style="margin-bottom:6px;">
+    <div class="field">
+      <label>Anticipo — firma de contrato (%)</label>
+      <input id="pagoAnticipo" type="number" value="30" step="5" min="0" max="100">
+    </div>
+    <div class="field">
+      <label>Contra avance de fabricación (%)</label>
+      <input id="pagoAvance" type="number" value="40" step="5" min="0" max="100">
+    </div>
+    <div class="field">
+      <label>Contra entrega / montaje (%)</label>
+      <input id="pagoEntrega" type="number" value="30" step="5" min="0" max="100">
+    </div>
+  </div>
+  <div class="note" id="pagoCheckNote"></div>
+  <div class="tablewrap" style="max-height:none;">
+    <table>
+      <thead><tr><th>Hito de pago</th><th>% del total</th><th>Monto estimado (COP)</th></tr></thead>
+      <tbody id="pagoTbody"></tbody>
+    </table>
+  </div>
+  <div class="note warn">
+    Este plan de pagos es una propuesta de referencia, no una condición comercial cerrada. Los porcentajes y los
+    hitos deben confirmarse con el cliente en la negociación del contrato.
+  </div>
+
+  <h2>Retorno de la inversión en el tiempo</h2>
+  <div class="chartbox">
+    <h3>Flujo de caja acumulado — proyecto seleccionado (sin flujo descontado)</h3>
+    <svg id="chartROI" viewBox="0 0 940 300" width="100%"></svg>
+  </div>
+  <div class="note">
+    La línea cruza el eje horizontal en el año en que la inversión queda recuperada (el mismo dato que el periodo de
+    retorno de arriba). Después de ese punto, el flujo acumulado sigue siendo positivo mientras el proyecto continúa
+    generando ahorro o ingreso. Este cálculo no incluye degradación de paneles, incremento de tarifa, operación y
+    mantenimiento, ni el efecto cuantificado de los beneficios tributarios de la Ley 1715 — es una proyección simple
+    a partir de un ahorro/ingreso anual constante.
+  </div>
+
+  <h2>De qué depende este cálculo</h2>
+  <div class="explain-grid">
+    <div class="explain-card confirmed">
+      <span class="tag confirmed">Dato confirmado por GEU</span>
+      <h3>Estructura M24</h3>
+      <p>Lo que GEU Structure fabrica y vende: la estructura metálica de soporte. Precio de venta ya confirmado por
+      Gerencia de Proyectos, calculado por número exacto de mesas según la capacidad del proyecto.</p>
+    </div>
+    <div class="explain-card confirmed">
+      <span class="tag confirmed">Dato real de cliente</span>
+      <h3>Resto del proyecto</h3>
+      <p>Paneles, inversores, cableado, mano de obra, subestación, cimentación y demás — todo lo que <b>GEU no vende ni fabrica</b>. Ya no es una referencia de mercado: viene de los presupuestos reales de dos proyectos de cliente (Chiquinquirá y Puerto Boyacá), con la línea de estructura metálica ya restada. Ajustable si tienes un dato más reciente.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    En corto: la parte turquesa de la barra de arriba es un número real (nuestra estructura). La parte gris es un
+    estimado de todo lo demás que necesita el proyecto para funcionar, calculado a partir de presupuestos reales de otros
+    proyectos.
+  </div>
+
+  <h2>Ajusta los supuestos</h2>
+  <p class="assum-intro">
+    Estos cuatro valores son los que más cambian de un proyecto a otro: la radiación del sitio y el precio de la energía.
+    Muévelos con datos reales cuando los tengas y el cálculo se actualiza al instante. Los datos técnicos de la estructura
+    ya están confirmados por GEU y quedan más abajo, plegados.
+  </p>
+
+  <div class="assum-group">
+    <div class="assum-card">
+      <div class="ac-head">
+        <div class="ac-label">Sol útil al día<small>Horas Sol Pico · HSP</small></div>
+        <div class="ac-val" id="hspVal">4,5 h</div>
+      </div>
+      <input type="range" id="hsp" min="3" max="6" step="0.1" value="4.5">
+      <div class="ac-scale"><span>3,0</span><span>6,0 h</span></div>
+      <div class="ac-hint">Horas de sol "a plena potencia" que recibe el sitio cada día. En Colombia va de ~3,5 a ~5,5 según la región.</div>
+      <details class="ac-src"><summary>De dónde sale</summary><p>Referencia regional. Validar contra el Atlas de radiación del IDEAM para el sitio específico del proyecto.</p></details>
+    </div>
+
+    <div class="assum-card">
+      <div class="ac-head">
+        <div class="ac-label">Rendimiento del sistema<small>Performance Ratio · PR</small></div>
+        <div class="ac-val" id="prVal">80%</div>
+      </div>
+      <input type="range" id="pr" min="0.7" max="0.9" step="0.01" value="0.80">
+      <div class="ac-scale"><span>70%</span><span>90%</span></div>
+      <div class="ac-hint">Qué porcentaje de la energía del sol llega realmente a la red, después de pérdidas por cableado, inversor, temperatura y suciedad.</div>
+      <details class="ac-src"><summary>De dónde sale</summary><p>Rango típico de la industria: 75%–85%. 80% es un valor conservador y realista para instalaciones bien mantenidas.</p></details>
+    </div>
+
+    <div class="assum-card">
+      <div class="ac-head">
+        <div class="ac-label">Precio de la energía que ahorras<small>Tarifa de autoconsumo</small></div>
+        <div class="ac-val" id="tarifaAutoVal">$800/kWh</div>
+      </div>
+      <input type="range" id="tarifaAuto" min="300" max="1400" step="10" value="800">
+      <div class="ac-scale"><span>$300</span><span>$1.400</span></div>
+      <div class="ac-hint">Lo que pagas hoy por cada kWh de la red. Cada kWh que genera el proyecto es un kWh que dejas de comprar a este precio.</div>
+      <details class="ac-src"><summary>De dónde sale</summary><p>Promedio nacional residencial ene-2026 ≈ 800–900 COP/kWh (MinMinas). Reemplazar por el valor de la factura real del cliente.</p></details>
+    </div>
+
+    <div class="assum-card">
+      <div class="ac-head">
+        <div class="ac-label">Precio de venta a la red / PPA<small>Tarifa de venta</small></div>
+        <div class="ac-val" id="tarifaPPAVal">$400/kWh</div>
+      </div>
+      <input type="range" id="tarifaPPA" min="150" max="800" step="10" value="400">
+      <div class="ac-scale"><span>$150</span><span>$800</span></div>
+      <div class="ac-hint">Lo que te pagarían por cada kWh si vendes la energía en vez de consumirla. Suele ser más bajo que la tarifa de compra.</div>
+      <details class="ac-src"><summary>De dónde sale</summary><p>Entre el precio de bolsa (≈213–300 COP/kWh, XM ene-2026) y una tarifa PPA negociada. Ajustar con la cifra real acordada en el contrato.</p></details>
+    </div>
+  </div>
+
+  <details class="assum-advanced">
+    <summary>Datos técnicos de la estructura M24 <span class="muted">— ya confirmados por GEU</span></summary>
+    <div class="adv-body">
+      <div class="grid">
+        <div class="field readonly">
+          <label>Módulos por mesa<br><small style="font-weight:600;color:var(--ink3)">paneles por estructura M24</small></label>
+          <input id="modulosPorMesa" type="number" value="24">
+        </div>
+        <div class="field readonly">
+          <label>Potencia de cada panel<br><small style="font-weight:600;color:var(--ink3)">Wp</small></label>
+          <input id="potModulo" type="number" value="710">
+        </div>
+        <div class="field">
+          <label>Precio por mesa M24<br><small style="font-weight:600;color:var(--ink3)">COP, dato confirmado por GEU</small></label>
+          <input id="precioMesa" type="number" value="6230000" step="10000">
+          <span class="echo" id="precioMesaEcho"></span>
+        </div>
+        <div class="field">
+          <label>Resto del proyecto · referencia 144 mesas<br><small style="font-weight:600;color:var(--ink3)">COP por mesa</small></label>
+          <input id="resto144" type="number" value="28062834" step="10000">
+          <span class="echo" id="resto144Echo"></span>
+          <small>Presupuesto real de cliente (paneles, mano de obra, área eléctrica, subestación, cimentación, cerramiento…), <b>sin la estructura metálica</b>. Fuente: PRESUPUESTO_CHIQUINQUIRA_REV_9, hoja MATERIALES.</small>
+        </div>
+        <div class="field">
+          <label>Resto del proyecto · referencia 233 mesas<br><small style="font-weight:600;color:var(--ink3)">COP por mesa</small></label>
+          <input id="resto233" type="number" value="25374227" step="10000">
+          <span class="echo" id="resto233Echo"></span>
+          <small>Mismo criterio, en el proyecto de mayor escala. La baja frente al de 144 mesas refleja economía de escala real. Fuente: PRESUPUESTO_PUERTO_BOYACA_REV_22, hoja MATERIALES.</small>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <h2>Proyección completa — 1 a 20 MW</h2>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th>MW</th><th>kWp</th><th>N° mesas</th><th>Estructura GEU</th><th>Resto proyecto</th>
+          <th>Inversión total</th><th>Generación anual (kWh)</th>
+          <th>Retorno autoconsumo</th><th>Retorno venta/PPA</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="charts">
+    <div class="chartbox">
+      <h3>Inversión total vs. capacidad (MW)</h3>
+      <svg id="chartInv" viewBox="0 0 480 260" width="100%"></svg>
+    </div>
+    <div class="chartbox">
+      <h3>Periodo de retorno vs. capacidad (MW)</h3>
+      <svg id="chartPay" viewBox="0 0 480 260" width="100%"></svg>
+    </div>
+  </div>
+
+</div>
+
+<div class="foot">
+  <div class="foot-inner">
+    <b>Nota metodológica.</b> El número de mesas se redondea hacia arriba (no se fabrican mesas parciales), por lo cual la
+    inversión por kWp puede variar levemente entre escalones de potencia. El periodo de retorno es un cálculo simple
+    (inversión total ÷ ingreso o ahorro anual), sin flujo de caja descontado, sin degradación anual de paneles, sin
+    incremento de tarifa en el tiempo, sin costos de operación y mantenimiento y sin beneficios tributarios (p. ej.
+    Ley 1715). Esta herramienta es un esquema conceptual de apoyo comercial interno; no reemplaza una evaluación
+    financiera formal ni un estudio de factibilidad del proyecto.
+  </div>
+</div>
+
+<script>
+function fmtCOP(n){ return '$' + Math.round(n).toLocaleString('es-CO'); }
+function fmtNum(n, d){ return Number(n).toLocaleString('es-CO', {maximumFractionDigits:d===undefined?0:d, minimumFractionDigits:d===undefined?0:d}); }
+
+const ids = ['modulosPorMesa','potModulo','precioMesa','resto144','resto233','hsp','pr','tarifaAuto','tarifaPPA','pagoAnticipo','pagoAvance','pagoEntrega'];
+ids.forEach(id => document.getElementById(id).addEventListener('input', recalc));
+
+const mwSlider = document.getElementById('mwSlider');
+const battCells = document.getElementById('battCells');
+function paintSlider(){
+  const v = parseInt(mwSlider.value, 10);
+  const max = parseInt(mwSlider.max, 10);
+  const pct = (v - mwSlider.min) / (max - mwSlider.min) * 100;
+  mwSlider.style.setProperty('--fill', pct + '%');
+
+  if (battCells.children.length !== max){
+    battCells.innerHTML = Array.from({ length: max }, () => '<span class="batt-cell"></span>').join('');
+  }
+  Array.from(battCells.children).forEach((cell, i) => {
+    cell.classList.toggle('on', i < v);
+    cell.classList.toggle('charging', i === v - 1);
+  });
+}
+mwSlider.addEventListener('input', () => {
+  document.getElementById('mwLabel').textContent = mwSlider.value;
+  paintSlider();
+  recalc();
+});
+paintSlider();
+
+// Sliders de supuestos: relleno + lectura en vivo (recalc ya está enganchado vía `ids`).
+const assumSliders = [
+  { id:'hsp',        fmt:v => v.toLocaleString('es-CO',{minimumFractionDigits:1,maximumFractionDigits:1}) + ' h' },
+  { id:'pr',         fmt:v => Math.round(v*100) + '%' },
+  { id:'tarifaAuto', fmt:v => '$' + Math.round(v).toLocaleString('es-CO') + '/kWh' },
+  { id:'tarifaPPA',  fmt:v => '$' + Math.round(v).toLocaleString('es-CO') + '/kWh' },
+];
+assumSliders.forEach(f => {
+  const el = document.getElementById(f.id);
+  const out = document.getElementById(f.id + 'Val');
+  const paint = () => {
+    const pct = (el.value - el.min) / (el.max - el.min) * 100;
+    el.style.setProperty('--fill', pct + '%');
+    if (out) out.textContent = f.fmt(parseFloat(el.value));
+  };
+  el.addEventListener('input', paint);
+  paint();
+});
+
+// Campos de dinero: eco formateado bajo el input.
+['precioMesa','resto144','resto233'].forEach(id => {
+  const el = document.getElementById(id);
+  const echo = document.getElementById(id + 'Echo');
+  if (!echo) return;
+  const upd = () => { echo.textContent = '≈ $' + Number(el.value || 0).toLocaleString('es-CO'); };
+  el.addEventListener('input', upd);
+  upd();
+});
+
+// Barra fija de resumen: aparece al pasar el selector.
+const stickyBar = document.getElementById('stickyBar');
+document.getElementById('sbUp').addEventListener('click', () => {
+  document.getElementById('selector').scrollIntoView({ behavior:'smooth', block:'center' });
+});
+const selectorEl = document.getElementById('selector');
+function updateStickyBar(){
+  const trigger = selectorEl.offsetTop + selectorEl.offsetHeight;
+  stickyBar.classList.toggle('on', window.scrollY > trigger);
+}
+window.addEventListener('scroll', updateStickyBar, { passive:true });
+window.addEventListener('resize', updateStickyBar);
+updateStickyBar();
+
+let rows = [];
+
+function computeRow(mw, kwpPorMesa, precioMesa, resto144, resto233, hsp, pr, tarifaAuto, tarifaPPA){
+  const kwp = mw * 1000;
+  const nMesas = Math.ceil(kwp / kwpPorMesa);
+  const costoEstructura = nMesas * precioMesa;
+  // Interpolación (o extrapolación) del costo real del resto del proyecto por mesa,
+  // entre los dos proyectos de cliente reales: Chiquinquirá (144 mesas) y Puerto Boyacá (233 mesas).
+  const t = (nMesas - 144) / (233 - 144);
+  let restoPorMesa = resto144 + t * (resto233 - resto144);
+  // Límite de seguridad: fuera del rango real medido, la extrapolación lineal no puede
+  // hacer que el costo por mesa se dispare ni se vuelva negativo. Se acota entre el 60% y el 160%
+  // de los valores reales observados.
+  const minPermitido = Math.min(resto144, resto233) * 0.6;
+  const maxPermitido = Math.max(resto144, resto233) * 1.6;
+  restoPorMesa = Math.max(minPermitido, Math.min(maxPermitido, restoPorMesa));
+  const costoResto = nMesas * restoPorMesa;
+  const inversionTotal = costoEstructura + costoResto;
+  const generacionAnual = kwp * hsp * 365 * pr;
+  const ahorroAuto = generacionAnual * tarifaAuto;
+  const ingresoPPA = generacionAnual * tarifaPPA;
+  const paybackAuto = ahorroAuto > 0 ? inversionTotal / ahorroAuto : null;
+  const paybackPPA = ingresoPPA > 0 ? inversionTotal / ingresoPPA : null;
+  const extrapolado = nMesas < 144 || nMesas > 233;
+  return {mw, kwp, nMesas, costoEstructura, costoResto, restoPorMesa, inversionTotal, generacionAnual, ahorroAuto, paybackAuto, ingresoPPA, paybackPPA, extrapolado};
+}
+
+function recalc(){
+  const modulos = parseFloat(document.getElementById('modulosPorMesa').value) || 0;
+  const potMod = parseFloat(document.getElementById('potModulo').value) || 0;
+  const kwpPorMesa = (modulos * potMod) / 1000;
+
+  const precioMesa = parseFloat(document.getElementById('precioMesa').value) || 0;
+  const resto144 = parseFloat(document.getElementById('resto144').value) || 0;
+  const resto233 = parseFloat(document.getElementById('resto233').value) || 0;
+  const hsp = parseFloat(document.getElementById('hsp').value) || 0;
+  const pr = parseFloat(document.getElementById('pr').value) || 0;
+  const tarifaAuto = parseFloat(document.getElementById('tarifaAuto').value) || 0;
+  const tarifaPPA = parseFloat(document.getElementById('tarifaPPA').value) || 0;
+
+  rows = [];
+  for(let mw = 1; mw <= 20; mw++){
+    rows.push(computeRow(mw, kwpPorMesa, precioMesa, resto144, resto233, hsp, pr, tarifaAuto, tarifaPPA));
+  }
+
+  const selMw = parseInt(document.getElementById('mwSlider').value);
+  const sel = rows[selMw - 1];
+
+  renderHero(sel);
+  renderComposition(sel);
+  renderScenarios(sel);
+  renderTable(selMw);
+  renderCharts();
+  renderPaymentPlan(sel);
+  renderROIChart(sel);
+  renderExtrapNote(sel);
+
+  document.getElementById('sbMw').textContent = sel.mw + ' MW';
+  document.getElementById('sbInv').textContent = fmtCOP(sel.inversionTotal);
+  document.getElementById('sbPay').textContent = sel.paybackAuto ? fmtNum(sel.paybackAuto,1) + ' años' : '—';
+}
+
+function renderExtrapNote(sel){
+  const el = document.getElementById('extrapNote');
+  if(!el) return;
+  if(sel.extrapolado){
+    const dir = sel.nMesas < 144 ? 'por debajo de' : 'por encima de';
+    el.innerHTML = `<div class="note warn"><b>Fuera del rango real de referencia:</b> ${fmtNum(sel.nMesas)} mesas está ${dir} el tramo cubierto por los dos proyectos de cliente (144 a 233 mesas). El costo del resto del proyecto para esta capacidad es una extrapolación de esa curva, no una medición directa — trátalo con más cautela que los valores dentro del rango 144–233 mesas.</div>`;
+  } else {
+    el.innerHTML = `<div class="note">${fmtNum(sel.nMesas)} mesas cae dentro del rango real medido en los dos proyectos de cliente (144–233 mesas) — el costo del resto del proyecto para esta capacidad es una interpolación directa entre esos dos datos reales, no un supuesto de mercado.</div>`;
+  }
+}
+
+function renderPaymentPlan(sel){
+  const p1 = parseFloat(document.getElementById('pagoAnticipo').value) || 0;
+  const p2 = parseFloat(document.getElementById('pagoAvance').value) || 0;
+  const p3 = parseFloat(document.getElementById('pagoEntrega').value) || 0;
+  const total = p1 + p2 + p3;
+
+  const note = document.getElementById('pagoCheckNote');
+  if (Math.abs(total - 100) > 0.01){
+    note.innerHTML = `<b>La suma de los porcentajes es ${fmtNum(total,0)}%.</b> Ajusta los tres campos para que sumen 100% antes de compartir el plan de pagos.`;
+  } else {
+    note.innerHTML = `Suma de porcentajes: <b>100%</b>. Montos calculados sobre la inversión total estimada para ${sel.mw} MW.`;
+  }
+
+  const hitos = [
+    ['Anticipo — firma de contrato', p1],
+    ['Contra avance de fabricación', p2],
+    ['Contra entrega / montaje', p3],
+  ];
+  document.getElementById('pagoTbody').innerHTML = hitos.map(([label, pct]) => `
+    <tr>
+      <td>${label}</td>
+      <td>${fmtNum(pct,0)}%</td>
+      <td><b>${fmtCOP(sel.inversionTotal * pct / 100)}</b></td>
+    </tr>
+  `).join('') + `
+    <tr class="totalrow">
+      <td>Total</td>
+      <td>${fmtNum(total,0)}%</td>
+      <td>${fmtCOP(sel.inversionTotal * total / 100)}</td>
+    </tr>
+  `;
+}
+
+function renderROIChart(sel){
+  const w = 940, h = 300, padL = 74, padR = 20, padT = 20, padB = 34;
+  const x0 = padL, x1 = w - padR, y0h = h - padB, y1h = padT;
+  const years = 10;
+
+  const seriesAuto = [];
+  const seriesPPA = [];
+  for(let y = 0; y <= years; y++){
+    seriesAuto.push(-sel.inversionTotal + sel.ahorroAuto * y);
+    seriesPPA.push(-sel.inversionTotal + sel.ingresoPPA * y);
+  }
+  const allVals = [...seriesAuto, ...seriesPPA];
+  const maxV = Math.max(...allVals, 0);
+  const minV = Math.min(...allVals, 0);
+  const range = maxV - minV || 1;
+
+  const xFor = (y) => x0 + (y / years) * (x1 - x0);
+  const yFor = (v) => y0h - ((v - minV) / range) * (y0h - y1h);
+  const yZero = yFor(0);
+
+  const xFor0 = xFor(0);
+  let s = `<defs>
+    <linearGradient id="roiFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1FA0BD" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#1FA0BD" stop-opacity="0"/>
+    </linearGradient>
+  </defs>`;
+
+  // horizontal gridlines + eje Y
+  [0,0.25,0.5,0.75,1].forEach(f => {
+    const v = minV + f*range;
+    const yy = yFor(v);
+    s += `<line x1="${x0}" y1="${yy}" x2="${x1}" y2="${yy}" stroke="#EEF1F4"/>`;
+    s += `<text x="${x0-10}" y="${yy+3.5}" font-size="10" fill="#8a9099" text-anchor="end">$${(v/1e9).toFixed(1)}B</text>`;
+  });
+
+  // línea cero (punto de equilibrio)
+  s += `<line x1="${x0}" y1="${yZero.toFixed(1)}" x2="${x1}" y2="${yZero.toFixed(1)}" stroke="#14687B" stroke-width="1.5" stroke-dasharray="2,3"/>`;
+  s += `<text x="${x1}" y="${yZero.toFixed(1)-6}" font-size="10" font-weight="700" fill="#14687B" text-anchor="end">Punto de equilibrio</text>`;
+
+  // eje X
+  s += `<line x1="${x0}" y1="${y0h}" x2="${x1}" y2="${y0h}" stroke="#D7DCE2" stroke-width="1"/>`;
+  for(let y = 0; y <= years; y++){
+    s += `<text x="${xFor(y).toFixed(1)}" y="${y0h+18}" font-size="10" fill="#8a9099" text-anchor="middle">${y}</text>`;
+  }
+  s += `<text x="${(x0+x1)/2}" y="${h-3}" font-size="10.5" fill="#5b5f66" font-weight="600" text-anchor="middle">Años</text>`;
+
+  // área bajo la curva de autoconsumo
+  const pathAuto = seriesAuto.map((v,i) => `${i===0?'M':'L'}${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).join(' ');
+  const pathPPA = seriesPPA.map((v,i) => `${i===0?'M':'L'}${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).join(' ');
+  s += `<path d="${pathAuto} L${xFor(years).toFixed(1)},${y0h} L${xFor0.toFixed(1)},${y0h} Z" fill="url(#roiFill)"/>`;
+  s += `<path d="${pathPPA}" fill="none" stroke="#5b5f66" stroke-width="2.5" stroke-dasharray="6,4" stroke-linecap="round"/>`;
+  s += `<path d="${pathAuto}" fill="none" stroke="#1FA0BD" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+  // marcador del año de retorno (autoconsumo)
+  if (sel.paybackAuto && sel.paybackAuto <= years){
+    const px = xFor(sel.paybackAuto);
+    s += `<line x1="${px.toFixed(1)}" y1="${y1h}" x2="${px.toFixed(1)}" y2="${y0h}" stroke="#1FA0BD" stroke-width="1" stroke-dasharray="3,3"/>`;
+    s += `<circle cx="${px.toFixed(1)}" cy="${yZero.toFixed(1)}" r="5" fill="#1FA0BD" stroke="#fff" stroke-width="2"/>`;
+    s += `<text x="${px.toFixed(1)}" y="${y1h+12}" font-size="10.5" font-weight="800" fill="#14687B" text-anchor="middle">${sel.paybackAuto.toFixed(1)} años</text>`;
+  }
+
+  // leyenda
+  s += `<rect x="${x1-186}" y="${y1h}" width="11" height="11" rx="2" fill="#1FA0BD"/><text x="${x1-170}" y="${y1h+10}" font-size="10.5" fill="#5b5f66">Autoconsumo</text>`;
+  s += `<rect x="${x1-186}" y="${y1h+18}" width="11" height="11" rx="2" fill="#5b5f66"/><text x="${x1-170}" y="${y1h+28}" font-size="10.5" fill="#5b5f66">Venta / PPA</text>`;
+
+  document.getElementById('chartROI').innerHTML = s;
+}
+
+function renderHero(sel){
+  const heroGrid = document.getElementById('heroGrid');
+  heroGrid.innerHTML = `
+    <div class="hero-card accent">
+      <div class="l">Inversión total requerida</div>
+      <div class="v">${fmtCOP(sel.inversionTotal)}</div>
+      <div class="sub">para ${sel.mw} MW instalados</div>
+    </div>
+    <div class="hero-card">
+      <div class="l">Mesas M24 necesarias</div>
+      <div class="v">${fmtNum(sel.nMesas)}</div>
+      <div class="sub">${fmtCOP(sel.costoEstructura)} en estructura</div>
+    </div>
+    <div class="hero-card">
+      <div class="l">Generación anual estimada</div>
+      <div class="v">${fmtNum(sel.generacionAnual/1000,0)} MWh</div>
+      <div class="sub">${fmtNum(sel.generacionAnual)} kWh/año</div>
+    </div>
+    <div class="hero-card">
+      <div class="l">Inversión por kWp</div>
+      <div class="v">${fmtCOP(sel.inversionTotal/sel.kwp)}</div>
+      <div class="sub">promedio a esta escala</div>
+    </div>
+  `;
+}
+
+function renderComposition(sel){
+  const pctE = sel.costoEstructura / sel.inversionTotal * 100;
+  const pctR = 100 - pctE;
+  document.getElementById('compTotal').textContent = fmtCOP(sel.inversionTotal);
+  document.getElementById('segEstructura').style.width = pctE + '%';
+  document.getElementById('segResto').style.width = pctR + '%';
+  document.getElementById('pctEstructura').textContent = fmtNum(pctE,1) + '%';
+  document.getElementById('pctResto').textContent = fmtNum(pctR,1) + '%';
+}
+
+function renderScenarios(sel){
+  document.getElementById('paybackAutoVal').textContent = sel.paybackAuto ? fmtNum(sel.paybackAuto,1) : '—';
+  document.getElementById('paybackAutoDet').textContent = 'Ahorro anual estimado: ' + fmtCOP(sel.ahorroAuto);
+  document.getElementById('paybackPPAVal').textContent = sel.paybackPPA ? fmtNum(sel.paybackPPA,1) : '—';
+  document.getElementById('paybackPPADet').textContent = 'Ingreso anual estimado: ' + fmtCOP(sel.ingresoPPA);
+}
+
+function renderTable(selMw){
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = rows.map(r => `
+    <tr class="${r.mw===selMw?'selected':''}">
+      <td>${r.mw}</td>
+      <td>${fmtNum(r.kwp)}</td>
+      <td>${r.nMesas}</td>
+      <td>${fmtCOP(r.costoEstructura)}</td>
+      <td>${fmtCOP(r.costoResto)}</td>
+      <td><b>${fmtCOP(r.inversionTotal)}</b></td>
+      <td>${fmtNum(r.generacionAnual)}</td>
+      <td>${r.paybackAuto ? fmtNum(r.paybackAuto,1) : '—'}</td>
+      <td>${r.paybackPPA ? fmtNum(r.paybackPPA,1) : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+function makeAxis(w, h, padL, padR, padT, padB, xTicks, yTicks){
+  const x0 = padL, x1 = w - padR, y0 = h - padB, y1 = padT;
+  let s = `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y0}" stroke="#999" stroke-width="1"/>`;
+  s += `<line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y1}" stroke="#999" stroke-width="1"/>`;
+  xTicks.forEach(t => {
+    s += `<text x="${t.x}" y="${y0+16}" font-size="9" fill="#777" text-anchor="middle">${t.label}</text>`;
+    s += `<line x1="${t.x}" y1="${y0}" x2="${t.x}" y2="${y0+3}" stroke="#999"/>`;
+  });
+  yTicks.forEach(t => {
+    s += `<text x="${x0-6}" y="${t.y+3}" font-size="9" fill="#777" text-anchor="end">${t.label}</text>`;
+    s += `<line x1="${x0-3}" y1="${t.y}" x2="${x0}" y2="${t.y}" stroke="#999"/>`;
+    s += `<line x1="${x0}" y1="${t.y}" x2="${x1}" y2="${t.y}" stroke="#eee"/>`;
+  });
+  return s;
+}
+
+function renderCharts(){
+  const w = 480, h = 260, padL = 62, padR = 14, padT = 14, padB = 26;
+  const x0 = padL, x1 = w - padR, y0 = h - padB, y1 = padT;
+  const selMw = parseInt(document.getElementById('mwSlider').value);
+
+  const maxInv = Math.max(...rows.map(r => r.inversionTotal));
+  const xFor = (mw) => x0 + (mw - 1) / 19 * (x1 - x0);
+  const yForInv = (v) => y0 - (v / maxInv) * (y0 - y1);
+
+  const xTicks1 = [1,5,10,15,20].map(mw => ({x:xFor(mw), label:mw}));
+  const yTicks1 = [0,0.25,0.5,0.75,1].map(f => ({y:y0-f*(y0-y1), label:(maxInv*f/1e9).toFixed(1)+'B'}));
+
+  let path1 = rows.map((r,i) => `${i===0?'M':'L'}${xFor(r.mw).toFixed(1)},${yForInv(r.inversionTotal).toFixed(1)}`).join(' ');
+  let dots1 = rows.map(r => `<circle cx="${xFor(r.mw).toFixed(1)}" cy="${yForInv(r.inversionTotal).toFixed(1)}" r="${r.mw===selMw?4:2.3}" fill="${r.mw===selMw?'#333334':'#1FA0BD'}"/>`).join('');
+
+  let svg1 = makeAxis(w,h,padL,padR,padT,padB,xTicks1,yTicks1);
+  svg1 += `<path d="${path1}" fill="none" stroke="#14687B" stroke-width="2"/>${dots1}`;
+  svg1 += `<text x="${w/2}" y="${h-4}" font-size="9.5" fill="#555" text-anchor="middle">Capacidad (MW)</text>`;
+  document.getElementById('chartInv').innerHTML = svg1;
+
+  const allPayback = rows.flatMap(r => [r.paybackAuto, r.paybackPPA]).filter(v => v!==null && isFinite(v));
+  const maxPay = Math.max(...allPayback, 1);
+  const yForPay = (v) => y0 - (v / maxPay) * (y0 - y1);
+
+  const xTicks2 = [1,5,10,15,20].map(mw => ({x:xFor(mw), label:mw}));
+  const yTicks2 = [0,0.25,0.5,0.75,1].map(f => ({y:y0-f*(y0-y1), label:(maxPay*f).toFixed(1)}));
+
+  let pathAuto = rows.map((r,i) => `${i===0?'M':'L'}${xFor(r.mw).toFixed(1)},${r.paybackAuto!==null?yForPay(r.paybackAuto).toFixed(1):y0}`).join(' ');
+  let pathPPA = rows.map((r,i) => `${i===0?'M':'L'}${xFor(r.mw).toFixed(1)},${r.paybackPPA!==null?yForPay(r.paybackPPA).toFixed(1):y0}`).join(' ');
+
+  let svg2 = makeAxis(w,h,padL,padR,padT,padB,xTicks2,yTicks2);
+  svg2 += `<path d="${pathAuto}" fill="none" stroke="#1FA0BD" stroke-width="2"/>`;
+  svg2 += `<path d="${pathPPA}" fill="none" stroke="#333334" stroke-width="2" stroke-dasharray="4,3"/>`;
+  svg2 += `<line x1="${xFor(selMw)}" y1="${y1}" x2="${xFor(selMw)}" y2="${y0}" stroke="#999" stroke-dasharray="2,2"/>`;
+  svg2 += `<text x="${w/2}" y="${h-4}" font-size="9.5" fill="#555" text-anchor="middle">Capacidad (MW)</text>`;
+  svg2 += `<rect x="${x1-160}" y="${y1+2}" width="10" height="10" fill="#1FA0BD"/><text x="${x1-146}" y="${y1+11}" font-size="9" fill="#555">Autoconsumo</text>`;
+  svg2 += `<rect x="${x1-160}" y="${y1+16}" width="10" height="10" fill="#333334"/><text x="${x1-146}" y="${y1+25}" font-size="9" fill="#555">Venta / PPA</text>`;
+  document.getElementById('chartPay').innerHTML = svg2;
+}
+
+recalc();
+</script>
+
+</body>
+</html>
