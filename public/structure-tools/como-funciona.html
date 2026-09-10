@@ -403,27 +403,33 @@ CZ.forEach(z => {
   gCorreas.add(boxAt(0.32, 0.22, 0.19, MAT.steelD, 0, y, z));
 });
 
-// ===== paneles (grupo conmutable) =====
+// ===== paneles (arreglo continuo, grupo conmutable) =====
 function buildPanels(){
   const g = new THREE.Group();
-  const PC = 6;
-  const stepX = 0.74, panW = 0.7;
-  const bands = [ { z: 1.55, len: 1.9 }, { z: -0.7, len: 1.9 } ];
+  const PC = 6;                       // módulos a lo largo (X)
+  const rowLen = 1.98;                // largo de cada módulo sobre la pendiente
+  const arrW = PC * 0.732;            // ancho total del arreglo
+  const stepX = arrW / PC;
+  const panW = stepX - 0.006;         // casi a tope (marcos juntos)
+  const rows = [ rowLen / 2 + 0.005, -rowLen / 2 - 0.005 ];   // 2 filas que se tocan en z=0
+  const zC = -0.15;                   // centro del arreglo (sobre la correa central)
+  const y = yTop(zC) + 0.30;
   for(let i = 0; i < PC; i++){
     const px = (i - (PC - 1) / 2) * stepX;
-    bands.forEach(b => {
-      const y = yTop(b.z) + 0.34;
+    rows.forEach(dz => {
       const mod = new THREE.Group();
-      mod.add(boxAt(panW, 0.028, b.len, MAT.panel, 0, 0.02, 0));
-      mod.add(boxAt(panW + 0.05, 0.05, b.len + 0.05, MAT.frame, 0, 0, 0));
-      mod.add(boxAt(panW, 0.032, 0.012, MAT.grid, 0, 0.03, b.len / 4));
-      mod.add(boxAt(panW, 0.032, 0.012, MAT.grid, 0, 0.03, -b.len / 4));
-      mod.add(boxAt(0.012, 0.032, b.len, MAT.grid, 0, 0.03, 0));
-      mod.position.set(px, y, b.z);
+      mod.add(boxAt(panW, 0.030, rowLen, MAT.panel, 0, 0.02, 0));
+      mod.add(boxAt(panW + 0.01, 0.05, rowLen + 0.01, MAT.frame, 0, 0, 0));
+      mod.add(boxAt(panW, 0.034, 0.014, MAT.grid, 0, 0.03, rowLen / 4));
+      mod.add(boxAt(panW, 0.034, 0.014, MAT.grid, 0, 0.03, -rowLen / 4));
+      mod.add(boxAt(0.014, 0.034, rowLen, MAT.grid, 0, 0.03, 0));
+      mod.position.set(px, y - Math.sin(TH) * dz, zC + Math.cos(TH) * dz);
       mod.rotation.x = TH;
       g.add(mod);
     });
   }
+  // travesaño de unión entre las dos filas (a lo ancho)
+  g.add(boxAt(arrW, 0.04, 0.06, MAT.frame, 0, y + 0.02, zC));
   return g;
 }
 gPanels.add(buildPanels());
