@@ -20,8 +20,9 @@ const toolItems = [
   { label: "Cómo funciona la M24", href: "/innovation/herramientas/como-funciona" },
   { label: "Configurador M24", href: "/innovation/herramientas/configurador-m24" },
   { label: "Simulador de inversión", href: "/innovation/herramientas/simulador-inversion" },
-  { label: "Asesor Técnico", href: "/innovation/herramientas/asesor-tecnico" },
-  // { label: "Asesor Técnico · carrito", href: "/innovation/herramientas/asesor-tecnico-carrito" }, // oculto por ahora
+  // Ocultos por ahora — la ruta/HTML se conservan:
+  // { label: "Asesor Técnico", href: "/innovation/herramientas/asesor-tecnico" },
+  // { label: "Asesor Técnico · carrito", href: "/innovation/herramientas/asesor-tecnico-carrito" },
 ];
 
 const mobileMoreItems = [...navItems, ...toolItems, { label: "Ver todo GEU", href: "/" }];
