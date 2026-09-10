@@ -26,7 +26,7 @@ const quickPrompts = [
 function getDivisionFromPathname(pathname: string | null): string {
   if (!pathname) return "Cauchos";
   if (pathname.startsWith("/import")) return "Import";
-  if (pathname.startsWith("/innovation")) return "Innovation";
+  if (pathname.startsWith("/structure")) return "Innovation";
   if (pathname.startsWith("/autoservicio-inteligente")) return "Innovation";
   if (pathname.startsWith("/energy")) return "Energy";
   if (pathname.startsWith("/plastic")) return "Plastic";
@@ -156,7 +156,7 @@ export default function SupportChat() {
     };
   }, []);
 
-  if (pathname === "/" || pathname === "/cauchos" || pathname === "/import" || pathname === "/innovation" || pathname === "/energy" || pathname === "/plastic" || pathname === "/admin" || isVisualSearchOpen) {
+  if (pathname === "/" || pathname === "/cauchos" || pathname === "/import" || pathname === "/structure" || pathname === "/energy" || pathname === "/plastic" || pathname === "/admin" || isVisualSearchOpen) {
     return null;
   }
 

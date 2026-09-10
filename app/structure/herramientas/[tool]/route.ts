@@ -13,7 +13,7 @@ const TOOLS: Record<string, string> = {
 };
 
 const BACK_BAR =
-  '<a href="/innovation" style="display:flex;align-items:center;gap:8px;' +
+  '<a href="/structure" style="display:flex;align-items:center;gap:8px;' +
   "background:#050505;color:#fff;font:600 12px/1 ui-sans-serif,system-ui,Arial;" +
   "text-decoration:none;padding:12px 18px;letter-spacing:.04em;" +
   'text-transform:uppercase;border-bottom:2px solid #0498b4">&larr;&nbsp;GEU Structure</a>';
