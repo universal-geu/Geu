@@ -202,8 +202,8 @@
     <div class="eyebrow">GEU Structure · Ingeniería</div>
     <h1>Cómo funciona la M24</h1>
     <p>La mesa M24 se apoya en <b>4 columnas escalonadas</b> ancladas con placa base. Sobre ellas corren
-       <b>dos vigas laterales</b> en C que dan la inclinación, con gussets triangulares en las puntas;
-       encima, <b>tres correas</b> reciben los paneles. Explótala y toca cada pieza.</p>
+       <b>dos vigas laterales</b> en C que vuelan en ambos extremos y dan la inclinación; encima,
+       <b>tres correas</b> reciben los paneles. Explótala y toca cada pieza.</p>
   </div>
 
   <h2>La estructura</h2>
@@ -367,19 +367,13 @@ function cProfile(g, p1, p2, web, flange, m){
   g.add(strut(c, d, web + 0.06, 0.035, m));                               // ala inferior
 }
 
-// ===== vigas laterales en C, inclinadas, con tornapunta en cada voladizo =====
+// ===== vigas laterales en C, inclinadas (cantilever, sin tornapuntas) =====
 function buildRail(s){
   const g = new THREE.Group();
   const x = s * RX;
   cProfile(g, [x, yTop(Z_TIP_F), Z_TIP_F], [x, yTop(Z_TIP_B), Z_TIP_B], 0.10, RAIL_H, MAT.steel);
   // empalme de los dos tramos (~centro)
   g.add(boxAt(0.16, RAIL_H + 0.12, 0.18, MAT.steelD, x, yTop(-0.1), -0.1));
-  // tornapunta del voladizo delantero: del pie de la columna a la punta de la viga
-  g.add(strut([x, Math.max(0.14, yBot(COL_Z[0]) - 0.82), COL_Z[0] - 0.04],
-              [x, yTop(Z_TIP_F) - 0.12, Z_TIP_F - 0.02], 0.075, 0.10, MAT.steel));
-  // tornapunta trasera (más corta)
-  g.add(strut([x, yBot(COL_Z[1]) - 0.60, COL_Z[1] + 0.04],
-              [x, yTop(Z_TIP_B) - 0.10, Z_TIP_B + 0.02], 0.07, 0.09, MAT.steel));
   // tapas de punta (boca del perfil)
   g.add(boxAt(0.13, RAIL_H + 0.05, 0.05, MAT.steelD, x, yTop(Z_TIP_F), Z_TIP_F + 0.02));
   g.add(boxAt(0.13, RAIL_H + 0.05, 0.05, MAT.steelD, x, yTop(Z_TIP_B), Z_TIP_B - 0.02));
