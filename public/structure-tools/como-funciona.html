@@ -334,7 +334,7 @@ const yTop = z => FRONT_Y + SLOPE * (Z_TIP_F - z);   // eje de la viga lateral
 const yBot = z => yTop(z) - RAIL_H;            // cara inferior de la viga
 
 const COL_Z = [1.55, -1.95];                  // z de las 2 líneas de columnas (4 patas)
-const CZ = [1.95, -0.15, -2.20];              // z de las 3 correas
+const CZ = [1.55, -0.2, -1.95];               // 3 correas: sobre columna frontal, centro, columna trasera
 const CORREA_HX = RX + 0.28;                   // media longitud de correa (con voladizo)
 const PED_H = 0;                               // sin pedestal: placa base sobre el suelo
 
@@ -375,11 +375,11 @@ function buildRail(s){
   // empalme de los dos tramos (~centro)
   g.add(boxAt(0.16, RAIL_H + 0.12, 0.18, MAT.steelD, x, yTop(-0.1), -0.1));
   // tornapunta del voladizo delantero: del pie de la columna a la punta de la viga
-  g.add(strut([x, Math.max(0.12, yBot(COL_Z[0]) - 0.75), COL_Z[0]],
-              [x, yTop(Z_TIP_F) - 0.06, Z_TIP_F - 0.05], 0.09, 0.12, MAT.steel));
+  g.add(strut([x, Math.max(0.14, yBot(COL_Z[0]) - 0.82), COL_Z[0] - 0.04],
+              [x, yTop(Z_TIP_F) - 0.12, Z_TIP_F - 0.02], 0.075, 0.10, MAT.steel));
   // tornapunta trasera (más corta)
-  g.add(strut([x, yBot(COL_Z[1]) - 0.55, COL_Z[1]],
-              [x, yTop(Z_TIP_B) - 0.05, Z_TIP_B + 0.05], 0.08, 0.11, MAT.steel));
+  g.add(strut([x, yBot(COL_Z[1]) - 0.60, COL_Z[1] + 0.04],
+              [x, yTop(Z_TIP_B) - 0.10, Z_TIP_B + 0.02], 0.07, 0.09, MAT.steel));
   // tapas de punta (boca del perfil)
   g.add(boxAt(0.13, RAIL_H + 0.05, 0.05, MAT.steelD, x, yTop(Z_TIP_F), Z_TIP_F + 0.02));
   g.add(boxAt(0.13, RAIL_H + 0.05, 0.05, MAT.steelD, x, yTop(Z_TIP_B), Z_TIP_B - 0.02));
@@ -391,9 +391,10 @@ const gPed = new THREE.Group(); // sin pedestales — la M24 se ancla con placa 
 scene.add(gPed);
 
 // ===== columnas (4, escalonadas, con placa base sobre el suelo) =====
+const COL_TOP = z => yBot(z) - (RAIL_H + 0.08);   // la columna termina bajo la silla E
 COL_Z.forEach(z => {
   [1, -1].forEach(s => {
-    const h = Math.max(0.25, yBot(z) - 0.04);
+    const h = Math.max(0.3, COL_TOP(z));
     gColumns.add(boxAt(0.15, h, 0.15, MAT.steel, s * RX, h / 2, z));
   });
 });
@@ -444,16 +445,17 @@ COL_Z.forEach(z => {
     gF.add(g);
   });
 });
-// E — conector columna–mesa (silla en la cabeza de la columna, toma el cordón inferior)
+// E — conector columna–mesa (silla que corona la columna y abraza la viga)
 COL_Z.forEach(z => {
   [1, -1].forEach(s => {
     const g = new THREE.Group();
-    g.add(boxAt(0.19, 0.07, 0.24, matFor.E, 0, 0.06, 0));
-    g.add(boxAt(0.05, 0.24, 0.24, matFor.E, -0.09, -0.03, 0));
-    g.add(boxAt(0.05, 0.24, 0.24, matFor.E, 0.09, -0.03, 0));
-    g.add(boxAt(0.22, 0.05, 0.06, matFor.E, 0, 0.0, 0.14));
-    sideBolt(g, MAT.bolt, 0, 0.02, 0.0, 0.26);
-    g.position.set(s * RX, yBot(z) - 0.02, z);
+    const gap = RAIL_H + 0.08;                       // alto de la silla
+    g.add(boxAt(0.22, 0.05, 0.24, matFor.E, 0, -gap / 2, 0));   // base sobre la columna
+    g.add(boxAt(0.05, gap, 0.24, matFor.E, -0.10, 0, 0));       // ala lateral
+    g.add(boxAt(0.05, gap, 0.24, matFor.E,  0.10, 0, 0));       // ala lateral
+    g.add(boxAt(0.24, 0.05, 0.24, matFor.E, 0, gap / 2, 0));    // tapa que toca la viga
+    sideBolt(g, MAT.bolt, 0, 0, 0.0, 0.26);
+    g.position.set(s * RX, yBot(z) - gap / 2, z);               // centrada entre columna y viga
     gE.add(g);
   });
 });
