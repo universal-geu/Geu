@@ -459,15 +459,26 @@ COL_Z.forEach(z => {
     gE.add(g);
   });
 });
-// D — conector viga externo (abraza el cruce correa / viga lateral)
+// D — conector viga externo (clip compacto correa / viga; en las columnas
+// la unión la resuelve la silla E, así que ahí el clip va oculto/pequeño)
 CZ.forEach(z => {
+  const atColumn = COL_Z.some(cz => Math.abs(cz - z) < 0.2);
   [1, -1].forEach(s => {
     const g = new THREE.Group();
-    g.add(boxAt(0.22, 0.22, 0.22, matFor.D, 0, 0.0, 0));            // cuerpo que abraza la viga
-    g.add(boxAt(0.05, 0.26, 0.26, matFor.D, s * 0.12, 0.0, 0));     // ala exterior contra la viga
-    g.add(boxAt(0.26, 0.05, 0.24, matFor.D, 0, 0.12, 0));           // tapa que recibe la correa
-    sideBolt(g, MAT.bolt, s * 0.02, 0.03, 0.0, 0.24);
-    g.position.set(s * RX, yTop(z), z);
+    if (atColumn) {
+      // clip discreto sobre la tapa de la silla E
+      g.add(boxAt(0.18, 0.06, 0.20, matFor.D, 0, 0.03, 0));
+      const bo = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.10, 8), MAT.bolt);
+      bo.position.set(0, 0.08, 0); g.add(bo);
+      g.position.set(s * RX, yTop(z) + 0.12, z);
+    } else {
+      // cruce en vano: abrazadera correa/viga
+      g.add(boxAt(0.18, 0.20, 0.18, matFor.D, 0, 0.0, 0));
+      g.add(boxAt(0.05, 0.24, 0.20, matFor.D, s * 0.10, 0.0, 0));
+      g.add(boxAt(0.22, 0.05, 0.18, matFor.D, 0, 0.11, 0));
+      sideBolt(g, MAT.bolt, s * 0.02, 0.03, 0.0, 0.22);
+      g.position.set(s * RX, yTop(z), z);
+    }
     gD.add(g);
   });
 });
