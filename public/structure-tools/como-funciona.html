@@ -201,9 +201,9 @@
   <div class="hud-head">
     <div class="eyebrow">GEU Structure · Ingeniería</div>
     <h1>Cómo funciona la M24</h1>
-    <p>La mesa M24 se apoya en <b>6 columnas escalonadas</b> sobre pedestales de hormigón. Sobre ellas corren
-       <b>dos vigas laterales</b> en perfil cajón que dan la inclinación, y encima <b>tres correas</b>
-       reciben los paneles. Explótala y toca cada pieza.</p>
+    <p>La mesa M24 se apoya en <b>6 columnas escalonadas</b> ancladas con placa base. Sobre ellas corren
+       <b>dos vigas laterales</b> en C que dan la inclinación, con gussets triangulares en las puntas;
+       encima, <b>tres correas</b> reciben los paneles. Explótala y toca cada pieza.</p>
   </div>
 
   <h2>La estructura</h2>
@@ -320,18 +320,23 @@ function sideBolt(g, m, x, y, z, len = 0.28){
   g.add(bo);
 }
 
-// ---------- geometría de la mesa M24 (marco rectangular, perfil cajón) ----------
-const RX = 2.5;                              // plano de las vigas laterales (± x)
-const Z_TIP_F = 2.75, Z_TIP_B = -2.15;       // extremos de la viga lateral
-const SLOPE = 0.22;                           // pendiente (~12°)
+// ---------- geometría real de la mesa M24 ----------
+// 2 vigas laterales en C, inclinadas, sobre 6 columnas escalonadas (placa base).
+// 3 correas en C cruzan de viga a viga y reciben los paneles. Gussets triangulares
+// en las puntas de la viga.
+const RX = 2.3;                               // vigas laterales en ± x
+const Z_TIP_F = 2.70, Z_TIP_B = -2.55;        // puntas de la viga (voladizos)
+const FRONT_Y = 0.98;                          // altura de la viga en la punta frontal
+const SLOPE = 0.24;                            // pendiente (~13.5°)
 const TH = Math.atan(SLOPE);
-const RAIL_H = 0.22;                          // canto del perfil de la viga
-const yTop = z => 1.58 - SLOPE * z;          // eje de la viga lateral
-const yBot = z => yTop(z) - RAIL_H;           // cara inferior de la viga (apoyo de columna)
+const RAIL_H = 0.24;                           // canto del perfil de la viga
+const yTop = z => FRONT_Y + SLOPE * (Z_TIP_F - z);   // eje de la viga lateral
+const yBot = z => yTop(z) - RAIL_H;            // cara inferior de la viga
 
-const COL_Z = [1.95, -0.05, -1.85];          // z de las 3 líneas de columnas
-const CZ = [1.95, -0.05, -1.85];             // z de las 3 correas (sobre las columnas)
-const CORREA_HX = 3.0;                        // media longitud de correa (con voladizo)
+const COL_Z = [1.85, -0.15, -2.05];           // z de las 3 líneas de columnas
+const CZ = [1.85, -0.15, -2.05];              // z de las 3 correas
+const CORREA_HX = RX + 0.28;                   // media longitud de correa (con voladizo)
+const PED_H = 0;                               // sin pedestal: placa base sobre el suelo
 
 const layers = {};
 function layer(key, dir, dist){
@@ -352,81 +357,70 @@ const gE       = layer('E',       [0, -1, 0], 0.5);
 const gColumns = layer('columns', [0, -1, 0], 1.15);
 const gF       = layer('F',       [0, -1, 0], 1.95);
 
-// ===== vigas laterales (perfil cajón macizo, inclinado) =====
+// perfil en C: alma + dos alas
+function cProfile(g, p1, p2, web, flange, m){
+  g.add(strut(p1, p2, web, flange, m));                                   // alma
+  const off = flange / 2 - 0.018;
+  const a = [p1[0], p1[1] + off, p1[2]], b = [p2[0], p2[1] + off, p2[2]];
+  const c = [p1[0], p1[1] - off, p1[2]], d = [p2[0], p2[1] - off, p2[2]];
+  g.add(strut(a, b, web + 0.06, 0.035, m));                               // ala superior
+  g.add(strut(c, d, web + 0.06, 0.035, m));                               // ala inferior
+}
+
+// ===== vigas laterales en C, inclinadas, con gussets triangulares =====
 function buildRail(s){
   const g = new THREE.Group();
   const x = s * RX;
-  // perfil principal
-  g.add(strut([x, yTop(Z_TIP_F), Z_TIP_F], [x, yTop(Z_TIP_B), Z_TIP_B], 0.14, RAIL_H, MAT.steel));
-  // pletina inferior corrida (rigidiza el ala)
-  g.add(strut([x, yTop(Z_TIP_F) - RAIL_H * 0.62, Z_TIP_F], [x, yTop(Z_TIP_B) - RAIL_H * 0.62, Z_TIP_B], 0.06, 0.05, MAT.steelD));
-  // empalme central de los dos tramos
-  g.add(boxAt(0.17, RAIL_H + 0.09, 0.16, MAT.steelD, x, yTop(-0.05), -0.05));
-  // remates de punta (perfil abierto)
-  g.add(boxAt(0.15, RAIL_H + 0.02, 0.05, MAT.steelD, x, yTop(Z_TIP_F), Z_TIP_F + 0.02));
-  g.add(boxAt(0.15, RAIL_H + 0.02, 0.05, MAT.steelD, x, yTop(Z_TIP_B), Z_TIP_B - 0.02));
+  cProfile(g, [x, yTop(Z_TIP_F), Z_TIP_F], [x, yTop(Z_TIP_B), Z_TIP_B], 0.10, RAIL_H, MAT.steel);
+  // empalme de los dos tramos (~centro)
+  g.add(boxAt(0.16, RAIL_H + 0.12, 0.18, MAT.steelD, x, yTop(-0.1), -0.1));
+  // gusset triangular delantero (bajo el voladizo)
+  const cF = COL_Z[0];
+  cProfile(g, [x, yBot(cF) - 0.02, cF], [x, yTop(Z_TIP_F) - 0.04, Z_TIP_F], 0.09, 0.16, MAT.steel);          // cordón inferior inclinado
+  g.add(strut([x, yBot(cF) - 0.02, cF], [x, yBot(cF) - 0.02, Z_TIP_F - 0.15], 0.07, 0.09, MAT.steelD));       // puntal
+  // gusset triangular trasero (más corto)
+  const cB = COL_Z[2];
+  g.add(strut([x, yBot(cB) - 0.02, cB], [x, yTop(Z_TIP_B) - 0.03, Z_TIP_B], 0.08, 0.13, MAT.steel));
+  // tapas de punta (perfil abierto)
+  g.add(boxAt(0.13, RAIL_H + 0.05, 0.04, MAT.steelD, x, yTop(Z_TIP_F), Z_TIP_F + 0.02));
+  g.add(boxAt(0.13, RAIL_H + 0.05, 0.04, MAT.steelD, x, yTop(Z_TIP_B), Z_TIP_B - 0.02));
   return g;
 }
 gRails.add(buildRail(1), buildRail(-1));
 
-// ===== marco horizontal inferior + diagonales de arriostramiento =====
-const PED_H = 0.4;
-const yLow = PED_H + 0.30;
-[1, -1].forEach(s => {
-  const x = s * RX;
-  // larguero inferior (Z)
-  gRails.add(boxAt(0.12, 0.13, (COL_Z[0] - COL_Z[2]) + 0.55, MAT.steel, x, yLow, (COL_Z[0] + COL_Z[2]) / 2));
-  // rodillas: pie de columna -> cabeza de la viga
-  COL_Z.forEach((z, i) => {
-    const zA = COL_Z[Math.min(i + 1, COL_Z.length - 1)];
-    if (zA === z) return;
-    gRails.add(strut([x, yLow, zA], [x, yBot(z) - 0.05, z], 0.055, 0.065, MAT.steelD));
-  });
-});
-// travesaños inferiores (X) en los extremos
-[COL_Z[0], COL_Z[2]].forEach(z => {
-  gRails.add(boxAt(RX * 2, 0.12, 0.13, MAT.steel, 0, yLow, z));
-});
-
-// ===== pedestales de hormigón (cimentación, estáticos) =====
-const gPed = new THREE.Group();
-COL_Z.forEach(z => {
-  [1, -1].forEach(s => {
-    gPed.add(boxAt(0.4, PED_H, 0.4, MAT.concrete, s * RX, PED_H / 2, z));
-    gPed.add(boxAt(0.48, 0.04, 0.48, MAT.concrete, s * RX, PED_H - 0.02, z)); // capitel
-  });
-});
+const gPed = new THREE.Group(); // sin pedestales — la M24 se ancla con placa base
 scene.add(gPed);
 
-// ===== columnas (6, escalonadas, apoyadas sobre los pedestales) =====
+// ===== columnas (6, escalonadas, con placa base sobre el suelo) =====
 COL_Z.forEach(z => {
   [1, -1].forEach(s => {
-    const topY = yBot(z) - 0.03;
-    const h = Math.max(0.25, topY - PED_H);
-    gColumns.add(boxAt(0.14, h, 0.14, MAT.steel, s * RX, PED_H + h / 2, z));
+    const h = Math.max(0.25, yBot(z) - 0.04);
+    gColumns.add(boxAt(0.14, h, 0.14, MAT.steel, s * RX, h / 2, z));
+    // rodilla de arriostramiento columna -> viga
+    gColumns.add(strut([s * RX, h * 0.52, z], [s * RX, yBot(z) - 0.05, z + (z > 0 ? -0.55 : 0.55)], 0.06, 0.07, MAT.steelD));
   });
 });
 
-// ===== correas (3, perfil cajón, cada una en dos tramos empalmados) =====
+// ===== correas (3, perfil en C, con voladizo y empalme central) =====
 CZ.forEach(z => {
-  const y = yTop(z) + 0.16;
-  [-1, 1].forEach(s => {
-    gCorreas.add(boxAt(CORREA_HX, 0.12, 0.14, MAT.steel, s * (CORREA_HX / 2 + 0.02), y, z));
-  });
-  // pletina de refuerzo bajo la correa
-  gCorreas.add(boxAt(CORREA_HX * 2, 0.04, 0.07, MAT.steelD, 0, y - 0.08, z));
+  const y = yTop(z) + RAIL_H / 2 + 0.09;
+  cProfile(gCorreas, [-CORREA_HX, y, z], [CORREA_HX, y, z], 0.12, 0.16, MAT.steel);
+  // tapas de extremo (boca del perfil)
+  [-1, 1].forEach(s => gCorreas.add(boxAt(0.04, 0.17, 0.14, MAT.steelD, s * CORREA_HX, y, z)));
+  // empalme central
+  gCorreas.add(boxAt(0.34, 0.22, 0.18, MAT.steelD, 0, y, z));
 });
 
 // ===== paneles (grupo conmutable) =====
 function buildPanels(){
   const g = new THREE.Group();
   const PC = 6;
-  const stepX = 0.98, panW = 0.92;
-  const bands = [ { z: 1.0, len: 1.5 }, { z: -0.55, len: 1.5 } ];
+  const stepX = 0.74, panW = 0.7;
+  const bands = [ { z: 1.55, len: 1.9 }, { z: -0.7, len: 1.9 } ];
   for(let i = 0; i < PC; i++){
     const px = (i - (PC - 1) / 2) * stepX;
     bands.forEach(b => {
-      const y = yTop(b.z) + 0.17;
+      const y = yTop(b.z) + 0.34;
       const mod = new THREE.Group();
       mod.add(boxAt(panW, 0.028, b.len, MAT.panel, 0, 0.02, 0));
       mod.add(boxAt(panW + 0.05, 0.05, b.len + 0.05, MAT.frame, 0, 0, 0));
