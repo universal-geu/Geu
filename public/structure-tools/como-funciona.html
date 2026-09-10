@@ -227,6 +227,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const PARTS = [
   { k:'A', nm:'Esquinero', ct:'6 uds · extremos de correa', ds:'Remata cada extremo de correa y sujeta la esquina del panel contra el perfil.' },
@@ -543,6 +545,46 @@ function goHome(){
 }
 goHome();
 
+// ---------- modelo real (GLB) vs esquema procedural ----------
+// El GLB es una malla única: sirve para el estado ENSAMBLADO. Al explotar,
+// aislar una pieza o alternar paneles se muestra el esquema procedural.
+const proceduralGroups = [...Object.values(layers), gPed];
+const gReal = new THREE.Group();
+gReal.visible = false;
+scene.add(gReal);
+let realReady = false;
+
+const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/libs/draco/');
+new GLTFLoader().setDRACOLoader(draco).load('/geu-structure-m24-real.glb', (gltf) => {
+  const root = gltf.scene;
+  root.traverse((o) => { if(o.isMesh){ o.material.envMapIntensity = 1.1; } });
+  // normalizar: centrar en XZ, apoyar en y=0, escalar a la huella del esquema
+  const box = new THREE.Box3().setFromObject(root);
+  const c = box.getCenter(new THREE.Vector3());
+  const sz = box.getSize(new THREE.Vector3());
+  const targetW = worldS.x * 0.98;
+  const k = targetW / sz.x;
+  root.position.set(-c.x, -box.min.y, -c.z);
+  const wrap = new THREE.Group();
+  wrap.add(root);
+  wrap.scale.setScalar(k);
+  wrap.position.set(worldC.x, 0, worldC.z);
+  gReal.add(wrap);
+  realReady = true;
+  applyMode();
+}, undefined, () => {
+  document.querySelector('.mv-loader, .loader3d, .stage-loader')?.remove();
+});
+
+function applyMode(){
+  const showProc = !realReady || explodeT > 0.001 || selected != null || panelsOn;
+  gReal.visible = realReady && !showProc;
+  proceduralGroups.forEach(g => {
+    if(g === gPanels){ g.visible = showProc && panelsOn && selected == null; return; }
+    g.visible = showProc && !g.userData.hidden;
+  });
+}
+
 // ---------- explosión ----------
 let explodeT = 0;
 function applyExplode(){
@@ -557,6 +599,7 @@ function setExplode(v){
   explodeEl.value = v;
   explodeEl.style.setProperty('--fill', v + '%');
   applyExplode();
+  applyMode();
 }
 explodeEl.addEventListener('input', () => {
   setExplode(+explodeEl.value);
@@ -574,6 +617,7 @@ function setPanels(on){
   tglPanels.setAttribute('aria-pressed', String(on));
   const b = structList.querySelector('[data-key="panels"]');
   if(b) b.classList.toggle('off', !on);
+  applyMode();
 }
 function setRotate(on){
   controls.autoRotate = on;
@@ -599,6 +643,7 @@ function setSelected(key){
   }
   document.querySelectorAll('.part').forEach(p => p.classList.toggle('on', p.dataset.k === key));
   gPanels.visible = panelsOn && key == null;
+  applyMode();
   if(key){
     setRotate(false);
     if(explodeT < 0.22) setExplode(34);
@@ -645,8 +690,10 @@ structList.querySelectorAll('.struct').forEach(btn => {
   btn.addEventListener('click', () => {
     if(btn.dataset.key === 'panels'){ setPanels(!panelsOn); return; }
     const g = layers[btn.dataset.key];
-    g.visible = !g.visible;
-    btn.classList.toggle('off', !g.visible);
+    g.userData.hidden = !g.userData.hidden;
+    if(explodeT < 0.02 && !selected) setExplode(34); // pasar al esquema para ver el cambio
+    btn.classList.toggle('off', g.userData.hidden);
+    applyMode();
   });
 });
 
@@ -661,11 +708,12 @@ partsEl.querySelectorAll('.part').forEach(btn => {
 });
 document.getElementById('resetBtn').addEventListener('click', () => {
   setSelected(null);
+  Object.values(layers).forEach(g => { g.userData.hidden = false; });
   setExplode(0);
-  Object.values(layers).forEach(g => { if(g !== gPanels) g.visible = true; });
   structList.querySelectorAll('.struct').forEach(b => b.classList.toggle('off', b.dataset.key === 'panels'));
   setPanels(false);
   setRotate(true);
+  applyMode();
   goHome();
 });
 
