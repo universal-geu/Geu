@@ -274,18 +274,19 @@ const fill = new THREE.DirectionalLight(0xffffff, 0.55); fill.position.set(0, 3,
 
 // ---------- materiales ----------
 const MAT = {
-  steel:  new THREE.MeshStandardMaterial({ color:0xb4babe, metalness:0.82, roughness:0.5 }),
-  steelD: new THREE.MeshStandardMaterial({ color:0x9aa1a6, metalness:0.8, roughness:0.58 }),
+  steel:  new THREE.MeshStandardMaterial({ color:0xbcc0c2, metalness:0.86, roughness:0.44 }),
+  steelD: new THREE.MeshStandardMaterial({ color:0xa4aaad, metalness:0.84, roughness:0.52 }),
   bolt:   new THREE.MeshStandardMaterial({ color:0x5c6367, metalness:0.9, roughness:0.4 }),
-  panel:  new THREE.MeshPhysicalMaterial({ color:0x111d38, metalness:0.18, roughness:0.17, clearcoat:1, clearcoatRoughness:0.22, envMapIntensity:1.1 }),
+  panel:  new THREE.MeshPhysicalMaterial({ color:0x0f2036, metalness:0.2, roughness:0.16, clearcoat:1, clearcoatRoughness:0.2, envMapIntensity:1.15 }),
   frame:  new THREE.MeshStandardMaterial({ color:0xd6dade, metalness:0.75, roughness:0.3 }),
+  concrete: new THREE.MeshStandardMaterial({ color:0xb7b2a9, metalness:0.02, roughness:0.94 }),
   grid:   new THREE.MeshBasicMaterial({ color:0x283a63 }),
 };
 const connBase = { color:0xd7dbde, metalness:0.5, roughness:0.36 };
 const matFor = { A:0,B:0,C:0,D:0,E:0,F:0 };
 Object.keys(matFor).forEach(k => { matFor[k] = new THREE.MeshStandardMaterial(connBase); matFor[k].emissiveIntensity = 1.4; });
 const selectableMats = Object.values(matFor);
-const contextMats = [MAT.steel, MAT.steelD, MAT.bolt, MAT.panel, MAT.frame, MAT.grid];
+const contextMats = [MAT.steel, MAT.steelD, MAT.bolt, MAT.panel, MAT.frame, MAT.grid, MAT.concrete];
 // declarar transparencia desde el inicio: cambiarla en runtime exigiría needsUpdate
 [...contextMats, ...selectableMats].forEach(m => { m.transparent = true; });
 
@@ -325,7 +326,7 @@ const Z_TIP_F = 2.78, Z_TIP_B = -2.18;       // puntas de la viga (voladizo en a
 const Z_CTR = (Z_TIP_F + Z_TIP_B) / 2;
 const SLOPE = 0.25;
 const TH = Math.atan(SLOPE);                 // ángulo de inclinación (~14°)
-const yTop = z => 1.12 - SLOPE * z;          // cordón superior
+const yTop = z => 1.62 - SLOPE * z;          // cordón superior
 const belly = z => {
   const t = (z - Z_CTR) / ((Z_TIP_F - Z_TIP_B) / 2);
   return Math.max(0, 0.40 * (1 - t * t));
@@ -351,9 +352,9 @@ const gCorreas = layer('correas', [0, 1, 0],  1.35);
 const gC       = layer('C',       [0, 1, 0],  0.9);
 const gD       = layer('D',       [0, 1, 0],  0.48);
 const gRails   = layer('rails',   [0, 1, 0],  0);
-const gE       = layer('E',       [0, -1, 0], 0.62);
-const gColumns = layer('columns', [0, -1, 0], 1.75);
-const gF       = layer('F',       [0, -1, 0], 2.85);
+const gE       = layer('E',       [0, -1, 0], 0.5);
+const gColumns = layer('columns', [0, -1, 0], 1.15);
+const gF       = layer('F',       [0, -1, 0], 1.95);
 
 // ===== vigas laterales =====
 function buildRail(s){
@@ -379,11 +380,23 @@ function buildRail(s){
 }
 gRails.add(buildRail(1), buildRail(-1));
 
-// ===== columnas =====
+// ===== pedestales de hormigón (cimentación, estáticos) =====
+const PED_H = 0.4;
+const gPed = new THREE.Group();
+COL_Z.forEach(z => {
+  [1, -1].forEach(s => {
+    gPed.add(boxAt(0.4, PED_H, 0.4, MAT.concrete, s * RX, PED_H / 2, z));
+    gPed.add(boxAt(0.48, 0.04, 0.48, MAT.concrete, s * RX, PED_H - 0.02, z)); // capitel
+  });
+});
+scene.add(gPed);
+
+// ===== columnas (apoyadas sobre los pedestales) =====
 COL_Z.forEach(z => {
   [1, -1].forEach(s => {
     const topY = yBot(z) - 0.05;
-    gColumns.add(boxAt(0.12, topY, 0.12, MAT.steel, s * RX, topY / 2, z));
+    const h = Math.max(0.2, topY - PED_H);
+    gColumns.add(boxAt(0.12, h, 0.12, MAT.steel, s * RX, PED_H + h / 2, z));
   });
 });
 
@@ -421,13 +434,13 @@ function buildPanels(){
 gPanels.add(buildPanels());
 
 // ===== conectores =====
-// F — base anclada
+// F — base anclada (platina sobre el pedestal, al pie de la columna)
 COL_Z.forEach(z => {
   [1, -1].forEach(s => {
     const g = new THREE.Group();
     g.add(boxAt(0.34, 0.03, 0.34, matFor.F, 0, 0.016, 0));
     plateBolts(g, MAT.bolt);
-    g.position.set(s * RX, 0, z);
+    g.position.set(s * RX, PED_H, z);
     gF.add(g);
   });
 });
@@ -517,6 +530,7 @@ scene.add(sh);
 // ---------- encuadre de cámara ----------
 const bb = new THREE.Box3();
 Object.values(layers).forEach(g => bb.expandByObject(g));
+bb.expandByObject(gPed);
 const worldC = bb.getCenter(new THREE.Vector3());
 const worldS = bb.getSize(new THREE.Vector3());
 const fitR = Math.max(worldS.x, worldS.z) * 0.7 + worldS.y + 3.4;
