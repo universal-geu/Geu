@@ -12,7 +12,7 @@ function resolveDivision(pathname: string, brandParam: string | null): DivisionN
   if (pathname.startsWith("/import")) return "Import";
   if (pathname.startsWith("/plastic")) return "Plastic";
   if (pathname.startsWith("/energy")) return "Energy";
-  if (pathname.startsWith("/innovation")) return "Innovation";
+  if (pathname.startsWith("/structure")) return "Innovation";
   if (pathname.startsWith("/autoservicio-inteligente")) return "Innovation";
   if (pathname.startsWith("/quienes-somos")) return "GEU";
   return "Cauchos";

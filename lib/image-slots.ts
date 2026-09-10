@@ -95,7 +95,7 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "import-categoria-aislamientos-termicos", label: "Categoría · Aislamientos Térmicos", group: "Categorías", division: "Import", defaultSrc: "/home-import.png", dims: "600 × 600 px" },
   { key: "import-categoria-mercado-persa", label: "Categoría · Mercado Persa", group: "Categorías", division: "Import", defaultSrc: "/home-import.png", dims: "600 × 600 px" },
   { key: "import-categoria-autopartes", label: "Categoría · Autopartes", group: "Categorías", division: "Import", defaultSrc: "/home-import.png", dims: "600 × 600 px" },
-  // ---- GEU Structure · Sitio público (/innovation) ----
+  // ---- GEU Structure · Sitio público (/structure) ----
   { key: "structure-hero", label: "Structure · Imagen del héroe", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-hero.jpg", dims: "1920 × 1280 px" },
   { key: "structure-hero-video", label: "Structure · Video del héroe", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-hero.mp4", dims: "1920 × 1080 px · MP4 o imagen" },
   { key: "structure-m24-05", label: "Structure · M24 · Con módulos FV", group: "Sitio Structure", division: "Innovation", defaultSrc: "/geu-structure-m24-05.jpg", dims: "1672 × 941 px" },

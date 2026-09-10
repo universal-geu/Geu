@@ -31,7 +31,7 @@ export const geuCompanies = [
     name: "GEU Structure",
     shortName: "Structure",
     slug: "innovation",
-    href: "/innovation",
+    href: "/structure",
     eyebrow: "GEU",
     title: "Structure",
     description: "Estructuras metalicas galvanizadas para proyectos fotovoltaicos.",

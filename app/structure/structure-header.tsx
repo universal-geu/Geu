@@ -9,20 +9,20 @@ import { useSiteColors } from "../components/use-site-colors";
 import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
 
 const navItems = [
-  { label: "Producto", href: "/innovation#producto" },
-  { label: "Fabricación", href: "/innovation#fabricacion" },
-  { label: "Ingeniería", href: "/innovation#ingenieria" },
-  { label: "Servicios", href: "/innovation#servicios" },
-  { label: "Contacto", href: "/innovation#contacto" },
+  { label: "Producto", href: "/structure#producto" },
+  { label: "Fabricación", href: "/structure#fabricacion" },
+  { label: "Ingeniería", href: "/structure#ingenieria" },
+  { label: "Servicios", href: "/structure#servicios" },
+  { label: "Contacto", href: "/structure#contacto" },
 ];
 
 const toolItems = [
-  { label: "Cómo funciona la M24", href: "/innovation/herramientas/como-funciona" },
-  { label: "Configurador M24", href: "/innovation/herramientas/configurador-m24" },
-  { label: "Simulador de inversión", href: "/innovation/herramientas/simulador-inversion" },
+  { label: "Cómo funciona la M24", href: "/structure/herramientas/como-funciona" },
+  { label: "Configurador M24", href: "/structure/herramientas/configurador-m24" },
+  { label: "Simulador de inversión", href: "/structure/herramientas/simulador-inversion" },
   // Ocultos por ahora — la ruta/HTML se conservan:
-  // { label: "Asesor Técnico", href: "/innovation/herramientas/asesor-tecnico" },
-  // { label: "Asesor Técnico · carrito", href: "/innovation/herramientas/asesor-tecnico-carrito" },
+  // { label: "Asesor Técnico", href: "/structure/herramientas/asesor-tecnico" },
+  // { label: "Asesor Técnico · carrito", href: "/structure/herramientas/asesor-tecnico-carrito" },
 ];
 
 const mobileMoreItems = [...navItems, ...toolItems, { label: "Ver todo GEU", href: "/" }];
@@ -95,7 +95,7 @@ export default function StructureHeader() {
       {colorOverrideCss && <style dangerouslySetInnerHTML={{ __html: colorOverrideCss }} />}
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/85 backdrop-blur-md">
         <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-5 md:px-8">
-          <Link href="/innovation" className="shrink-0">
+          <Link href="/structure" className="shrink-0">
             <StructureMark />
           </Link>
           <nav className="hidden items-center gap-7 text-[11px] font-black uppercase tracking-[0.08em] text-white/85 lg:flex">
@@ -129,9 +129,9 @@ export default function StructureHeader() {
       </header>
 
       <MobileBottomNav
-        homeHref="/innovation"
+        homeHref="/structure"
         accent="#0498b4"
-        categoriasHref="/innovation#producto"
+        categoriasHref="/structure#producto"
         categoriasLabel="Producto"
         accountBrand="innovation"
         moreItems={mobileMoreItems}

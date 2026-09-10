@@ -16,7 +16,7 @@ const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Cauchos", href: "/cauchos" },
   { label: "Import", href: "/import" },
-  { label: "Structure", href: "/innovation", active: true },
+  { label: "Structure", href: "/structure", active: true },
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic" },
   { label: "Contacto", href: "mailto:innovation@geu.com.co" },
