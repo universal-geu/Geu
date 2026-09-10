@@ -201,8 +201,8 @@
   <div class="hud-head">
     <div class="eyebrow">GEU Structure · Ingeniería</div>
     <h1>Cómo funciona la M24</h1>
-    <p>La mesa M24 se apoya en <b>6 columnas escalonadas</b> ancladas al suelo. Sobre ellas corren
-       <b>dos vigas laterales</b> en celosía que dan la inclinación, y encima <b>tres correas</b>
+    <p>La mesa M24 se apoya en <b>6 columnas escalonadas</b> sobre pedestales de hormigón. Sobre ellas corren
+       <b>dos vigas laterales</b> en perfil cajón que dan la inclinación, y encima <b>tres correas</b>
        reciben los paneles. Explótala y toca cada pieza.</p>
   </div>
 
@@ -227,8 +227,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const PARTS = [
   { k:'A', nm:'Esquinero', ct:'6 uds · extremos de correa', ds:'Remata cada extremo de correa y sujeta la esquina del panel contra el perfil.' },
@@ -276,8 +274,8 @@ const fill = new THREE.DirectionalLight(0xffffff, 0.55); fill.position.set(0, 3,
 
 // ---------- materiales ----------
 const MAT = {
-  steel:  new THREE.MeshStandardMaterial({ color:0xbcc0c2, metalness:0.86, roughness:0.44 }),
-  steelD: new THREE.MeshStandardMaterial({ color:0xa4aaad, metalness:0.84, roughness:0.52 }),
+  steel:  new THREE.MeshStandardMaterial({ color:0xc4c7c6, metalness:0.9, roughness:0.38 }),
+  steelD: new THREE.MeshStandardMaterial({ color:0xacb0b0, metalness:0.88, roughness:0.46 }),
   bolt:   new THREE.MeshStandardMaterial({ color:0x5c6367, metalness:0.9, roughness:0.4 }),
   panel:  new THREE.MeshPhysicalMaterial({ color:0x0f2036, metalness:0.2, roughness:0.16, clearcoat:1, clearcoatRoughness:0.2, envMapIntensity:1.15 }),
   frame:  new THREE.MeshStandardMaterial({ color:0xd6dade, metalness:0.75, roughness:0.3 }),
@@ -322,22 +320,18 @@ function sideBolt(g, m, x, y, z, len = 0.28){
   g.add(bo);
 }
 
-// ---------- geometría de la viga lateral (celosía tipo lente) ----------
-const RX = 2.5;                              // plano de las vigas (± x)
-const Z_TIP_F = 2.78, Z_TIP_B = -2.18;       // puntas de la viga (voladizo en ambos extremos)
-const Z_CTR = (Z_TIP_F + Z_TIP_B) / 2;
-const SLOPE = 0.25;
-const TH = Math.atan(SLOPE);                 // ángulo de inclinación (~14°)
-const yTop = z => 1.62 - SLOPE * z;          // cordón superior
-const belly = z => {
-  const t = (z - Z_CTR) / ((Z_TIP_F - Z_TIP_B) / 2);
-  return Math.max(0, 0.40 * (1 - t * t));
-};
-const yBot = z => yTop(z) - belly(z);        // cordón inferior (panza)
+// ---------- geometría de la mesa M24 (marco rectangular, perfil cajón) ----------
+const RX = 2.5;                              // plano de las vigas laterales (± x)
+const Z_TIP_F = 2.75, Z_TIP_B = -2.15;       // extremos de la viga lateral
+const SLOPE = 0.22;                           // pendiente (~12°)
+const TH = Math.atan(SLOPE);
+const RAIL_H = 0.22;                          // canto del perfil de la viga
+const yTop = z => 1.58 - SLOPE * z;          // eje de la viga lateral
+const yBot = z => yTop(z) - RAIL_H;           // cara inferior de la viga (apoyo de columna)
 
-const COL_Z = [1.95, -0.15, -1.75];          // z de las 3 columnas
-const CZ = [2.0, -0.15, -1.75];              // z de las 3 correas
-const CORREA_HX = 3.15;                       // media longitud de correa
+const COL_Z = [1.95, -0.05, -1.85];          // z de las 3 líneas de columnas
+const CZ = [1.95, -0.05, -1.85];             // z de las 3 correas (sobre las columnas)
+const CORREA_HX = 3.0;                        // media longitud de correa (con voladizo)
 
 const layers = {};
 function layer(key, dir, dist){
@@ -358,32 +352,43 @@ const gE       = layer('E',       [0, -1, 0], 0.5);
 const gColumns = layer('columns', [0, -1, 0], 1.15);
 const gF       = layer('F',       [0, -1, 0], 1.95);
 
-// ===== vigas laterales =====
+// ===== vigas laterales (perfil cajón macizo, inclinado) =====
 function buildRail(s){
   const g = new THREE.Group();
   const x = s * RX;
-  // cordón superior (recto)
-  g.add(strut([x, yTop(Z_TIP_F), Z_TIP_F], [x, yTop(Z_TIP_B), Z_TIP_B], 0.10, 0.15, MAT.steel));
-  // cordón inferior (polilínea curva que forma la panza)
-  const zs = [2.66, 1.8, 0.9, 0.0, -0.9, -1.7, -2.06];
-  for(let i = 0; i < zs.length - 1; i++){
-    g.add(strut([x, yBot(zs[i]), zs[i]], [x, yBot(zs[i+1]), zs[i+1]], 0.085, 0.11, MAT.steel));
-  }
-  // alma: montantes + diagonales
-  const webZ = [1.8, 0.9, 0.0, -0.9, -1.7];
-  webZ.forEach(z => g.add(strut([x, yBot(z), z], [x, yTop(z), z], 0.05, 0.05, MAT.steel)));
-  for(let i = 0; i < webZ.length - 1; i++){
-    g.add(strut([x, yBot(webZ[i]), webZ[i]], [x, yTop(webZ[i+1]), webZ[i+1]], 0.042, 0.042, MAT.steel));
-  }
-  // remates de punta
-  g.add(boxAt(0.13, 0.13, 0.15, MAT.steelD, x, yTop(Z_TIP_F), Z_TIP_F + 0.04));
-  g.add(boxAt(0.13, 0.13, 0.15, MAT.steelD, x, yTop(Z_TIP_B), Z_TIP_B - 0.04));
+  // perfil principal
+  g.add(strut([x, yTop(Z_TIP_F), Z_TIP_F], [x, yTop(Z_TIP_B), Z_TIP_B], 0.14, RAIL_H, MAT.steel));
+  // pletina inferior corrida (rigidiza el ala)
+  g.add(strut([x, yTop(Z_TIP_F) - RAIL_H * 0.62, Z_TIP_F], [x, yTop(Z_TIP_B) - RAIL_H * 0.62, Z_TIP_B], 0.06, 0.05, MAT.steelD));
+  // empalme central de los dos tramos
+  g.add(boxAt(0.17, RAIL_H + 0.09, 0.16, MAT.steelD, x, yTop(-0.05), -0.05));
+  // remates de punta (perfil abierto)
+  g.add(boxAt(0.15, RAIL_H + 0.02, 0.05, MAT.steelD, x, yTop(Z_TIP_F), Z_TIP_F + 0.02));
+  g.add(boxAt(0.15, RAIL_H + 0.02, 0.05, MAT.steelD, x, yTop(Z_TIP_B), Z_TIP_B - 0.02));
   return g;
 }
 gRails.add(buildRail(1), buildRail(-1));
 
-// ===== pedestales de hormigón (cimentación, estáticos) =====
+// ===== marco horizontal inferior + diagonales de arriostramiento =====
 const PED_H = 0.4;
+const yLow = PED_H + 0.30;
+[1, -1].forEach(s => {
+  const x = s * RX;
+  // larguero inferior (Z)
+  gRails.add(boxAt(0.12, 0.13, (COL_Z[0] - COL_Z[2]) + 0.55, MAT.steel, x, yLow, (COL_Z[0] + COL_Z[2]) / 2));
+  // rodillas: pie de columna -> cabeza de la viga
+  COL_Z.forEach((z, i) => {
+    const zA = COL_Z[Math.min(i + 1, COL_Z.length - 1)];
+    if (zA === z) return;
+    gRails.add(strut([x, yLow, zA], [x, yBot(z) - 0.05, z], 0.055, 0.065, MAT.steelD));
+  });
+});
+// travesaños inferiores (X) en los extremos
+[COL_Z[0], COL_Z[2]].forEach(z => {
+  gRails.add(boxAt(RX * 2, 0.12, 0.13, MAT.steel, 0, yLow, z));
+});
+
+// ===== pedestales de hormigón (cimentación, estáticos) =====
 const gPed = new THREE.Group();
 COL_Z.forEach(z => {
   [1, -1].forEach(s => {
@@ -393,21 +398,23 @@ COL_Z.forEach(z => {
 });
 scene.add(gPed);
 
-// ===== columnas (apoyadas sobre los pedestales) =====
+// ===== columnas (6, escalonadas, apoyadas sobre los pedestales) =====
 COL_Z.forEach(z => {
   [1, -1].forEach(s => {
-    const topY = yBot(z) - 0.05;
-    const h = Math.max(0.2, topY - PED_H);
-    gColumns.add(boxAt(0.12, h, 0.12, MAT.steel, s * RX, PED_H + h / 2, z));
+    const topY = yBot(z) - 0.03;
+    const h = Math.max(0.25, topY - PED_H);
+    gColumns.add(boxAt(0.14, h, 0.14, MAT.steel, s * RX, PED_H + h / 2, z));
   });
 });
 
-// ===== correas (2 tramos empalmados al centro) =====
+// ===== correas (3, perfil cajón, cada una en dos tramos empalmados) =====
 CZ.forEach(z => {
-  const y = yTop(z) + 0.13;
+  const y = yTop(z) + 0.16;
   [-1, 1].forEach(s => {
-    gCorreas.add(boxAt(CORREA_HX, 0.09, 0.09, MAT.steel, s * (CORREA_HX / 2 + 0.03), y, z));
+    gCorreas.add(boxAt(CORREA_HX, 0.12, 0.14, MAT.steel, s * (CORREA_HX / 2 + 0.02), y, z));
   });
+  // pletina de refuerzo bajo la correa
+  gCorreas.add(boxAt(CORREA_HX * 2, 0.04, 0.07, MAT.steelD, 0, y - 0.08, z));
 });
 
 // ===== paneles (grupo conmutable) =====
@@ -484,7 +491,7 @@ CZ.forEach(z => {
     bo.position.set(sx, 0, 0.02);
     g.add(bo);
   });
-  g.position.set(0, yTop(z) + 0.13, z);
+  g.position.set(0, yTop(z) + 0.16, z);
   gC.add(g);
 });
 // A — esquinero / remate en los 6 extremos de correa
@@ -494,7 +501,7 @@ CZ.forEach(z => {
     g.add(boxAt(0.13, 0.12, 0.14, matFor.A, 0, 0, 0));
     g.add(boxAt(0.06, 0.13, 0.16, matFor.A, s * 0.06, 0.01, 0));
     g.add(boxAt(0.14, 0.04, 0.12, matFor.A, 0, 0.08, 0));           // pestaña que sujeta el panel
-    g.position.set(s * CORREA_HX, yTop(z) + 0.13, z);
+    g.position.set(s * CORREA_HX, yTop(z) + 0.16, z);
     gA.add(g);
   });
 });
@@ -508,7 +515,7 @@ CZ.forEach((z, ci) => {
     const bo = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.09, 8), MAT.bolt);
     bo.position.set(0, 0.05, 0);
     g.add(bo);
-    g.position.set(bx, yTop(z) + 0.19, z);
+    g.position.set(bx, yTop(z) + 0.24, z);
     gB.add(g);
   });
 });
@@ -545,46 +552,6 @@ function goHome(){
 }
 goHome();
 
-// ---------- modelo real (GLB) vs esquema procedural ----------
-// El GLB es una malla única: sirve para el estado ENSAMBLADO. Al explotar,
-// aislar una pieza o alternar paneles se muestra el esquema procedural.
-const proceduralGroups = [...Object.values(layers), gPed];
-const gReal = new THREE.Group();
-gReal.visible = false;
-scene.add(gReal);
-let realReady = false;
-
-const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/libs/draco/');
-new GLTFLoader().setDRACOLoader(draco).load('/geu-structure-m24-real.glb', (gltf) => {
-  const root = gltf.scene;
-  root.traverse((o) => { if(o.isMesh){ o.material.envMapIntensity = 1.1; } });
-  // normalizar: centrar en XZ, apoyar en y=0, escalar a la huella del esquema
-  const box = new THREE.Box3().setFromObject(root);
-  const c = box.getCenter(new THREE.Vector3());
-  const sz = box.getSize(new THREE.Vector3());
-  const targetW = worldS.x * 0.98;
-  const k = targetW / sz.x;
-  root.position.set(-c.x, -box.min.y, -c.z);
-  const wrap = new THREE.Group();
-  wrap.add(root);
-  wrap.scale.setScalar(k);
-  wrap.position.set(worldC.x, 0, worldC.z);
-  gReal.add(wrap);
-  realReady = true;
-  applyMode();
-}, undefined, () => {
-  document.querySelector('.mv-loader, .loader3d, .stage-loader')?.remove();
-});
-
-function applyMode(){
-  const showProc = !realReady || explodeT > 0.001 || selected != null || panelsOn;
-  gReal.visible = realReady && !showProc;
-  proceduralGroups.forEach(g => {
-    if(g === gPanels){ g.visible = showProc && panelsOn && selected == null; return; }
-    g.visible = showProc && !g.userData.hidden;
-  });
-}
-
 // ---------- explosión ----------
 let explodeT = 0;
 function applyExplode(){
@@ -599,7 +566,6 @@ function setExplode(v){
   explodeEl.value = v;
   explodeEl.style.setProperty('--fill', v + '%');
   applyExplode();
-  applyMode();
 }
 explodeEl.addEventListener('input', () => {
   setExplode(+explodeEl.value);
@@ -617,7 +583,6 @@ function setPanels(on){
   tglPanels.setAttribute('aria-pressed', String(on));
   const b = structList.querySelector('[data-key="panels"]');
   if(b) b.classList.toggle('off', !on);
-  applyMode();
 }
 function setRotate(on){
   controls.autoRotate = on;
@@ -643,7 +608,6 @@ function setSelected(key){
   }
   document.querySelectorAll('.part').forEach(p => p.classList.toggle('on', p.dataset.k === key));
   gPanels.visible = panelsOn && key == null;
-  applyMode();
   if(key){
     setRotate(false);
     if(explodeT < 0.22) setExplode(34);
@@ -690,10 +654,8 @@ structList.querySelectorAll('.struct').forEach(btn => {
   btn.addEventListener('click', () => {
     if(btn.dataset.key === 'panels'){ setPanels(!panelsOn); return; }
     const g = layers[btn.dataset.key];
-    g.userData.hidden = !g.userData.hidden;
-    if(explodeT < 0.02 && !selected) setExplode(34); // pasar al esquema para ver el cambio
-    btn.classList.toggle('off', g.userData.hidden);
-    applyMode();
+    g.visible = !g.visible;
+    btn.classList.toggle('off', !g.visible);
   });
 });
 
@@ -708,12 +670,11 @@ partsEl.querySelectorAll('.part').forEach(btn => {
 });
 document.getElementById('resetBtn').addEventListener('click', () => {
   setSelected(null);
-  Object.values(layers).forEach(g => { g.userData.hidden = false; });
   setExplode(0);
+  Object.values(layers).forEach(g => { if(g !== gPanels) g.visible = true; });
   structList.querySelectorAll('.struct').forEach(b => b.classList.toggle('off', b.dataset.key === 'panels'));
   setPanels(false);
   setRotate(true);
-  applyMode();
   goHome();
 });
 
