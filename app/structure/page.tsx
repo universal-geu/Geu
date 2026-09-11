@@ -5,6 +5,7 @@ import ProductGallery from "./product-gallery";
 import ProductSpecs from "./product-specs";
 import GalvanizingProcess from "./galvanizing-process";
 import ServiciosTimeline from "./servicios-timeline";
+import YuloWidget from "./yulo-widget";
 import SiteFooter from "../components/site-footer";
 import { getSiteTexts } from "@/lib/site-texts";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
@@ -583,6 +584,8 @@ export default async function StructurePage() {
         maxWidth="1500px"
         columns={[]}
       />
+
+      <YuloWidget />
     </main>
   );
 }
