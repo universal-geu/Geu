@@ -27,10 +27,12 @@ function createEmptyReport(): SalesReport {
       grossRevenue: 0,
       paidRevenue: 0,
       averageOrderValue: 0,
+      totalProducts: 0,
     },
     topProduct: null,
     topProducts: [],
     categories: [],
+    priceRanges: [],
     recentOrders: [],
   };
 }

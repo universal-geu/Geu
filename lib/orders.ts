@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { DivisionName } from "@/lib/divisions";
-import { DIVISION_ADMIN_EMAILS, DIVISION_BRAND, isServiceDivision } from "@/lib/divisions";
+import { DIVISION_ADMIN_EMAILS, DIVISION_BRAND, DIVISIONS, isServiceDivision } from "@/lib/divisions";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { formatOrderCode } from "@/lib/format-order";
 import { calculateShippingCost } from "@/lib/shipping";
@@ -49,6 +49,13 @@ export type SalesReportCategory = {
   revenue: number;
 };
 
+export type SalesReportPriceRange = {
+  label: string;
+  min: number;
+  max: number;
+  count: number;
+};
+
 export type SalesReport = {
   generatedAt: string;
   totals: {
@@ -60,10 +67,12 @@ export type SalesReport = {
     grossRevenue: number;
     paidRevenue: number;
     averageOrderValue: number;
+    totalProducts: number;
   };
   topProduct: SalesReportProduct | null;
   topProducts: SalesReportProduct[];
   categories: SalesReportCategory[];
+  priceRanges: SalesReportPriceRange[];
   recentOrders: Array<{
     id: string;
     orderNumber: number;
@@ -364,6 +373,52 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
+// Fine-grained buckets (by $5.000, then $10.000) only up to $50.000 — beyond
+// that a single "$50.001 - $250.000" bucket covers the mid range, and
+// everything past the $250.000 cap collapses into one final "más de" count
+// instead of piling up many narrow filters.
+const PRICE_RANGE_CAP = 250000;
+const PRICE_RANGE_DETAIL_LIMIT = 50000;
+
+function buildPriceRangeBuckets(prices: number[]): SalesReportPriceRange[] {
+  const boundaries: number[] = [0];
+  let current = 0;
+
+  while (current < 20000) {
+    current += 5000;
+    boundaries.push(current);
+  }
+  while (current < PRICE_RANGE_DETAIL_LIMIT) {
+    current += 10000;
+    boundaries.push(current);
+  }
+  boundaries.push(PRICE_RANGE_CAP);
+
+  const buckets = boundaries.slice(1).map((max, index) => {
+    const min = boundaries[index] === 0 ? 1 : boundaries[index] + 1;
+    const count = prices.filter((price) => price >= min && price <= max).length;
+
+    return {
+      label: `${formatCurrency(min)} - ${formatCurrency(max)}`,
+      min,
+      max,
+      count,
+    };
+  });
+
+  const overflowCount = prices.filter((price) => price > PRICE_RANGE_CAP).length;
+  if (overflowCount > 0) {
+    buckets.push({
+      label: `Más de ${formatCurrency(PRICE_RANGE_CAP)}`,
+      min: PRICE_RANGE_CAP + 1,
+      max: Infinity,
+      count: overflowCount,
+    });
+  }
+
+  return buckets;
+}
+
 async function sendOrderConfirmationEmails(order: {
   id: string;
   orderNumber: number;
@@ -504,6 +559,7 @@ export async function getSalesReport(division?: DivisionName): Promise<SalesRepo
         category: true,
         stock: true,
         division: true,
+        price: true,
       },
     }),
   ]);
@@ -582,6 +638,10 @@ export async function getSalesReport(division?: DivisionName): Promise<SalesRepo
   const scopedOrders = division
     ? orders.filter((order) => order.items.some((item) => matchesDivision(item.productId)))
     : orders;
+  const scopedProducts = division
+    ? products.filter((product) => product.division === division)
+    : products;
+  const priceRanges = buildPriceRangeBuckets(scopedProducts.map((product) => product.price));
 
   return {
     generatedAt: new Date().toISOString(),
@@ -596,10 +656,12 @@ export async function getSalesReport(division?: DivisionName): Promise<SalesRepo
       paidRevenue,
       averageOrderValue:
         activeOrders.length > 0 ? Math.round(grossRevenue / activeOrders.length) : 0,
+      totalProducts: scopedProducts.length,
     },
     topProduct: topProducts[0] || null,
     topProducts,
     categories,
+    priceRanges,
     recentOrders: scopedOrders.slice(0, 5).map((order) => ({
       id: order.id,
       orderNumber: order.orderNumber,
@@ -611,6 +673,40 @@ export async function getSalesReport(division?: DivisionName): Promise<SalesRepo
       createdAt: order.createdAt,
     })),
   };
+}
+
+export type DivisionSalesSummary = {
+  totalProducts: number;
+  productsSold: number;
+  paidRevenue: number;
+  orders: number;
+  priceRanges: SalesReportPriceRange[];
+  topProducts: SalesReportProduct[];
+};
+
+export type SalesReportOverview = Record<DivisionName, DivisionSalesSummary>;
+
+// Powers the "¿En qué unidad de negocio quieres trabajar?" switcher and the
+// "Informes generales" master page: a snapshot of every business unit,
+// including its product-level breakdown, so an admin can see how each one is
+// doing without having to switch into each one.
+export async function getSalesReportOverview(): Promise<SalesReportOverview> {
+  const entries = await Promise.all(
+    DIVISIONS.map(async (division) => {
+      const report = await getSalesReport(division);
+      const summary: DivisionSalesSummary = {
+        totalProducts: report.totals.totalProducts,
+        productsSold: report.totals.productsSold,
+        paidRevenue: report.totals.paidRevenue,
+        orders: report.totals.orders,
+        priceRanges: report.priceRanges,
+        topProducts: report.topProducts,
+      };
+      return [division, summary] as const;
+    }),
+  );
+
+  return Object.fromEntries(entries) as SalesReportOverview;
 }
 
 export type DashboardMetrics = {
