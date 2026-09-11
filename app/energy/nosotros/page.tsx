@@ -1,6 +1,7 @@
 import Image from "next/image";
 import EnergyHeader from "../energy-header";
 import SiteFooter from "../../components/site-footer";
+import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
 
 export const dynamic = "force-dynamic";
@@ -83,6 +84,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export default async function EnergyNosotrosPage() {
+  const siteImages = await getSiteImages();
   const siteTexts = await getSiteTexts();
   const t = (key: string) => resolveText(key, siteTexts);
 
@@ -92,7 +94,7 @@ export default async function EnergyNosotrosPage() {
 
       <section className="relative overflow-hidden bg-white pt-20">
         <Image
-          src="/energy-nosotros-hero.png"
+          src={resolveImage("energy-nosotros-banner", siteImages)}
           alt="GEU Energy, infraestructura para granjas solares"
           width={1983}
           height={793}

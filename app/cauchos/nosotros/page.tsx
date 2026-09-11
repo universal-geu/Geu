@@ -104,7 +104,7 @@ export default async function CauchosNosotrosPage() {
 
       <section className="relative overflow-hidden bg-white">
         <Image
-          src="/cauchos-nosotros-hero.png"
+          src={resolveImage("cauchos-nosotros-banner", siteImages)}
           alt="Universal de Cauchos"
           width={1983}
           height={793}

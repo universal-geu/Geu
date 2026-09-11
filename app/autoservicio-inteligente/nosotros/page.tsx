@@ -85,7 +85,7 @@ export default async function InnovationNosotrosPage() {
 
       <section className="relative min-h-[460px] overflow-hidden bg-white md:min-h-[620px]">
         <Image
-          src="/innovation-nosotros-hero.png"
+          src={resolveImage("innovation-nosotros-banner", siteImages)}
           alt="GEU Innovation"
           fill
           priority
