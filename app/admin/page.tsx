@@ -23,7 +23,7 @@ import {
 } from "../data/catalog";
 import type { InventoryMovementSummary, StoreProduct } from "@/lib/products";
 import { expandProductCategoryViews } from "@/lib/product-category-views";
-import type { DashboardMetrics, SalesReport, ShippingStatus } from "@/lib/orders";
+import type { DashboardMetrics, SalesReport, SalesReportOverview, ShippingStatus } from "@/lib/orders";
 import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
 import { TEXT_SLOTS } from "@/lib/text-slots";
@@ -1621,7 +1621,7 @@ function DashboardTagIcon() {
   );
 }
 
-const SIDEBAR_ICONS: Partial<Record<AdminToolKey | "dashboard", () => React.JSX.Element>> = {
+const SIDEBAR_ICONS: Partial<Record<AdminToolKey | "dashboard" | "overview", () => React.JSX.Element>> = {
   dashboard: DashboardIcon,
   create: CreateIcon,
   edit: EditIcon,
@@ -1629,6 +1629,7 @@ const SIDEBAR_ICONS: Partial<Record<AdminToolKey | "dashboard", () => React.JSX.
   orders: OrdersIcon,
   quotes: QuotesIcon,
   reports: ReportsIcon,
+  overview: ReportsIcon,
   settings: SettingsIcon,
   accounts: AccountsIcon,
 };
@@ -1659,6 +1660,7 @@ export default function AdminPage() {
     | "orders"
     | "quotes"
     | "reports"
+    | "overview"
     | "settings"
     | "accounts"
     | null
@@ -1788,6 +1790,8 @@ export default function AdminPage() {
   const [isSavingQuoteNotes, setIsSavingQuoteNotes] = useState(false);
   const [salesReport, setSalesReport] = useState<SalesReport | null>(null);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
+  const [divisionOverview, setDivisionOverview] = useState<SalesReportOverview | null>(null);
+  const [expandedOverviewDivision, setExpandedOverviewDivision] = useState<DivisionName | null>(null);
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -2052,6 +2056,8 @@ export default function AdminPage() {
         if (canAccess("quotes")) {
           void loadQuotes();
         }
+
+        void loadDivisionOverview();
       } else {
         setIsAuthenticated(false);
         setAdminName("");
@@ -2658,6 +2664,18 @@ export default function AdminPage() {
     setSalesReport(payload.report);
   }
 
+  async function loadDivisionOverview() {
+    const response = await fetch("/api/admin/reports/overview");
+    const payload = (await response.json()) as {
+      error?: string;
+      overview?: SalesReportOverview | null;
+    };
+
+    if (response.ok && payload.overview) {
+      setDivisionOverview(payload.overview);
+    }
+  }
+
   async function loadDashboardMetrics() {
     setIsLoadingDashboard(true);
 
@@ -2768,6 +2786,15 @@ export default function AdminPage() {
     setEditingSlug(null);
     setActiveTab("reports");
     void loadSalesReport();
+  };
+
+  const openOverviewView = () => {
+    setSelectedImage(null);
+    setRequestError("");
+    setPrimaryImageIndex(0);
+    setEditingSlug(null);
+    setActiveTab("overview");
+    void loadDivisionOverview();
   };
 
   const loadContentDrafts = async () => {
@@ -3572,6 +3599,16 @@ export default function AdminPage() {
       { key: "orders", label: "Pedidos", active: activeTab === "orders", onClick: openOrdersView },
       { key: "quotes", label: "Cotizaciones", active: activeTab === "quotes", onClick: openQuotesView, count: pendingQuotesCount },
       { key: "reports", label: "Informes", active: activeTab === "reports", onClick: openReportsView },
+      ...(adminDivision === "GEU"
+        ? [
+            {
+              key: "overview" as const,
+              label: "Informes generales",
+              active: activeTab === "overview",
+              onClick: openOverviewView,
+            },
+          ]
+        : []),
       {
         key: "settings",
         label: "Configuración",
@@ -3580,16 +3617,18 @@ export default function AdminPage() {
       },
       { key: "accounts", label: "Cuentas", active: activeTab === "accounts", onClick: openAccountsView },
     ] as Array<{
-      key: AdminToolKey;
+      key: AdminToolKey | "overview";
       label: string;
       active: boolean;
       onClick: () => void;
       count?: number;
     }>
   ).filter((item) =>
-    item.key === "settings"
-      ? canAccessTool("settings") || canAccessTool("images")
-      : canAccessTool(item.key),
+    item.key === "overview"
+      ? true
+      : item.key === "settings"
+        ? canAccessTool("settings") || canAccessTool("images")
+        : canAccessTool(item.key),
   );
 
   const settingsSubItems = (
@@ -3806,7 +3845,10 @@ export default function AdminPage() {
             </Link>
             <button
               type="button"
-              onClick={() => setShowDivisionSwitcher(true)}
+              onClick={() => {
+                setShowDivisionSwitcher(true);
+                void loadDivisionOverview();
+              }}
               className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors duration-200 hover:border-[var(--admin-accent)] hover:text-[var(--admin-accent)]"
             >
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -5239,8 +5281,13 @@ export default function AdminPage() {
                   </div>
                 ) : (
                   <div className="mt-8 space-y-8">
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                       {[
+                        {
+                          label: "Total de productos",
+                          value: formatNumber(salesReport.totals.totalProducts),
+                          helper: "Productos activos en el catálogo",
+                        },
                         {
                           label: "Unidades vendidas",
                           value: formatNumber(salesReport.totals.productsSold),
@@ -5458,9 +5505,264 @@ export default function AdminPage() {
                       </div>
                     </div>
 
+                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                      <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                        Distribución de precios
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-[#6e7379]">
+                        Cantidad de productos del catálogo según su rango de precio.
+                      </p>
+                      <div className="mt-5 space-y-3">
+                        {(() => {
+                          const nonEmptyRanges = salesReport.priceRanges.filter(
+                            (range) => range.count > 0,
+                          );
+
+                          if (nonEmptyRanges.length === 0) {
+                            return (
+                              <p className="text-sm text-[#6e7379]">
+                                Aún no hay productos con precio registrado.
+                              </p>
+                            );
+                          }
+
+                          const maxRangeCount = Math.max(
+                            ...nonEmptyRanges.map((entry) => entry.count),
+                            1,
+                          );
+
+                          return nonEmptyRanges.map((range) => {
+                            const progress = Math.max(
+                              8,
+                              Math.round((range.count / maxRangeCount) * 100),
+                            );
+
+                            return (
+                              <div
+                                key={range.label}
+                                className="flex flex-wrap items-center gap-4 rounded-[1.1rem] border border-black/8 bg-[#fafaf9] px-4 py-3.5"
+                              >
+                                <p className="w-full shrink-0 text-sm font-semibold text-[#1f2328] sm:w-52">
+                                  {range.label}
+                                </p>
+                                <div className="h-2 flex-1 basis-32 overflow-hidden rounded-full bg-[#e5e7eb]">
+                                  <span
+                                    className="block h-full rounded-full bg-[#0f766e]"
+                                    style={{ width: `${progress}%` }}
+                                  />
+                                </div>
+                                <p className="w-12 shrink-0 text-right text-sm font-semibold text-[var(--admin-accent)]">
+                                  {formatNumber(range.count)}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+
                     <p className="text-xs text-[#8b8d91]">
                       Actualizado: {new Date(salesReport.generatedAt).toLocaleString("es-CO")}
                     </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "overview" && (
+            <div className="admin-fade-up space-y-8">
+              <div className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
+                      Panel maestro
+                    </p>
+                    <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                      Informes generales
+                    </h2>
+                    <p className="mt-3 max-w-2xl text-sm leading-7 text-[#6e7379]">
+                      Ingresos, unidades vendidas y productos de cada unidad de negocio de GEU.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void loadDivisionOverview()}
+                    className="inline-flex rounded-full border border-black/10 px-5 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                  >
+                    Recargar informes
+                  </button>
+                </div>
+
+                {!divisionOverview ? (
+                  <p className="mt-8 text-sm text-[#6e7379]">Cargando informes de cada unidad...</p>
+                ) : (
+                  <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {DIVISIONS.map((division) => {
+                      const brand = ADMIN_BRAND_CONFIG[division];
+                      const summary = divisionOverview[division];
+                      const isExpanded = expandedOverviewDivision === division;
+                      const nonEmptyPriceRanges = summary.priceRanges.filter((range) => range.count > 0);
+                      const maxRangeCount = Math.max(...nonEmptyPriceRanges.map((range) => range.count), 1);
+
+                      return (
+                        <div
+                          key={division}
+                          className={`flex flex-col gap-4 rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-5 ${
+                            isExpanded ? "md:col-span-2 xl:col-span-3" : ""
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span
+                              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]"
+                              style={{ backgroundColor: brand.accent }}
+                            >
+                              {brand.label.charAt(0)}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-black text-[#1f2328]">{brand.label}</p>
+                              <button
+                                type="button"
+                                onClick={() => void switchDivision(division)}
+                                disabled={isSwitchingDivision}
+                                className="text-xs font-semibold text-[var(--admin-accent)] underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                {division === adminDivision ? "Estás aquí ahora" : "Entrar al panel"}
+                              </button>
+                            </div>
+                          </div>
+
+                          {isServiceDivision(division) ? (
+                            <p className="text-sm leading-6 text-[#6e7379]">
+                              Esta unidad no maneja productos ni pedidos: solo contenido del sitio.
+                            </p>
+                          ) : (
+                            <>
+                              <div className="space-y-2 border-t border-black/8 pt-4 text-sm">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[#8b8d91]">Ingresos pagados</span>
+                                  <span className="font-semibold text-[#1f2328]">
+                                    {formatCurrency(summary.paidRevenue)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[#8b8d91]">Unidades vendidas</span>
+                                  <span className="font-semibold text-[#1f2328]">
+                                    {formatNumber(summary.productsSold)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[#8b8d91]">Pedidos</span>
+                                  <span className="font-semibold text-[#1f2328]">
+                                    {formatNumber(summary.orders)}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setExpandedOverviewDivision((current) =>
+                                      current === division ? null : division,
+                                    )
+                                  }
+                                  className="flex w-full items-center justify-between gap-2 rounded-lg -mx-2 px-2 py-1 text-left transition-colors duration-200 hover:bg-black/5"
+                                >
+                                  <span className="text-[#8b8d91]">Productos</span>
+                                  <span className="flex items-center gap-1.5 font-semibold text-[var(--admin-accent)]">
+                                    {formatNumber(summary.totalProducts)}
+                                    <svg
+                                      viewBox="0 0 24 24"
+                                      className={`h-3.5 w-3.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      aria-hidden="true"
+                                    >
+                                      <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                  </span>
+                                </button>
+                              </div>
+
+                              {isExpanded && (
+                                <div className="grid gap-6 border-t border-black/8 pt-4 lg:grid-cols-2">
+                                  <div>
+                                    <div className="flex items-center justify-between gap-2">
+                                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
+                                        Distribución de precios
+                                      </p>
+                                      <p className="text-xs font-semibold text-[#1f2328]">
+                                        Total: {formatNumber(summary.totalProducts)}
+                                      </p>
+                                    </div>
+                                    <div className="mt-3 space-y-2">
+                                      {nonEmptyPriceRanges.length === 0 ? (
+                                        <p className="text-sm text-[#6e7379]">
+                                          Aún no hay productos con precio registrado.
+                                        </p>
+                                      ) : (
+                                        nonEmptyPriceRanges.map((range) => {
+                                          const progress = Math.max(
+                                            8,
+                                            Math.round((range.count / maxRangeCount) * 100),
+                                          );
+
+                                          return (
+                                            <div
+                                              key={range.label}
+                                              className="flex flex-wrap items-center gap-3 rounded-lg bg-white px-3 py-2 text-xs"
+                                            >
+                                              <span className="w-32 shrink-0 font-semibold text-[#1f2328]">
+                                                {range.label}
+                                              </span>
+                                              <span className="h-1.5 flex-1 basis-16 overflow-hidden rounded-full bg-[#e5e7eb]">
+                                                <span
+                                                  className="block h-full rounded-full bg-[#0f766e]"
+                                                  style={{ width: `${progress}%` }}
+                                                />
+                                              </span>
+                                              <span className="w-8 shrink-0 text-right font-semibold text-[var(--admin-accent)]">
+                                                {formatNumber(range.count)}
+                                              </span>
+                                            </div>
+                                          );
+                                        })
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
+                                      Productos más vendidos
+                                    </p>
+                                    <div className="mt-3 space-y-2">
+                                      {summary.topProducts.length === 0 ? (
+                                        <p className="text-sm text-[#6e7379]">Aún no hay productos vendidos.</p>
+                                      ) : (
+                                        summary.topProducts.map((product, index) => (
+                                          <div
+                                            key={product.productId}
+                                            className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-xs"
+                                          >
+                                            <span className="min-w-0 truncate font-semibold text-[#1f2328]">
+                                              {index + 1}. {product.name}
+                                            </span>
+                                            <span className="shrink-0 font-semibold text-[var(--admin-accent)]">
+                                              {formatNumber(product.quantitySold)} vendidos
+                                            </span>
+                                          </div>
+                                        ))
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
