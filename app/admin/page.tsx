@@ -3721,83 +3721,128 @@ export default function AdminPage() {
       )}
 
       {showDivisionSwitcher && (
-        <div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#0f172a]/55 px-6 backdrop-blur-[2px]">
-          <div className="w-full max-w-3xl rounded-[1.8rem] border border-black/8 bg-white p-7 shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p
-                  className="text-xs font-semibold uppercase tracking-[0.24em]"
-                  style={{ color: "var(--admin-accent)" }}
+        <div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#05070d]/70 px-6 backdrop-blur-md">
+          <div className="relative w-full max-w-3xl overflow-hidden rounded-[2rem] border border-black/[0.06] bg-white shadow-[0_50px_120px_-30px_rgba(2,6,23,0.45),0_18px_40px_rgba(15,23,42,0.14)]">
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-black/10 to-transparent"
+              aria-hidden="true"
+            />
+
+            <div className="relative px-7 pb-7 pt-8 md:px-9">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.32em] text-[#9a9ea3]">
+                    <span className="h-px w-7 bg-[#c7cacd]" />
+                    Panel maestro
+                  </p>
+                  <h2 className="mt-3 text-[26px] font-semibold leading-tight tracking-[-0.02em] text-[#12161c] md:text-3xl">
+                    ¿En qué unidad de negocio quieres trabajar?
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowDivisionSwitcher(false)}
+                  disabled={isSwitchingDivision}
+                  aria-label="Cerrar"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/8 text-slate-500 transition-colors duration-200 hover:border-black/16 hover:bg-black/5 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Panel maestro
-                </p>
-                <h2 className="mt-2 text-2xl font-black text-[#1f2328]">
-                  ¿En qué unidad de negocio quieres trabajar?
-                </h2>
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6 6 18" />
+                  </svg>
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowDivisionSwitcher(false)}
-                disabled={isSwitchingDivision}
-                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors duration-200 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label="Cerrar"
-              >
-                Cerrar
-              </button>
-            </div>
 
-            {switchDivisionError && (
-              <p className="mt-4 rounded-xl border border-[var(--admin-accent)]/25 bg-[var(--admin-accent-soft)] px-4 py-3 text-sm text-[var(--admin-accent)]">
-                {switchDivisionError}
-              </p>
-            )}
+              {switchDivisionError && (
+                <p className="mt-5 rounded-xl border border-[var(--admin-accent)]/25 bg-[var(--admin-accent-soft)] px-4 py-3 text-sm text-[var(--admin-accent)]">
+                  {switchDivisionError}
+                </p>
+              )}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {DIVISIONS.map((division) => {
-                const brand = ADMIN_BRAND_CONFIG[division];
-                const isCurrent = division === adminDivision;
+              <div className="mt-7 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                {DIVISIONS.map((division) => {
+                  const brand = ADMIN_BRAND_CONFIG[division];
+                  const isCurrent = division === adminDivision;
 
-                return (
-                  <button
-                    key={division}
-                    type="button"
-                    onClick={() => void switchDivision(division)}
-                    disabled={isSwitchingDivision}
-                    className={`group flex flex-col items-start gap-3 rounded-[1.4rem] border p-5 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
-                      isCurrent
-                        ? "border-transparent shadow-[0_14px_28px_rgba(15,23,42,0.14)]"
-                        : "border-black/8 bg-white hover:-translate-y-0.5 hover:border-black/16 hover:shadow-[0_14px_28px_rgba(15,23,42,0.1)]"
-                    }`}
-                    style={isCurrent ? { backgroundColor: brand.accent, color: "#ffffff" } : undefined}
-                  >
-                    <span
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]"
-                      style={{ backgroundColor: isCurrent ? "rgba(255,255,255,0.2)" : brand.accent }}
+                  return (
+                    <button
+                      key={division}
+                      type="button"
+                      onClick={() => void switchDivision(division)}
+                      disabled={isSwitchingDivision}
+                      className={`group relative flex flex-col gap-3 overflow-hidden rounded-[1.3rem] border p-5 text-left transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        isCurrent
+                          ? "border-black/[0.06] bg-[#fafaf9]"
+                          : "border-black/8 bg-white hover:-translate-y-0.5 hover:border-black/[0.14] hover:shadow-[0_18px_34px_-14px_rgba(15,23,42,0.28)]"
+                      }`}
                     >
-                      {brand.label.charAt(0)}
-                    </span>
-                    <span className="min-w-0">
-                      <span
-                        className={`block text-sm font-black ${isCurrent ? "text-white" : "text-[#1f2328]"}`}
-                      >
-                        {brand.label}
-                      </span>
-                      <span
-                        className={`mt-1 block text-xs font-semibold ${isCurrent ? "text-white/80" : "text-[#8b8d91]"}`}
-                      >
-                        {isCurrent ? "Estás aquí ahora" : "Entrar al panel"}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+                      {isCurrent && (
+                        <span
+                          className="pointer-events-none absolute inset-y-0 left-0 w-[3px]"
+                          style={{ backgroundColor: brand.accent }}
+                          aria-hidden="true"
+                        />
+                      )}
+                      <div className="flex items-start justify-between gap-2">
+                        <span
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.85rem] text-base font-bold text-white ring-1 ring-black/5"
+                          style={{
+                            background: `linear-gradient(155deg, ${brand.accent} 0%, ${brand.accentHover} 100%)`,
+                            boxShadow: `0 10px 22px -8px ${brand.accent}66`,
+                          }}
+                        >
+                          {brand.label.charAt(0)}
+                        </span>
+                        {!isCurrent && (
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="mt-1 h-4 w-4 shrink-0 text-[#c4c6c9] transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[#8b8d91]"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="m9 6 6 6-6 6" />
+                          </svg>
+                        )}
+                      </div>
+                      <div>
+                        <span className="block text-[13.5px] font-semibold leading-snug text-[#12161c]">
+                          {brand.label}
+                        </span>
+                        {isCurrent ? (
+                          <span
+                            className="mt-1.5 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                            style={{ backgroundColor: `${brand.accent}14`, color: brand.accent }}
+                          >
+                            <span
+                              className="h-1.5 w-1.5 rounded-full"
+                              style={{ backgroundColor: brand.accent }}
+                            />
+                            Estás aquí ahora
+                          </span>
+                        ) : (
+                          <span className="mt-1 block text-xs font-medium text-[#8b8d91]">
+                            Entrar al panel
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
 
-            {isSwitchingDivision && (
-              <p className="mt-5 text-center text-sm font-semibold text-[#6e7379]">
-                Cambiando de unidad de negocio...
-              </p>
-            )}
+              {isSwitchingDivision && (
+                <p className="mt-6 flex items-center justify-center gap-2.5 text-sm font-semibold text-[#6e7379]">
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 animate-spin" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" opacity="0.2" />
+                    <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                  Cambiando de unidad de negocio...
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
