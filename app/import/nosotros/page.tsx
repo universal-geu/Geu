@@ -86,7 +86,7 @@ export default async function ImportNosotrosPage() {
 
       <section className="relative overflow-hidden bg-white">
         <Image
-          src="/geu-import-puerto-banner.jpg"
+          src={resolveImage("import-nosotros-banner", siteImages)}
           alt="Logística portuaria GEU Import"
           width={1920}
           height={463}

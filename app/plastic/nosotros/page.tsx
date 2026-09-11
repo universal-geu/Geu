@@ -86,7 +86,7 @@ export default async function PlasticNosotrosPage() {
 
       <section className="relative overflow-hidden bg-white">
         <Image
-          src="/plastic-nosotros-hero.png"
+          src={resolveImage("plastic-nosotros-banner", siteImages)}
           alt="GEU Plastic"
           width={1983}
           height={793}

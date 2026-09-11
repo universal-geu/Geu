@@ -23,6 +23,7 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "marca-destacada-mangueras", label: "Marca destacada 2 · Mangueras", group: "Marcas destacadas", division: "Cauchos", defaultSrc: "/featured-cauchos-temp.jpg", dims: "900 × 250 px" },
   { key: "marca-destacada-laminas", label: "Marca destacada 3 · Láminas", group: "Marcas destacadas", division: "Cauchos", defaultSrc: "/featured-cauchos-temp.jpg", dims: "900 × 250 px" },
   { key: "marca-destacada-soportes", label: "Marca destacada 4 · Soportes", group: "Marcas destacadas", division: "Cauchos", defaultSrc: "/featured-cauchos-temp.jpg", dims: "900 × 250 px" },
+  { key: "cauchos-nosotros-banner", label: "Nosotros · Banner principal", group: "Nosotros", division: "Cauchos", defaultSrc: "/cauchos-nosotros-hero.png", dims: "1983 × 793 px" },
   { key: "cauchos-nosotros-destacada-1", label: "Nosotros · Destacada 1", group: "Nosotros", division: "Cauchos", defaultSrc: "/cauchos-nosotros-galeria-1.jpg", dims: "900 × 675 px" },
   { key: "cauchos-nosotros-destacada-2", label: "Nosotros · Destacada 2", group: "Nosotros", division: "Cauchos", defaultSrc: "/cauchos-nosotros-galeria-2.jpg", dims: "900 × 675 px" },
   { key: "cauchos-nosotros-destacada-3", label: "Nosotros · Destacada 3", group: "Nosotros", division: "Cauchos", defaultSrc: "/cauchos-nosotros-galeria-3.jpg", dims: "900 × 675 px" },
@@ -77,6 +78,7 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "import-destacada-2", label: "Import · Destacada 2", group: "Marcas destacadas", division: "Import", defaultSrc: "/import-destacada-2.jpg", dims: "900 × 250 px" },
   { key: "import-destacada-3", label: "Import · Destacada 3", group: "Marcas destacadas", division: "Import", defaultSrc: "/import-destacada-3.jpg", dims: "900 × 250 px" },
   { key: "import-destacada-4", label: "Import · Destacada 4", group: "Marcas destacadas", division: "Import", defaultSrc: "/import-destacada-4.jpg", dims: "900 × 250 px" },
+  { key: "import-nosotros-banner", label: "Nosotros · Banner principal", group: "Nosotros", division: "Import", defaultSrc: "/geu-import-puerto-banner.jpg", dims: "1920 × 463 px" },
   { key: "import-nosotros-1", label: "Nosotros · Destacada 1", group: "Nosotros", division: "Import", defaultSrc: "/import-destacada-1.jpg", dims: "900 × 675 px" },
   { key: "import-nosotros-2", label: "Nosotros · Destacada 2", group: "Nosotros", division: "Import", defaultSrc: "/import-destacada-2.jpg", dims: "900 × 675 px" },
   { key: "import-nosotros-3", label: "Nosotros · Destacada 3", group: "Nosotros", division: "Import", defaultSrc: "/import-destacada-3.jpg", dims: "900 × 675 px" },
@@ -131,6 +133,7 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "innovation-destacada-2", label: "Innovation · Destacada 2", group: "Autoservicio · Ofertas y destacadas", division: "Innovation", defaultSrc: "/innovation-destacada-2.jpg", dims: "1792 × 1024 px" },
   { key: "innovation-destacada-3", label: "Innovation · Destacada 3", group: "Autoservicio · Ofertas y destacadas", division: "Innovation", defaultSrc: "/innovation-destacada-3.jpg", dims: "1792 × 1024 px" },
   { key: "innovation-destacada-4", label: "Innovation · Destacada 4", group: "Autoservicio · Ofertas y destacadas", division: "Innovation", defaultSrc: "/innovation-destacada-4.jpg", dims: "1792 × 1024 px" },
+  { key: "innovation-nosotros-banner", label: "Nosotros · Banner principal", group: "Nosotros", division: "Innovation", defaultSrc: "/innovation-nosotros-hero.png", dims: "1920 × 1080 px" },
   { key: "estufas-proyecto-1", label: "Estufas · Encuentro con la comunidad", group: "Estufas", division: "Innovation", defaultSrc: "/geu-innovation-project-1.jpg", dims: "1000 × 1000 px" },
   { key: "estufas-proyecto-2", label: "Estufas · Transporte hasta la vereda", group: "Estufas", division: "Innovation", defaultSrc: "/geu-innovation-project-2.jpg", dims: "1000 × 1000 px" },
   { key: "estufas-proyecto-3", label: "Estufas · Instalación y capacitación", group: "Estufas", division: "Innovation", defaultSrc: "/geu-innovation-project-3.png", dims: "1000 × 1000 px" },
@@ -169,6 +172,7 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "plastic-destacada-2", label: "Plastic · Destacada 2", group: "Marcas destacadas", division: "Plastic", defaultSrc: "/plastic-destacada-2.jpg", dims: "1792 × 1024 px" },
   { key: "plastic-destacada-3", label: "Plastic · Destacada 3", group: "Marcas destacadas", division: "Plastic", defaultSrc: "/plastic-destacada-3.jpg", dims: "1792 × 1024 px" },
   { key: "plastic-destacada-4", label: "Plastic · Destacada 4", group: "Marcas destacadas", division: "Plastic", defaultSrc: "/plastic-destacada-4.jpg", dims: "1792 × 1024 px" },
+  { key: "plastic-nosotros-banner", label: "Nosotros · Banner principal", group: "Nosotros", division: "Plastic", defaultSrc: "/plastic-nosotros-hero.png", dims: "1983 × 793 px" },
   { key: "plastic-nosotros-1", label: "Nosotros · Destacada 1", group: "Nosotros", division: "Plastic", defaultSrc: "/plastic-destacada-1.jpg", dims: "900 × 675 px" },
   { key: "plastic-nosotros-2", label: "Nosotros · Destacada 2", group: "Nosotros", division: "Plastic", defaultSrc: "/plastic-destacada-2.jpg", dims: "900 × 675 px" },
   { key: "plastic-nosotros-3", label: "Nosotros · Destacada 3", group: "Nosotros", division: "Plastic", defaultSrc: "/plastic-destacada-3.jpg", dims: "900 × 675 px" },
@@ -217,6 +221,9 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "energy-solucion-biposte", label: "Energy · Estructura Biposte", group: "Proyectos", division: "Energy", defaultSrc: "/energy-estructura-biposte.jpg", dims: "1000 × 1000 px" },
   { key: "energy-solucion-chinesehat", label: "Energy · Estructura Chinese hat", group: "Proyectos", division: "Energy", defaultSrc: "/energy-estructura-chinesehat.jpg", dims: "1000 × 1000 px" },
   { key: "energy-solucion-carport", label: "Energy · Estructura Carport", group: "Proyectos", division: "Energy", defaultSrc: "/energy-estructura-carport.jpg", dims: "1000 × 1000 px" },
+
+  // ---- Energy · Nosotros ----
+  { key: "energy-nosotros-banner", label: "Nosotros · Banner principal", group: "Nosotros", division: "Energy", defaultSrc: "/energy-nosotros-hero.png", dims: "1983 × 793 px" },
 
   // ---- GEU · Nosotros (corporativo) ----
   { key: "geu-nosotros-hero", label: "Nosotros · Fondo del héroe", group: "Nosotros", division: "GEU", defaultSrc: "/about-geu-logo-wall.jpg", dims: "1962 × 802 px" },
