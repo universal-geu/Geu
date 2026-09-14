@@ -11,6 +11,7 @@ import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import { categoryLabelKey } from "@/lib/text-slots";
 import { getProducts, productSellsInDivision } from "@/lib/products";
 import { importCategorias, slugify } from "../data/catalog";
 
@@ -93,6 +94,7 @@ export default async function ImportPage() {
   const importProducts = (importFeaturedProducts.length > 0 ? importFeaturedProducts : importCatalog).slice(0, 4);
   const importCategories = importCategoriesBase.map((category) => ({
     ...category,
+    title: resolveText(categoryLabelKey("Import", category.title), siteTexts, category.title),
     image: resolveImage(category.imageKey, siteImages),
   }));
   const importOffersResolved = importOffers.map((offer) => ({

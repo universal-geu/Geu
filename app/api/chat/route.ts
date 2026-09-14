@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { buildCatalogContext, buildLocalAssistantReply, getCatalogSnapshot } from "@/lib/chatbot";
 import { buildGusLocalReply, GUS_SYSTEM_PROMPT } from "@/lib/gus-context";
+import { buildYuloLocalReply, YULO_SYSTEM_PROMPT } from "@/lib/yulo-context";
 
 export const dynamic = "force-dynamic";
 
@@ -59,12 +60,18 @@ export async function POST(request: Request) {
 
     const division = typeof body.division === "string" ? body.division : undefined;
     const isEnergy = division === "Energy";
+    // Structure's division key elsewhere in the codebase is "Innovation",
+    // not "Structure" — see DIVISION_BRAND in lib/divisions.ts.
+    const isStructure = division === "Innovation";
 
-    const snapshot = isEnergy ? null : await getCatalogSnapshot(latestUserMessage.content, division);
+    const snapshot =
+      isEnergy || isStructure ? null : await getCatalogSnapshot(latestUserMessage.content, division);
 
     const fallback = isEnergy
       ? buildGusLocalReply(latestUserMessage.content)
-      : buildLocalAssistantReply(latestUserMessage.content, snapshot!, division);
+      : isStructure
+        ? buildYuloLocalReply(latestUserMessage.content)
+        : buildLocalAssistantReply(latestUserMessage.content, snapshot!, division);
 
     if (!openai) {
       return Response.json({
@@ -76,16 +83,18 @@ export async function POST(request: Request) {
 
     const instructions = isEnergy
       ? GUS_SYSTEM_PROMPT
-      : [
-          "Eres el asistente comercial de GEU Grupo Empresarial Universal.",
-          "Responde siempre en español claro, breve y útil.",
-          "Tu objetivo es ayudar a encontrar productos, categorías y orientar sobre disponibilidad, envíos y pagos.",
-          "No inventes productos, precios ni stock.",
-          "Si no estás seguro, dilo claramente y sugiere una categoría o producto real del contexto.",
-          "Cuando menciones productos, usa el nombre exacto y si es útil di su ruta relativa.",
-          "Contexto del catálogo:",
-          buildCatalogContext(snapshot!),
-        ].join("\n\n");
+      : isStructure
+        ? YULO_SYSTEM_PROMPT
+        : [
+            "Eres el asistente comercial de GEU Grupo Empresarial Universal.",
+            "Responde siempre en español claro, breve y útil.",
+            "Tu objetivo es ayudar a encontrar productos, categorías y orientar sobre disponibilidad, envíos y pagos.",
+            "No inventes productos, precios ni stock.",
+            "Si no estás seguro, dilo claramente y sugiere una categoría o producto real del contexto.",
+            "Cuando menciones productos, usa el nombre exacto y si es útil di su ruta relativa.",
+            "Contexto del catálogo:",
+            buildCatalogContext(snapshot!),
+          ].join("\n\n");
 
     const response = await openai.responses.create({
       model: process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini",

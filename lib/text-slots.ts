@@ -1,4 +1,9 @@
-import { categoriasData, importCategoriasData, plasticCategoriasData } from "@/app/data/catalog";
+import {
+  categoriasData,
+  energyCategoriasData,
+  importCategoriasData,
+  plasticCategoriasData,
+} from "@/app/data/catalog";
 
 export function categoryLabelKey(division: string, nombre: string): string {
   return `category-label:${division}:${nombre}`;
@@ -220,6 +225,13 @@ export const TEXT_SLOTS: TextSlot[] = [
     label: `Categoría · ${category.nombre}`,
     group: "Nombres de categorías",
     division: "Plastic" as const,
+    defaultValue: category.nombre,
+  })),
+  ...energyCategoriasData.map((category) => ({
+    key: categoryLabelKey("Energy", category.nombre),
+    label: `Categoría · ${category.nombre}`,
+    group: "Nombres de categorías",
+    division: "Energy" as const,
     defaultValue: category.nombre,
   })),
 ];

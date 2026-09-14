@@ -11,6 +11,7 @@ import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import { categoryLabelKey } from "@/lib/text-slots";
 import { getProducts, productSellsInDivision } from "@/lib/products";
 import { plasticCategorias, slugify } from "../data/catalog";
 
@@ -87,6 +88,7 @@ export default async function PlasticPage() {
   const plasticProducts = (plasticFeaturedProducts.length > 0 ? plasticFeaturedProducts : plasticCatalog).slice(0, 4);
   const plasticCategories = plasticCategoriesBase.map((category) => ({
     ...category,
+    title: resolveText(categoryLabelKey("Plastic", category.title), siteTexts, category.title),
     image: resolveImage(category.imageKey, siteImages),
   }));
   const plasticOffersResolved = plasticOffers.map((offer) => ({

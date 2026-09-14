@@ -27,7 +27,7 @@ import { matchesQuery } from "@/lib/text-match";
 import type { DashboardMetrics, SalesReport, SalesReportOverview, ShippingStatus } from "@/lib/orders";
 import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
-import { TEXT_SLOTS } from "@/lib/text-slots";
+import { TEXT_SLOTS, categoryLabelKey } from "@/lib/text-slots";
 import { COLOR_SLOTS } from "@/lib/color-slots";
 import {
   DIVISIONS,
@@ -1140,12 +1140,13 @@ function AdditionalCategoriesEditor({
           <div key={item.id} className="rounded-[1.2rem] border border-black/8 bg-white p-4">
             <div className="grid gap-3 md:grid-cols-3">
               <CategoryComboBox
-                label="Categoría"
+                label="Categoría *"
                 name={`categoriaAdicional-${item.id}`}
                 value={item.categoria}
                 options={categoryOptions}
                 entityName="categoría"
                 strict={strictCategory}
+                required
                 onChange={(value) =>
                   updateItem(item.id, { categoria: value, subcategoria: "", categoriaMenor: "" })
                 }
@@ -1154,20 +1155,22 @@ function AdditionalCategoriesEditor({
               {!strictCategory && (
                 <>
                   <CategoryComboBox
-                    label="Sub categoría"
+                    label="Sub categoría *"
                     name={`subcategoriaAdicional-${item.id}`}
                     value={item.subcategoria}
                     options={getSubcategoryOptionsFor(item.categoria, adminProducts)}
                     entityName="subcategoría"
+                    required
                     onChange={(value) => updateItem(item.id, { subcategoria: value, categoriaMenor: "" })}
                   />
 
                   <CategoryComboBox
-                    label="Categoría menor"
+                    label="Categoría menor *"
                     name={`categoriaMenorAdicional-${item.id}`}
                     value={item.categoriaMenor}
                     options={getCategoriaMenorOptionsFor(item.categoria, item.subcategoria, adminProducts)}
                     entityName="categoría menor"
+                    required
                     onChange={(value) => updateItem(item.id, { categoriaMenor: value })}
                   />
                 </>
@@ -2232,6 +2235,18 @@ export default function AdminPage() {
       setIsSavingProduct(false);
       const label = DIVISION_BRAND[divisionSinCategoria.division].label;
       const message = `Elige al menos una categoría de ${label} para este producto.`;
+      setRequestError(message);
+      setToast({ tone: "error", message });
+      return;
+    }
+
+    const categoriaAdicionalIncompleta = form.categoriasAdicionales.find(
+      (item) => item.categoria.trim() && (!item.subcategoria.trim() || !item.categoriaMenor.trim()),
+    );
+    if (categoriaAdicionalIncompleta) {
+      setIsSavingProduct(false);
+      const message =
+        "Completa la sub categoría y la categoría menor de cada categoría adicional (o quítala si no aplica).";
       setRequestError(message);
       setToast({ tone: "error", message });
       return;
@@ -7034,6 +7049,48 @@ export default function AdminPage() {
                               <p className="mt-1 text-[10px] font-semibold text-[#8b8d91]">
                                 {slot.dims}
                               </p>
+                              {slot.group === "Categorías" &&
+                                (() => {
+                                  const categoryName = slot.label.replace(/^Categoría\s*·\s*/, "");
+                                  const nameKey = categoryLabelKey(slot.division, categoryName);
+                                  const nameValue = resolveAdminText(nameKey, categoryName);
+                                  const isSavingName = savingTextKey === nameKey;
+                                  const isSavedName = savedTextKey === nameKey;
+                                  const hasNameDraft = Boolean(contentDrafts[nameKey]);
+
+                                  return (
+                                    <div className="mt-2">
+                                      <label className="mb-1 flex items-center justify-between gap-2 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#8b8d91]">
+                                        <span>Nombre de la categoría</span>
+                                        <span className="flex items-center gap-1.5">
+                                          {isSavingName && <span className="normal-case text-[#8b8d91]">Guardando...</span>}
+                                          {isSavedName && <span className="normal-case text-[#1f6b39]">✓ Guardado</span>}
+                                          {hasNameDraft && !isSavingName && (
+                                            <button
+                                              type="button"
+                                              onClick={() => void handleDiscardDraft(nameKey)}
+                                              className="normal-case text-[#8b8d91] hover:text-[var(--admin-accent)]"
+                                            >
+                                              ↺ Deshacer
+                                            </button>
+                                          )}
+                                        </span>
+                                      </label>
+                                      <input
+                                        key={`${nameKey}:${nameValue}`}
+                                        type="text"
+                                        defaultValue={nameValue}
+                                        onBlur={(event) => {
+                                          const nextValue = event.target.value.trim();
+                                          if (nextValue && nextValue !== nameValue) {
+                                            void handleSaveText(nameKey, nextValue);
+                                          }
+                                        }}
+                                        className="w-full rounded-lg border border-black/10 bg-[#fafaf9] px-2.5 py-1.5 text-xs text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                                      />
+                                    </div>
+                                  );
+                                })()}
                               <label
                                 className={`mt-2 flex cursor-pointer items-center justify-center gap-1.5 rounded-full py-2 text-xs font-semibold transition-colors ${
                                   isSaved

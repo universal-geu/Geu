@@ -16,7 +16,7 @@ const WAVE_FRAMES = [
 // that direction instead of a mirrored front-on walk. Each frame was
 // generated as its own separate image (not sliced from a shared sheet), so
 // there's no risk of neighboring poses bleeding into each other.
-const RUN_FRAMES = Array.from({ length: 20 }, (_, i) => `/gus/run-${i + 1}.png`);
+const RUN_FRAMES = Array.from({ length: 9 }, (_, i) => `/gus/run-${i + 1}.png`);
 const CELEBRATE_FRAME = "/gus/celebrate.png";
 
 const HOVER_GREETING = "¡Hola! Soy el hijo de Yulo 👋";
@@ -32,9 +32,43 @@ const WIDGET_SIZE = 190;
 const STORAGE_KEY = "yulo-widget-position";
 const WANDER_IDLE_MS = 15000;
 const WANDER_CHECK_MS = 4000;
+// Structure's division key in the rest of the codebase is "Innovation", not
+// "Structure" — see DIVISION_BRAND in lib/divisions.ts.
+const VOICE_DIVISION = "Innovation";
+const VOICE_HISTORY_LIMIT = 8;
+const VOICE_LANG = "es-CO";
+const VOICE_LISTEN_ERROR = "No te escuché bien. Intenta de nuevo cuando quieras.";
+const VOICE_REQUEST_ERROR = "Tuve un problema para responder. Intenta de nuevo en un momento.";
 
 type Mode = "idle" | "wave" | "run" | "celebrate";
 type Position = { x: number; y: number };
+type VoiceStatus = "idle" | "listening" | "thinking" | "speaking" | "error";
+type ConversationTurn = { role: "user" | "assistant"; content: string };
+
+// Minimal shape of the (non-standard, vendor-prefixed) Web Speech API
+// SpeechRecognition instance — not part of TypeScript's DOM lib.
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: { results: { [index: number]: { [index: number]: { transcript: string } } } }) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+};
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
+
+function MicIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z" />
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+      <line x1="12" y1="19" x2="12" y2="23" />
+      <line x1="8" y1="23" x2="16" y2="23" />
+    </svg>
+  );
+}
 
 export default function YuloWidget() {
   const [position, setPosition] = useState<Position | null>(null);
@@ -43,11 +77,16 @@ export default function YuloWidget() {
   const [facingLeft, setFacingLeft] = useState(false);
   const [bubble, setBubble] = useState<string | null>(null);
   const [isHovering, setIsHovering] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
+  const [voiceBubble, setVoiceBubble] = useState<string | null>(null);
 
   const sequenceTimeouts = useRef<number[]>([]);
   const runIntervalRef = useRef<number | null>(null);
   const bubbleTimeout = useRef<number | null>(null);
   const idleSinceRef = useRef(0);
+  const conversationRef = useRef<ConversationTurn[]>([]);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const modeRef = useRef<Mode>("idle");
   const positionRef = useRef<Position | null>(null);
@@ -78,6 +117,106 @@ export default function YuloWidget() {
       runIntervalRef.current = null;
     }
   };
+
+  // Feature-detect once on mount: speech recognition needs a secure context
+  // (HTTPS) and is Chrome/Edge-only today, so the mic button only shows up
+  // when both recognition and speech synthesis are actually available. Must
+  // run in an effect (not a lazy useState initializer) since it reads
+  // `window`: this component renders null until `position` is set (also via
+  // an effect, below), so nothing is ever painted before this has run.
+  useEffect(() => {
+    const w = window as typeof window & {
+      SpeechRecognition?: SpeechRecognitionCtor;
+      webkitSpeechRecognition?: SpeechRecognitionCtor;
+    };
+    const hasRecognition = Boolean(w.SpeechRecognition || w.webkitSpeechRecognition);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setVoiceSupported(hasRecognition && "speechSynthesis" in window);
+  }, []);
+
+  const speak = useCallback((text: string) => {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = VOICE_LANG;
+    utterance.onstart = () => setVoiceStatus("speaking");
+    utterance.onend = () => setVoiceStatus((current) => (current === "speaking" ? "idle" : current));
+    utterance.onerror = () => setVoiceStatus((current) => (current === "speaking" ? "idle" : current));
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
+  const askYulo = useCallback(
+    async (question: string) => {
+      setVoiceBubble(question);
+      setVoiceStatus("thinking");
+      const userTurn: ConversationTurn = { role: "user", content: question };
+      conversationRef.current = [...conversationRef.current, userTurn].slice(-VOICE_HISTORY_LIMIT);
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: conversationRef.current, division: VOICE_DIVISION }),
+        });
+        const payload = (await response.json()) as { message?: string; error?: string };
+        const answer = response.ok && payload.message ? payload.message : VOICE_REQUEST_ERROR;
+
+        const assistantTurn: ConversationTurn = { role: "assistant", content: answer };
+        conversationRef.current = [...conversationRef.current, assistantTurn].slice(-VOICE_HISTORY_LIMIT);
+        setVoiceBubble(answer);
+        speak(answer);
+      } catch {
+        setVoiceBubble(VOICE_REQUEST_ERROR);
+        setVoiceStatus("error");
+        speak(VOICE_REQUEST_ERROR);
+      }
+    },
+    [speak],
+  );
+
+  const toggleListening = useCallback(
+    (event: React.PointerEvent | React.MouseEvent) => {
+      event.stopPropagation();
+      if (!voiceSupported) return;
+
+      if (voiceStatus === "listening") {
+        recognitionRef.current?.stop();
+        return;
+      }
+
+      window.speechSynthesis?.cancel();
+      clearSequenceTimeouts();
+      const w = window as typeof window & {
+        SpeechRecognition?: SpeechRecognitionCtor;
+        webkitSpeechRecognition?: SpeechRecognitionCtor;
+      };
+      const Recognition = w.SpeechRecognition || w.webkitSpeechRecognition;
+      if (!Recognition) return;
+
+      const recognition = new Recognition();
+      recognition.lang = VOICE_LANG;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onresult = (resultEvent) => {
+        const transcript = resultEvent.results[0]?.[0]?.transcript;
+        if (transcript) void askYulo(transcript);
+      };
+      recognition.onerror = () => {
+        setVoiceStatus("error");
+        setVoiceBubble(VOICE_LISTEN_ERROR);
+      };
+      recognition.onend = () => {
+        setVoiceStatus((current) => (current === "listening" ? "idle" : current));
+      };
+
+      recognitionRef.current = recognition;
+      setBubble(null);
+      setVoiceBubble(null);
+      setVoiceStatus("listening");
+      recognition.start();
+    },
+    [voiceSupported, voiceStatus, askYulo],
+  );
 
   // Start bottom-right by default; restore a remembered spot if the visitor
   // has moved Yulo before, clamped in case the viewport shrank since then.
@@ -160,21 +299,40 @@ export default function YuloWidget() {
     const targetX = goLeft ? Math.max(8, startX - distance) : Math.min(maxX, startX + distance);
     if (Math.abs(targetX - startX) < 20) return;
 
-    setFacingLeft(targetX < startX);
+    // The run sprites face left natively, so `facingLeft` (which flips via
+    // scaleX when true) actually needs to flip when moving right, not left.
+    setFacingLeft(targetX > startX);
     setMode("run");
     setFrameIndex(0);
 
-    const steps = 24;
-    const stepDuration = 60;
+    const baseY = currentPosition.y;
+    // Ease in/out of the sprint (accelerate off the mark, decelerate into the
+    // stop) instead of a constant-speed slide, which is what reads as
+    // "gliding" rather than actually running.
+    const easeInOutQuad = (t: number) => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2);
+    // A gait bounces twice per full cycle through the frame set (once per
+    // footfall) — this is what sells "running" even when the frames
+    // themselves are similar poses, since the body visibly rises and falls
+    // with each stride instead of sliding across at a flat height.
+    const BOB_HEIGHT = 7;
+
+    const steps = 36;
+    const stepDuration = 55;
+    // Advance the pose slower than the position updates so each frame is
+    // actually on screen long enough to read, instead of strobing through
+    // all 10 poses several times over a single short dash.
+    const framesPerPoseStep = 3;
     let step = 0;
     stopRunInterval();
     runIntervalRef.current = window.setInterval(() => {
       step += 1;
-      const progress = step / steps;
-      setPosition({ x: startX + (targetX - startX) * progress, y: currentPosition.y });
-      setFrameIndex(step % RUN_FRAMES.length);
+      const eased = easeInOutQuad(step / steps);
+      const bob = Math.sin((step / 12) * Math.PI) ** 2 * BOB_HEIGHT;
+      setPosition({ x: startX + (targetX - startX) * eased, y: baseY - bob });
+      setFrameIndex(Math.floor(step / framesPerPoseStep) % RUN_FRAMES.length);
       if (step >= steps) {
         stopRunInterval();
+        setPosition({ x: startX + (targetX - startX), y: baseY });
         returnToIdle();
       }
     }, stepDuration);
@@ -196,6 +354,8 @@ export default function YuloWidget() {
       clearSequenceTimeouts();
       stopRunInterval();
       if (bubbleTimeout.current) window.clearTimeout(bubbleTimeout.current);
+      recognitionRef.current?.stop();
+      window.speechSynthesis?.cancel();
     },
     [],
   );
@@ -229,7 +389,8 @@ export default function YuloWidget() {
 
     const deltaX = event.clientX - lastPointerX.current;
     if (Math.abs(deltaX) > 2) {
-      setFacingLeft(deltaX < 0);
+      // Same left-facing-native flip rule as startWander.
+      setFacingLeft(deltaX > 0);
       lastPointerX.current = event.clientX;
     }
 
@@ -282,7 +443,10 @@ export default function YuloWidget() {
           ? [CELEBRATE_FRAME]
           : IDLE_FRAMES;
   const src = frames[frameIndex % frames.length] ?? IDLE_FRAMES[0];
-  const bubbleText = bubble ?? (isHovering && mode === "idle" ? HOVER_GREETING : null);
+  const voiceStatusText =
+    voiceStatus === "listening" ? "🎙️ Te escucho..." : voiceStatus === "thinking" ? "Pensando..." : null;
+  const bubbleText =
+    voiceStatusText ?? voiceBubble ?? bubble ?? (isHovering && mode === "idle" ? HOVER_GREETING : null);
 
   return (
     <div
@@ -315,6 +479,24 @@ export default function YuloWidget() {
         className="h-full w-full object-contain object-bottom drop-shadow-[0_10px_14px_rgba(0,0,0,0.35)]"
         style={{ transform: mode === "run" && facingLeft ? "scaleX(-1)" : undefined }}
       />
+      {voiceSupported && (
+        <button
+          type="button"
+          aria-label={voiceStatus === "listening" ? "Dejar de escuchar" : "Hablar con el hijo de Yulo"}
+          onPointerDown={(event) => event.stopPropagation()}
+          onPointerUp={(event) => event.stopPropagation()}
+          onClick={toggleListening}
+          className={`absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white text-white shadow-[0_6px_14px_rgba(0,0,0,0.35)] transition-colors duration-150 ${
+            voiceStatus === "listening"
+              ? "animate-pulse bg-[#e4002b]"
+              : voiceStatus === "thinking" || voiceStatus === "speaking"
+                ? "bg-slate-500"
+                : "bg-[#0498b4] hover:bg-[#037c93]"
+          }`}
+        >
+          <MicIcon className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }

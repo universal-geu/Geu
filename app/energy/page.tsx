@@ -11,6 +11,7 @@ import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import { categoryLabelKey } from "@/lib/text-slots";
 import { getProducts, productSellsInDivision } from "@/lib/products";
 import { energyCategorias, slugify } from "../data/catalog";
 
@@ -72,6 +73,7 @@ export default async function EnergyPage() {
   const energyProducts = (energyFeaturedProducts.length > 0 ? energyFeaturedProducts : energyCatalog).slice(0, 4);
   const energyCategories = energyCategoriesBase.map((category) => ({
     ...category,
+    title: resolveText(categoryLabelKey("Energy", category.title), siteTexts, category.title),
     image: resolveImage(category.imageKey, siteImages),
   }));
   const energyOffersResolved = energyOffers.map((offer) => ({
