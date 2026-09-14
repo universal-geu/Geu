@@ -1,6 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import type { DivisionName } from "@/lib/divisions";
-import { DIVISION_ADMIN_EMAILS, DIVISION_BRAND, DIVISIONS, isServiceDivision } from "@/lib/divisions";
+import {
+  DIVISION_ADMIN_EMAILS,
+  DIVISION_BRAND,
+  DIVISIONS,
+  getDivisionFromBrandParam,
+  isServiceDivision,
+} from "@/lib/divisions";
+import { productSellsInDivision } from "@/lib/product-category-views";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { formatOrderCode } from "@/lib/format-order";
 import { calculateShippingCost } from "@/lib/shipping";
@@ -24,6 +31,11 @@ export type CheckoutInput = {
   // `notes`), but the shipping fee charged sums every destination's cost
   // instead of only the primary one's.
   shippingCities?: string[];
+  // The `?brand=` the customer checked out under (e.g. "import"). Used to
+  // exempt products cross-listed into that division from the Cauchos
+  // WhatsApp-only block below, and to pick which division's colors the
+  // confirmation page shows. Defaults to Cauchos when absent.
+  brand?: string;
 };
 
 export type ShippingStatus =
@@ -134,6 +146,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
       : calculateShippingCost(city);
 
   const cauchosSalesMode = await getCauchosSalesMode();
+  const checkoutDivision = getDivisionFromBrandParam(input.brand);
 
   const order = await prisma.$transaction(async (tx) => {
     const productSlugs = cartItems.map((item) => item.productId);
@@ -150,13 +163,25 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
         stock: true,
         minimumStock: true,
         division: true,
+        additionalDivisions: true,
       },
     });
 
-    // Enforced here (not just in the checkout/cart UI) so it can't be bypassed
-    // by navigating with a different `?brand=` query param — this is the one
-    // place every checkout path funnels through before an order is created.
-    if (cauchosSalesMode === "whatsapp" && products.some((product) => product.division === "Cauchos")) {
+    // Enforced here (not just in the checkout/cart UI) so it can't be
+    // bypassed client-side — this is the one place every checkout path
+    // funnels through before an order is created. Only blocks products that
+    // are Cauchos-only: one cross-listed into `checkoutDivision` (via
+    // "también aplica para otra empresa GEU") is part of that division's
+    // real catalog and should check out normally there.
+    const hasCauchosOnlyItem = products.some(
+      (product) =>
+        product.division === "Cauchos" &&
+        !productSellsInDivision(
+          { division: product.division, divisionesAdicionales: product.additionalDivisions },
+          checkoutDivision,
+        ),
+    );
+    if (cauchosSalesMode === "whatsapp" && hasCauchosOnlyItem) {
       throw new Error("CAUCHOS_WHATSAPP_MODE");
     }
 
@@ -218,8 +243,11 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
     // `Order.division` is only used for cosmetic purposes (e.g. which brand's
     // colors to show on the confirmation page) — the source of truth for who
     // actually owns each line, and thus each division's revenue, is the
-    // `division` stored on every OrderItem below.
-    const orderDivision: DivisionName = products[0]?.division ?? "Cauchos";
+    // `division` stored on every OrderItem below. Prefer the division the
+    // customer actually checked out under (so a cross-listed item bought
+    // while shopping Import shows Import's confirmation page), falling back
+    // to the product's own division for older calls with no brand context.
+    const orderDivision: DivisionName = input.brand ? checkoutDivision : (products[0]?.division ?? "Cauchos");
 
     const createdOrder = await tx.order.create({
       data: {

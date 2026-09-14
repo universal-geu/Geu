@@ -13,10 +13,10 @@ const WAVE_FRAMES = [
 ];
 // True side-profile sprint poses (vs. the old front-facing walk poses), so
 // flipping them horizontally for left-vs-right actually reads as running in
-// that direction instead of a mirrored front-on walk. All 24 source frames
-// (vs. the original 2) so the cycle reads as fluid motion instead of a
-// choppy toggle.
-const RUN_FRAMES = Array.from({ length: 24 }, (_, i) => `/gus/run-${i + 1}.png`);
+// that direction instead of a mirrored front-on walk. Each frame was
+// generated as its own separate image (not sliced from a shared sheet), so
+// there's no risk of neighboring poses bleeding into each other.
+const RUN_FRAMES = Array.from({ length: 20 }, (_, i) => `/gus/run-${i + 1}.png`);
 const CELEBRATE_FRAME = "/gus/celebrate.png";
 
 const HOVER_GREETING = "¡Hola! Soy el hijo de Yulo 👋";
@@ -47,7 +47,7 @@ export default function YuloWidget() {
   const sequenceTimeouts = useRef<number[]>([]);
   const runIntervalRef = useRef<number | null>(null);
   const bubbleTimeout = useRef<number | null>(null);
-  const idleSinceRef = useRef(Date.now());
+  const idleSinceRef = useRef(0);
 
   const modeRef = useRef<Mode>("idle");
   const positionRef = useRef<Position | null>(null);
@@ -57,6 +57,9 @@ export default function YuloWidget() {
   const lastPointerX = useRef(0);
   const dragRunFrame = useRef(0);
 
+  useEffect(() => {
+    idleSinceRef.current = Date.now();
+  }, []);
   useEffect(() => {
     modeRef.current = mode;
   }, [mode]);
@@ -78,6 +81,10 @@ export default function YuloWidget() {
 
   // Start bottom-right by default; restore a remembered spot if the visitor
   // has moved Yulo before, clamped in case the viewport shrank since then.
+  // Must run in an effect (not a lazy useState initializer) since it reads
+  // `window`/localStorage: this component renders null on the server and on
+  // the client's first pass (see the `if (!position) return null` below), so
+  // hydration always matches before this effect fires the one-time update.
   useEffect(() => {
     const clamp = (x: number, y: number) => ({
       x: Math.min(Math.max(x, 8), window.innerWidth - WIDGET_SIZE - 8),
@@ -88,6 +95,7 @@ export default function YuloWidget() {
       const saved = window.localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as Position;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPosition(clamp(parsed.x, parsed.y));
         return;
       }
@@ -116,6 +124,7 @@ export default function YuloWidget() {
   const returnToIdle = useCallback(() => {
     setMode("idle");
     setFrameIndex(0);
+    setFacingLeft(false);
     idleSinceRef.current = Date.now();
   }, []);
 
@@ -304,7 +313,7 @@ export default function YuloWidget() {
         draggable={false}
         priority
         className="h-full w-full object-contain object-bottom drop-shadow-[0_10px_14px_rgba(0,0,0,0.35)]"
-        style={{ transform: facingLeft ? "scaleX(-1)" : undefined }}
+        style={{ transform: mode === "run" && facingLeft ? "scaleX(-1)" : undefined }}
       />
     </div>
   );

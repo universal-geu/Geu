@@ -9,6 +9,7 @@ import { useProducts } from "../components/products-provider";
 import { useSalesSettings } from "../components/sales-settings-provider";
 import { formatearMoneda } from "../data/catalog";
 import { CART_ACCENT, DIVISION_BRAND, getDivisionFromBrandParam } from "@/lib/divisions";
+import { productSellsInDivision } from "@/lib/product-category-views";
 import {
   parsePrecio,
   resolveProductSlug,
@@ -30,13 +31,17 @@ export default function CarritoPage() {
     return DIVISION_BRAND[product?.division ?? division];
   };
   // Also checked against the cart's actual items (not just the `?brand=`
-  // query param) so a Cauchos item already in the cart can't dodge the
+  // query param) so a Cauchos-only item already in the cart can't dodge the
   // WhatsApp-only notice just by opening the cart with a different brand.
-  const cartHasCauchosItem = items.some(
-    (item) =>
-      (products.find((entry) => entry.slug === resolveProductSlug(item.id))?.division ?? division) ===
-      "Cauchos",
-  );
+  // A product cross-listed into this division (via "también aplica para
+  // otra empresa GEU") is exempt — it's part of this division's real
+  // catalog too, so it should check out normally here instead of blocking
+  // the whole cart.
+  const cartHasCauchosItem = items.some((item) => {
+    const product = products.find((entry) => entry.slug === resolveProductSlug(item.id));
+    if (!product) return division === "Cauchos";
+    return product.division === "Cauchos" && !productSellsInDivision(product, division);
+  });
   const whatsappModeActive =
     cauchosSalesMode === "whatsapp" && (division === "Cauchos" || cartHasCauchosItem);
   const isImportCart = division === "Import";

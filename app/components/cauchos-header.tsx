@@ -115,6 +115,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
             <CauchosMenuButton />
             <CauchosSearchForm
               basePath={brand.basePath}
+              division={division}
               className="flex min-h-11 flex-1 overflow-hidden rounded-[3px] border border-slate-300 bg-white shadow-inner"
             />
           </div>

@@ -11,6 +11,7 @@ import { useSiteImages } from "./use-site-images";
 import { resolveImage } from "@/lib/image-slots";
 import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
 import { expandProductCategoryViews, productSellsInDivision } from "@/lib/product-category-views";
+import { matchesQuery } from "@/lib/text-match";
 
 type Props = {
   segments?: string[];
@@ -85,24 +86,22 @@ export default function CauchosCategoryProductsPage({
 
   const categoryProducts = useMemo(() => {
     if (isSearchMode) {
-      const needle = trimmedSearchQuery.toLowerCase();
       return products.filter((product) => {
         if (!productSellsInDivision(product, division)) return false;
 
-        return (
-          product.nombre.toLowerCase().includes(needle) ||
-          product.marca.toLowerCase().includes(needle) ||
-          product.categoria.toLowerCase().includes(needle) ||
-          ((product.subcategorias ?? [product.subcategoria]).some(
-            (value) => value?.toLowerCase().includes(needle) ?? false,
-          )) ||
-          (product.sku?.toLowerCase().includes(needle) ?? false) ||
-          (product.categoriasAdicionales?.some(
-            (entry) =>
-              entry.categoria.toLowerCase().includes(needle) ||
-              (entry.subcategorias?.some((value) => value.toLowerCase().includes(needle)) ?? false),
-          ) ?? false)
-        );
+        const haystack = [
+          product.nombre,
+          product.marca,
+          product.categoria,
+          ...(product.subcategorias ?? [product.subcategoria]),
+          product.sku,
+          ...(product.categoriasAdicionales?.flatMap((entry) => [entry.categoria, ...(entry.subcategorias ?? [])]) ??
+            []),
+        ]
+          .filter((value): value is string => Boolean(value))
+          .join(" ");
+
+        return matchesQuery(haystack, trimmedSearchQuery);
       });
     }
 
@@ -152,16 +151,18 @@ export default function CauchosCategoryProductsPage({
 
     if (bySubcategory.size < 2) return [];
 
-    return Array.from(bySubcategory.entries()).map(([name, count]) => {
-      const imageKey = menuGroups.find((group) => group.name === name)?.imageKey;
-      return {
-        name,
-        count,
-        image: imageKey ? resolveImage(imageKey, siteImages) : null,
-        href: `${brand.basePath}/categoria/${slugify(name)}`,
-        active: slugify(name) === subcategorySlug,
-      };
-    });
+    return Array.from(bySubcategory.entries())
+      .sort(([a], [b]) => a.localeCompare(b, "es"))
+      .map(([name, count]) => {
+        const imageKey = menuGroups.find((group) => group.name === name)?.imageKey;
+        return {
+          name,
+          count,
+          image: imageKey ? resolveImage(imageKey, siteImages) : null,
+          href: `${brand.basePath}/categoria/${slugify(name)}`,
+          active: slugify(name) === subcategorySlug,
+        };
+      });
   }, [brand.basePath, division, isSearchMode, minorSlug, products, resolvedDepartment, siteImages, subcategorySlug]);
 
   const brands = useMemo(

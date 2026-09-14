@@ -284,22 +284,26 @@ export default function CauchosCategorySidebarMenu({
     });
 
     const buildFromProducts = (subcategoryMap: Map<string, typeof cauchosProducts>) =>
-      Array.from(subcategoryMap.entries()).map(([name, items]) => {
-        const minorItems = Array.from(
-          new Map(items.map((product) => [product.categoriaMenor || product.nombre, product])).values(),
-        );
-        const groupHref = `${cauchosBasePath}/categoria/${slugify(name)}`;
+      Array.from(subcategoryMap.entries())
+        .sort(([a], [b]) => a.localeCompare(b, "es"))
+        .map(([name, items]) => {
+          const minorItems = Array.from(
+            new Map(items.map((product) => [product.categoriaMenor || product.nombre, product])).values(),
+          ).sort((a, b) =>
+            (a.categoriaMenor || a.nombre).localeCompare(b.categoriaMenor || b.nombre, "es"),
+          );
+          const groupHref = `${cauchosBasePath}/categoria/${slugify(name)}`;
 
-        return {
-          name,
-          image: items[0]?.imagen ?? null,
-          groupHref,
-          itemLinks: minorItems.map((product) => ({
-            label: product.categoriaMenor || product.nombre,
-            href: `${groupHref}/${slugify(product.categoriaMenor || product.nombre)}`,
-          })),
-        };
-      });
+          return {
+            name,
+            image: items[0]?.imagen ?? null,
+            groupHref,
+            itemLinks: minorItems.map((product) => ({
+              label: product.categoriaMenor || product.nombre,
+              href: `${groupHref}/${slugify(product.categoriaMenor || product.nombre)}`,
+            })),
+          };
+        });
 
     // Placeholder subcategory groups (invented names, no real products yet)
     // for departments still waiting on real catalog data from the admin
@@ -310,12 +314,16 @@ export default function CauchosCategorySidebarMenu({
       if (!groups) return [];
 
       const groupHref = `${cauchosBasePath}/categoria/${slugify(title)}`;
-      return groups.map((group) => ({
-        name: group.name,
-        image: resolveImage(group.imageKey, siteImages),
-        groupHref,
-        itemLinks: group.items.map((label) => ({ label, href: groupHref })),
-      }));
+      return [...groups]
+        .sort((a, b) => a.name.localeCompare(b.name, "es"))
+        .map((group) => ({
+          name: group.name,
+          image: resolveImage(group.imageKey, siteImages),
+          groupHref,
+          itemLinks: [...group.items]
+            .sort((a, b) => a.localeCompare(b, "es"))
+            .map((label) => ({ label, href: groupHref })),
+        }));
     };
 
     // Only this division's official categories are shown, in order, each

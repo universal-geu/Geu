@@ -88,13 +88,17 @@ export default function CheckoutForm({
   user,
   items,
   subtotal,
+  division: divisionProp,
+  brand: brandParam,
 }: {
   user: CheckoutUser;
   items: CheckoutItem[];
   subtotal: number;
+  division?: DivisionName;
+  brand?: string;
 }) {
   const router = useRouter();
-  const division = user.division ?? "Cauchos";
+  const division = divisionProp ?? user.division ?? "Cauchos";
   const brand = DIVISION_BRAND[division];
   const hasSavedAddress = Boolean(user.city || user.addressLine1 || user.addressLine2);
   const [form, setForm] = useState<FormState>({
@@ -281,6 +285,7 @@ export default function CheckoutForm({
         ...form,
         notes: finalNotes,
         shippingCities: splitShipping ? shippingDestinationCities : undefined,
+        brand: brandParam,
       }),
     });
 

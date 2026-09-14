@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { matchesQuery } from "@/lib/text-match";
 
 type Props = {
   label: string;
@@ -50,8 +51,8 @@ export default function MultiCategoryComboBox({
     () =>
       normalizedSearch.length === 0
         ? options
-        : options.filter((option) => option.toLowerCase().includes(normalizedSearch)),
-    [options, normalizedSearch],
+        : options.filter((option) => matchesQuery(option, search.trim())),
+    [options, normalizedSearch, search],
   );
 
   const canCreate =

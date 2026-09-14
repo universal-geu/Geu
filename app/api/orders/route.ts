@@ -50,6 +50,7 @@ export async function POST(request: Request) {
       addressLine2?: string;
       notes?: string;
       shippingCities?: string[];
+      brand?: string;
     };
 
     const order = await createOrderFromCart(session.userId, {
@@ -63,6 +64,7 @@ export async function POST(request: Request) {
       shippingCities: Array.isArray(body.shippingCities) ? body.shippingCities : undefined,
       addressLine2: body.addressLine2,
       notes: body.notes,
+      brand: body.brand,
     });
 
     return Response.json({

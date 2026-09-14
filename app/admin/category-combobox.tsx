@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { matchesQuery } from "@/lib/text-match";
 
 type Props = {
   label: string;
@@ -47,13 +48,13 @@ export default function CategoryComboBox({
   }, []);
 
   const normalizedValue = value.trim().toLowerCase();
-  const normalizedSearch = search.trim().toLowerCase();
+  const trimmedSearch = search.trim();
   const filteredOptions = useMemo(
     () =>
-      normalizedSearch.length === 0
+      trimmedSearch.length === 0
         ? options
-        : options.filter((option) => option.toLowerCase().includes(normalizedSearch)),
-    [options, normalizedSearch],
+        : options.filter((option) => matchesQuery(option, trimmedSearch)),
+    [options, trimmedSearch],
   );
   const hasExactMatch = options.some((option) => option.toLowerCase() === normalizedValue);
   // While the user is actively typing a value that doesn't match anything yet,

@@ -86,7 +86,6 @@ export default function AccessGate() {
               Acceso privado
             </p>
             <input
-              // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
               type="password"
               inputMode="numeric"

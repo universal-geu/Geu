@@ -23,6 +23,7 @@ import {
 } from "../data/catalog";
 import type { InventoryMovementSummary, StoreProduct } from "@/lib/products";
 import { expandProductCategoryViews } from "@/lib/product-category-views";
+import { matchesQuery } from "@/lib/text-match";
 import type { DashboardMetrics, SalesReport, SalesReportOverview, ShippingStatus } from "@/lib/orders";
 import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
@@ -1058,7 +1059,7 @@ function getSubcategoryOptionsFor(categoria: string, adminProducts: StoreProduct
     .filter((product) => normalizeMatchKey(product.categoria) === normalizedCategoria)
     .flatMap(productSubcategoriesList);
 
-  return Array.from(new Set([...fromMenu, ...fromProducts]));
+  return Array.from(new Set([...fromMenu, ...fromProducts])).sort((a, b) => a.localeCompare(b, "es"));
 }
 
 function getCategoriaMenorOptionsFor(
@@ -1082,7 +1083,7 @@ function getCategoriaMenorOptionsFor(
     )
     .flatMap(productMinorCategoriesList);
 
-  return Array.from(new Set([...fromMenu, ...fromProducts]));
+  return Array.from(new Set([...fromMenu, ...fromProducts])).sort((a, b) => a.localeCompare(b, "es"));
 }
 
 function AdditionalCategoriesEditor({
@@ -1266,7 +1267,7 @@ function AdditionalDivisionsEditor({
                   getSubcategoryOptionsFor(categoria, targetViews),
                 ),
               ),
-            );
+            ).sort((a, b) => a.localeCompare(b, "es"));
             const minorOptionsForItem = Array.from(
               new Set(
                 (item.categorias.length ? item.categorias : [""]).flatMap((categoria) =>
@@ -1275,7 +1276,7 @@ function AdditionalDivisionsEditor({
                   ),
                 ),
               ),
-            );
+            ).sort((a, b) => a.localeCompare(b, "es"));
             return (
               <div
                 key={item.division}
@@ -1880,7 +1881,7 @@ export default function AdminPage() {
       .flatMap((product) => product.subcategorias || [product.subcategoria])
       .filter((value): value is string => Boolean(value));
 
-    return Array.from(new Set([...fromMenu, ...fromProducts]));
+    return Array.from(new Set([...fromMenu, ...fromProducts])).sort((a, b) => a.localeCompare(b, "es"));
   }, [adminProducts, form.categoria]);
   const categoriaMenorOptions = useMemo(() => {
     const normalizedCategoria = normalizeMatchKey(form.categoria);
@@ -1901,7 +1902,7 @@ export default function AdminPage() {
       .flatMap((product) => product.categoriasMenores || [])
       .filter((value): value is string => Boolean(value));
 
-    return Array.from(new Set([...fromMenu, ...fromProducts]));
+    return Array.from(new Set([...fromMenu, ...fromProducts])).sort((a, b) => a.localeCompare(b, "es"));
   }, [adminProducts, form.categoria, form.subcategorias]);
   const stockAlerts = useMemo(() => {
     const divisionProducts = adminProducts.filter((product) => product.division === adminDivision);
@@ -1911,17 +1912,19 @@ export default function AdminPage() {
     };
   }, [adminProducts, adminDivision]);
   const filteredProducts = useMemo(() => {
-    const search = editSearch.trim().toLowerCase();
+    const search = editSearch.trim();
 
     return adminProducts.filter((product) => {
       const matchesCategory =
         editCategoryFilter === "Todas" || product.categoria === editCategoryFilter;
       const matchesSearch =
         search.length === 0 ||
-        product.nombre.toLowerCase().includes(search) ||
-        product.marca.toLowerCase().includes(search) ||
-        (product.sku || "").toLowerCase().includes(search) ||
-        (product.variantes || []).some((variante) => variante.sku.toLowerCase().includes(search));
+        matchesQuery(
+          [product.nombre, product.marca, product.sku, ...(product.variantes || []).map((v) => v.sku)]
+            .filter((value): value is string => Boolean(value))
+            .join(" "),
+          search,
+        );
       const matchesInventory =
         inventoryStatusFilter === "all" ||
         product.estadoInventario === inventoryStatusFilter;
@@ -1930,19 +1933,26 @@ export default function AdminPage() {
     });
   }, [adminProducts, editCategoryFilter, editSearch, inventoryStatusFilter]);
   const filteredOrders = useMemo(() => {
-    const search = orderSearch.trim().toLowerCase();
+    const search = orderSearch.trim();
 
     return orders.filter((order) => {
       const matchesFilter =
         orderShippingFilter === "all" || order.shippingStatus === orderShippingFilter;
       const matchesSearch =
         search.length === 0 ||
-        formatOrderCode(order.orderNumber).toLowerCase().includes(search) ||
-        order.customerName.toLowerCase().includes(search) ||
-        order.customerEmail.toLowerCase().includes(search) ||
-        order.city.toLowerCase().includes(search) ||
-        (order.trackingNumber || "").toLowerCase().includes(search) ||
-        order.items.some((item) => item.name.toLowerCase().includes(search));
+        matchesQuery(
+          [
+            formatOrderCode(order.orderNumber),
+            order.customerName,
+            order.customerEmail,
+            order.city,
+            order.trackingNumber,
+            ...order.items.map((item) => item.name),
+          ]
+            .filter((value): value is string => Boolean(value))
+            .join(" "),
+          search,
+        );
 
       return matchesFilter && matchesSearch;
     });

@@ -688,17 +688,22 @@ function getFallbackProducts(): StoreProduct[] {
   }));
 }
 
-export async function getProductDivisionsBySlugs(slugs: string[]): Promise<DivisionName[]> {
+export async function getProductDivisionInfoBySlugs(
+  slugs: string[],
+): Promise<Array<{ division: DivisionName; divisionesAdicionales: DivisionName[] }>> {
   if (!prisma || slugs.length === 0) {
     return [];
   }
 
   const products = await prisma.product.findMany({
     where: { slug: { in: slugs } },
-    select: { division: true },
+    select: { division: true, additionalDivisions: true },
   });
 
-  return products.map((product) => product.division);
+  return products.map((product) => ({
+    division: product.division,
+    divisionesAdicionales: product.additionalDivisions,
+  }));
 }
 
 export async function getProductDivision(slug: string): Promise<DivisionName | null> {
