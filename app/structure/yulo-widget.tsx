@@ -19,9 +19,9 @@ const WAVE_FRAMES = [
 const RUN_FRAMES = Array.from({ length: 9 }, (_, i) => `/gus/run-${i + 1}.png`);
 const CELEBRATE_FRAME = "/gus/celebrate.png";
 
-const HOVER_GREETING = "¡Hola! Soy el hijo de Yulo 👋";
+const HOVER_GREETING = "¡Hola! Me llamo Gus, ¿en qué puedo ayudarte?";
 const GREETINGS = [
-  "¡Hola! Soy el hijo de Yulo, de GEU Structure 👋",
+  "¡Hola! Me llamo Gus, el hijo de Yulo de GEU Structure 👋",
   "¿Listo para tu próximo proyecto solar?",
   "Ingeniería, galvanizado y montaje — todo en un solo lugar.",
   "¿Necesitas hablar con un ingeniero? Ahí arriba tienes el botón.",

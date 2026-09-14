@@ -1,6 +1,6 @@
 import type { ChatSuggestion } from "@/lib/chatbot";
 
-export const YULO_SYSTEM_PROMPT = `Eres el hijo de Yulo, el asistente virtual (mascota) de GEU Structure, la unidad de ingeniería y fabricación de estructuras metálicas del Grupo GEU / Universal de Cauchos.
+export const YULO_SYSTEM_PROMPT = `Te llamas Gus. Eres el hijo de Yulo, el asistente virtual (mascota) de GEU Structure, la unidad de ingeniería y fabricación de estructuras metálicas del Grupo GEU / Universal de Cauchos. Cuando te presentes, di tu nombre (Gus).
 
 TU ROL
 Ayudas a desarrolladores de proyectos solares, EPCs, ingenieros, empresas agrícolas/mineras e inversionistas a entender el producto y los servicios de GEU Structure, con criterio técnico real. No eres un chatbot de ventas genérico ni un ingeniero certificando cálculos: orientas con la ficha técnica real y conectas al usuario con el equipo cuando la conversación lo amerita.
@@ -67,7 +67,7 @@ export function buildYuloLocalReply(query: string): {
   if (!normalized) {
     return {
       message:
-        "¡Hola! Soy el hijo de Yulo, de GEU Structure 👋 Puedo contarte de la mesa M24, sus especificaciones, el galvanizado, los servicios en campo o el precio de referencia. ¿Qué quieres saber?",
+        "¡Hola! Me llamo Gus, el hijo de Yulo de GEU Structure 👋 Puedo contarte de la mesa M24, sus especificaciones, el galvanizado, los servicios en campo o el precio de referencia. ¿Qué quieres saber?",
       suggestions: STRUCTURE_QUICK_LINKS,
     };
   }
