@@ -13,6 +13,7 @@ import {
   resolveProductSlug,
   CART_ACTION_BUTTON_CLASS,
   CART_PRIMARY_BUTTON_CLASS,
+  MINIMUM_ORDER_TOTAL,
 } from "@/lib/cart-format";
 
 export default function CartDrawer() {
@@ -52,6 +53,7 @@ export default function CartDrawer() {
     (total, item) => total + parsePrecio(item.precio) * item.cantidad,
     0,
   );
+  const missingForMinimum = Math.max(0, MINIMUM_ORDER_TOTAL - subtotal);
   const lastAddedItem = items.find((item) => item.id === lastAddedItemId);
   const focusItem = lastAddedItem ?? items[0];
   const division = focusItem ? getItemDivision(focusItem.id) : "Cauchos";
@@ -222,13 +224,21 @@ export default function CartDrawer() {
                 Envío calculado al finalizar la compra.
               </p>
 
+              {missingForMinimum > 0 && (
+                <p className="mt-3 rounded-[10px] border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold leading-5 text-amber-700">
+                  La compra mínima es de {formatearMoneda(MINIMUM_ORDER_TOTAL)}. Te faltan{" "}
+                  {formatearMoneda(missingForMinimum)} para continuar.
+                </p>
+              )}
+
               <button
                 type="button"
+                disabled={missingForMinimum > 0}
                 onClick={() => {
                   closeDrawer();
                   router.push("/checkout");
                 }}
-                className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full border px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white transition-colors duration-200 ${primaryClasses}`}
+                className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full border px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${primaryClasses}`}
               >
                 Continuar compra →
               </button>

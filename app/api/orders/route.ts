@@ -1,6 +1,17 @@
 import { getSessionFromCookies } from "@/lib/auth";
 import { requireAdminUser } from "@/lib/admin";
 import { createOrderFromCart, getAllOrders } from "@/lib/orders";
+import { MINIMUM_ORDER_TOTAL } from "@/lib/cart-format";
+import { syncCartItemsForUser, type PersistedCartItem } from "@/lib/cart";
+import { findOrCreateGuestUser } from "@/lib/users";
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 export async function GET() {
   try {
@@ -35,10 +46,6 @@ export async function POST(request: Request) {
   try {
     const session = await getSessionFromCookies();
 
-    if (!session) {
-      return Response.json({ error: "No autorizado." }, { status: 401 });
-    }
-
     const body = (await request.json()) as {
       customerName?: string;
       customerEmail?: string;
@@ -51,9 +58,33 @@ export async function POST(request: Request) {
       notes?: string;
       shippingCities?: string[];
       brand?: string;
+      items?: PersistedCartItem[];
     };
 
-    const order = await createOrderFromCart(session.userId, {
+    // Guest checkout: no session, so there's no server-side cart to read.
+    // The client sends its (localStorage-backed) cart items instead — sync
+    // them onto a resolved-by-email guest user, then reuse the exact same
+    // order-creation path a logged-in checkout goes through.
+    const userId = session
+      ? session.userId
+      : (
+          await findOrCreateGuestUser({
+            fullName: body.customerName || "",
+            email: body.customerEmail || "",
+            phone: body.customerPhone || "",
+            company: body.company,
+            department: body.department || "",
+            city: body.city || "",
+            addressLine1: body.addressLine1 || "",
+            addressLine2: body.addressLine2,
+          })
+        ).id;
+
+    if (!session) {
+      await syncCartItemsForUser(userId, Array.isArray(body.items) ? body.items : []);
+    }
+
+    const order = await createOrderFromCart(userId, {
       customerName: body.customerName || "",
       customerEmail: body.customerEmail || "",
       customerPhone: body.customerPhone || "",
@@ -92,6 +123,10 @@ export async function POST(request: Request) {
             ? "Uno de los productos en tu carrito ya no tiene esa medida disponible, actualiza tu carrito."
           : error instanceof Error && error.message === "CAUCHOS_WHATSAPP_MODE"
             ? "Los productos de Universal de Cauchos solo se pueden solicitar por WhatsApp en este momento."
+          : error instanceof Error && error.message === "MINIMUM_ORDER_NOT_MET"
+            ? `La compra mínima es de ${formatCurrency(MINIMUM_ORDER_TOTAL)}. Agrega más productos para continuar.`
+          : error instanceof Error && error.message === "ACCOUNT_DISABLED"
+            ? "Ese correo pertenece a una cuenta desactivada. Contacta al administrador."
           : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
             ? "La base de datos no está configurada todavía."
             : "No fue posible crear el pedido.";
@@ -101,6 +136,10 @@ export async function POST(request: Request) {
         ? 400
         : error instanceof Error && error.message === "EMPTY_CART"
           ? 400
+          : error instanceof Error && error.message === "MINIMUM_ORDER_NOT_MET"
+            ? 400
+          : error instanceof Error && error.message === "ACCOUNT_DISABLED"
+            ? 403
           : error instanceof Error &&
               (error.message === "INSUFFICIENT_STOCK" ||
                 error.message === "VARIANT_NOT_FOUND" ||

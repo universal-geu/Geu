@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import CheckoutForm from "./checkout-form";
+import GuestCheckout from "./guest-checkout";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getCartItemsForUser, parseCartItemId } from "@/lib/cart";
 import { getUserById } from "@/lib/users";
@@ -7,6 +8,7 @@ import { getCauchosSalesMode } from "@/lib/site-settings";
 import { getProductDivisionInfoBySlugs } from "@/lib/products";
 import { getDivisionFromBrandParam } from "@/lib/divisions";
 import { productSellsInDivision } from "@/lib/product-category-views";
+import { isWompiConfigured } from "@/lib/wompi";
 
 function parsePriceValue(price: string) {
   const numeric = Number(price.replace(/[^\d]/g, ""));
@@ -20,19 +22,22 @@ export default async function CheckoutPage({
 }) {
   const { brand } = await searchParams;
   const division = getDivisionFromBrandParam(brand);
-  const loginRedirect = brand ? `/login?next=/checkout&brand=${brand}` : "/login?next=/checkout";
   const cartRedirect = brand ? `/carrito?brand=${brand}` : "/carrito";
+  const wompiEnabled = isWompiConfigured();
 
   const session = await getSessionFromCookies();
 
+  // No session: let the shopper check out as a guest instead of forcing a
+  // login. The guest's cart lives only in their browser's localStorage, so
+  // it's read client-side there instead of from the DB.
   if (!session) {
-    redirect(loginRedirect);
+    return <GuestCheckout division={division} brand={brand} wompiEnabled={wompiEnabled} />;
   }
 
   const user = await getUserById(session.userId);
 
   if (!user) {
-    redirect(loginRedirect);
+    return <GuestCheckout division={division} brand={brand} wompiEnabled={wompiEnabled} />;
   }
 
   const cartItems = await getCartItemsForUser(user.id);
@@ -66,5 +71,14 @@ export default async function CheckoutPage({
     0,
   );
 
-  return <CheckoutForm user={user} items={cartItems} subtotal={subtotal} division={division} brand={brand} />;
+  return (
+    <CheckoutForm
+      user={user}
+      items={cartItems}
+      subtotal={subtotal}
+      division={division}
+      brand={brand}
+      wompiEnabled={wompiEnabled}
+    />
+  );
 }

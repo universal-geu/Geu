@@ -15,6 +15,7 @@ import {
   resolveProductSlug,
   CART_ACTION_BUTTON_CLASS as ACTION_BUTTON_CLASS,
   CART_PRIMARY_BUTTON_CLASS as PRIMARY_BUTTON_CLASS,
+  MINIMUM_ORDER_TOTAL,
 } from "@/lib/cart-format";
 
 export default function CarritoPage() {
@@ -56,6 +57,7 @@ export default function CarritoPage() {
     (total, item) => total + parsePrecio(item.precio) * item.cantidad,
     0,
   );
+  const missingForMinimum = Math.max(0, MINIMUM_ORDER_TOTAL - subtotal);
 
   if (whatsappModeActive) {
     const whatsappNumber = whatsappNumbers[division];
@@ -266,12 +268,28 @@ export default function CarritoPage() {
                   El envío se calcula en el siguiente paso, según tu ciudad de entrega.
                 </p>
 
-                <Link
-                  href={checkoutHref}
-                  className={`mt-6 inline-flex w-full items-center justify-center rounded-full border px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white transition-colors duration-200 ${primaryClasses}`}
-                >
-                  Continuar compra
-                </Link>
+                {missingForMinimum > 0 && (
+                  <p className="mt-4 rounded-[10px] border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold leading-5 text-amber-700">
+                    La compra mínima es de {formatearMoneda(MINIMUM_ORDER_TOTAL)}. Te faltan{" "}
+                    {formatearMoneda(missingForMinimum)} para continuar.
+                  </p>
+                )}
+
+                {missingForMinimum > 0 ? (
+                  <span
+                    className="mt-6 inline-flex w-full cursor-not-allowed items-center justify-center rounded-full border px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white opacity-50"
+                    style={{ borderColor: accent, backgroundColor: accent }}
+                  >
+                    Continuar compra
+                  </span>
+                ) : (
+                  <Link
+                    href={checkoutHref}
+                    className={`mt-6 inline-flex w-full items-center justify-center rounded-full border px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white transition-colors duration-200 ${primaryClasses}`}
+                  >
+                    Continuar compra
+                  </Link>
+                )}
                 <Link
                   href={homeHref}
                   className="mt-3 inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-slate-500 transition-colors duration-200 hover:text-slate-950"

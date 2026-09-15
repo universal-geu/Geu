@@ -1119,6 +1119,11 @@ function AdditionalCategoriesEditor({
           <p className="mt-2 text-xs leading-6 text-[#6e7379]">
             Agrega categorías adicionales para que este mismo producto aparezca al navegar por ellas, sin duplicarlo.
           </p>
+          {items.length > 0 && (
+            <p className="mt-2 text-xs font-medium leading-6 text-[#b45309]">
+              Los campos marcados con * son obligatorios. No podrás guardar el producto hasta completarlos o quitar la categoría adicional.
+            </p>
+          )}
         </div>
         <button
           type="button"
@@ -2240,8 +2245,13 @@ export default function AdminPage() {
       return;
     }
 
+    const strictCategoryAdicional =
+      adminDivision === "Import" || adminDivision === "Plastic" || adminDivision === "Energy";
     const categoriaAdicionalIncompleta = form.categoriasAdicionales.find(
-      (item) => item.categoria.trim() && (!item.subcategoria.trim() || !item.categoriaMenor.trim()),
+      (item) =>
+        item.categoria.trim() &&
+        !strictCategoryAdicional &&
+        (!item.subcategoria.trim() || !item.categoriaMenor.trim()),
     );
     if (categoriaAdicionalIncompleta) {
       setIsSavingProduct(false);

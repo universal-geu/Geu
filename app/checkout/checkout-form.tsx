@@ -2,12 +2,40 @@
 
 import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
 import Image from "next/image";
+import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-locations";
 import { formatOrderCode } from "@/lib/format-order";
 import { calculateShippingCost } from "@/lib/shipping";
 import CauchosHeader from "../components/cauchos-header";
 import { DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
+import { MINIMUM_ORDER_TOTAL } from "@/lib/cart-format";
+
+type WompiWidgetResult = {
+  transaction?: { id: string; status: string };
+};
+
+type WompiWidgetCheckoutOptions = {
+  currency: string;
+  amountInCents: number;
+  reference: string;
+  publicKey: string;
+  signature: { integrity: string };
+  customerData?: {
+    email?: string;
+    fullName?: string;
+    phoneNumber?: string;
+    phoneNumberPrefix?: string;
+  };
+};
+
+declare global {
+  interface Window {
+    WidgetCheckout?: new (options: WompiWidgetCheckoutOptions) => {
+      open: (callback: (result: WompiWidgetResult) => void) => void;
+    };
+  }
+}
 
 type CheckoutItem = {
   id: string;
@@ -90,12 +118,14 @@ export default function CheckoutForm({
   subtotal,
   division: divisionProp,
   brand: brandParam,
+  wompiEnabled = false,
 }: {
   user: CheckoutUser;
   items: CheckoutItem[];
   subtotal: number;
   division?: DivisionName;
   brand?: string;
+  wompiEnabled?: boolean;
 }) {
   const router = useRouter();
   const division = divisionProp ?? user.division ?? "Cauchos";
@@ -119,6 +149,7 @@ export default function CheckoutForm({
   const [pendingOrder, setPendingOrder] = useState<PendingOrderState>(null);
   const [paymentCode, setPaymentCode] = useState("");
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
+  const [isPayingWithWompi, setIsPayingWithWompi] = useState(false);
   const [splitShipping, setSplitShipping] = useState(false);
   const [destinations, setDestinations] = useState<Destination[]>([createDestination(1)]);
   const cityOptions = useMemo(
@@ -235,6 +266,8 @@ export default function CheckoutForm({
     () => items.reduce((total, item) => total + item.cantidad, 0),
     [items],
   );
+  const missingForMinimum = Math.max(0, MINIMUM_ORDER_TOTAL - subtotal);
+  const belowMinimum = missingForMinimum > 0;
 
   const handleChange = (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -269,6 +302,14 @@ export default function CheckoutForm({
     event.preventDefault();
     setInlineError("");
     setToast(null);
+
+    if (belowMinimum) {
+      const message = `La compra mínima es de ${formatCurrency(MINIMUM_ORDER_TOTAL)}. Te faltan ${formatCurrency(missingForMinimum)} para continuar.`;
+      setInlineError(message);
+      setToast({ tone: "error", message });
+      return;
+    }
+
     setIsSubmitting(true);
 
     const splitNotes = splitShipping ? buildSplitNotes() : "";
@@ -286,6 +327,10 @@ export default function CheckoutForm({
         notes: finalNotes,
         shippingCities: splitShipping ? shippingDestinationCities : undefined,
         brand: brandParam,
+        // Only read when there's no session (guest checkout) — the server
+        // has no DB cart to fall back to in that case, so it needs the
+        // client's (localStorage-backed) cart items directly.
+        items,
       }),
     });
 
@@ -355,23 +400,144 @@ export default function CheckoutForm({
     router.refresh();
   };
 
+  const handlePayWithWompi = async () => {
+    if (!pendingOrder) return;
+
+    setInlineError("");
+    setToast(null);
+    setIsPayingWithWompi(true);
+
+    try {
+      const signResponse = await fetch("/api/wompi/signature", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: pendingOrder.id }),
+      });
+
+      const signPayload = (await signResponse.json()) as {
+        error?: string;
+        checkout?: {
+          publicKey: string;
+          reference: string;
+          amountInCents: number;
+          currency: string;
+          signature: string;
+          customerEmail: string;
+          customerFullName: string;
+          customerPhone: string;
+        };
+      };
+
+      if (!signResponse.ok || !signPayload.checkout) {
+        throw new Error(signPayload.error || "No fue posible iniciar el pago con Wompi.");
+      }
+
+      const checkout = signPayload.checkout;
+      const WidgetCheckout = window.WidgetCheckout;
+
+      if (!WidgetCheckout) {
+        throw new Error(
+          "No fue posible cargar el widget de Wompi. Recarga la página e intenta de nuevo.",
+        );
+      }
+
+      const widget = new WidgetCheckout({
+        currency: checkout.currency,
+        amountInCents: checkout.amountInCents,
+        reference: checkout.reference,
+        publicKey: checkout.publicKey,
+        signature: { integrity: checkout.signature },
+        customerData: {
+          email: checkout.customerEmail,
+          fullName: checkout.customerFullName,
+          // The widget requires this alongside phoneNumber — GEU only
+          // ships within Colombia, so it's always +57.
+          phoneNumberPrefix: "+57",
+          phoneNumber: checkout.customerPhone,
+        },
+      });
+
+      widget.open((result) => {
+        void (async () => {
+          const transaction = result.transaction;
+
+          if (!transaction) {
+            return;
+          }
+
+          const confirmResponse = await fetch("/api/wompi/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId: pendingOrder.id,
+              transactionId: transaction.id,
+            }),
+          });
+
+          const confirmPayload = (await confirmResponse.json()) as {
+            error?: string;
+            message?: string;
+            order?: { id: string };
+          };
+
+          setIsPayingWithWompi(false);
+
+          if (!confirmResponse.ok || !confirmPayload.order) {
+            const message = confirmPayload.error || "No fue posible confirmar el pago.";
+            setInlineError(message);
+            setToast({ tone: "error", message });
+            return;
+          }
+
+          setToast({
+            tone: "success",
+            message: confirmPayload.message || "Pago confirmado correctamente.",
+          });
+
+          router.push(`/checkout/exito?pedido=${confirmPayload.order.id}&pagado=1`);
+          router.refresh();
+        })();
+      });
+
+      // The widget takes it from here with its own UI — this button's job
+      // was just to launch it. Without this, closing the widget without
+      // paying (its callback isn't guaranteed to fire on cancel) would
+      // leave the button stuck on "Abriendo Wompi...".
+      setIsPayingWithWompi(false);
+    } catch (error) {
+      setIsPayingWithWompi(false);
+      const message =
+        error instanceof Error ? error.message : "No fue posible iniciar el pago con Wompi.";
+      setInlineError(message);
+      setToast({ tone: "error", message });
+    }
+  };
+
   return (
     <main
       className="min-h-screen bg-[#f5f5f5] text-[#111]"
       style={{ "--brand-accent": brand.accent, "--brand-accent-hover": brand.accentHover } as CSSProperties}
     >
       <CauchosHeader division={division} />
+      {wompiEnabled && <Script src="https://checkout.wompi.co/widget.js" strategy="afterInteractive" />}
       {pendingOrder && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 px-6 backdrop-blur-[2px]">
           <div className="w-full max-w-lg rounded-[1.9rem] border border-black/8 bg-white p-7 shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--brand-accent)]">
-              Pago demo
+              {wompiEnabled ? "Pago con Wompi" : "Pago demo"}
             </p>
             <h2 className="mt-3 text-3xl font-bold text-[#16384f]">
-              Simular pago del pedido
+              {wompiEnabled ? "Paga tu pedido con Wompi" : "Simular pago del pedido"}
             </h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
-              Mientras conectamos Wompi, este paso te permite mostrar la experiencia completa. Usa el código <span className="font-semibold text-[#16384f]">1234</span> para aprobar el pago.
+              {wompiEnabled ? (
+                "Se abrirá la ventana segura de Wompi para completar el pago con tarjeta, PSE, Nequi u otros medios disponibles."
+              ) : (
+                <>
+                  Mientras conectamos Wompi, este paso te permite mostrar la experiencia completa. Usa el código{" "}
+                  <span className="font-semibold text-[#16384f]">1234</span> para aprobar el pago.
+                </>
+              )}
             </p>
 
             <div className="mt-6 grid gap-3 md:grid-cols-2">
@@ -391,46 +557,66 @@ export default function CheckoutForm({
               </div>
             </div>
 
-            <form onSubmit={handleConfirmPayment} className="mt-6 space-y-4">
-              <div>
-                <label
-                  htmlFor="paymentCode"
-                  className="mb-2 block text-sm font-medium text-slate-700"
-                >
-                  Código de pago demo
-                </label>
-                <input
-                  id="paymentCode"
-                  type="password"
-                  value={paymentCode}
-                  onChange={(event) => setPaymentCode(event.target.value)}
-                  placeholder="Ingresa el código"
-                  autoFocus
-                  required
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
-                />
-              </div>
-
-              <div className="flex gap-3">
+            {wompiEnabled ? (
+              <div className="mt-6 flex gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    setPendingOrder(null);
-                    setPaymentCode("");
-                  }}
+                  onClick={() => setPendingOrder(null)}
                   className="flex-1 rounded-xl border border-[#16384f]/20 px-4 py-3 font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
                 >
                   Pagar luego
                 </button>
                 <button
-                  type="submit"
-                  disabled={isConfirmingPayment}
+                  type="button"
+                  onClick={() => void handlePayWithWompi()}
+                  disabled={isPayingWithWompi}
                   className="flex-1 rounded-xl bg-[var(--brand-accent)] px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {isConfirmingPayment ? "Validando..." : "Confirmar pago"}
+                  {isPayingWithWompi ? "Abriendo Wompi..." : "Pagar con Wompi"}
                 </button>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleConfirmPayment} className="mt-6 space-y-4">
+                <div>
+                  <label
+                    htmlFor="paymentCode"
+                    className="mb-2 block text-sm font-medium text-slate-700"
+                  >
+                    Código de pago demo
+                  </label>
+                  <input
+                    id="paymentCode"
+                    type="password"
+                    value={paymentCode}
+                    onChange={(event) => setPaymentCode(event.target.value)}
+                    placeholder="Ingresa el código"
+                    autoFocus
+                    required
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingOrder(null);
+                      setPaymentCode("");
+                    }}
+                    className="flex-1 rounded-xl border border-[#16384f]/20 px-4 py-3 font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                  >
+                    Pagar luego
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isConfirmingPayment}
+                    className="flex-1 rounded-xl bg-[var(--brand-accent)] px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isConfirmingPayment ? "Validando..." : "Confirmar pago"}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
@@ -473,7 +659,7 @@ export default function CheckoutForm({
             Finalizar pedido
           </h1>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-[#6e7379]">
-            Completa tus datos de entrega. El pedido quedará guardado en tu cuenta
+            Completa tus datos de entrega. El pedido quedará registrado
             y luego podremos conectar el pago con Wompi sobre este mismo flujo.
           </p>
         </div>
@@ -820,6 +1006,13 @@ export default function CheckoutForm({
               </div>
             )}
 
+            {belowMinimum && (
+              <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                La compra mínima es de {formatCurrency(MINIMUM_ORDER_TOTAL)}. Te faltan{" "}
+                {formatCurrency(missingForMinimum)} para continuar.
+              </p>
+            )}
+
             {inlineError && (
               <p className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
                 {inlineError}
@@ -829,7 +1022,7 @@ export default function CheckoutForm({
             <div className="mt-8 flex flex-wrap gap-3">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || belowMinimum}
                 className="rounded-full bg-[var(--brand-accent)] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSubmitting ? "Guardando pedido..." : "Crear pedido"}

@@ -9,10 +9,6 @@ export async function POST(
   try {
     const session = await getSessionFromCookies();
 
-    if (!session) {
-      return Response.json({ error: "No autorizado." }, { status: 401 });
-    }
-
     const { id } = await params;
     const body = (await request.json()) as {
       paymentCode?: string;
@@ -27,7 +23,7 @@ export async function POST(
 
     const order = await confirmSimulatedOrderPayment(
       id,
-      session.userId,
+      session?.userId ?? null,
       body.paymentCode,
     );
 

@@ -1531,6 +1531,8 @@ export const OrderScalarFieldEnum = {
   subtotal: 'subtotal',
   shippingCost: 'shippingCost',
   totalItems: 'totalItems',
+  paymentReference: 'paymentReference',
+  wompiTransactionId: 'wompiTransactionId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

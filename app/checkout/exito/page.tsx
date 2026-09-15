@@ -2,7 +2,9 @@ import Link from "next/link";
 import { formatOrderCode } from "@/lib/format-order";
 import { getOrderConfirmationSummary } from "@/lib/orders";
 import { DIVISION_BRAND } from "@/lib/divisions";
+import { getSessionFromCookies } from "@/lib/auth";
 import CauchosHeader from "../../components/cauchos-header";
+import ClearCartOnMount from "./clear-cart-on-mount";
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -14,9 +16,13 @@ export default async function CheckoutSuccessPage({
   const confirmationSummary = params.pedido ? await getOrderConfirmationSummary(params.pedido) : null;
   const division = confirmationSummary?.division ?? "Cauchos";
   const brand = DIVISION_BRAND[division];
+  // A guest checkout has no session to log back into — point them to keep
+  // shopping instead of a "mis pedidos" link they can't actually reach.
+  const isGuest = !(await getSessionFromCookies());
 
   return (
     <main className="min-h-screen bg-[#f5f5f5]">
+      <ClearCartOnMount />
       <CauchosHeader division={division} />
       <section className="mx-auto flex min-h-[calc(100vh-160px)] w-full max-w-2xl items-center justify-center px-6 py-16">
       <div className="w-full rounded-[2rem] bg-white p-8 text-center shadow-lg shadow-black/10 md:p-10">
@@ -30,8 +36,12 @@ export default async function CheckoutSuccessPage({
         </h1>
         <p className="mt-4 text-sm leading-7 text-slate-600">
           {paymentConfirmed
-            ? "El pedido quedó pagado dentro del flujo demo y ya puedes mostrar el seguimiento completo en tu cuenta."
-            : "Tu pedido quedó guardado en la base de datos y ya aparece dentro de tu cuenta. El siguiente paso será conectar el pago con Wompi sobre esta misma orden."}
+            ? isGuest
+              ? "El pedido quedó pagado dentro del flujo demo. Guarda el código de pedido para hacerle seguimiento."
+              : "El pedido quedó pagado dentro del flujo demo y ya puedes mostrar el seguimiento completo en tu cuenta."
+            : isGuest
+              ? "Tu pedido quedó guardado. El siguiente paso será conectar el pago con Wompi sobre esta misma orden."
+              : "Tu pedido quedó guardado en la base de datos y ya aparece dentro de tu cuenta. El siguiente paso será conectar el pago con Wompi sobre esta misma orden."}
         </p>
 
         {confirmationSummary && (
@@ -46,16 +56,23 @@ export default async function CheckoutSuccessPage({
         )}
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/mi-cuenta"
-            className="rounded-full px-6 py-3 text-sm font-semibold text-white transition-colors duration-200"
-            style={{ backgroundColor: brand.accent }}
-          >
-            Ver mis pedidos
-          </Link>
+          {!isGuest && (
+            <Link
+              href="/mi-cuenta"
+              className="rounded-full px-6 py-3 text-sm font-semibold text-white transition-colors duration-200"
+              style={{ backgroundColor: brand.accent }}
+            >
+              Ver mis pedidos
+            </Link>
+          )}
           <Link
             href={brand.basePath}
-            className="rounded-full border border-[#16384f]/20 px-6 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+            className={
+              isGuest
+                ? "rounded-full px-6 py-3 text-sm font-semibold text-white transition-colors duration-200"
+                : "rounded-full border border-[#16384f]/20 px-6 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+            }
+            style={isGuest ? { backgroundColor: brand.accent } : undefined}
           >
             Seguir comprando
           </Link>

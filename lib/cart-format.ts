@@ -1,3 +1,5 @@
+export const MINIMUM_ORDER_TOTAL = 10000;
+
 export function parsePrecio(precio: string) {
   const numeric = Number(precio.replace(/[^\d]/g, ""));
   return Number.isFinite(numeric) ? numeric : 0;

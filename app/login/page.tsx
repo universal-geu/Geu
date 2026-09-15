@@ -4,13 +4,7 @@ import { useEffect, useState, type CSSProperties, type ChangeEvent, type FormEve
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import CauchosHeader from "../components/cauchos-header";
-import {
-  DIVISION_ADMIN_EMAILS,
-  DIVISION_ADMIN_PASSWORD,
-  DIVISION_ADMIN_PIN,
-  DIVISION_BRAND,
-  getDivisionFromBrandParam,
-} from "@/lib/divisions";
+import { DIVISION_BRAND, getDivisionFromBrandParam } from "@/lib/divisions";
 
 const LOGIN_ACCENTS: Record<string, { accent: string; accentHover: string; brandName: string }> = {
   Cauchos: { accent: "#075ed8", accentHover: "#064bb0", brandName: "GEU" },
@@ -89,7 +83,6 @@ export default function LoginPage() {
   const [form, setForm] = useState<LoginFormState>(initialState);
   const [adminPin, setAdminPin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMasterSubmitting, setIsMasterSubmitting] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
   const [inlineError, setInlineError] = useState("");
   const [showAdminPinModal, setShowAdminPinModal] = useState(false);
@@ -224,50 +217,6 @@ export default function LoginPage() {
     }
 
     await completeLogin(payload);
-  };
-
-  const handleMasterLogin = async () => {
-    setInlineError("");
-    setToast(null);
-    setIsMasterSubmitting(true);
-
-    const response = await fetch("/api/auth/admin/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: DIVISION_ADMIN_EMAILS[loginDivision],
-        password: DIVISION_ADMIN_PASSWORD,
-        adminPin: DIVISION_ADMIN_PIN,
-      }),
-    });
-
-    const payload = (await response.json()) as {
-      error?: string;
-      message?: string;
-      user?: { id: string; role: "CUSTOMER" | "ADMIN" };
-      requiresAdminPin?: boolean;
-    };
-
-    setIsMasterSubmitting(false);
-
-    if (!response.ok || payload.requiresAdminPin || payload.user?.role !== "ADMIN") {
-      const message = payload.error || "No fue posible iniciar como usuario maestro.";
-      setInlineError(message);
-      setToast({ tone: "error", message });
-      return;
-    }
-
-    setToast({
-      tone: "success",
-      message: payload.message || "Acceso maestro correcto.",
-    });
-
-    window.setTimeout(() => {
-      router.push(adminRedirectPath);
-      router.refresh();
-    }, 350);
   };
 
   return (
@@ -478,7 +427,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting || isMasterSubmitting}
+            disabled={isSubmitting}
             className="w-full rounded-xl px-4 py-3 font-semibold text-white transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-70"
             style={{ backgroundColor: accent }}
             onMouseEnter={(event) => {
@@ -491,27 +440,6 @@ export default function LoginPage() {
             {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
           </button>
         </form>
-
-        <button
-          type="button"
-          onClick={() => void handleMasterLogin()}
-          disabled={isSubmitting || isMasterSubmitting}
-          className="mt-3 w-full rounded-xl border bg-white px-4 py-3 font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-70"
-          style={{
-            borderColor: accent,
-            color: accent,
-          }}
-          onMouseEnter={(event) => {
-            event.currentTarget.style.backgroundColor = accent;
-            event.currentTarget.style.color = "#ffffff";
-          }}
-          onMouseLeave={(event) => {
-            event.currentTarget.style.backgroundColor = "#ffffff";
-            event.currentTarget.style.color = accent;
-          }}
-        >
-          {isMasterSubmitting ? "Entrando al panel..." : "Iniciar como usuario maestro"}
-        </button>
 
         <p className="mt-6 text-sm text-slate-600">
           ¿Aún no tienes una cuenta?{" "}

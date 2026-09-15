@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { compare, hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { DIVISION_ADMIN_EMAILS, type DivisionName } from "@/lib/divisions";
@@ -78,6 +79,55 @@ export async function registerUser(input: RegisterUserInput) {
     email: user.email,
     role: user.role,
   };
+}
+
+export type GuestCheckoutInput = {
+  fullName: string;
+  company?: string;
+  email: string;
+  phone?: string;
+  department?: string;
+  city?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+};
+
+// Guest checkout never authenticates the shopper — it only needs a User row
+// to hang the Order/CartItem foreign keys off of. Reusing an existing
+// account by email (without logging into it) mirrors how most stores merge
+// guest orders into a returning customer's history; the random password
+// hash below is never handed back, so it can't be used to sign in as that
+// account.
+export async function findOrCreateGuestUser(input: GuestCheckoutInput) {
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  const email = input.email.trim().toLowerCase();
+  const existing = await prisma.user.findUnique({ where: { email } });
+
+  if (existing) {
+    if (!existing.active) {
+      throw new Error("ACCOUNT_DISABLED");
+    }
+    return existing;
+  }
+
+  const passwordHash = await hash(randomBytes(32).toString("hex"), 10);
+
+  return prisma.user.create({
+    data: {
+      fullName: input.fullName.trim(),
+      company: input.company?.trim() || null,
+      email,
+      phone: input.phone?.trim() || null,
+      department: input.department?.trim() || null,
+      city: input.city?.trim() || null,
+      addressLine1: input.addressLine1?.trim() || null,
+      addressLine2: input.addressLine2?.trim() || null,
+      passwordHash,
+    },
+  });
 }
 
 export async function authenticateUser(email: string, password: string) {

@@ -8,6 +8,14 @@ import {
   isServiceDivision,
 } from "@/lib/divisions";
 import { productSellsInDivision } from "@/lib/product-category-views";
+import { MINIMUM_ORDER_TOTAL } from "@/lib/cart-format";
+import {
+  computeIntegritySignature,
+  fetchWompiTransaction,
+  getWompiPublicKey,
+  isWompiConfigured,
+  type WompiTransaction,
+} from "@/lib/wompi";
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { formatOrderCode } from "@/lib/format-order";
 import { calculateShippingCost } from "@/lib/shipping";
@@ -239,6 +247,10 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
       (total, item) => total + getUnitPrice(item) * item.quantity,
       0,
     );
+
+    if (subtotal < MINIMUM_ORDER_TOTAL) {
+      throw new Error("MINIMUM_ORDER_NOT_MET");
+    }
 
     // `Order.division` is only used for cosmetic purposes (e.g. which brand's
     // colors to show on the confirmation page) — the source of truth for who
@@ -1006,7 +1018,10 @@ async function sendShippingStatusEmail({
 
 export async function confirmSimulatedOrderPayment(
   orderId: string,
-  userId: string,
+  // Null for a guest checkout (no session to scope by) — the order id
+  // itself (an unguessable cuid) plus the payment code are the only gate
+  // available for that path, same as a real payment link would rely on.
+  userId: string | null,
   paymentCode: string,
 ) {
   if (!prisma) {
@@ -1021,10 +1036,7 @@ export async function confirmSimulatedOrderPayment(
   }
 
   const order = await prisma.order.findFirst({
-    where: {
-      id: orderId,
-      userId,
-    },
+    where: userId ? { id: orderId, userId } : { id: orderId },
     include: {
       items: {
         orderBy: { createdAt: "asc" },
@@ -1065,4 +1077,172 @@ export async function confirmSimulatedOrderPayment(
       },
     },
   });
+}
+
+export async function createWompiCheckoutSignature(
+  orderId: string,
+  // Same guest-safe scoping as confirmSimulatedOrderPayment above.
+  userId: string | null,
+) {
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  if (!isWompiConfigured()) {
+    throw new Error("WOMPI_NOT_CONFIGURED");
+  }
+
+  const order = await prisma.order.findFirst({
+    where: userId ? { id: orderId, userId } : { id: orderId },
+  });
+
+  if (!order) {
+    throw new Error("ORDER_NOT_FOUND");
+  }
+
+  if (order.paymentStatus === "PAID") {
+    throw new Error("ORDER_ALREADY_PAID");
+  }
+
+  // Regenerated on every attempt — a declined or abandoned try gets a fresh
+  // reference on retry rather than reusing one Wompi already saw.
+  const reference = `pedido-${order.orderNumber}-${Date.now().toString(36)}`;
+  const amountInCents = (order.subtotal + order.shippingCost) * 100;
+  const currency = "COP";
+  const signature = computeIntegritySignature({ reference, amountInCents, currency });
+
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { paymentReference: reference },
+  });
+
+  return {
+    publicKey: getWompiPublicKey(),
+    reference,
+    amountInCents,
+    currency,
+    signature,
+    customerEmail: order.customerEmail,
+    customerFullName: order.customerName,
+    customerPhone: order.customerPhone,
+  };
+}
+
+type OrderWithItems = NonNullable<Awaited<ReturnType<typeof confirmSimulatedOrderPayment>>>;
+
+// Shared by both confirmation paths below: the widget-callback round trip
+// (which re-fetches the transaction from Wompi before calling this) and the
+// events webhook (which already has a signature-verified transaction).
+// Never trusts the transaction's status alone — the reference and amount
+// must match what we actually signed for this exact order.
+async function applyWompiTransaction(order: OrderWithItems, transaction: WompiTransaction) {
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  if (order.paymentStatus === "PAID") {
+    return order;
+  }
+
+  if (transaction.reference !== order.paymentReference) {
+    throw new Error("REFERENCE_MISMATCH");
+  }
+
+  const expectedAmountInCents = (order.subtotal + order.shippingCost) * 100;
+  if (transaction.amountInCents !== expectedAmountInCents) {
+    throw new Error("AMOUNT_MISMATCH");
+  }
+
+  if (transaction.status !== "APPROVED") {
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        wompiTransactionId: transaction.id,
+        paymentStatus: transaction.status === "PENDING" ? order.paymentStatus : "FAILED",
+      },
+    });
+    throw new Error(transaction.status === "PENDING" ? "PAYMENT_PENDING" : "PAYMENT_DECLINED");
+  }
+
+  return await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      wompiTransactionId: transaction.id,
+      paymentStatus: "PAID",
+      status: "PAID",
+      shippingStatus: order.shippingStatus === "PENDING" ? "PREPARING" : order.shippingStatus,
+      preparingAt:
+        order.shippingStatus === "PENDING" && !order.preparingAt ? new Date() : order.preparingAt,
+      adminNotes: order.adminNotes || "Pago confirmado automáticamente por Wompi.",
+    },
+    include: {
+      items: {
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+}
+
+export async function confirmWompiPayment(
+  orderId: string,
+  userId: string | null,
+  transactionId: string,
+) {
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  const order = await prisma.order.findFirst({
+    where: userId ? { id: orderId, userId } : { id: orderId },
+    include: {
+      items: {
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+
+  if (!order) {
+    throw new Error("ORDER_NOT_FOUND");
+  }
+
+  const transaction = await fetchWompiTransaction(transactionId);
+
+  return applyWompiTransaction(order, transaction);
+}
+
+// Called by the events webhook, which only knows the transaction's
+// reference (not our internal order id) — a miss here just means the
+// reference belongs to a different deployment/environment, not an error.
+export async function applyWompiTransactionByReference(transaction: WompiTransaction) {
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  const order = await prisma.order.findFirst({
+    where: { paymentReference: transaction.reference },
+    include: {
+      items: {
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+
+  if (!order) {
+    return null;
+  }
+
+  try {
+    return await applyWompiTransaction(order, transaction);
+  } catch (error) {
+    // The webhook must still ack 200 for a merely-declined/pending
+    // transaction (that's an expected outcome, already persisted above) —
+    // only genuine mismatches are worth surfacing to the caller.
+    if (
+      error instanceof Error &&
+      (error.message === "PAYMENT_PENDING" || error.message === "PAYMENT_DECLINED")
+    ) {
+      return order;
+    }
+    throw error;
+  }
 }

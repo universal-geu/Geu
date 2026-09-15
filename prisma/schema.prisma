@@ -140,35 +140,44 @@ model CartItem {
 }
 
 model Order {
-  id             String         @id @default(cuid())
-  orderNumber    Int            @unique @default(autoincrement())
-  userId         String
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status         OrderStatus    @default(PENDING)
-  paymentStatus  PaymentStatus  @default(PENDING)
-  shippingStatus ShippingStatus @default(PENDING)
-  division       Division       @default(Cauchos)
-  customerName   String
-  customerEmail  String
-  customerPhone  String
-  company        String?
-  department     String
-  city           String
-  addressLine1   String
-  addressLine2   String?
-  notes          String?
-  carrier        String?
-  trackingNumber String?
-  adminNotes     String?
-  preparingAt    DateTime?
-  shippedAt      DateTime?
-  deliveredAt    DateTime?
-  subtotal       Int
-  shippingCost   Int            @default(0)
-  totalItems     Int
-  items          OrderItem[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id                 String         @id @default(cuid())
+  orderNumber        Int            @unique @default(autoincrement())
+  userId             String
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status             OrderStatus    @default(PENDING)
+  paymentStatus      PaymentStatus  @default(PENDING)
+  shippingStatus     ShippingStatus @default(PENDING)
+  division           Division       @default(Cauchos)
+  customerName       String
+  customerEmail      String
+  customerPhone      String
+  company            String?
+  department         String
+  city               String
+  addressLine1       String
+  addressLine2       String?
+  notes              String?
+  carrier            String?
+  trackingNumber     String?
+  adminNotes         String?
+  preparingAt        DateTime?
+  shippedAt          DateTime?
+  deliveredAt        DateTime?
+  subtotal           Int
+  shippingCost       Int            @default(0)
+  totalItems         Int
+  // Wompi payment tracking. `paymentReference` is regenerated on every
+  // checkout attempt (a declined/abandoned attempt can be retried with a
+  // fresh one) and is what the events webhook uses to find this order;
+  // `wompiTransactionId` is filled in once Wompi assigns one.
+  paymentReference   String?
+  wompiTransactionId String?
+  items              OrderItem[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([paymentReference])
+  @@index([wompiTransactionId])
 }
 
 model OrderItem {
