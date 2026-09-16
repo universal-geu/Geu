@@ -206,11 +206,12 @@ export default async function PlasticPage() {
                 >
                   <Link
                     href={`/producto/${product.slug}`}
-                    className="relative block h-52 overflow-hidden bg-slate-200"
+                    className="relative block h-52 overflow-hidden bg-white"
                     style={{
-                      backgroundImage: `linear-gradient(180deg,rgba(2,6,23,0.04),rgba(2,6,23,0.34)),url('${productImage}')`,
+                      backgroundImage: `url('${productImage}')`,
                       backgroundPosition: "center",
-                      backgroundSize: "cover",
+                      backgroundSize: "contain",
+                      backgroundRepeat: "no-repeat",
                     }}
                   >
                     <span className="absolute left-3 top-3 rounded-[4px] bg-[#6b7280] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(107,114,128,0.24)]">

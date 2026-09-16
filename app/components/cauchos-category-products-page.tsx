@@ -622,14 +622,14 @@ export default function CauchosCategoryProductsPage({
                 >
                   <Link
                     href={`/producto/${product.slug}`}
-                    className="relative block h-52 overflow-hidden bg-slate-200"
+                    className="relative block h-52 overflow-hidden bg-white"
                   >
                     <Image
                       src={productImage}
                       alt={product.nombre}
                       fill
                       sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      className="object-cover transition duration-500 group-hover:scale-105"
+                      className="object-contain p-4 transition duration-500 group-hover:scale-105"
                     />
                     <span className="absolute left-3 top-3 rounded-[4px] bg-[#e4002b] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(228,0,43,0.24)]">
                       {product.descuento}
