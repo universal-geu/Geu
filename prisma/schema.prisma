@@ -53,6 +53,25 @@ enum Division {
   GEU
 }
 
+model Category {
+  id        String   @id @default(cuid())
+  division  Division
+  name      String
+  color     String   @default("#1971c2")
+  icon      String   @default("◆")
+  // Optional key into the site-images admin slot system, set only for the
+  // original curated categories that ship with a hand-picked photo. New
+  // categories created from the admin panel leave this null and the
+  // storefront falls back to a generic division image.
+  imageKey  String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([division, name])
+  @@index([division, order])
+}
+
 model Product {
   id                    String              @id @default(cuid())
   slug                  String              @unique

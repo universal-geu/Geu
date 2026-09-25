@@ -4,7 +4,7 @@ import GuestCheckout from "./guest-checkout";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getCartItemsForUser, parseCartItemId } from "@/lib/cart";
 import { getUserById } from "@/lib/users";
-import { getCauchosSalesMode } from "@/lib/site-settings";
+import { getAllSalesModes } from "@/lib/site-settings";
 import { getProductDivisionInfoBySlugs } from "@/lib/products";
 import { getDivisionFromBrandParam } from "@/lib/divisions";
 import { productSellsInDivision } from "@/lib/product-category-views";
@@ -46,24 +46,23 @@ export default async function CheckoutPage({
     redirect(cartRedirect);
   }
 
-  // Blocks checkout only for items that are Cauchos-only (not cross-listed
-  // into the division being shopped via `?brand=`) — a product cross-listed
-  // into this division is part of its real catalog and should check out
-  // normally here. Checked against the cart's actual products (not just
-  // trusting the query param) so a customer can't dodge the notice for a
-  // truly Cauchos-only item just by changing `?brand=` in the URL.
+  // Blocks checkout only for items whose own division is WhatsApp-only (not
+  // cross-listed into the division being shopped via `?brand=`) — a product
+  // cross-listed into this division is part of its real catalog and should
+  // check out normally here. Checked against the cart's actual products (not
+  // just trusting the query param) so a customer can't dodge the notice for
+  // a truly WhatsApp-only item just by changing `?brand=` in the URL.
   // `createOrderFromCart` re-enforces this server-side too.
-  if ((await getCauchosSalesMode()) === "whatsapp") {
-    const slugs = cartItems.map((item) => parseCartItemId(item.id).slug);
-    const productDivisions = await getProductDivisionInfoBySlugs(slugs);
+  const slugs = cartItems.map((item) => parseCartItemId(item.id).slug);
+  const productDivisions = await getProductDivisionInfoBySlugs(slugs);
+  const salesModes = await getAllSalesModes();
 
-    const hasCauchosOnlyItem = productDivisions.some(
-      (product) => product.division === "Cauchos" && !productSellsInDivision(product, division),
-    );
+  const hasWhatsAppOnlyItem = productDivisions.some(
+    (product) => salesModes[product.division] === "whatsapp" && !productSellsInDivision(product, division),
+  );
 
-    if (hasCauchosOnlyItem) {
-      redirect(cartRedirect);
-    }
+  if (hasWhatsAppOnlyItem) {
+    redirect(cartRedirect);
   }
 
   const subtotal = cartItems.reduce(

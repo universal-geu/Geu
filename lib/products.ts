@@ -14,6 +14,7 @@ import {
   type ProductoEspecificacion,
   type ProductoVariante,
 } from "@/app/data/catalog";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { DIVISION_BRAND, isServiceDivision, type DivisionName } from "@/lib/divisions";
 
@@ -632,13 +633,24 @@ function toStoreProduct(product: ProductRecord): StoreProduct {
         categoria,
         marca: product.brand,
       }),
+    // "application" in product (rather than just checking the value) tells
+    // apart a light-select row, which never has this column at all, from a
+    // full row whose column happens to be empty — only the latter should
+    // get the generated filler text. Otherwise every one of the ~2,100
+    // catalog rows in the light list payload carried a paragraph of text
+    // nobody reads there, for nothing (measured ~170KB of pure filler).
     aplicacion:
-      product.application?.trim() ||
-      `Aplicación recomendada para la línea ${categoria}.`,
+      "application" in product
+        ? product.application?.trim() ||
+          `Aplicación recomendada para la línea ${categoria}.`
+        : undefined,
     compatibilidad: normalizeTextList(product.compatibility || []).filter(
       (value) => !isInternalMarker(value),
     ),
-    garantia: product.warranty?.trim() || "1 año de garantía del fabricante",
+    garantia:
+      "warranty" in product
+        ? product.warranty?.trim() || "1 año de garantía del fabricante"
+        : undefined,
     fichaTecnicaUrl: product.technicalSheetUrl || undefined,
     especificacionesTecnicas: normalizeTechnicalSpecs(product.technicalSpecs),
     variantes: (product.variants || []).map((variant) => ({
@@ -719,7 +731,74 @@ export async function getProductDivision(slug: string): Promise<DivisionName | n
   return product?.division ?? null;
 }
 
-export async function getProducts() {
+// Fields the storefront's cards, search and cart actually read. Deliberately
+// leaves out technicalSpecs/application/warranty/technicalSheetUrl/
+// galleryImages and the variants relation — those are ~43% of the catalog's
+// JSON weight (measured: ~1.3MB of a ~3MB payload across 2,100+ products)
+// and only ever get read on the product detail page or the admin edit form,
+// neither of which uses getProducts(). toStoreProduct() already defaults
+// every one of those fields safely when absent (`?.trim() || fallback`,
+// `|| []`), so a row shaped like this maps through it unchanged.
+const PRODUCT_LIST_SELECT = {
+  slug: true,
+  sku: true,
+  oemReference: true,
+  alternativeReferences: true,
+  category: true,
+  name: true,
+  brand: true,
+  division: true,
+  additionalDivisions: true,
+  price: true,
+  previousPrice: true,
+  displayPriceOverride: true,
+  displaySecondaryLabel: true,
+  stock: true,
+  minimumStock: true,
+  image: true,
+  availability: true,
+  description: true,
+  compatibility: true,
+  featured: true,
+} as const;
+
+// Wrapped in React's cache() so the several server components that read
+// the catalog on the same request (root layout + each brand's home/category
+// page) share one DB round trip instead of each paying for their own — the
+// DB lives on a remote Supabase pooler, so duplicate fetches were a large,
+// easily avoidable chunk of page load time.
+export const getProducts = cache(async function getProducts() {
+  if (!prisma) {
+    return getFallbackProducts();
+  }
+
+  try {
+    const products = await prisma.product.findMany({
+      where: {
+        active: true,
+      },
+      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      select: PRODUCT_LIST_SELECT,
+    });
+
+    return products.map(toStoreProduct);
+  } catch (error) {
+    // Do NOT fall back to the static placeholder catalog here — those are
+    // unrelated demo products (wrong prices/stock/images, some left over
+    // from a different project) and silently swapping to them on a real DB
+    // error would show customers fabricated pricing and availability. An
+    // empty catalog is the honest degraded state; every caller already
+    // handles zero products safely.
+    console.error("getProducts: fallo la consulta a la base de datos", error);
+    return [];
+  }
+});
+
+// The full catalog — every field, every variant. Only for places that
+// genuinely need it: the admin edit form (/api/admin/products) and, for a
+// single product, the detail page (getProductBySlug below). Storefront
+// browsing should always go through the lighter getProducts() above.
+export const getProductsFull = cache(async function getProductsFull() {
   if (!prisma) {
     return getFallbackProducts();
   }
@@ -735,16 +814,34 @@ export async function getProducts() {
 
     return products.map(toStoreProduct);
   } catch (error) {
-    // Do NOT fall back to the static placeholder catalog here — those are
-    // unrelated demo products (wrong prices/stock/images, some left over
-    // from a different project) and silently swapping to them on a real DB
-    // error would show customers fabricated pricing and availability. An
-    // empty catalog is the honest degraded state; every caller already
-    // handles zero products safely.
-    console.error("getProducts: fallo la consulta a la base de datos", error);
+    console.error("getProductsFull: fallo la consulta a la base de datos", error);
     return [];
   }
-}
+});
+
+// One product, fully populated (specs, gallery, variants) — what the
+// product detail page needs beyond the light card data it already has from
+// getProducts(). Keeps a single "open a product page" from paying for the
+// whole catalog's worth of data just to show one item.
+export const getProductBySlug = cache(async function getProductBySlug(
+  slug: string,
+): Promise<StoreProduct | null> {
+  if (!prisma) {
+    return getFallbackProducts().find((product) => product.slug === slug) ?? null;
+  }
+
+  try {
+    const product = await prisma.product.findUnique({
+      where: { slug },
+      include: { variants: true },
+    });
+
+    return product ? toStoreProduct(product) : null;
+  } catch (error) {
+    console.error("getProductBySlug: fallo la consulta a la base de datos", error);
+    return null;
+  }
+});
 
 export async function getFeaturedProducts() {
   const products = await getProducts();

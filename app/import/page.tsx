@@ -3,7 +3,6 @@ import Link from "next/link";
 import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import CauchosHeader from "../components/cauchos-header";
-import CauchosProjectChat from "../components/cauchos-project-chat";
 import HeroVideo from "../components/hero-video";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import { ResponsiveBanner } from "../components/responsive-banner";
@@ -11,9 +10,11 @@ import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
-import { categoryLabelKey } from "@/lib/text-slots";
+import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
+import { getCategoriesForDivision } from "@/lib/categories";
 import { getProducts, productSellsInDivision } from "@/lib/products";
-import { importCategorias, slugify } from "../data/catalog";
+import { productHref } from "@/lib/divisions";
+import { slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -28,30 +29,6 @@ const navItems = [
   { label: "Contacto", href: "#contacto" },
 ];
 
-const IMPORT_CATEGORY_IMAGE_KEYS: Record<string, string> = {
-  "Láminas de caucho": "import-categoria-laminas",
-  "Empaquetaduras": "import-categoria-empaquetaduras",
-  "Plásticos de Ingeniería": "import-categoria-plasticos",
-  "Acoples OPW": "import-categoria-acoples-opw",
-  "Acoples Hidráulicos": "import-categoria-acoples-hidraulicos",
-  "Válvulas, acoples y racores": "import-categoria-valvulas",
-  "Mangueras Hidráulicas": "import-categoria-mangueras-hidraulicas",
-  "Mangueras Industriales": "import-categoria-mangueras-industriales",
-  "Mangueras en PVC": "import-categoria-mangueras-pvc",
-  "Mangueras en caucho y lona": "import-categoria-mangueras-caucho-lona",
-  "Línea Neumática": "import-categoria-linea-neumatica",
-  "Aislamientos Térmicos": "import-categoria-aislamientos-termicos",
-  "Mercado Persa": "import-categoria-mercado-persa",
-  "Autopartes": "import-categoria-autopartes",
-};
-
-const importCategoriesBase = importCategorias.map((title) => ({
-  label: title,
-  title,
-  imageKey: IMPORT_CATEGORY_IMAGE_KEYS[title] ?? "import-categoria-autopartes",
-  count: "Ver productos",
-  href: `/import/categoria/${slugify(title)}`,
-}));
 
 const importOffers = [
   { title: "Repuestos importados", href: "/import/categoria/autopartes", imageKey: "import-oferta-1" },
@@ -84,18 +61,32 @@ const importFeatured = [
 ];
 
 export default async function ImportPage() {
-  const siteImages = await getSiteImages();
-  const siteImageLinks = await getSiteImageLinks();
-  const siteTexts = await getSiteTexts();
+  // Independent reads — fetch them together instead of paying for six
+  // sequential round trips to a remote DB on every page load.
+  const [siteImages, siteImageLinks, siteTexts, whatsappNumber, allProducts, importCategoryRecords] =
+    await Promise.all([
+      getSiteImages(),
+      getSiteImageLinks(),
+      getSiteTexts(),
+      getWhatsAppNumberForDivision("Import"),
+      getProducts(),
+      getCategoriesForDivision("Import"),
+    ]);
   const t = (key: string) => resolveText(key, siteTexts);
-  const allProducts = await getProducts();
+  const whatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        "Hola GEU Import, quiero hacer una solicitud de importacion.",
+      )}`
+    : "#contacto";
   const importCatalog = allProducts.filter((product) => productSellsInDivision(product, "Import"));
   const importFeaturedProducts = importCatalog.filter((product) => product.destacado);
   const importProducts = (importFeaturedProducts.length > 0 ? importFeaturedProducts : importCatalog).slice(0, 4);
-  const importCategories = importCategoriesBase.map((category) => ({
-    ...category,
-    title: resolveText(categoryLabelKey("Import", category.title), siteTexts, category.title),
-    image: resolveImage(category.imageKey, siteImages),
+  const importCategories = importCategoryRecords.map((category) => ({
+    label: category.name,
+    title: category.name,
+    count: "Ver productos",
+    href: `/import/categoria/${slugify(category.name)}`,
+    image: category.imageKey ? resolveImage(category.imageKey, siteImages) : "/home-import.webp",
   }));
   const importOffersResolved = importOffers.map((offer) => ({
     ...offer,
@@ -117,31 +108,30 @@ export default async function ImportPage() {
           <CauchosCategoryCarousel categories={importCategories} accent="red" />
         </div>
         <div className="mx-auto w-full overflow-hidden bg-[#e31313]" style={{ maxWidth: "1632px" }}>
-          <CauchosProjectChat
-            division="Import"
-            triggerLabel={
-              <>
-                <span className="sr-only">¿Qué quieres importar?</span>
-                <span aria-hidden="true" className="geu-marquee-track flex w-max items-center">
-                  {[0, 1].map((groupIndex) => (
-                    <span key={groupIndex} className="flex items-center">
-                      {Array.from({ length: 10 }).map((_, i) => (
-                        <span
-                          key={i}
-                          className="flex items-center whitespace-nowrap px-5 text-xs font-black uppercase tracking-[0.14em] text-white"
-                        >
-                          ¿Qué quieres importar?
-                          <span className="ml-2">→</span>
-                          <span className="ml-5 text-white/45">✦</span>
-                        </span>
-                      ))}
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="geu-marquee-btn block w-full cursor-pointer overflow-hidden py-2.5 text-left"
+          >
+            <span className="sr-only">¿Qué quieres importar?</span>
+            <span aria-hidden="true" className="geu-marquee-track flex w-max items-center">
+              {[0, 1].map((groupIndex) => (
+                <span key={groupIndex} className="flex items-center">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className="flex items-center whitespace-nowrap px-5 text-xs font-black uppercase tracking-[0.14em] text-white"
+                    >
+                      ¿Qué quieres importar?
+                      <span className="ml-2">→</span>
+                      <span className="ml-5 text-white/45">✦</span>
                     </span>
                   ))}
                 </span>
-              </>
-            }
-            triggerClassName="geu-marquee-btn block w-full cursor-pointer overflow-hidden py-2.5 text-left"
-          />
+              ))}
+            </span>
+          </a>
         </div>
         <div className="bg-white">
           <div
@@ -191,18 +181,11 @@ export default async function ImportPage() {
                 {t("import-productos-subtitulo")}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-[0.06em] text-slate-600">
-              {["Entrega inmediata", "Importado", "Por pedido"].map((tag) => (
-                <span key={tag} className="rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
-                  {tag}
-                </span>
-              ))}
-            </div>
           </div>
 
           <div className="-mx-5 mt-8 flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-3 2xl:grid-cols-4">
             {importProducts.map((product) => {
-              const productImage = product.imagen === "/hero-unipars.jpg" ? "/home-import.png" : product.imagen;
+              const productImage = product.imagen === "/hero-unipars.jpg" ? "/home-import.webp" : product.imagen;
 
               return (
                 <article
@@ -210,7 +193,7 @@ export default async function ImportPage() {
                   className="group flex min-h-[455px] w-[calc(100vw-2.5rem)] shrink-0 snap-start flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#e31313]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)] sm:w-auto sm:shrink"
                 >
                   <Link
-                    href={`/producto/${product.slug}`}
+                    href={productHref(product.slug, "Import")}
                     className="relative block h-52 overflow-hidden bg-white"
                     style={{
                       backgroundImage: `url('${productImage}')`,
@@ -231,7 +214,7 @@ export default async function ImportPage() {
                       {product.marca}
                     </span>
                     <Link
-                      href={`/producto/${product.slug}`}
+                      href={productHref(product.slug, "Import")}
                       className="mt-2 min-h-14 text-xl font-black leading-7 text-slate-950 hover:text-[#e31313]"
                     >
                       {product.nombre}
@@ -252,14 +235,16 @@ export default async function ImportPage() {
                     </span>
                     <CauchosAddToCartButton
                       id={product.slug}
+                      slug={product.slug}
                       nombre={product.nombre}
                       precio={product.precio}
                       imagen={productImage}
+                      sku={product.sku}
                       division="Import"
                       accent="red"
                     />
                     <Link
-                      href={`/producto/${product.slug}`}
+                      href={productHref(product.slug, "Import")}
                       className="mt-3 inline-flex justify-center rounded-full px-4 py-2 text-center text-xs font-black uppercase tracking-[0.08em] text-slate-500 hover:bg-[#fff0f0] hover:text-[#e31313]"
                     >
                       Ver detalle
@@ -299,11 +284,14 @@ export default async function ImportPage() {
                 {t("import-contacto-subtitulo")}
               </p>
             </div>
-            <CauchosProjectChat
-              division="Import"
-              triggerLabel="Hablar con un experto →"
-              triggerClassName="inline-flex w-fit items-center justify-center rounded-[4px] border border-[#e31313] bg-[#e31313] px-7 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_16px_34px_rgba(227,19,19,0.28)] transition hover:border-white hover:bg-white hover:text-[#170606]"
-            />
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-fit items-center justify-center rounded-[4px] border border-[#e31313] bg-[#e31313] px-7 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_16px_34px_rgba(227,19,19,0.28)] transition hover:border-white hover:bg-white hover:text-[#170606]"
+            >
+              Hablar con un experto →
+            </a>
           </div>
         </div>
       </section>

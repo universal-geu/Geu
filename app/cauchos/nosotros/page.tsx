@@ -68,8 +68,7 @@ const valores = [
 ];
 
 const metricas = [
-  { value: "20+", label: "Años de experiencia" },
-  { value: "35", label: "Países" },
+  { value: "50+", label: "Años de experiencia" },
   { value: "1200+", label: "Clientes" },
   { value: "5", label: "Unidades de negocio" },
   { value: "98%", label: "Satisfacción del cliente" },
@@ -220,7 +219,7 @@ export default async function CauchosNosotrosPage() {
             {t("cauchos-cifras-titulo")}
           </h2>
 
-          <ul className="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-5">
+          <ul className="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-4">
             {metricas.map((metrica) => (
               <li key={metrica.label}>
                 <p className="text-4xl font-medium tracking-[-0.02em] text-slate-950">

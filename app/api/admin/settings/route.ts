@@ -1,7 +1,7 @@
 import { requireAdminUser } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import {
-  CAUCHOS_SALES_MODE_KEY,
+  salesModeKey,
   whatsappNumberKey,
   type CauchosSalesMode,
 } from "@/lib/site-settings";
@@ -12,7 +12,7 @@ export async function GET() {
     if (!prisma) return Response.json({ whatsappNumber: "", cauchosSalesMode: "precios" });
     const [whatsappRow, salesModeRow] = await Promise.all([
       prisma.siteSetting.findUnique({ where: { key: whatsappNumberKey(admin.division) } }),
-      prisma.siteSetting.findUnique({ where: { key: CAUCHOS_SALES_MODE_KEY } }),
+      prisma.siteSetting.findUnique({ where: { key: salesModeKey(admin.division) } }),
     ]);
     return Response.json({
       whatsappNumber: whatsappRow?.value ?? "",
@@ -39,10 +39,11 @@ export async function POST(request: Request) {
         return Response.json({ error: "Modo de venta inválido." }, { status: 400 });
       }
 
+      const key = salesModeKey(admin.division);
       const setting = await prisma.siteSetting.upsert({
-        where: { key: CAUCHOS_SALES_MODE_KEY },
+        where: { key },
         update: { value: body.cauchosSalesMode },
-        create: { key: CAUCHOS_SALES_MODE_KEY, value: body.cauchosSalesMode },
+        create: { key, value: body.cauchosSalesMode },
       });
       return Response.json({ cauchosSalesMode: setting.value });
     }

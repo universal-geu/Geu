@@ -153,7 +153,7 @@ function YesNoField({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 py-1">
-      <span className="text-[11px] font-black uppercase tracking-[0.06em] text-slate-600">{label}</span>
+      <span className="min-w-0 text-[11px] font-black uppercase tracking-[0.06em] text-slate-600">{label}</span>
       <div className="flex shrink-0 gap-1.5">
         {(["SI", "NO"] as const).map((option) => (
           <button
@@ -335,10 +335,10 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 px-4 py-6 md:items-center"
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/60 px-3 py-3 sm:px-4 sm:py-6 md:items-center"
           style={{ "--brand-accent": "#075ed8", "--brand-accent-hover": "#054eb3" } as React.CSSProperties}
         >
-          <div className="flex h-[min(680px,92vh)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-[0_30px_80px_rgba(2,6,23,0.35)]">
+          <div className="flex h-[min(680px,92dvh)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-[0_30px_80px_rgba(2,6,23,0.35)]">
             <div className="flex items-center justify-between bg-[var(--brand-accent)] px-5 py-4 text-white">
               <div>
                 <p className="text-sm font-black uppercase tracking-[0.1em]">Universal de Cauchos</p>
@@ -370,7 +370,7 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
               </div>
             ) : (
               <>
-                <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
+                <div className="flex-1 space-y-6 overflow-y-auto overflow-x-hidden px-4 py-5 sm:px-5">
                   <div>
                     <SectionTitle>Datos de la solicitud</SectionTitle>
                     <p className="mt-3 text-xs font-semibold text-slate-500">
@@ -429,7 +429,7 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
                         );
                       })}
                     </div>
-                    <div className="mt-3 max-w-xs">
+                    <div className="mt-3 sm:max-w-xs">
                       <TextField label="Otro · ¿cuál?" value={form.procesoOtroCual} onChange={(v) => update("procesoOtroCual", v)} />
                     </div>
                   </div>
@@ -439,7 +439,7 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
                       <SectionTitle>Información del producto</SectionTitle>
                       <div className="mt-4 space-y-3">
                         <TextField label="Color del producto" value={form.colorProducto} onChange={(v) => update("colorProducto", v)} />
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2 sm:gap-y-2">
                           <YesNoField label="Adjunta plano del producto" value={form.adjuntaPlano} onChange={(v) => update("adjuntaPlano", v)} />
                           <YesNoField label="Adjunta muestra física" value={form.adjuntaMuestra} onChange={(v) => update("adjuntaMuestra", v)} />
                           <YesNoField label="Realiza dibujo del producto" value={form.realizaDibujo} onChange={(v) => update("realizaDibujo", v)} />
@@ -450,7 +450,7 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
                           />
                         </div>
                         <TextField label="¿Cuál?" value={form.clienteSuministraCual} onChange={(v) => update("clienteSuministraCual", v)} />
-                        <div className="grid grid-cols-2 gap-3 pt-1">
+                        <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2">
                           <TextField label="Material sugerido" value={form.materialSugerido} onChange={(v) => update("materialSugerido", v)} placeholder="Ej: EPDM" />
                           <TextField label="Dureza" value={form.dureza} onChange={(v) => update("dureza", v)} placeholder="Ej: 75 Shore-A" />
                         </div>
@@ -459,7 +459,7 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
 
                     <div>
                       <SectionTitle>Condiciones de trabajo</SectionTitle>
-                      <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-2">
+                      <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-1 sm:grid-cols-2 sm:gap-y-2">
                         <YesNoField label="Hidrocarburos" value={form.hidrocarburos} onChange={(v) => update("hidrocarburos", v)} />
                         <YesNoField label="Impacto" value={form.impacto} onChange={(v) => update("impacto", v)} />
                         <YesNoField label="Abrasión" value={form.abrasion} onChange={(v) => update("abrasion", v)} />
@@ -499,7 +499,7 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
 
                   <div>
                     <SectionTitle>Información comercial</SectionTitle>
-                    <div className="mt-4 max-w-xs">
+                    <div className="mt-4 sm:max-w-xs">
                       <TextField label="Cantidad" value={form.cantidad} onChange={(v) => update("cantidad", v)} placeholder="Ej: 100 mts" />
                     </div>
                   </div>

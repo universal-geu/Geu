@@ -1,9 +1,9 @@
 import {
   formatearMoneda,
-  getCategoriasForDivision,
   slugCategoria,
   type Categoria,
 } from "@/app/data/catalog";
+import { getCategoriesForDivision } from "@/lib/categories";
 import { DIVISIONS, type DivisionName } from "@/lib/divisions";
 import { getProducts, productSellsInDivision, type StoreProduct } from "@/lib/products";
 
@@ -59,10 +59,10 @@ function scoreProduct(product: StoreProduct, queryTokens: string[]) {
   }, 0);
 }
 
-function getMatchedCategories(query: string, division: DivisionName) {
+async function getMatchedCategories(query: string, division: DivisionName) {
   const normalized = normalizeText(query);
   const queryTokens = new Set(tokenize(query));
-  const categoriesForDivision = getCategoriasForDivision(division);
+  const categoriesForDivision = (await getCategoriesForDivision(division)).map((category) => category.name);
 
   return categoriesForDivision.filter((category) => {
     const categoryValue = normalizeText(category);
@@ -87,7 +87,7 @@ export async function getCatalogSnapshot(
   const allProducts = await getProducts();
   const products = allProducts.filter((product) => productSellsInDivision(product, division));
   const queryTokens = tokenize(query);
-  const matchedCategories = getMatchedCategories(query, division);
+  const matchedCategories = await getMatchedCategories(query, division);
 
   const matchedProducts = products
     .map((product) => ({
@@ -104,7 +104,7 @@ export async function getCatalogSnapshot(
   return {
     matchedProducts,
     matchedCategories,
-    allCategories: getCategoriasForDivision(division),
+    allCategories: (await getCategoriesForDivision(division)).map((category) => category.name),
   };
 }
 

@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import CauchosAddToCartButton from "../../components/cauchos-add-to-cart-button";
 import CauchosHeader from "../../components/cauchos-header";
 import { useProducts } from "../../components/products-provider";
 import { FALLBACK_PRODUCT_IMAGE } from "../../components/cauchos-category-products-page";
+import type { StoreProduct } from "@/lib/products";
+import { productSellsInDivision } from "@/lib/product-category-views";
 import { slugCategoria } from "../../data/catalog";
-import { CART_ACCENT, DIVISION_BRAND, isServiceDivision } from "@/lib/divisions";
+import { CART_ACCENT, DIVISION_BRAND, getDivisionFromBrandParam, isServiceDivision, productHref } from "@/lib/divisions";
 
 const ACCENT_TEXT_CLASS = {
   blue: "text-[#075ed8]",
@@ -220,26 +222,67 @@ function ProductImageGallery({
 
 export default function ProductoDetallePage() {
   const params = useParams<{ slug: string }>();
+  const searchParams = useSearchParams();
   const { products, refreshProducts } = useProducts();
   const [cantidad, setCantidad] = useState(1);
+  // Texto mientras el usuario escribe la cantidad a mano (null = mostrar `cantidad`).
+  const [cantidadTexto, setCantidadTexto] = useState<string | null>(null);
   const [selectedVariantSku, setSelectedVariantSku] = useState<string | null>(null);
   const [isMedidaMenuOpen, setIsMedidaMenuOpen] = useState(false);
   const slug = params.slug;
-  const producto = products.find((item) => item.slug === slug);
+  // The shared catalog (`products`) only carries the "light" card fields —
+  // see lib/products.ts — so every storefront page load doesn't pay for
+  // every product's specs/gallery/variants. This page fetches the one
+  // product's full record separately below and layers it on top.
+  const lightProducto = products.find((item) => item.slug === slug);
 
   // The product catalog is only loaded once per full page load — if a
   // product was created/renamed after that, a client-side navigation here
   // won't see it until we explicitly refetch. Retry once per slug before
   // giving up and showing "not found".
   const attemptedRefreshRef = useRef<string | null>(null);
-  const [isRefreshingCatalog, setIsRefreshingCatalog] = useState(() => !producto);
+  const [isRefreshingCatalog, setIsRefreshingCatalog] = useState(() => !lightProducto);
 
   useEffect(() => {
-    if (producto || attemptedRefreshRef.current === slug) return;
+    if (lightProducto || attemptedRefreshRef.current === slug) return;
     attemptedRefreshRef.current = slug;
     setIsRefreshingCatalog(true);
     void refreshProducts().finally(() => setIsRefreshingCatalog(false));
-  }, [producto, slug, refreshProducts]);
+  }, [lightProducto, slug, refreshProducts]);
+
+  // Layers in the full record (specs, gallery, extra variants) for just
+  // this one product — cheap on its own, unlike re-fetching the whole
+  // catalog. `producto` below renders instantly from the light data and
+  // "fills in" once this resolves.
+  const [fullProducto, setFullProducto] = useState<StoreProduct | null>(null);
+  const fetchedFullSlugRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (fetchedFullSlugRef.current === slug) return;
+    fetchedFullSlugRef.current = slug;
+    setFullProducto(null);
+
+    let cancelled = false;
+    fetch(`/api/products/${slug}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload: { product?: StoreProduct } | null) => {
+        if (!cancelled && payload?.product) setFullProducto(payload.product);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  const producto = useMemo(
+    () =>
+      lightProducto && fullProducto?.slug === lightProducto.slug
+        ? { ...lightProducto, ...fullProducto }
+        : lightProducto,
+    [lightProducto, fullProducto],
+  );
+
   const galleryImages = useMemo(
     () =>
       producto
@@ -316,6 +359,7 @@ export default function ProductoDetallePage() {
   }
 
   const ajustarCantidad = (delta: number) => {
+    setCantidadTexto(null);
     setCantidad((actual) => {
       const siguiente = actual + delta;
       if (siguiente < 1) return 1;
@@ -332,7 +376,16 @@ export default function ProductoDetallePage() {
         item.slug !== producto.slug,
     )
     .slice(0, 3);
-  const productDivision = producto.division ?? "Cauchos";
+  // Products cross-listed into another GEU brand (divisionesAdicionales)
+  // keep that brand's own catalog links visible from the detail page: the
+  // listing passes along ?brand=<division> so we don't fall back to the
+  // product's home division and bounce the visitor to a different brand's
+  // header/theme than the one they were browsing.
+  const requestedDivision = getDivisionFromBrandParam(searchParams.get("brand"));
+  const productDivision =
+    searchParams.get("brand") && productSellsInDivision(producto, requestedDivision)
+      ? requestedDivision
+      : producto.division ?? "Cauchos";
   const cartAccent = CART_ACCENT[productDivision];
   const isRed = cartAccent === "red";
   const accentTextClass = ACCENT_TEXT_CLASS[cartAccent];
@@ -573,9 +626,24 @@ export default function ProductoDetallePage() {
                 >
                   −
                 </button>
-                <div className="border-x border-slate-200 px-7 py-3 text-lg font-black text-slate-950">
-                  {cantidad}
-                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={cantidadTexto ?? String(cantidad)}
+                  onChange={(event) => {
+                    const texto = event.target.value.replace(/\D/g, "");
+                    setCantidadTexto(texto);
+                    const valor = Number.parseInt(texto, 10);
+                    if (valor > 0) setCantidad(Math.min(valor, maxCantidad));
+                  }}
+                  onBlur={() => setCantidadTexto(null)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") event.currentTarget.blur();
+                  }}
+                  aria-label="Cantidad"
+                  className="w-20 border-x border-slate-200 py-3 text-center text-lg font-black text-slate-950 outline-none focus:bg-slate-50"
+                />
                 <button
                   type="button"
                   onClick={() => ajustarCantidad(1)}
@@ -588,9 +656,11 @@ export default function ProductoDetallePage() {
 
               <CauchosAddToCartButton
                 id={hasVariants && selectedVariant ? `${producto.slug}::${selectedVariant.sku}` : producto.slug}
+                slug={producto.slug}
                 nombre={hasVariants && selectedVariant ? `${producto.nombre} - ${selectedVariant.medida}` : producto.nombre}
                 precio={displayPrecio}
                 imagen={productImage}
+                sku={hasVariants && selectedVariant ? selectedVariant.sku : producto.sku}
                 division={productDivision}
                 cantidad={cantidad}
                 disabled={!canPurchase}
@@ -639,7 +709,7 @@ export default function ProductoDetallePage() {
                 alt={item.nombre}
                 width={900}
                 height={700}
-                className="h-52 w-full object-cover"
+                className="h-60 w-full bg-white object-contain p-4"
               />
               <div className="space-y-4 p-5">
                 <div>
@@ -656,7 +726,7 @@ export default function ProductoDetallePage() {
                 </p>
 
                 <Link
-                  href={`/producto/${item.slug}`}
+                  href={productHref(item.slug, productDivision)}
                   className={`inline-flex rounded-full border bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.08em] transition-colors duration-200 ${OUTLINE_BUTTON_CLASS[cartAccent]}`}
                 >
                   Ver producto

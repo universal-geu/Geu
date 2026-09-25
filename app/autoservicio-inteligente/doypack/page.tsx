@@ -13,7 +13,6 @@ const navItems = [
   { label: "Structure", href: "/innovation" },
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/autoservicio-inteligente/nosotros" },
   { label: "Contacto", href: "mailto:innovation@geu.com.co" },
 ];
 

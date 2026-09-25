@@ -7,16 +7,17 @@ import {
   useState,
   type ChangeEvent,
   type FormEvent,
+  type ReactNode,
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProducts } from "../components/products-provider";
+import { useCategories } from "../components/categories-provider";
 import CategoryComboBox from "./category-combobox";
 import MultiCategoryComboBox from "./multi-category-combobox";
 import {
   cauchosCategorySubcategories,
-  getCategoriasForDivision,
   type Categoria,
   type ProductoCatalogo,
   type ProductoEspecificacion,
@@ -27,7 +28,7 @@ import { matchesQuery } from "@/lib/text-match";
 import type { DashboardMetrics, SalesReport, SalesReportOverview, ShippingStatus } from "@/lib/orders";
 import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
-import { TEXT_SLOTS, categoryLabelKey } from "@/lib/text-slots";
+import { TEXT_SLOTS } from "@/lib/text-slots";
 import { COLOR_SLOTS } from "@/lib/color-slots";
 import {
   DIVISIONS,
@@ -42,17 +43,17 @@ import {
 import type { CauchosSalesMode } from "@/lib/site-settings";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
-  ADMIN_TOOL_KEYS,
-  ADMIN_TOOL_LABELS,
   hasAdminPermission,
   isToolAllowedForDivision,
   type AdminToolKey,
 } from "@/lib/admin-permissions";
+import GusOrderRunner from "../components/gus-order-runner";
 
 const IMAGE_GROUP_SECTIONS: { label: string; groups: string[] }[] = [
   { label: "Sitio GEU Structure", groups: ["Sitio Structure"] },
   { label: "Página principal", groups: ["Página de inicio", "Ofertas", "Marcas destacadas"] },
   { label: "Quiénes somos", groups: ["Nosotros"] },
+  { label: "Mi cuenta", groups: ["Mi cuenta"] },
   {
     label: "Catálogo",
     groups: ["Página de categorías", "Categorías", "Subcategorías (menú)"],
@@ -444,21 +445,17 @@ type AdminQuote = {
 
 const quoteStatuses: QuoteStatusValue[] = ["NEW", "CONTACTED", "CLOSED"];
 
-type TeamAccount = {
-  id: string;
-  fullName: string;
-  email: string;
-  division: DivisionName | null;
-  permissions: string[];
-  active: boolean;
-  createdAt: string | Date;
-};
-
 function getQuoteStatusLabel(status: QuoteStatusValue) {
   if (status === "CONTACTED") return "Contactado";
   if (status === "CLOSED") return "Cerrado";
   return "Nueva";
 }
+
+const QUOTE_STATUS_THEME: Record<QuoteStatusValue, { dot: string; badgeBg: string; badgeText: string }> = {
+  NEW: { dot: "#c98a1f", badgeBg: "#fff4e5", badgeText: "#a15c00" },
+  CONTACTED: { dot: "var(--admin-accent)", badgeBg: "var(--admin-accent-soft)", badgeText: "var(--admin-accent)" },
+  CLOSED: { dot: "#1f9d55", badgeBg: "#effaf2", badgeText: "#1f6b39" },
+};
 
 type ProductImageChoice = {
   label: string;
@@ -676,7 +673,13 @@ function AdminOrderProgress({ order }: { order: AdminOrder }) {
 
       <div className="mt-5 overflow-x-auto">
         <div className="relative min-w-[620px] px-1 py-2">
-          <div className="pointer-events-none absolute left-[12.5%] right-[12.5%] top-6 z-0">
+          <GusOrderRunner
+            key={activeStep}
+            activeStep={activeStep}
+            stepCount={steps.length}
+            cancelled={order.status === "CANCELLED" || order.shippingStatus === "CANCELLED"}
+          />
+          <div className="pointer-events-none absolute left-[12.5%] right-[12.5%] top-[80px] z-0">
             <span className="block h-[6px] rounded-full bg-[#d9dde4] shadow-[inset_0_1px_2px_rgba(15,23,42,0.08)]" />
             <span
               className="absolute left-0 top-0 h-[6px] rounded-full bg-gradient-to-r from-[var(--admin-accent)] to-[var(--admin-accent-light)] shadow-[0_6px_16px_rgba(var(--admin-accent-rgb),0.25)] transition-all duration-300"
@@ -1211,6 +1214,7 @@ function AdditionalDivisionsEditor({
   allProducts: StoreProduct[];
   onChange: (items: DivisionCategoriaFormItem[]) => void;
 }) {
+  const { getCategoryNamesForDivision } = useCategories();
   const options = SELLABLE_DIVISIONS.filter((division) => division !== currentDivision);
 
   if (options.length === 0) return null;
@@ -1298,7 +1302,7 @@ function AdditionalDivisionsEditor({
                     label={`Categorías en ${DIVISION_BRAND[item.division].label}`}
                     name={`categoriaDivision-${item.division}`}
                     value={item.categorias}
-                    options={getCategoriasForDivision(item.division)}
+                    options={getCategoryNamesForDivision(item.division)}
                     placeholder="Elige una o varias"
                     entityName="categoría"
                     strict={!isCauchos}
@@ -1445,17 +1449,6 @@ function SettingsIcon() {
     <SidebarIconShell>
       <circle cx="12" cy="12" r="3.2" />
       <path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M3 12h2.2M18.8 12H21M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" />
-    </SidebarIconShell>
-  );
-}
-
-function AccountsIcon() {
-  return (
-    <SidebarIconShell>
-      <circle cx="9" cy="8" r="3.2" />
-      <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
-      <circle cx="17.5" cy="9" r="2.4" />
-      <path d="M15.8 14.3c2.6.5 4.4 2.6 4.4 5.2" />
     </SidebarIconShell>
   );
 }
@@ -1640,7 +1633,6 @@ const SIDEBAR_ICONS: Partial<Record<AdminToolKey | "dashboard" | "overview", () 
   reports: ReportsIcon,
   overview: ReportsIcon,
   settings: SettingsIcon,
-  accounts: AccountsIcon,
 };
 
 export default function AdminPage() {
@@ -1657,7 +1649,27 @@ export default function AdminPage() {
     removeProduct,
     adjustInventory,
     refreshProducts,
+    loadFullCatalog,
   } = useProducts();
+  // The shared product list starts out "light" (no specs/gallery/variants —
+  // see lib/products.ts) so storefront pages stay fast. The admin edit form
+  // needs every field, so upgrade it to the full catalog once when the
+  // panel opens instead of every page paying for that weight up front.
+  // loadFullCatalog is a new closure on every ProductsProvider render (it
+  // captures setProducts) and calling it triggers exactly that re-render,
+  // so depending on it here would refetch in a loop — mount-once is correct.
+  useEffect(() => {
+    void loadFullCatalog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const {
+    getCategoriesForDivision: getCategoryRecordsForDivision,
+    getCategoryNamesForDivision,
+    createCategory: createCategoryRequest,
+    renameCategory: renameCategoryRequest,
+    removeCategory: removeCategoryRequest,
+    reorderCategories: reorderCategoriesRequest,
+  } = useCategories();
   const adminProducts = useMemo(
     () => allAdminProducts.filter((product) => product.division === adminDivision),
     [allAdminProducts, adminDivision],
@@ -1668,10 +1680,10 @@ export default function AdminPage() {
     | "inventory"
     | "orders"
     | "quotes"
+    | "categories"
     | "reports"
     | "overview"
     | "settings"
-    | "accounts"
     | null
   >(null);
   const imageDivisionFilter = adminDivision;
@@ -1773,17 +1785,6 @@ export default function AdminPage() {
   const [switchDivisionError, setSwitchDivisionError] = useState("");
   const [adminName, setAdminName] = useState("");
   const [adminPermissions, setAdminPermissions] = useState<string[]>([]);
-  const [teamAccounts, setTeamAccounts] = useState<TeamAccount[]>([]);
-  const [isLoadingTeam, setIsLoadingTeam] = useState(false);
-  const [teamError, setTeamError] = useState("");
-  const [newAccountForm, setNewAccountForm] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    permissions: [] as AdminToolKey[],
-  });
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
-  const [savingAccountId, setSavingAccountId] = useState<string | null>(null);
   const [inventoryAdjustments, setInventoryAdjustments] = useState<Record<string, string>>({});
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovementSummary[]>([]);
   const [isLoadingInventory, setIsLoadingInventory] = useState(false);
@@ -1792,11 +1793,15 @@ export default function AdminPage() {
   const [quotes, setQuotes] = useState<AdminQuote[]>([]);
   const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
-  const [quoteStatusFilter, setQuoteStatusFilter] = useState<"all" | QuoteStatusValue>("all");
   const [isSavingQuoteStatus, setIsSavingQuoteStatus] = useState(false);
   const [quoteNotesDraft, setQuoteNotesDraft] = useState("");
   const [prevSelectedQuoteId, setPrevSelectedQuoteId] = useState<string | null>(null);
   const [isSavingQuoteNotes, setIsSavingQuoteNotes] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState("");
+  const [savingCategoryId, setSavingCategoryId] = useState<string | null>(null);
   const [salesReport, setSalesReport] = useState<SalesReport | null>(null);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
   const [divisionOverview, setDivisionOverview] = useState<SalesReportOverview | null>(null);
@@ -1872,14 +1877,10 @@ export default function AdminPage() {
   // Legacy seed products carry older category strings (e.g. "Mangueras",
   // "Sellos y empaques") that predate this taxonomy and aren't real nav
   // categories, so they're intentionally excluded from the picker.
-  const assignableToolKeys = useMemo(
-    () =>
-      ADMIN_TOOL_KEYS.filter(
-        (key) => (key !== "inventory" || !isServiceAdmin) && isToolAllowedForDivision(adminDivision, key),
-      ),
-    [isServiceAdmin, adminDivision],
+  const categoryOptions = useMemo(
+    () => getCategoryNamesForDivision(adminDivision),
+    [adminDivision, getCategoryNamesForDivision],
   );
-  const categoryOptions = useMemo(() => getCategoriasForDivision(adminDivision), [adminDivision]);
   const subcategoryOptions = useMemo(() => {
     const normalizedCategoria = normalizeMatchKey(form.categoria);
     const menuGroups = cauchosCategorySubcategories[form.categoria] ?? [];
@@ -1974,11 +1975,12 @@ export default function AdminPage() {
     return counts;
   }, [orders]);
 
-  const filteredQuotes = useMemo(() => {
-    return quotes.filter(
-      (quote) => quoteStatusFilter === "all" || quote.status === quoteStatusFilter,
-    );
-  }, [quoteStatusFilter, quotes]);
+  const quoteColumns = useMemo(() => {
+    return quoteStatuses.map((status) => ({
+      status,
+      items: quotes.filter((quote) => quote.status === status),
+    }));
+  }, [quotes]);
 
   const selectedQuote = quotes.find((quote) => quote.id === selectedQuoteId) ?? null;
 
@@ -2065,7 +2067,6 @@ export default function AdminPage() {
             ["reports", openReportsView],
             ["images", () => openSettingsSection("images")],
             ["settings", () => openSettingsSection("texts")],
-            ["accounts", openAccountsView],
           ];
           const firstAllowed = fallback.find(([tool]) => canAccess(tool));
           firstAllowed?.[1]();
@@ -2619,10 +2620,6 @@ export default function AdminPage() {
     }
 
     setQuotes(payload.quotes);
-
-    if (!selectedQuoteId && payload.quotes[0]) {
-      setSelectedQuoteId(payload.quotes[0].id);
-    }
   }
 
   async function handleQuoteStatusChange(id: string, status: QuoteStatusValue) {
@@ -2675,6 +2672,77 @@ export default function AdminPage() {
       current.map((quote) => (quote.id === id ? { ...quote, adminNotes: payload.quote!.adminNotes } : quote)),
     );
     setToast({ tone: "success", message: "Respuesta guardada. El cliente ya puede verla." });
+  }
+
+  async function handleCreateCategory() {
+    const name = newCategoryName.trim();
+    if (!name) return;
+
+    setIsCreatingCategory(true);
+    const result = await createCategoryRequest(adminDivision, name);
+    setIsCreatingCategory(false);
+
+    if (!result.ok) {
+      setToast({ tone: "error", message: result.message });
+      return;
+    }
+
+    setNewCategoryName("");
+    setToast({ tone: "success", message: "Categoría creada correctamente." });
+  }
+
+  async function handleRenameCategory(id: string) {
+    const name = editingCategoryName.trim();
+    if (!name) return;
+
+    setSavingCategoryId(id);
+    const result = await renameCategoryRequest(id, name);
+    setSavingCategoryId(null);
+
+    if (!result.ok) {
+      setToast({ tone: "error", message: result.message });
+      return;
+    }
+
+    setEditingCategoryId(null);
+    setToast({ tone: "success", message: "Categoría renombrada correctamente." });
+  }
+
+  async function handleDeleteCategory(id: string, name: string) {
+    if (!window.confirm(`¿Eliminar la categoría "${name}"? Esta acción no se puede deshacer.`)) return;
+
+    setSavingCategoryId(id);
+    const result = await removeCategoryRequest(id);
+    setSavingCategoryId(null);
+
+    if (!result.ok) {
+      setToast({ tone: "error", message: result.message });
+      return;
+    }
+
+    setToast({ tone: "success", message: "Categoría eliminada correctamente." });
+  }
+
+  async function handleMoveCategory(id: string, direction: "up" | "down") {
+    const list = getCategoryRecordsForDivision(adminDivision);
+    const index = list.findIndex((category) => category.id === id);
+    if (index === -1) return;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    const reordered = [...list];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+
+    setSavingCategoryId(id);
+    const result = await reorderCategoriesRequest(
+      adminDivision,
+      reordered.map((category) => category.id),
+    );
+    setSavingCategoryId(null);
+
+    if (!result.ok) {
+      setToast({ tone: "error", message: result.message });
+    }
   }
 
   async function loadSalesReport() {
@@ -2809,9 +2877,16 @@ export default function AdminPage() {
     setRequestError("");
     setPrimaryImageIndex(0);
     setEditingSlug(null);
-    setQuoteStatusFilter("all");
     setActiveTab("quotes");
     void loadQuotes();
+  };
+
+  const openCategoriesView = () => {
+    setSelectedImage(null);
+    setRequestError("");
+    setPrimaryImageIndex(0);
+    setEditingSlug(null);
+    setActiveTab("categories");
   };
 
   const openReportsView = () => {
@@ -3231,174 +3306,6 @@ export default function AdminPage() {
     }
   };
 
-  const loadTeamAccounts = async () => {
-    setIsLoadingTeam(true);
-    setTeamError("");
-    try {
-      const response = await fetch("/api/admin/team");
-      const payload = (await response.json()) as {
-        accounts?: TeamAccount[];
-        error?: string;
-      };
-
-      if (!response.ok || !payload.accounts) {
-        throw new Error(payload.error || "No fue posible cargar las cuentas.");
-      }
-
-      setTeamAccounts(payload.accounts);
-    } catch (error) {
-      setTeamError(
-        error instanceof Error ? error.message : "No fue posible cargar las cuentas.",
-      );
-    } finally {
-      setIsLoadingTeam(false);
-    }
-  };
-
-  const openAccountsView = () => {
-    setSelectedImage(null);
-    setRequestError("");
-    setPrimaryImageIndex(0);
-    setEditingSlug(null);
-    setActiveTab("accounts");
-    void loadTeamAccounts();
-  };
-
-  const toggleNewAccountPermission = (tool: AdminToolKey) => {
-    setNewAccountForm((current) => ({
-      ...current,
-      permissions: current.permissions.includes(tool)
-        ? current.permissions.filter((item) => item !== tool)
-        : [...current.permissions, tool],
-    }));
-  };
-
-  const handleCreateAccount = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsCreatingAccount(true);
-    setTeamError("");
-
-    try {
-      const response = await fetch("/api/admin/team", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newAccountForm),
-      });
-      const payload = (await response.json()) as {
-        account?: TeamAccount;
-        error?: string;
-      };
-
-      if (!response.ok || !payload.account) {
-        throw new Error(payload.error || "No fue posible crear la cuenta.");
-      }
-
-      setTeamAccounts((current) => [...current, payload.account!]);
-      setNewAccountForm({ fullName: "", email: "", password: "", permissions: [] });
-      setToast({ tone: "success", message: "Cuenta creada correctamente." });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No fue posible crear la cuenta.";
-      setTeamError(message);
-      setToast({ tone: "error", message });
-    } finally {
-      setIsCreatingAccount(false);
-    }
-  };
-
-  const handleToggleAccountPermission = async (account: TeamAccount, tool: AdminToolKey) => {
-    const nextPermissions = account.permissions.includes(tool)
-      ? account.permissions.filter((item) => item !== tool)
-      : [...account.permissions, tool];
-
-    setSavingAccountId(account.id);
-    try {
-      const response = await fetch(`/api/admin/team/${account.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ permissions: nextPermissions }),
-      });
-      const payload = (await response.json()) as {
-        account?: TeamAccount;
-        error?: string;
-      };
-
-      if (!response.ok || !payload.account) {
-        throw new Error(payload.error || "No fue posible actualizar los permisos.");
-      }
-
-      setTeamAccounts((current) =>
-        current.map((item) => (item.id === account.id ? payload.account! : item)),
-      );
-    } catch (error) {
-      setToast({
-        tone: "error",
-        message: error instanceof Error ? error.message : "No fue posible actualizar los permisos.",
-      });
-    } finally {
-      setSavingAccountId(null);
-    }
-  };
-
-  const handleToggleAccountActive = async (account: TeamAccount) => {
-    setSavingAccountId(account.id);
-    try {
-      const response = await fetch(`/api/admin/team/${account.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ active: !account.active }),
-      });
-      const payload = (await response.json()) as {
-        account?: TeamAccount;
-        error?: string;
-      };
-
-      if (!response.ok || !payload.account) {
-        throw new Error(payload.error || "No fue posible actualizar la cuenta.");
-      }
-
-      setTeamAccounts((current) =>
-        current.map((item) => (item.id === account.id ? payload.account! : item)),
-      );
-      setToast({
-        tone: "success",
-        message: payload.account.active ? "Cuenta activada." : "Cuenta desactivada.",
-      });
-    } catch (error) {
-      setToast({
-        tone: "error",
-        message: error instanceof Error ? error.message : "No fue posible actualizar la cuenta.",
-      });
-    } finally {
-      setSavingAccountId(null);
-    }
-  };
-
-  const handleDeleteAccount = async (account: TeamAccount) => {
-    if (!window.confirm(`¿Eliminar la cuenta de ${account.fullName}? Esta acción no se puede deshacer.`)) {
-      return;
-    }
-
-    setSavingAccountId(account.id);
-    try {
-      const response = await fetch(`/api/admin/team/${account.id}`, { method: "DELETE" });
-
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(payload?.error || "No fue posible eliminar la cuenta.");
-      }
-
-      setTeamAccounts((current) => current.filter((item) => item.id !== account.id));
-      setToast({ tone: "success", message: "Cuenta eliminada correctamente." });
-    } catch (error) {
-      setToast({
-        tone: "error",
-        message: error instanceof Error ? error.message : "No fue posible eliminar la cuenta.",
-      });
-    } finally {
-      setSavingAccountId(null);
-    }
-  };
-
   const handleSiteImageUpload = async (slotKey: string, file: File) => {
     setUploadingImageKey(slotKey);
     setImageError(null);
@@ -3633,6 +3540,7 @@ export default function AdminPage() {
         : []),
       { key: "orders", label: "Pedidos", active: activeTab === "orders", onClick: openOrdersView },
       { key: "quotes", label: "Cotizaciones", active: activeTab === "quotes", onClick: openQuotesView, count: pendingQuotesCount },
+      { key: "categories", label: "Categorías", active: activeTab === "categories", onClick: openCategoriesView },
       { key: "reports", label: "Informes", active: activeTab === "reports", onClick: openReportsView },
       ...(adminDivision === "GEU"
         ? [
@@ -3650,7 +3558,6 @@ export default function AdminPage() {
         active: activeTab === "settings",
         onClick: openSettingsView,
       },
-      { key: "accounts", label: "Cuentas", active: activeTab === "accounts", onClick: openAccountsView },
     ] as Array<{
       key: AdminToolKey | "overview";
       label: string;
@@ -3700,7 +3607,7 @@ export default function AdminPage() {
             onClick: () => openSettingsSection("whatsapp"),
           }
         : null,
-      canAccessTool("settings") && adminDivision === "Cauchos"
+      canAccessTool("settings") && !isServiceDivision(adminDivision)
         ? {
             key: "salesMode" as const,
             label: "Modo de venta",
@@ -5585,62 +5492,6 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                      <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                        Distribución de precios
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-[#6e7379]">
-                        Cantidad de productos del catálogo según su rango de precio.
-                      </p>
-                      <div className="mt-5 space-y-3">
-                        {(() => {
-                          const nonEmptyRanges = salesReport.priceRanges.filter(
-                            (range) => range.count > 0,
-                          );
-
-                          if (nonEmptyRanges.length === 0) {
-                            return (
-                              <p className="text-sm text-[#6e7379]">
-                                Aún no hay productos con precio registrado.
-                              </p>
-                            );
-                          }
-
-                          const maxRangeCount = Math.max(
-                            ...nonEmptyRanges.map((entry) => entry.count),
-                            1,
-                          );
-
-                          return nonEmptyRanges.map((range) => {
-                            const progress = Math.max(
-                              8,
-                              Math.round((range.count / maxRangeCount) * 100),
-                            );
-
-                            return (
-                              <div
-                                key={range.label}
-                                className="flex flex-wrap items-center gap-4 rounded-[1.1rem] border border-black/8 bg-[#fafaf9] px-4 py-3.5"
-                              >
-                                <p className="w-full shrink-0 text-sm font-semibold text-[#1f2328] sm:w-52">
-                                  {range.label}
-                                </p>
-                                <div className="h-2 flex-1 basis-32 overflow-hidden rounded-full bg-[#e5e7eb]">
-                                  <span
-                                    className="block h-full rounded-full bg-[#0f766e]"
-                                    style={{ width: `${progress}%` }}
-                                  />
-                                </div>
-                                <p className="w-12 shrink-0 text-right text-sm font-semibold text-[var(--admin-accent)]">
-                                  {formatNumber(range.count)}
-                                </p>
-                              </div>
-                            );
-                          });
-                        })()}
-                      </div>
-                    </div>
-
                     <p className="text-xs text-[#8b8d91]">
                       Actualizado: {new Date(salesReport.generatedAt).toLocaleString("es-CO")}
                     </p>
@@ -6258,119 +6109,104 @@ export default function AdminPage() {
           )}
 
           {activeTab === "quotes" && (
-            <div className="admin-fade-up space-y-8">
-              <div className="grid gap-8 xl:grid-cols-[360px_minmax(0,1fr)]">
-                <aside className="space-y-5">
-                  <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
-                      Cotizaciones
-                    </p>
-                    <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                      Solicitudes de evaluación técnica
-                    </h2>
-                    <p className="mt-3 text-sm leading-7 text-[#6e7379]">
-                      Estas solicitudes las envían los clientes desde el asistente &quot;Hablemos de tu proyecto&quot; del sitio.
-                    </p>
-                  </div>
+            <div className="admin-fade-up space-y-6">
+              <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">Cotizaciones</p>
+                <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                  Solicitudes de evaluación técnica
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[#6e7379]">
+                  Estas solicitudes las envían los clientes desde el asistente &quot;Hablemos de tu proyecto&quot; del sitio.
+                  Haz clic en una tarjeta para ver el detalle y responder.
+                </p>
+              </div>
 
-                  <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setQuoteStatusFilter("all")}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
-                          quoteStatusFilter === "all"
-                            ? "bg-[#16384f] text-white"
-                            : "border border-black/10 bg-[#fafaf9] text-[#5d6167] hover:bg-[#ececea]"
-                        }`}
-                      >
-                        Todas
-                      </button>
-                      {quoteStatuses.map((status) => (
-                        <button
-                          key={status}
-                          type="button"
-                          onClick={() => setQuoteStatusFilter(status)}
-                          className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
-                            quoteStatusFilter === status
-                              ? "bg-[#6366f1] text-white"
-                              : "border border-black/10 bg-[#fafaf9] text-[#5d6167] hover:bg-[#ececea]"
-                          }`}
-                        >
-                          {getQuoteStatusLabel(status)}
-                        </button>
-                      ))}
-                    </div>
-
-                    <p className="mt-5 text-sm text-[#6e7379]">
-                      Mostrando {filteredQuotes.length} solicitud{filteredQuotes.length === 1 ? "" : "es"}.
-                    </p>
-                  </div>
-
-                  <div className="space-y-3">
-                    {isLoadingQuotes ? (
-                      <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 text-sm text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                        Cargando cotizaciones...
-                      </div>
-                    ) : filteredQuotes.length === 0 ? (
-                      <div className="rounded-[1.5rem] border border-dashed border-black/12 bg-white p-5 text-sm leading-7 text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                        Aún no hay solicitudes que coincidan con los filtros actuales.
-                      </div>
-                    ) : (
-                      filteredQuotes.map((quote) => (
-                        <button
-                          key={quote.id}
-                          type="button"
-                          onClick={() => setSelectedQuoteId(quote.id)}
-                          className={`block w-full rounded-[1.4rem] border p-5 text-left shadow-[0_14px_28px_rgba(15,23,42,0.05)] transition-all duration-200 ${
-                            selectedQuoteId === quote.id
-                              ? "border-[#16384f] bg-[#16384f] text-white"
-                              : "border-black/8 bg-white hover:-translate-y-0.5 hover:border-[#16384f]/18"
-                          }`}
-                        >
-                          <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${selectedQuoteId === quote.id ? "text-white/72" : "text-[#8b8d91]"}`}>
-                            {new Date(quote.createdAt).toLocaleDateString("es-CO")}
-                          </p>
-                          <p className="mt-2 text-lg font-semibold">{quote.company}</p>
-                          <p className={`mt-2 text-sm ${selectedQuoteId === quote.id ? "text-white/78" : "text-[#5d6167]"}`}>
-                            {quote.fullName} · {quote.requestType}
-                          </p>
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${selectedQuoteId === quote.id ? "bg-white/14 text-white" : "bg-[var(--admin-accent-soft)] text-[var(--admin-accent)]"}`}>
-                              {getQuoteStatusLabel(quote.status)}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </aside>
-
-                <div className="space-y-8">
-                  {!selectedQuote ? (
-                    <div className="rounded-[1.75rem] border border-dashed border-black/12 bg-white p-8 text-center text-sm leading-7 text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                      Selecciona una solicitud para ver el detalle completo.
-                    </div>
-                  ) : (
-                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)] md:p-8">
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <h3 className="text-3xl font-bold tracking-[-0.04em] text-[#16384f]">
-                            {selectedQuote.company}
-                          </h3>
-                          <span
-                            className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.04em] ${
-                              selectedQuote.status === "CLOSED"
-                                ? "bg-[#effaf2] text-[#1f6b39]"
-                                : selectedQuote.status === "CONTACTED"
-                                  ? "bg-[var(--admin-accent-soft)] text-[var(--admin-accent)]"
-                                  : "bg-[#fff4e5] text-[#a15c00]"
-                            }`}
-                          >
-                            {getQuoteStatusLabel(selectedQuote.status)}
+              {isLoadingQuotes ? (
+                <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 text-sm text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                  Cargando cotizaciones...
+                </div>
+              ) : quotes.length === 0 ? (
+                <div className="rounded-[1.5rem] border border-dashed border-black/12 bg-white p-5 text-sm leading-7 text-[#6e7379] shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                  Aún no hay solicitudes de cotización.
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-3">
+                  {quoteColumns.map(({ status, items }) => {
+                    const theme = QUOTE_STATUS_THEME[status];
+                    return (
+                      <div key={status} className="flex flex-col gap-3 rounded-[1.5rem] bg-[#f0f1ee] p-4">
+                        <div className="flex items-center justify-between px-1">
+                          <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#5d6167]">
+                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: theme.dot }} />
+                            {getQuoteStatusLabel(status)}
+                          </span>
+                          <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-[#8b8d91] shadow-sm">
+                            {items.length}
                           </span>
                         </div>
 
+                        <div className="space-y-3">
+                          {items.length === 0 ? (
+                            <div className="rounded-2xl border border-dashed border-black/10 p-4 text-center text-xs text-[#9a9da2]">
+                              Sin solicitudes
+                            </div>
+                          ) : (
+                            items.map((quote) => (
+                              <button
+                                key={quote.id}
+                                type="button"
+                                onClick={() => setSelectedQuoteId(quote.id)}
+                                className="block w-full rounded-2xl border border-black/8 bg-white p-4 text-left shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.1)]"
+                              >
+                                <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9a9da2]">
+                                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: theme.dot }} />
+                                  {new Date(quote.createdAt).toLocaleDateString("es-CO")}
+                                </span>
+                                <p className="mt-2 text-base font-bold leading-tight text-[#16384f]">{quote.company}</p>
+                                <p className="mt-1 text-xs text-[#6e7379]">{quote.fullName}</p>
+                                {quote.requestType && (
+                                  <span className="mt-3 inline-flex rounded-full bg-[#fafaf9] px-2.5 py-1 text-[11px] font-semibold text-[#5d6167]">
+                                    {quote.requestType}
+                                  </span>
+                                )}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {selectedQuote && (
+                <div
+                  className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-8"
+                  onClick={() => setSelectedQuoteId(null)}
+                >
+                  <div
+                    className="w-full max-w-3xl rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_30px_80px_rgba(2,6,23,0.25)] md:p-8"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h3 className="text-3xl font-bold tracking-[-0.04em] text-[#16384f]">
+                          {selectedQuote.company}
+                        </h3>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.04em] ${
+                            selectedQuote.status === "CLOSED"
+                              ? "bg-[#effaf2] text-[#1f6b39]"
+                              : selectedQuote.status === "CONTACTED"
+                                ? "bg-[var(--admin-accent-soft)] text-[var(--admin-accent)]"
+                                : "bg-[#fff4e5] text-[#a15c00]"
+                          }`}
+                        >
+                          {getQuoteStatusLabel(selectedQuote.status)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
                         <select
                           value={selectedQuote.status}
                           disabled={isSavingQuoteStatus}
@@ -6388,62 +6224,174 @@ export default function AdminPage() {
                             </option>
                           ))}
                         </select>
+                        <button
+                          type="button"
+                          aria-label="Cerrar"
+                          onClick={() => setSelectedQuoteId(null)}
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-black/10 text-lg font-semibold text-[#8b8d91] transition-colors duration-200 hover:bg-[#fafaf9]"
+                        >
+                          ×
+                        </button>
                       </div>
+                    </div>
 
-                      <p className="mt-2 text-sm text-[#8b8d91]">
-                        {selectedQuote.fullName} · {selectedQuote.requestType} ·{" "}
-                        {new Date(selectedQuote.createdAt).toLocaleString("es-CO")}
-                      </p>
+                    <p className="mt-2 text-sm text-[#8b8d91]">
+                      {selectedQuote.fullName} · {selectedQuote.requestType} ·{" "}
+                      {new Date(selectedQuote.createdAt).toLocaleString("es-CO")}
+                    </p>
 
-                      <p className="mt-6 text-base leading-7 text-[#1f2328]">{selectedQuote.productDetails}</p>
+                    {(() => {
+                        const details = selectedQuote.details ?? {};
+                        const getDetail = (key: string) => details[key]?.trim() ?? "";
+                        const hasFormDetails = Object.keys(details).length > 0;
 
-                      {(selectedQuote.process.length > 0 || selectedQuote.conditions.length > 0) && (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {selectedQuote.process.map((item) => (
-                            <span key={item} className="rounded-full bg-[var(--admin-accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--admin-accent)]">
-                              {item}
-                            </span>
-                          ))}
-                          {selectedQuote.conditions.map((item) => (
-                            <span key={item} className="rounded-full bg-[#fff1f1] px-3 py-1 text-xs font-semibold text-[#c53b3b]">
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                        const yesNoFields = [
+                          { label: "Adjunta plano del producto", key: "Adjunta plano del producto" },
+                          { label: "Adjunta muestra física", key: "Adjunta muestra física" },
+                          { label: "Realiza dibujo del producto", key: "Realiza dibujo del producto" },
+                          {
+                            label: "Cliente suministra material",
+                            key: "Cliente suministra material",
+                            extraKey: "Cliente suministra material · cuál",
+                          },
+                        ];
+                        const conditionFields = [
+                          { label: "Hidrocarburos", key: "Hidrocarburos" },
+                          { label: "Impacto", key: "Impacto" },
+                          { label: "Abrasión", key: "Abrasión" },
+                          { label: "Uso externo", key: "Uso externo" },
+                          { label: "Presión de trabajo", key: "Presión de trabajo", extraKey: "Presión de trabajo · cuál" },
+                          {
+                            label: "Temperatura de trabajo",
+                            key: "Temperatura de trabajo",
+                            extraKey: "Temperatura de trabajo · cuál",
+                          },
+                          { label: "Requisito legal", key: "Requisito legal", extraKey: "Requisito legal · cuál" },
+                          { label: "Grado alimenticio", key: "Grado alimenticio" },
+                        ];
 
-                      <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-2 border-t border-black/6 pt-5 text-sm">
-                        <div className="flex items-baseline gap-1.5">
-                          <dt className="font-semibold text-[#8b8d91]">NIT / Tel.</dt>
-                          <dd className="font-semibold text-[#1f2328]">
-                            {selectedQuote.nit || "—"} · {selectedQuote.phone || "—"}
-                          </dd>
-                        </div>
-                        <div className="flex items-baseline gap-1.5">
-                          <dt className="font-semibold text-[#8b8d91]">Cantidad / entrega</dt>
-                          <dd className="font-semibold text-[#1f2328]">{selectedQuote.quantityAndDeadline || "—"}</dd>
-                        </div>
-                      </dl>
+                        const Card = ({ title, className, children }: { title: string; className?: string; children: ReactNode }) => (
+                          <section className={`rounded-2xl border border-black/6 bg-white p-5 sm:p-6 ${className ?? ""}`}>
+                            <h4 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#9a9da2]">{title}</h4>
+                            <dl className="mt-3 divide-y divide-black/6">{children}</dl>
+                          </section>
+                        );
 
-                      {selectedQuote.details && Object.keys(selectedQuote.details).length > 0 && (
-                        <details className="mt-5 border-t border-black/6 pt-5">
-                          <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91] hover:text-[var(--admin-accent)]">
-                            Ver todos los campos del formulario
-                          </summary>
-                          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-                            {Object.entries(selectedQuote.details)
-                              .filter(([, value]) => value?.trim())
-                              .map(([label, value]) => (
-                                <div key={label}>
-                                  <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
-                                    {label}
-                                  </dt>
-                                  <dd className="mt-0.5 text-sm font-semibold text-[#1f2328]">{value}</dd>
-                                </div>
-                              ))}
-                          </dl>
-                        </details>
-                      )}
+                        const Row = ({ label, children }: { label: string; children: ReactNode }) => (
+                          <div className="flex items-start justify-between gap-6 py-2.5 first:pt-0 last:pb-0">
+                            <dt className="w-40 shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9a9da2]">
+                              {label}
+                            </dt>
+                            <dd className="flex-1 text-sm font-semibold leading-6 text-[#1f2328]">{children}</dd>
+                          </div>
+                        );
+
+                        const Empty = () => <span className="font-normal text-[#c1c3c6]">—</span>;
+
+                        const YesNoValue = ({ value, extra }: { value: string; extra?: string }) => {
+                          if (!value) return <Empty />;
+                          const isYes = value === "SI";
+                          return (
+                            <div className="space-y-1">
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className={`h-1.5 w-1.5 rounded-full ${isYes ? "bg-[#1f9d55]" : "bg-[#d5d7da]"}`} />
+                                <span className={isYes ? "text-[#1f9d55]" : "text-[#9a9da2]"}>{isYes ? "Sí" : "No"}</span>
+                              </span>
+                              {extra && <p className="text-xs font-normal text-[#6e7379]">{extra}</p>}
+                            </div>
+                          );
+                        };
+
+                        return (
+                          <div className="mt-6 space-y-4">
+                            <Card title="Datos de la solicitud">
+                              <Row label="Producto">{getDetail("Producto") || <Empty />}</Row>
+                              <Row label="Tipo de solicitud">
+                                {(() => {
+                                  const tipo = getDetail("Tipo de solicitud") || selectedQuote.requestType;
+                                  return tipo ? (
+                                    <span className="inline-flex rounded-full bg-[var(--admin-accent-soft)] px-3 py-1 text-xs font-bold uppercase tracking-[0.04em] text-[var(--admin-accent)]">
+                                      {tipo}
+                                    </span>
+                                  ) : (
+                                    <Empty />
+                                  );
+                                })()}
+                              </Row>
+                              {selectedQuote.process.length > 0 && (
+                                <Row label="Proceso solicitado">
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {selectedQuote.process.map((item) => (
+                                      <span
+                                        key={item}
+                                        className="rounded-full bg-[var(--admin-accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--admin-accent)]"
+                                      >
+                                        {item}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </Row>
+                              )}
+                              <Row label="Descripción">
+                                <span className="font-normal">
+                                  {getDetail("Descripción de la solicitud") || selectedQuote.productDetails || <Empty />}
+                                </span>
+                              </Row>
+                            </Card>
+
+                            {hasFormDetails ? (
+                              <div className="grid gap-4 lg:grid-cols-2">
+                                <Card title="Información del producto">
+                                  <Row label="Color">{getDetail("Color del producto") || <Empty />}</Row>
+                                  {yesNoFields.map(({ label, key, extraKey }) => (
+                                    <Row key={key} label={label}>
+                                      <YesNoValue value={getDetail(key)} extra={extraKey ? getDetail(extraKey) : ""} />
+                                    </Row>
+                                  ))}
+                                  <Row label="Material sugerido">{getDetail("Material sugerido") || <Empty />}</Row>
+                                  <Row label="Dureza">{getDetail("Dureza") || <Empty />}</Row>
+                                </Card>
+
+                                <Card title="Condiciones de trabajo">
+                                  {conditionFields.map(({ label, key, extraKey }) => (
+                                    <Row key={key} label={label}>
+                                      <YesNoValue value={getDetail(key)} extra={extraKey ? getDetail(extraKey) : ""} />
+                                    </Row>
+                                  ))}
+                                  <Row label="Otro">
+                                    <span className="font-normal">{getDetail("Otro") || <Empty />}</span>
+                                  </Row>
+                                </Card>
+                              </div>
+                            ) : (
+                              selectedQuote.conditions.length > 0 && (
+                                <Card title="Condiciones de trabajo">
+                                  <Row label="Condiciones">
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {selectedQuote.conditions.map((item) => (
+                                        <span
+                                          key={item}
+                                          className="rounded-full bg-[#fff1f1] px-3 py-1 text-xs font-semibold text-[#c53b3b]"
+                                        >
+                                          {item}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </Row>
+                                </Card>
+                              )
+                            )}
+
+                            <Card title="Información comercial">
+                              <Row label="NIT">{selectedQuote.nit || <Empty />}</Row>
+                              <Row label="Teléfono">{selectedQuote.phone || <Empty />}</Row>
+                              <Row label="Cantidad / entrega">
+                                {getDetail("Cantidad") || selectedQuote.quantityAndDeadline || <Empty />}
+                              </Row>
+                            </Card>
+                          </div>
+                        );
+                      })()}
 
                       <div className="mt-6 border-l-4 border-[var(--admin-accent)]/30 pl-5">
                         <label className="block space-y-2">
@@ -6473,6 +6421,151 @@ export default function AdminPage() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+          {activeTab === "categories" && (
+            <div className="admin-fade-up space-y-6">
+              <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">Categorías</p>
+                <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                  Categorías de {DIVISION_BRAND[adminDivision].label}
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-[#6e7379]">
+                  Renombra, crea, elimina o reordena las categorías que aparecen en el menú, el carrusel y los
+                  filtros de productos. Al renombrar una categoría, los productos que la usan se actualizan
+                  automáticamente.
+                </p>
+              </div>
+
+              <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                <div className="flex flex-wrap items-center gap-3">
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(event) => setNewCategoryName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") void handleCreateCategory();
+                    }}
+                    placeholder="Nombre de la nueva categoría"
+                    className="min-w-[240px] flex-1 rounded-full border border-black/10 bg-[#fafaf9] px-4 py-2.5 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleCreateCategory()}
+                    disabled={isCreatingCategory || !newCategoryName.trim()}
+                    className="inline-flex shrink-0 rounded-full bg-[#16384f] px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#0f2a3b] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isCreatingCategory ? "Creando..." : "Agregar categoría"}
+                  </button>
+                </div>
+
+                <div className="mt-6 space-y-2">
+                  {getCategoryRecordsForDivision(adminDivision).length === 0 ? (
+                    <p className="rounded-[1.25rem] border border-dashed border-black/12 p-5 text-sm leading-7 text-[#6e7379]">
+                      Aún no hay categorías para esta unidad.
+                    </p>
+                  ) : (
+                    getCategoryRecordsForDivision(adminDivision).map((category, index, list) => {
+                      const isEditing = editingCategoryId === category.id;
+                      const isSaving = savingCategoryId === category.id;
+
+                      return (
+                        <div
+                          key={category.id}
+                          className="flex flex-wrap items-center gap-3 rounded-[1.25rem] border border-black/8 bg-[#fafaf9] px-4 py-3"
+                        >
+                          <span
+                            className="h-3 w-3 shrink-0 rounded-full"
+                            style={{ backgroundColor: category.color }}
+                            aria-hidden="true"
+                          />
+                          <span className="shrink-0 text-base" aria-hidden="true">
+                            {category.icon}
+                          </span>
+
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              autoFocus
+                              value={editingCategoryName}
+                              onChange={(event) => setEditingCategoryName(event.target.value)}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") void handleRenameCategory(category.id);
+                                if (event.key === "Escape") setEditingCategoryId(null);
+                              }}
+                              className="min-w-[200px] flex-1 rounded-full border border-[var(--admin-accent)] bg-white px-3 py-1.5 text-sm text-[#1f2328] outline-none"
+                            />
+                          ) : (
+                            <span className="flex-1 text-sm font-semibold text-[#1f2328]">{category.name}</span>
+                          )}
+
+                          <div className="flex shrink-0 items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => void handleMoveCategory(category.id, "up")}
+                              disabled={index === 0 || isSaving}
+                              aria-label="Subir"
+                              className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-[#5d6167] transition-colors duration-200 hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void handleMoveCategory(category.id, "down")}
+                              disabled={index === list.length - 1 || isSaving}
+                              aria-label="Bajar"
+                              className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-[#5d6167] transition-colors duration-200 hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              ↓
+                            </button>
+
+                            {isEditing ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => void handleRenameCategory(category.id)}
+                                  disabled={isSaving}
+                                  className="rounded-full bg-[var(--admin-accent)] px-4 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  {isSaving ? "Guardando..." : "Guardar"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingCategoryId(null)}
+                                  className="rounded-full border border-black/10 px-4 py-1.5 text-xs font-semibold text-[#5d6167] hover:bg-white"
+                                >
+                                  Cancelar
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCategoryId(category.id);
+                                    setEditingCategoryName(category.name);
+                                  }}
+                                  className="rounded-full border border-black/10 px-4 py-1.5 text-xs font-semibold text-[#5d6167] hover:bg-white"
+                                >
+                                  Renombrar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => void handleDeleteCategory(category.id, category.name)}
+                                  disabled={isSaving}
+                                  className="rounded-full border border-red-200 px-4 py-1.5 text-xs font-semibold text-red-600 transition-colors duration-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  Eliminar
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -7059,48 +7152,6 @@ export default function AdminPage() {
                               <p className="mt-1 text-[10px] font-semibold text-[#8b8d91]">
                                 {slot.dims}
                               </p>
-                              {slot.group === "Categorías" &&
-                                (() => {
-                                  const categoryName = slot.label.replace(/^Categoría\s*·\s*/, "");
-                                  const nameKey = categoryLabelKey(slot.division, categoryName);
-                                  const nameValue = resolveAdminText(nameKey, categoryName);
-                                  const isSavingName = savingTextKey === nameKey;
-                                  const isSavedName = savedTextKey === nameKey;
-                                  const hasNameDraft = Boolean(contentDrafts[nameKey]);
-
-                                  return (
-                                    <div className="mt-2">
-                                      <label className="mb-1 flex items-center justify-between gap-2 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#8b8d91]">
-                                        <span>Nombre de la categoría</span>
-                                        <span className="flex items-center gap-1.5">
-                                          {isSavingName && <span className="normal-case text-[#8b8d91]">Guardando...</span>}
-                                          {isSavedName && <span className="normal-case text-[#1f6b39]">✓ Guardado</span>}
-                                          {hasNameDraft && !isSavingName && (
-                                            <button
-                                              type="button"
-                                              onClick={() => void handleDiscardDraft(nameKey)}
-                                              className="normal-case text-[#8b8d91] hover:text-[var(--admin-accent)]"
-                                            >
-                                              ↺ Deshacer
-                                            </button>
-                                          )}
-                                        </span>
-                                      </label>
-                                      <input
-                                        key={`${nameKey}:${nameValue}`}
-                                        type="text"
-                                        defaultValue={nameValue}
-                                        onBlur={(event) => {
-                                          const nextValue = event.target.value.trim();
-                                          if (nextValue && nextValue !== nameValue) {
-                                            void handleSaveText(nameKey, nextValue);
-                                          }
-                                        }}
-                                        className="w-full rounded-lg border border-black/10 bg-[#fafaf9] px-2.5 py-1.5 text-xs text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                                      />
-                                    </div>
-                                  );
-                                })()}
                               <label
                                 className={`mt-2 flex cursor-pointer items-center justify-center gap-1.5 rounded-full py-2 text-xs font-semibold transition-colors ${
                                   isSaved
@@ -7565,11 +7616,11 @@ export default function AdminPage() {
           {activeTab === "settings" &&
             settingsSection === "salesMode" &&
             canAccessTool("settings") &&
-            adminDivision === "Cauchos" && (
+            !isServiceDivision(adminDivision) && (
               <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
                 <div className="mb-8">
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
-                    Universal de Cauchos
+                    {adminBrand.label}
                   </p>
                   <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
                     Modo de venta
@@ -7630,210 +7681,6 @@ export default function AdminPage() {
                 )}
               </div>
             )}
-
-          {activeTab === "accounts" && (
-            <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
-              <div className="mb-8">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
-                  Equipo
-                </p>
-                <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                  Cuentas del equipo
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
-                  Crea cuentas para tu equipo de {adminBrand.label} y elige qué herramientas del
-                  panel puede usar cada una.
-                </p>
-              </div>
-
-              {teamError && (
-                <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-                  {teamError}
-                </p>
-              )}
-
-              <form
-                onSubmit={handleCreateAccount}
-                className="mb-10 rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-6"
-              >
-                <h3 className="text-sm font-semibold text-[#4f545a]">Nueva cuenta</h3>
-                <div className="mt-4 grid gap-4 md:grid-cols-3">
-                  <label className="space-y-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
-                      Nombre completo
-                    </span>
-                    <input
-                      required
-                      value={newAccountForm.fullName}
-                      onChange={(event) =>
-                        setNewAccountForm((current) => ({
-                          ...current,
-                          fullName: event.target.value,
-                        }))
-                      }
-                      placeholder="Nombre y apellido"
-                      className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                    />
-                  </label>
-
-                  <label className="space-y-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
-                      Correo
-                    </span>
-                    <input
-                      required
-                      type="email"
-                      value={newAccountForm.email}
-                      onChange={(event) =>
-                        setNewAccountForm((current) => ({
-                          ...current,
-                          email: event.target.value,
-                        }))
-                      }
-                      placeholder="correo@geu.com.co"
-                      className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                    />
-                  </label>
-
-                  <label className="space-y-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
-                      Contraseña
-                    </span>
-                    <input
-                      required
-                      type="password"
-                      minLength={8}
-                      value={newAccountForm.password}
-                      onChange={(event) =>
-                        setNewAccountForm((current) => ({
-                          ...current,
-                          password: event.target.value,
-                        }))
-                      }
-                      placeholder="Mínimo 8 caracteres"
-                      className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                    />
-                  </label>
-                </div>
-
-                <div className="mt-5">
-                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
-                    Herramientas habilitadas
-                  </span>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {assignableToolKeys.map((tool) => {
-                      const checked = newAccountForm.permissions.includes(tool);
-                      return (
-                        <button
-                          key={tool}
-                          type="button"
-                          onClick={() => toggleNewAccountPermission(tool)}
-                          className={`rounded-full border px-4 py-2 text-xs font-semibold transition-colors duration-200 ${
-                            checked
-                              ? "border-[var(--admin-accent)] bg-[var(--admin-accent)] text-white"
-                              : "border-black/10 bg-white text-[#4f545a] hover:border-[var(--admin-accent)]"
-                          }`}
-                        >
-                          {ADMIN_TOOL_LABELS[tool]}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="mt-2 text-xs leading-5 text-[#8b8d91]">
-                    Marca &quot;Cuentas&quot; solo si esta persona también debe poder crear o editar otras
-                    cuentas del equipo.
-                  </p>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isCreatingAccount || newAccountForm.permissions.length === 0}
-                  className="mt-6 inline-flex rounded-full bg-[var(--admin-accent)] px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[var(--admin-accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isCreatingAccount ? "Creando..." : "Crear cuenta"}
-                </button>
-              </form>
-
-              <h3 className="mb-4 text-sm font-semibold text-[#4f545a]">Cuentas existentes</h3>
-
-              {isLoadingTeam ? (
-                <p className="text-sm text-[#6e7379]">Cargando cuentas...</p>
-              ) : teamAccounts.length === 0 ? (
-                <div className="rounded-[1.2rem] border border-dashed border-black/12 bg-white px-4 py-5 text-sm text-[#6e7379]">
-                  Todavía no has creado cuentas adicionales para tu equipo.
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {teamAccounts.map((account) => {
-                    const isSaving = savingAccountId === account.id;
-                    return (
-                      <div
-                        key={account.id}
-                        className="rounded-[1.2rem] border border-black/8 bg-white p-5"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-semibold text-[#1f2328]">
-                              {account.fullName}
-                            </p>
-                            <p className="text-xs text-[#8b8d91]">{account.email}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                account.active
-                                  ? "bg-[#effaf2] text-[#1f6b39]"
-                                  : "bg-[#fff1f1] text-[#c53b3b]"
-                              }`}
-                            >
-                              {account.active ? "Activa" : "Desactivada"}
-                            </span>
-                            <button
-                              type="button"
-                              disabled={isSaving}
-                              onClick={() => void handleToggleAccountActive(account)}
-                              className="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              {account.active ? "Desactivar" : "Activar"}
-                            </button>
-                            <button
-                              type="button"
-                              disabled={isSaving}
-                              onClick={() => void handleDeleteAccount(account)}
-                              className="rounded-full border border-red-200 px-4 py-2 text-xs font-semibold text-red-600 transition-colors duration-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              Eliminar
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {assignableToolKeys.map((tool) => {
-                            const checked = account.permissions.includes(tool);
-                            return (
-                              <button
-                                key={tool}
-                                type="button"
-                                disabled={isSaving}
-                                onClick={() => void handleToggleAccountPermission(account, tool)}
-                                className={`rounded-full border px-4 py-2 text-xs font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${
-                                  checked
-                                    ? "border-[var(--admin-accent)] bg-[var(--admin-accent)] text-white"
-                                    : "border-black/10 bg-white text-[#4f545a] hover:border-[var(--admin-accent)]"
-                                }`}
-                              >
-                                {ADMIN_TOOL_LABELS[tool]}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </section>
         </div>

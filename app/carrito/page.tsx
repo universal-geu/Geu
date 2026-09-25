@@ -23,7 +23,7 @@ export default function CarritoPage() {
   const { items, incrementItem, decrementItem, removeItem, clearCart } =
     useCart();
   const { products } = useProducts();
-  const { cauchosSalesMode, whatsappNumbers } = useSalesSettings();
+  const { salesModes, whatsappNumbers } = useSalesSettings();
   const brandParam = searchParams.get("brand");
   const division = getDivisionFromBrandParam(brandParam);
   const brand = DIVISION_BRAND[division];
@@ -32,19 +32,17 @@ export default function CarritoPage() {
     return DIVISION_BRAND[product?.division ?? division];
   };
   // Also checked against the cart's actual items (not just the `?brand=`
-  // query param) so a Cauchos-only item already in the cart can't dodge the
-  // WhatsApp-only notice just by opening the cart with a different brand.
-  // A product cross-listed into this division (via "también aplica para
-  // otra empresa GEU") is exempt — it's part of this division's real
-  // catalog too, so it should check out normally here instead of blocking
-  // the whole cart.
-  const cartHasCauchosItem = items.some((item) => {
+  // query param) so a WhatsApp-only item already in the cart can't dodge the
+  // notice just by opening the cart with a different brand. A product
+  // cross-listed into this division (via "también aplica para otra empresa
+  // GEU") is exempt — it's part of this division's real catalog too, so it
+  // should check out normally here instead of blocking the whole cart.
+  const cartHasForeignWhatsAppItem = items.some((item) => {
     const product = products.find((entry) => entry.slug === resolveProductSlug(item.id));
-    if (!product) return division === "Cauchos";
-    return product.division === "Cauchos" && !productSellsInDivision(product, division);
+    if (!product?.division) return false;
+    return salesModes[product.division] === "whatsapp" && !productSellsInDivision(product, division);
   });
-  const whatsappModeActive =
-    cauchosSalesMode === "whatsapp" && (division === "Cauchos" || cartHasCauchosItem);
+  const whatsappModeActive = salesModes[division] === "whatsapp" || cartHasForeignWhatsAppItem;
   const isImportCart = division === "Import";
   const cartAccent = CART_ACCENT[division];
   const accent = brand.accent;
@@ -62,7 +60,7 @@ export default function CarritoPage() {
   if (whatsappModeActive) {
     const whatsappNumber = whatsappNumbers[division];
     const whatsappHref = whatsappNumber
-      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hola GEU, quiero comprar productos de Universal de Cauchos.")}`
+      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hola GEU, quiero comprar productos de ${brand.label}.`)}`
       : undefined;
 
     return (
@@ -77,7 +75,7 @@ export default function CarritoPage() {
               Estamos atendiendo por WhatsApp
             </h1>
             <p className="mt-4 text-base font-semibold leading-7 text-slate-500">
-              Por ahora las compras de Universal de Cauchos se coordinan directamente por WhatsApp
+              Por ahora las compras de {brand.label} se coordinan directamente por WhatsApp
               con uno de nuestros asesores. Escríbenos y con gusto te ayudamos con tu pedido.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">

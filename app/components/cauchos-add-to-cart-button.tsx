@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { useCart } from "./cart-provider";
 import { useSalesSettings } from "./sales-settings-provider";
-import type { DivisionName } from "@/lib/divisions";
+import { productHref, type DivisionName } from "@/lib/divisions";
 
 type Props = {
   id: string;
+  slug: string;
   nombre: string;
   precio: string;
   imagen: string;
+  sku?: string;
   division?: DivisionName;
   accent?: "blue" | "red" | "gray" | "gold";
   cantidad?: number;
@@ -33,22 +35,25 @@ function WhatsAppIcon({ className = "" }: { className?: string }) {
 
 export default function CauchosAddToCartButton({
   id,
+  slug,
   nombre,
   precio,
   imagen,
+  sku,
   division = "Cauchos",
   accent = "blue",
   cantidad = 1,
   disabled = false,
 }: Props) {
   const { addItem } = useCart();
-  const { cauchosSalesMode, whatsappNumbers } = useSalesSettings();
+  const { salesModes, whatsappNumbers, siteOrigin } = useSalesSettings();
   const [added, setAdded] = useState(false);
 
-  const whatsappModeActive = division === "Cauchos" && cauchosSalesMode === "whatsapp";
+  const whatsappModeActive = salesModes[division] === "whatsapp";
 
   if (whatsappModeActive) {
-    const message = `Hola GEU, quiero comprar: ${nombre} (x${cantidad}). Precio: ${precio}.`;
+    const productLink = siteOrigin ? `${siteOrigin}${productHref(slug, division)}` : null;
+    const message = `Hola GEU, quiero comprar: ${nombre}${sku ? ` (SKU: ${sku})` : ""} (x${cantidad}). Precio: ${precio}.${productLink ? ` Ver producto: ${productLink}` : ""}`;
     const whatsappNumber = whatsappNumbers[division];
     const href = whatsappNumber
       ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`

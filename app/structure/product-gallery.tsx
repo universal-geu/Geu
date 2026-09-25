@@ -11,7 +11,7 @@ type Shot = {
 
 const shots: Shot[] = [
   {
-    src: "/geu-structure-m24-05.jpg",
+    src: "/geu-structure-m24-05.webp",
     label: "Con módulos FV",
     alt: "Estructura M24 biposte galvanizada con módulos fotovoltaicos montados",
   },

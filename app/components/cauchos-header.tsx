@@ -5,6 +5,7 @@ import Link from "next/link";
 import CauchosAccountLink from "./cauchos-account-link";
 import CauchosCartLink from "./cauchos-cart-link";
 import CauchosSearchForm from "./cauchos-search-form";
+import CauchosMobileSearch from "./cauchos-mobile-search";
 import CauchosCategorySidebarMenu from "./cauchos-category-sidebar-menu";
 import CauchosMenuButton from "./cauchos-menu-button";
 import { CauchosMenuProvider, useCauchosMenu } from "./cauchos-menu-context";
@@ -52,8 +53,8 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
   const siteTexts = useSiteTexts();
   const siteColors = useSiteColors();
   const colorOverrideCss = buildDivisionColorOverrideCss(division, siteColors);
-  const { cauchosSalesMode } = useSalesSettings();
-  const showCart = !(division === "Cauchos" && cauchosSalesMode === "whatsapp");
+  const { salesModes } = useSalesSettings();
+  const showCart = salesModes[division] !== "whatsapp";
   const phone = resolveText("header-phone", siteTexts);
   const brand = DIVISION_BRAND[division];
   const resolvedAccent = resolveColor(
@@ -99,19 +100,33 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
         </div>
 
         <div className="mx-auto grid min-h-[74px] max-w-[1632px] items-center gap-4 px-5 py-3 md:grid-cols-[280px_1fr_auto] md:px-8">
-          <Link href={brand.basePath} className="flex shrink-0 items-center">
-            <Image
-              src={brand.logo}
-              alt={brand.logoAlt}
-              width={2518}
-              height={420}
-              priority
-              className="h-auto object-contain"
-              style={{ width: "260px", maxWidth: "100%" }}
-            />
-          </Link>
+          <div className="flex items-center justify-between gap-3 md:contents">
+            <Link href={brand.basePath} className="flex min-w-0 shrink items-center">
+              <Image
+                src={brand.logo}
+                alt={brand.logoAlt}
+                width={2518}
+                height={420}
+                priority
+                className="h-auto object-contain"
+                style={{ width: "260px", maxWidth: "100%" }}
+              />
+            </Link>
+            <div className="flex shrink-0 items-center gap-1 md:hidden">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#d6006e] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.03em] text-white shadow-sm transition-colors duration-150 active:bg-[#b8005e]"
+              >
+                <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0 fill-current" aria-hidden="true">
+                  <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" />
+                </svg>
+                Ver todo GEU
+              </Link>
+              <CauchosMobileSearch basePath={brand.basePath} division={division} accent={resolvedAccent} />
+            </div>
+          </div>
 
-          <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-3 md:flex">
             <CauchosMenuButton />
             <CauchosSearchForm
               basePath={brand.basePath}
@@ -159,7 +174,6 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
             ...(extraNavLink ? [extraNavLink] : []),
             { label: "Cotizaciones", href: `${brand.basePath}#contacto` },
             { label: "Catálogos", href: `${brand.basePath}#productos` },
-            { label: "Ver todo GEU", href: "/" },
           ]}
         />
       </header>

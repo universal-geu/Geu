@@ -3,13 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, type CSSProperties } from "react";
-import { cauchosCategorySubcategories, getCategoriasForDivision, slugify } from "../data/catalog";
+import { cauchosCategorySubcategories, slugify } from "../data/catalog";
 import CauchosAddToCartButton from "./cauchos-add-to-cart-button";
 import CauchosHeader from "./cauchos-header";
 import { useProducts } from "./products-provider";
+import { useCategories } from "./categories-provider";
 import { useSiteImages } from "./use-site-images";
 import { resolveImage } from "@/lib/image-slots";
-import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
+import { CART_ACCENT, DIVISION_BRAND, productHref, type DivisionName } from "@/lib/divisions";
 import { expandProductCategoryViews, productSellsInDivision } from "@/lib/product-category-views";
 import { matchesQuery } from "@/lib/text-match";
 
@@ -25,12 +26,41 @@ const priceRanges = [
   { label: "Más de $300.000", min: 300000, max: Number.POSITIVE_INFINITY },
 ];
 
+// Promoción que se muestra al azar debajo de los filtros (mismas ofertas de la
+// portada de cada división).
+const SIDEBAR_OFFERS: Partial<Record<DivisionName, { title: string; href: string; imageKey: string }[]>> = {
+  Cauchos: [
+    { title: "Productos de caucho", href: "/cauchos/categoria/linea-cauchos", imageKey: "oferta-cauchos-productos" },
+    { title: "Cauchos industriales", href: "/cauchos/categoria/linea-cauchos", imageKey: "oferta-cauchos-industriales" },
+    { title: "Mangueras industriales", href: "/cauchos/categoria/linea-neumatica", imageKey: "oferta-mangueras-industriales" },
+    { title: "Soportes industriales", href: "/cauchos/categoria/espejos-retrovisores-y-soportes", imageKey: "oferta-soportes-industriales" },
+  ],
+  Import: [
+    { title: "Repuestos importados", href: "/import/categoria/autopartes", imageKey: "import-oferta-1" },
+    { title: "Abastecimiento global", href: "/import", imageKey: "import-oferta-2" },
+    { title: "Logistica internacional", href: "/import#contacto", imageKey: "import-oferta-3" },
+    { title: "Compras por pedido", href: "/import#contacto", imageKey: "import-oferta-4" },
+  ],
+  Energy: [
+    { title: "Paneles solares", href: "/energy/categoria/paneles-solares", imageKey: "energy-oferta-1" },
+    { title: "Baterías y respaldo", href: "/energy/categoria/baterias-y-respaldo", imageKey: "energy-oferta-2" },
+    { title: "Estructuras de montaje", href: "/energy/categoria/estructuras-de-montaje", imageKey: "energy-oferta-3" },
+    { title: "Instalación por proyecto", href: "/energy#contacto", imageKey: "energy-oferta-4" },
+  ],
+  Plastic: [
+    { title: "Extrusion PVC Rigido", href: "/plastic/categoria/extrusion-en-pvc-rigido", imageKey: "plastic-oferta-1" },
+    { title: "Extrusion PVC Flexible", href: "/plastic/categoria/extrusion-en-pvc-flexible", imageKey: "plastic-oferta-2" },
+    { title: "Perfileria para construccion", href: "/plastic/categoria/perfileria-para-construccion", imageKey: "plastic-oferta-3" },
+    { title: "Perfileria para carroceria", href: "/plastic/categoria/perfileria-para-carroceria", imageKey: "plastic-oferta-4" },
+  ],
+};
+
 const CATEGORY_BANNER: Record<DivisionName, { src: string; alt: string }> = {
   Cauchos: { src: "/cauchos-category-banner.jpg", alt: "Universal de Cauchos" },
-  Import: { src: "/geu-import-main-banner.jpg", alt: "GEU Import" },
+  Import: { src: "/geu-import-main-banner.webp", alt: "GEU Import" },
   Innovation: { src: "/cauchos-category-banner.jpg", alt: "GEU Structure" },
-  Energy: { src: "/geu-energy-structures-banner.png", alt: "GEU Energy" },
-  Plastic: { src: "/geu-plastic-main-banner.jpg", alt: "GEU Plastic" },
+  Energy: { src: "/geu-energy-structures-banner.webp", alt: "GEU Energy" },
+  Plastic: { src: "/geu-plastic-main-banner.webp", alt: "GEU Plastic" },
   GEU: { src: "/about-geu-logo-wall.jpg", alt: "GEU" },
 };
 
@@ -49,11 +79,11 @@ const CATEGORY_BANNER_MOBILE_IMAGE_KEY: Partial<Record<DivisionName, string>> = 
 };
 
 export const FALLBACK_PRODUCT_IMAGE: Record<DivisionName, string> = {
-  Cauchos: "/home-cauchos.png",
-  Import: "/home-import.png",
-  Innovation: "/home-cauchos.png",
-  Energy: "/home-energy.png",
-  Plastic: "/home-plastic.png",
+  Cauchos: "/home-cauchos.webp",
+  Import: "/home-import.webp",
+  Innovation: "/home-cauchos.webp",
+  Energy: "/home-energy.webp",
+  Plastic: "/home-plastic.webp",
   GEU: "/home-geu-logo.png",
 };
 
@@ -71,7 +101,15 @@ export default function CauchosCategoryProductsPage({
   division = "Cauchos",
 }: Props) {
   const { products } = useProducts();
+  const { getCategoryNamesForDivision } = useCategories();
   const siteImages = useSiteImages();
+  const sidebarOffers = SIDEBAR_OFFERS[division] ?? [];
+  // Solo se pinta en el cliente (tras cargar las imágenes del admin), así que
+  // elegir al azar aquí no genera diferencias de hidratación.
+  const [sidebarOfferIndex] = useState(() => Math.floor(Math.random() * 4));
+  const sidebarOffer = sidebarOffers.length > 0 ? sidebarOffers[sidebarOfferIndex % sidebarOffers.length] : null;
+  // Espera a que lleguen las imágenes del admin para no mostrar primero la imagen por defecto.
+  const siteImagesLoaded = Object.keys(siteImages).length > 0;
   const brand = DIVISION_BRAND[division];
   const cartAccent = CART_ACCENT[division];
   const [subcategorySlug, minorSlug] = segments;
@@ -124,8 +162,8 @@ export default function CauchosCategoryProductsPage({
   }, [division, isSearchMode, minorSlug, products, subcategorySlug, trimmedSearchQuery]);
 
   const matchedDepartment = useMemo(
-    () => getCategoriasForDivision(division).find((title) => slugify(title) === subcategorySlug),
-    [division, subcategorySlug],
+    () => getCategoryNamesForDivision(division).find((title) => slugify(title) === subcategorySlug),
+    [division, getCategoryNamesForDivision, subcategorySlug],
   );
   const placeholderGroups = useMemo(() => {
     if (minorSlug || !matchedDepartment) return [];
@@ -451,10 +489,11 @@ export default function CauchosCategoryProductsPage({
             ) : null}
 
             <div className="grid gap-8 lg:grid-cols-[310px_1fr]">
+              <div className="lg:flex lg:flex-col lg:gap-6">
               <aside
                 className={`fixed inset-y-0 right-0 z-50 w-[88%] max-w-[360px] overflow-y-auto bg-white shadow-[0_0_40px_rgba(15,23,42,0.25)] transition-transform duration-300 ${
                   showFilters ? "translate-x-0" : "translate-x-full"
-                } lg:sticky lg:top-5 lg:z-auto lg:h-fit lg:w-auto lg:max-w-none lg:translate-x-0 lg:overflow-visible lg:rounded-[4px] lg:border lg:border-slate-200 lg:shadow-[0_14px_34px_rgba(15,23,42,0.06)]`}
+                } lg:static lg:z-auto lg:h-fit lg:w-auto lg:max-w-none lg:translate-x-0 lg:overflow-visible lg:rounded-[4px] lg:border lg:border-slate-200 lg:shadow-[0_14px_34px_rgba(15,23,42,0.06)]`}
               >
               <div className="border-b border-slate-200 px-5 py-5">
                 <div className="flex items-center justify-between gap-3">
@@ -575,6 +614,23 @@ export default function CauchosCategoryProductsPage({
               </div>
               </aside>
 
+              {sidebarOffer && siteImagesLoaded ? (
+                <Link
+                  href={sidebarOffer.href}
+                  aria-label={sidebarOffer.title}
+                  className="group relative hidden aspect-[9/16] overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.08)] lg:sticky lg:top-5 lg:block"
+                >
+                  <Image
+                    src={resolveImage(sidebarOffer.imageKey, siteImages)}
+                    alt={sidebarOffer.title}
+                    fill
+                    sizes="310px"
+                    className="object-cover transition duration-500 group-hover:scale-[1.025]"
+                  />
+                </Link>
+              ) : null}
+              </div>
+
               <div>
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-slate-200 bg-white px-5 py-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
                 <div className="flex items-center gap-3">
@@ -621,7 +677,7 @@ export default function CauchosCategoryProductsPage({
                   className="group flex min-h-[455px] w-[calc(100vw-2.5rem)] shrink-0 snap-start flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[var(--brand-accent)]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)] sm:w-auto sm:shrink"
                 >
                   <Link
-                    href={`/producto/${product.slug}`}
+                    href={productHref(product.slug, division)}
                     className="relative block h-52 overflow-hidden bg-white"
                   >
                     <Image
@@ -643,7 +699,7 @@ export default function CauchosCategoryProductsPage({
                       {product.marca}
                     </span>
                     <Link
-                      href={`/producto/${product.slug}`}
+                      href={productHref(product.slug, division)}
                       className="mt-2 min-h-14 text-xl font-black leading-7 text-slate-950 hover:text-[var(--brand-accent)]"
                     >
                       {product.nombre}
@@ -664,14 +720,16 @@ export default function CauchosCategoryProductsPage({
                     </div>
                     <CauchosAddToCartButton
                       id={product.slug}
+                      slug={product.slug}
                       nombre={product.nombre}
                       precio={product.precio}
                       imagen={productImage}
+                      sku={product.sku}
                       division={division}
                       accent={cartAccent}
                     />
                     <Link
-                      href={`/producto/${product.slug}`}
+                      href={productHref(product.slug, division)}
                       className="mt-3 inline-flex justify-center rounded-full border border-[var(--brand-accent)] bg-white px-4 py-2 text-center text-xs font-black uppercase tracking-[0.08em] text-[var(--brand-accent)] transition-colors duration-200 hover:bg-[var(--brand-accent)] hover:text-white"
                     >
                       Ver detalle

@@ -40,6 +40,52 @@ function StructureMark() {
   );
 }
 
+function MainNavMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        aria-label="Abrir menú"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 text-white transition-colors hover:border-[#0498b4] hover:text-[#0498b4]"
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-lg border border-white/10 bg-[#0b0b0b] py-1.5 shadow-[0_20px_44px_rgba(0,0,0,0.5)]">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.06em] text-white/85 transition-colors hover:bg-white/5 hover:text-[#0498b4]"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ToolsMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -98,16 +144,8 @@ export default function StructureHeader() {
           <Link href="/structure" className="shrink-0">
             <StructureMark />
           </Link>
-          <nav className="hidden items-center gap-7 text-[11px] font-black uppercase tracking-[0.08em] text-white/85 lg:flex">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="inline-flex items-center gap-1 border-b border-transparent py-2 hover:border-[#0498b4] hover:text-[#0498b4]"
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav className="hidden items-center gap-4 text-[11px] font-black uppercase tracking-[0.08em] text-white/85 lg:flex">
+            <MainNavMenu />
             <ToolsMenu />
           </nav>
           <div className="flex items-center gap-5 text-white">

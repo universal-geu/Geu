@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
 import { Orbitron, Rajdhani } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { CartProvider } from "./components/cart-provider";
 import { ProductsProvider } from "./components/products-provider";
+import { CategoriesProvider } from "./components/categories-provider";
 import { SalesSettingsProvider } from "./components/sales-settings-provider";
 import HeaderShell from "./components/header-shell";
 import CartDrawer from "./components/cart-drawer";
-import SupportChat from "./components/support-chat";
 import WhatsAppFloatButton from "./components/whatsapp-float-button";
 import { getProducts } from "@/lib/products";
+import { getAllCategories } from "@/lib/categories";
 import { getDevAdminUserById, getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import { getCartItemsForUser } from "@/lib/cart";
-import { getAllWhatsAppNumbers, getCauchosSalesMode } from "@/lib/site-settings";
+import { getAllWhatsAppNumbers, getAllSalesModes } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -38,10 +40,22 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const initialProducts = await getProducts();
-  const whatsappNumbers = await getAllWhatsAppNumbers();
-  const cauchosSalesMode = await getCauchosSalesMode();
-  const session = await getSessionFromCookies();
+  // These six reads don't depend on one another, so running them
+  // sequentially just adds up every one of their round trips to a remote DB.
+  // Promise.all collapses that to the duration of the slowest one — this
+  // runs on every request (force-dynamic, no shared layout across brands),
+  // so it was on the critical path of every single page load.
+  const [initialProducts, initialCategories, whatsappNumbers, salesModes, requestHeaders, session] =
+    await Promise.all([
+      getProducts(),
+      getAllCategories(),
+      getAllWhatsAppNumbers(),
+      getAllSalesModes(),
+      headers(),
+      getSessionFromCookies(),
+    ]);
+  const host = requestHeaders.get("host");
+  const siteOrigin = host ? `${host.startsWith("localhost") ? "http" : "https"}://${host}` : "";
   let currentUser = null;
   let initialCartItems: Awaited<ReturnType<typeof getCartItemsForUser>> = [];
 
@@ -79,19 +93,20 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ProductsProvider initialProducts={initialProducts}>
-          <SalesSettingsProvider cauchosSalesMode={cauchosSalesMode} whatsappNumbers={whatsappNumbers}>
-            <CartProvider
-              key={cartProviderKey}
-              initialItems={initialCartItems}
-              currentUserId={currentUser?.id ?? null}
-            >
-              <HeaderShell />
-              {children}
-              <CartDrawer />
-              <SupportChat />
-              <WhatsAppFloatButton whatsappNumbers={whatsappNumbers} />
-            </CartProvider>
-          </SalesSettingsProvider>
+          <CategoriesProvider initialCategories={initialCategories}>
+            <SalesSettingsProvider salesModes={salesModes} whatsappNumbers={whatsappNumbers} siteOrigin={siteOrigin}>
+              <CartProvider
+                key={cartProviderKey}
+                initialItems={initialCartItems}
+                currentUserId={currentUser?.id ?? null}
+              >
+                <HeaderShell />
+                {children}
+                <CartDrawer />
+                <WhatsAppFloatButton whatsappNumbers={whatsappNumbers} />
+              </CartProvider>
+            </SalesSettingsProvider>
+          </CategoriesProvider>
         </ProductsProvider>
       </body>
     </html>

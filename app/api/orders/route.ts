@@ -122,7 +122,7 @@ export async function POST(request: Request) {
           : error instanceof Error && error.message === "VARIANT_NOT_FOUND"
             ? "Uno de los productos en tu carrito ya no tiene esa medida disponible, actualiza tu carrito."
           : error instanceof Error && error.message === "CAUCHOS_WHATSAPP_MODE"
-            ? "Los productos de Universal de Cauchos solo se pueden solicitar por WhatsApp en este momento."
+            ? "Uno de los productos en tu carrito solo se puede solicitar por WhatsApp en este momento."
           : error instanceof Error && error.message === "MINIMUM_ORDER_NOT_MET"
             ? `La compra mínima es de ${formatCurrency(MINIMUM_ORDER_TOTAL)}. Agrega más productos para continuar.`
           : error instanceof Error && error.message === "ACCOUNT_DISABLED"

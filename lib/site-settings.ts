@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { DIVISIONS, type DivisionName } from "@/lib/divisions";
 
@@ -10,7 +11,7 @@ export function whatsappNumberKey(division: DivisionName): string {
   return `whatsapp-number-${division.toLowerCase()}`;
 }
 
-export async function getSiteSetting(key: string): Promise<string | null> {
+export const getSiteSetting = cache(async function getSiteSetting(key: string): Promise<string | null> {
   if (!prisma) return null;
   try {
     const row = await prisma.siteSetting.findUnique({ where: { key } });
@@ -18,7 +19,7 @@ export async function getSiteSetting(key: string): Promise<string | null> {
   } catch {
     return null;
   }
-}
+});
 
 /** The shared/default number, used by any division that hasn't set its own. */
 export async function getWhatsAppNumber(): Promise<string | null> {
@@ -35,7 +36,9 @@ export async function getWhatsAppNumberForDivision(
 }
 
 /** Every division's effective number in one query — for the root layout. */
-export async function getAllWhatsAppNumbers(): Promise<Record<DivisionName, string | null>> {
+export const getAllWhatsAppNumbers = cache(async function getAllWhatsAppNumbers(): Promise<
+  Record<DivisionName, string | null>
+> {
   const empty = Object.fromEntries(DIVISIONS.map((division) => [division, null])) as Record<
     DivisionName,
     string | null
@@ -57,9 +60,43 @@ export async function getAllWhatsAppNumbers(): Promise<Record<DivisionName, stri
   } catch {
     return empty;
   }
+});
+
+// Cauchos keeps its original (pre-per-division) key so its already-configured
+// mode isn't lost; every other division gets its own "sales-mode-<division>" key.
+export function salesModeKey(division: DivisionName): string {
+  return division === "Cauchos" ? CAUCHOS_SALES_MODE_KEY : `sales-mode-${division.toLowerCase()}`;
 }
 
-export async function getCauchosSalesMode(): Promise<CauchosSalesMode> {
-  const value = await getSiteSetting(CAUCHOS_SALES_MODE_KEY);
+export const getSalesModeForDivision = cache(async function getSalesModeForDivision(
+  division: DivisionName,
+): Promise<CauchosSalesMode> {
+  const value = await getSiteSetting(salesModeKey(division));
   return value === "whatsapp" ? "whatsapp" : "precios";
-}
+});
+
+/** Every division's sales mode in one query — for the root layout. */
+export const getAllSalesModes = cache(async function getAllSalesModes(): Promise<
+  Record<DivisionName, CauchosSalesMode>
+> {
+  const empty = Object.fromEntries(DIVISIONS.map((division) => [division, "precios"])) as Record<
+    DivisionName,
+    CauchosSalesMode
+  >;
+  if (!prisma) return empty;
+
+  try {
+    const keys = DIVISIONS.map(salesModeKey);
+    const rows = await prisma.siteSetting.findMany({ where: { key: { in: keys } } });
+    const byKey = new Map(rows.map((row) => [row.key, row.value.trim()]));
+
+    return Object.fromEntries(
+      DIVISIONS.map((division) => [
+        division,
+        byKey.get(salesModeKey(division)) === "whatsapp" ? "whatsapp" : "precios",
+      ]),
+    ) as Record<DivisionName, CauchosSalesMode>;
+  } catch {
+    return empty;
+  }
+});

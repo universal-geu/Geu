@@ -3,7 +3,6 @@ import Link from "next/link";
 import CauchosAddToCartButton from "../components/cauchos-add-to-cart-button";
 import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import CauchosHeader from "../components/cauchos-header";
-import CauchosProjectChat from "../components/cauchos-project-chat";
 import HeroVideo from "../components/hero-video";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import { ResponsiveBanner } from "../components/responsive-banner";
@@ -11,9 +10,11 @@ import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
-import { categoryLabelKey } from "@/lib/text-slots";
+import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
+import { getCategoriesForDivision } from "@/lib/categories";
 import { getProducts, productSellsInDivision } from "@/lib/products";
-import { energyCategorias, slugify } from "../data/catalog";
+import { productHref } from "@/lib/divisions";
+import { slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -29,24 +30,6 @@ const navItems = [
   { label: "Contacto", href: "#contacto" },
 ];
 
-const ENERGY_CATEGORY_IMAGE_KEYS: Record<string, string> = {
-  "Paneles solares": "energy-categoria-paneles-solares",
-  "Inversores": "energy-categoria-inversores",
-  "Baterías y respaldo": "energy-categoria-baterias-respaldo",
-  "Estructuras de montaje": "energy-categoria-estructuras-montaje",
-  "Cableado y conectores": "energy-categoria-cableado-conectores",
-  "Controladores de carga": "energy-categoria-controladores-carga",
-  "Medición y monitoreo": "energy-categoria-medicion-monitoreo",
-  "Accesorios e instalación": "energy-categoria-accesorios-instalacion",
-};
-
-const energyCategoriesBase = energyCategorias.map((title) => ({
-  label: title,
-  title,
-  imageKey: ENERGY_CATEGORY_IMAGE_KEYS[title] ?? "energy-categoria-paneles-solares",
-  count: "Ver productos",
-  href: `/energy/categoria/${slugify(title)}`,
-}));
 
 const energyOffers = [
   { title: "Paneles solares", href: "/energy/categoria/paneles-solares", imageKey: "energy-oferta-1" },
@@ -63,18 +46,32 @@ const energyFeatured = [
 ];
 
 export default async function EnergyPage() {
-  const siteImages = await getSiteImages();
-  const siteImageLinks = await getSiteImageLinks();
-  const siteTexts = await getSiteTexts();
+  // Independent reads — fetch them together instead of paying for six
+  // sequential round trips to a remote DB on every page load.
+  const [siteImages, siteImageLinks, siteTexts, whatsappNumber, allProducts, energyCategoryRecords] =
+    await Promise.all([
+      getSiteImages(),
+      getSiteImageLinks(),
+      getSiteTexts(),
+      getWhatsAppNumberForDivision("Energy"),
+      getProducts(),
+      getCategoriesForDivision("Energy"),
+    ]);
   const t = (key: string) => resolveText(key, siteTexts);
-  const allProducts = await getProducts();
+  const whatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        "Hola GEU Energy, quiero hacer una evaluacion tecnica.",
+      )}`
+    : "#contacto";
   const energyCatalog = allProducts.filter((product) => productSellsInDivision(product, "Energy"));
   const energyFeaturedProducts = energyCatalog.filter((product) => product.destacado);
   const energyProducts = (energyFeaturedProducts.length > 0 ? energyFeaturedProducts : energyCatalog).slice(0, 4);
-  const energyCategories = energyCategoriesBase.map((category) => ({
-    ...category,
-    title: resolveText(categoryLabelKey("Energy", category.title), siteTexts, category.title),
-    image: resolveImage(category.imageKey, siteImages),
+  const energyCategories = energyCategoryRecords.map((category) => ({
+    label: category.name,
+    title: category.name,
+    count: "Ver productos",
+    href: `/energy/categoria/${slugify(category.name)}`,
+    image: category.imageKey ? resolveImage(category.imageKey, siteImages) : "/home-energy.webp",
   }));
   const energyOffersResolved = energyOffers.map((offer) => ({
     ...offer,
@@ -96,31 +93,30 @@ export default async function EnergyPage() {
           <CauchosCategoryCarousel categories={energyCategories} accent="gold" />
         </div>
         <div className="mx-auto w-full overflow-hidden bg-[#d4a900]" style={{ maxWidth: "1632px" }}>
-          <CauchosProjectChat
-            division="Energy"
-            triggerLabel={
-              <>
-                <span className="sr-only">¿Qué proyecto energético tienes en mente?</span>
-                <span aria-hidden="true" className="geu-marquee-track flex w-max items-center">
-                  {[0, 1].map((groupIndex) => (
-                    <span key={groupIndex} className="flex items-center">
-                      {Array.from({ length: 10 }).map((_, i) => (
-                        <span
-                          key={i}
-                          className="flex items-center whitespace-nowrap px-5 text-xs font-black uppercase tracking-[0.14em] text-white"
-                        >
-                          ¿Qué proyecto energético tienes en mente?
-                          <span className="ml-2">→</span>
-                          <span className="ml-5 text-white/45">✦</span>
-                        </span>
-                      ))}
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="geu-marquee-btn block w-full cursor-pointer overflow-hidden py-2.5 text-left"
+          >
+            <span className="sr-only">¿Qué proyecto energético tienes en mente?</span>
+            <span aria-hidden="true" className="geu-marquee-track flex w-max items-center">
+              {[0, 1].map((groupIndex) => (
+                <span key={groupIndex} className="flex items-center">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className="flex items-center whitespace-nowrap px-5 text-xs font-black uppercase tracking-[0.14em] text-white"
+                    >
+                      ¿Qué proyecto energético tienes en mente?
+                      <span className="ml-2">→</span>
+                      <span className="ml-5 text-white/45">✦</span>
                     </span>
                   ))}
                 </span>
-              </>
-            }
-            triggerClassName="geu-marquee-btn block w-full cursor-pointer overflow-hidden py-2.5 text-left"
-          />
+              ))}
+            </span>
+          </a>
         </div>
         <div className="bg-white">
           <div
@@ -182,7 +178,7 @@ export default async function EnergyPage() {
 
           <div className="-mx-5 mt-8 flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-3 2xl:grid-cols-4">
             {energyProducts.map((product) => {
-              const productImage = product.imagen === "/hero-unipars.jpg" ? "/home-energy.png" : product.imagen;
+              const productImage = product.imagen === "/hero-unipars.jpg" ? "/home-energy.webp" : product.imagen;
 
               return (
                 <article
@@ -190,7 +186,7 @@ export default async function EnergyPage() {
                   className="group flex min-h-[455px] w-[calc(100vw-2.5rem)] shrink-0 snap-start flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#d4a900]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)] sm:w-auto sm:shrink"
                 >
                   <Link
-                    href={`/producto/${product.slug}`}
+                    href={productHref(product.slug, "Energy")}
                     className="relative block h-52 overflow-hidden bg-white"
                     style={{
                       backgroundImage: `url('${productImage}')`,
@@ -211,7 +207,7 @@ export default async function EnergyPage() {
                       {product.marca}
                     </span>
                     <Link
-                      href={`/producto/${product.slug}`}
+                      href={productHref(product.slug, "Energy")}
                       className="mt-2 min-h-14 text-xl font-black leading-7 text-slate-950 hover:text-[#b38f00]"
                     >
                       {product.nombre}
@@ -232,14 +228,16 @@ export default async function EnergyPage() {
                     </span>
                     <CauchosAddToCartButton
                       id={product.slug}
+                      slug={product.slug}
                       nombre={product.nombre}
                       precio={product.precio}
                       imagen={productImage}
+                      sku={product.sku}
                       division="Energy"
                       accent="gold"
                     />
                     <Link
-                      href={`/producto/${product.slug}`}
+                      href={productHref(product.slug, "Energy")}
                       className="mt-3 inline-flex justify-center rounded-full px-4 py-2 text-center text-xs font-black uppercase tracking-[0.08em] text-slate-500 hover:bg-[#fff9e5] hover:text-[#b38f00]"
                     >
                       Ver detalle
@@ -279,11 +277,14 @@ export default async function EnergyPage() {
                 {t("energy-contacto-subtitulo")}
               </p>
             </div>
-            <CauchosProjectChat
-              division="Energy"
-              triggerLabel="Hablar con un experto →"
-              triggerClassName="inline-flex w-fit items-center justify-center rounded-[4px] border border-[#d4a900] bg-[#d4a900] px-7 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_16px_34px_rgba(212,169,0,0.28)] transition hover:border-white hover:bg-white hover:text-[#170606]"
-            />
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-fit items-center justify-center rounded-[4px] border border-[#d4a900] bg-[#d4a900] px-7 py-4 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[0_16px_34px_rgba(212,169,0,0.28)] transition hover:border-white hover:bg-white hover:text-[#170606]"
+            >
+              Hablar con un experto →
+            </a>
           </div>
         </div>
       </section>

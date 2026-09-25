@@ -3,13 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import CauchosAccountLink from "../components/cauchos-account-link";
 import MobileBottomNav from "../components/mobile-bottom-nav";
 import { useSiteColors } from "../components/use-site-colors";
 import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
 
 const navItems = [
-  { label: "Nosotros", href: "/autoservicio-inteligente/nosotros" },
   { label: "Contacto", href: "/autoservicio-inteligente#contacto" },
 ];
 
@@ -30,15 +28,6 @@ function InnovationMark() {
       priority
       className="h-auto w-[245px] max-w-full object-contain"
     />
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-3.4-3.4" />
-    </svg>
   );
 }
 
@@ -120,13 +109,6 @@ export default function InnovationHeader() {
             </svg>
             Ver todo GEU
           </Link>
-          <button type="button" aria-label="Buscar" className="hover:text-[#0498b4]">
-            <SearchIcon />
-          </button>
-          <CauchosAccountLink
-            brand="innovation"
-            className="hidden text-[11px] font-black uppercase tracking-[0.08em] hover:text-[#0498b4] lg:inline-flex"
-          />
         </div>
       </div>
 
@@ -154,7 +136,7 @@ export default function InnovationHeader() {
       accent="#0498b4"
       onCategoriasClick={() => setIsMobileSolucionesOpen((current) => !current)}
       categoriasLabel="Soluciones"
-      accountBrand="innovation"
+      hideAccount
       moreItems={mobileMoreItems}
       breakpointClassName="lg:hidden"
     />

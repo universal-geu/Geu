@@ -16,8 +16,8 @@ type ChatMessage = {
   suggestions?: ChatSuggestion[];
 };
 
-const gusAvatarImage = "/geu-energy-gus-avatar.png";
-const gusButtonImage = "/geu-energy-gus-boton.png";
+const gusAvatarImage = "/geu-energy-gus-avatar.webp";
+const gusButtonImage = "/geu-energy-gus-boton.webp";
 
 const quickPrompts = [
   "Quiero cotizar una granja solar",

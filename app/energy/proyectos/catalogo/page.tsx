@@ -12,22 +12,22 @@ export const dynamic = "force-dynamic";
 const tiposEstructura = [
   {
     nombre: "Monoposte",
-    imagen: "/energy-estructura-monoposte.jpg",
+    imagen: "/energy-estructura-monoposte.webp",
     texto: "Un solo poste central por línea de módulos, ideal para terrenos con buena capacidad portante.",
   },
   {
     nombre: "Biposte",
-    imagen: "/energy-estructura-biposte.jpg",
+    imagen: "/energy-estructura-biposte.webp",
     texto: "Dos hileras de postes que reparten mejor la carga, pensado para configuraciones más grandes.",
   },
   {
     nombre: "Chinese hat",
-    imagen: "/energy-estructura-chinesehat.jpg",
+    imagen: "/energy-estructura-chinesehat.webp",
     texto: "Estructura tipo carpa con paneles a dos aguas desde una cumbrera central.",
   },
   {
     nombre: "Carport",
-    imagen: "/energy-estructura-carport.jpg",
+    imagen: "/energy-estructura-carport.webp",
     texto: "Cubierta solar para parqueaderos: genera energía y da sombra al mismo tiempo.",
   },
 ];
@@ -109,17 +109,17 @@ const aplicacionesFotos = [
   {
     titulo: "Proyectos fotovoltaicos residenciales",
     texto: "Techos residenciales con retorno de inversión rápido.",
-    imagen: "/energy-aplicacion-residencial.jpg",
+    imagen: "/energy-aplicacion-residencial.webp",
   },
   {
     titulo: "Estacionamientos solares (Carport)",
     texto: "Cubiertas solares para parqueaderos: generan energía y dan sombra.",
-    imagen: "/energy-aplicacion-carport.jpg",
+    imagen: "/energy-aplicacion-carport.webp",
   },
   {
     titulo: "Parques solares a gran escala",
     texto: "Instalaciones de montaje en tierra para proyectos de gran escala.",
-    imagen: "/energy-aplicacion-parque.jpg",
+    imagen: "/energy-aplicacion-parque.webp",
   },
 ];
 
@@ -276,7 +276,7 @@ export default async function EnergyCatalogoPage() {
       <section className="relative overflow-hidden border-b border-white/10 bg-black pt-20">
         <div className="relative aspect-[2048/560] w-full">
           <Image
-            src="/geu-energy-hero-field.png"
+            src="/geu-energy-hero-field.webp"
             alt="Estructura fija para paneles solares GEU Energy"
             fill
             sizes="100vw"
@@ -437,7 +437,7 @@ export default async function EnergyCatalogoPage() {
                 </div>
                 <div className="relative aspect-square w-full max-w-[280px] justify-self-end overflow-hidden rounded-[10px] border border-slate-200 shadow-[0_2px_10px_rgba(15,23,42,0.04)] md:justify-self-auto">
                   <Image
-                    src="/energy-cimentacion-anclaje.jpg"
+                    src="/energy-cimentacion-anclaje.webp"
                     alt="Dado de concreto con platina de anclaje y espárragos para la cimentación de la estructura"
                     fill
                     sizes="280px"

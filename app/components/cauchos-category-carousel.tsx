@@ -42,6 +42,15 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
   const tone = accentClasses[accent];
   const [canScroll, setCanScroll] = useState(false);
   const [visibleWidth, setVisibleWidth] = useState<number | null>(null);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(false);
+
+  const updateEdges = () => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    setAtStart(scroller.scrollLeft <= 4);
+    setAtEnd(scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 4);
+  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -64,6 +73,8 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
       const width = wholeCount * (cardWidth + gap) - gap;
       setVisibleWidth(width);
       setCanScroll(scroller.scrollWidth > width + 1);
+      setAtStart(scroller.scrollLeft <= 4);
+      setAtEnd(scroller.scrollLeft + width >= scroller.scrollWidth - 4);
     };
 
     recompute();
@@ -82,12 +93,12 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
 
   return (
     <div ref={containerRef} className="relative">
-      {canScroll && (
+      {canScroll && !atStart && (
         <button
           type="button"
           aria-label="Ver categorias anteriores"
           onClick={() => scroll("left")}
-          className={`absolute left-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-black shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition md:inline-flex ${tone.arrow}`}
+          className={`absolute left-0 md:left-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-black shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition md:h-10 md:w-10 ${tone.arrow}`}
         >
           ‹
         </button>
@@ -95,6 +106,7 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
 
       <div
         ref={scrollerRef}
+        onScroll={updateEdges}
         style={visibleWidth ? { maxWidth: visibleWidth } : undefined}
         className={`mx-auto flex snap-x snap-mandatory overflow-x-auto scroll-smooth px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
           accent === "red" ? "gap-7 py-2" : accent === "silver" ? "gap-5 py-2" : "gap-2 py-1"
@@ -144,12 +156,12 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
         ))}
       </div>
 
-      {canScroll && (
+      {canScroll && !atEnd && (
         <button
           type="button"
           aria-label="Ver mas categorias"
           onClick={() => scroll("right")}
-          className={`absolute right-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-black shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition md:inline-flex ${tone.arrow}`}
+          className={`absolute right-0 md:right-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-black shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition md:h-10 md:w-10 ${tone.arrow}`}
         >
           ›
         </button>

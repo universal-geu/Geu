@@ -5,41 +5,49 @@ export const categoriasData = [
     nombre: "Alimentos, Farmacéuticos y cosméticos",
     color: "#2f9e44",
     icono: "✚",
+    imageKey: "categoria-alimentos",
   },
   {
     nombre: "Agroindustria",
     color: "#5c940d",
     icono: "☘",
+    imageKey: "categoria-agroindustria",
   },
   {
     nombre: "Petróleo, minería, gas, energías renovables y petroquímica",
     color: "#e8590c",
     icono: "◈",
+    imageKey: "categoria-petroleo",
   },
   {
     nombre: "Químico, aseo y plásticos",
     color: "#1971c2",
     icono: "◆",
+    imageKey: "categoria-quimico",
   },
   {
     nombre: "Construcción, infraestructura, obra civil, cemento y agregados",
     color: "#868e96",
     icono: "▲",
+    imageKey: "categoria-construccion",
   },
   {
     nombre: "Transporte, logística y puertos marítimos",
     color: "#0c8599",
     icono: "▶",
+    imageKey: "categoria-transporte",
   },
   {
     nombre: "Manufactura, metalmecánica, siderúrgica y textiles",
     color: "#495057",
     icono: "⬢",
+    imageKey: "categoria-manufactura",
   },
   {
     nombre: "Ferretería y otros",
     color: "#c92a2a",
     icono: "✦",
+    imageKey: "categoria-ferreteria",
   },
 ] as const;
 
@@ -51,20 +59,20 @@ export const categorias: string[] = categoriasData.map((item) => item.nombre);
 // already a single, specific product line, so unlike Cauchos there's no
 // further sub-sector breakdown via cauchosCategorySubcategories.
 export const importCategoriasData = [
-  { nombre: "Láminas de caucho", color: "#2f9e44", icono: "▭" },
-  { nombre: "Empaquetaduras", color: "#1971c2", icono: "◆" },
-  { nombre: "Plásticos de Ingeniería", color: "#5c940d", icono: "⬡" },
-  { nombre: "Acoples OPW", color: "#e8590c", icono: "⬤" },
-  { nombre: "Acoples Hidráulicos", color: "#0c8599", icono: "⬢" },
-  { nombre: "Válvulas, acoples y racores", color: "#087f5b", icono: "◎" },
-  { nombre: "Mangueras Hidráulicas", color: "#c92a2a", icono: "▶" },
-  { nombre: "Mangueras Industriales", color: "#495057", icono: "▶" },
-  { nombre: "Mangueras en PVC", color: "#7048e8", icono: "▶" },
-  { nombre: "Mangueras en caucho y lona", color: "#862e9c", icono: "▶" },
-  { nombre: "Línea Neumática", color: "#1864ab", icono: "◈" },
-  { nombre: "Aislamientos Térmicos", color: "#e67700", icono: "▲" },
-  { nombre: "Mercado Persa", color: "#868e96", icono: "✦" },
-  { nombre: "Autopartes", color: "#c92a2a", icono: "⚙" },
+  { nombre: "Láminas de caucho", color: "#2f9e44", icono: "▭", imageKey: "import-categoria-laminas" },
+  { nombre: "Empaquetaduras", color: "#1971c2", icono: "◆", imageKey: "import-categoria-empaquetaduras" },
+  { nombre: "Plásticos de Ingeniería", color: "#5c940d", icono: "⬡", imageKey: "import-categoria-plasticos" },
+  { nombre: "Acoples OPW", color: "#e8590c", icono: "⬤", imageKey: "import-categoria-acoples-opw" },
+  { nombre: "Acoples Hidráulicos", color: "#0c8599", icono: "⬢", imageKey: "import-categoria-acoples-hidraulicos" },
+  { nombre: "Válvulas, acoples y racores", color: "#087f5b", icono: "◎", imageKey: "import-categoria-valvulas" },
+  { nombre: "Mangueras Hidráulicas", color: "#c92a2a", icono: "▶", imageKey: "import-categoria-mangueras-hidraulicas" },
+  { nombre: "Mangueras Industriales", color: "#495057", icono: "▶", imageKey: "import-categoria-mangueras-industriales" },
+  { nombre: "Mangueras en PVC", color: "#7048e8", icono: "▶", imageKey: "import-categoria-mangueras-pvc" },
+  { nombre: "Mangueras en caucho y lona", color: "#862e9c", icono: "▶", imageKey: "import-categoria-mangueras-caucho-lona" },
+  { nombre: "Línea Neumática", color: "#1864ab", icono: "◈", imageKey: "import-categoria-linea-neumatica" },
+  { nombre: "Aislamientos Térmicos", color: "#e67700", icono: "▲", imageKey: "import-categoria-aislamientos-termicos" },
+  { nombre: "Mercado Persa", color: "#868e96", icono: "✦", imageKey: "import-categoria-mercado-persa" },
+  { nombre: "Autopartes", color: "#c92a2a", icono: "⚙", imageKey: "import-categoria-autopartes" },
 ] as const;
 export const importCategorias: string[] = importCategoriasData.map((item) => item.nombre);
 
@@ -72,14 +80,14 @@ export const importCategorias: string[] = importCategoriasData.map((item) => ite
 // like Import, each entry is already a single, specific product line, with
 // no further sub-sector breakdown.
 export const plasticCategoriasData = [
-  { nombre: "Extrusión en PVC Rígido", color: "#1971c2", icono: "▭" },
-  { nombre: "Extrusión en PVC Flexible", color: "#0c8599", icono: "▭" },
-  { nombre: "Desarrollo de empaques magnéticos", color: "#5c940d", icono: "◆" },
-  { nombre: "Desarrollo de cintas magnéticas", color: "#e8590c", icono: "◆" },
-  { nombre: "Procesos de ensamble de puertas y encimeras", color: "#495057", icono: "⬡" },
-  { nombre: "Perfilería para hidroponía", color: "#2f9e44", icono: "⬢" },
-  { nombre: "Perfilería para construcción", color: "#868e96", icono: "▲" },
-  { nombre: "Perfilería para carrocería", color: "#c92a2a", icono: "⚙" },
+  { nombre: "Extrusión en PVC Rígido", color: "#1971c2", icono: "▭", imageKey: "plastic-categoria-pvc-rigido" },
+  { nombre: "Extrusión en PVC Flexible", color: "#0c8599", icono: "▭", imageKey: "plastic-categoria-pvc-flexible" },
+  { nombre: "Desarrollo de empaques magnéticos", color: "#5c940d", icono: "◆", imageKey: "plastic-categoria-empaques-magneticos" },
+  { nombre: "Desarrollo de cintas magnéticas", color: "#e8590c", icono: "◆", imageKey: "plastic-categoria-cintas-magneticas" },
+  { nombre: "Procesos de ensamble de puertas y encimeras", color: "#495057", icono: "⬡", imageKey: "plastic-categoria-ensamble-puertas-encimeras" },
+  { nombre: "Perfilería para hidroponía", color: "#2f9e44", icono: "⬢", imageKey: "plastic-categoria-perfileria-hidroponia" },
+  { nombre: "Perfilería para construcción", color: "#868e96", icono: "▲", imageKey: "plastic-categoria-perfileria-construccion" },
+  { nombre: "Perfilería para carrocería", color: "#c92a2a", icono: "⚙", imageKey: "plastic-categoria-perfileria-carroceria" },
 ] as const;
 export const plasticCategorias: string[] = plasticCategoriasData.map((item) => item.nombre);
 
@@ -87,30 +95,16 @@ export const plasticCategorias: string[] = plasticCategoriasData.map((item) => i
 // like Import and Plastic, each entry is already a single, specific product
 // line, with no further sub-sector breakdown.
 export const energyCategoriasData = [
-  { nombre: "Paneles solares", color: "#d4a900", icono: "◈" },
-  { nombre: "Inversores", color: "#1971c2", icono: "⚡" },
-  { nombre: "Baterías y respaldo", color: "#495057", icono: "▮" },
-  { nombre: "Estructuras de montaje", color: "#868e96", icono: "▲" },
-  { nombre: "Cableado y conectores", color: "#e8590c", icono: "⬢" },
-  { nombre: "Controladores de carga", color: "#0c8599", icono: "◎" },
-  { nombre: "Medición y monitoreo", color: "#5c940d", icono: "◆" },
-  { nombre: "Accesorios e instalación", color: "#c92a2a", icono: "⚙" },
+  { nombre: "Paneles solares", color: "#d4a900", icono: "◈", imageKey: "energy-categoria-paneles-solares" },
+  { nombre: "Inversores", color: "#1971c2", icono: "⚡", imageKey: "energy-categoria-inversores" },
+  { nombre: "Baterías y respaldo", color: "#495057", icono: "▮", imageKey: "energy-categoria-baterias-respaldo" },
+  { nombre: "Estructuras de montaje", color: "#868e96", icono: "▲", imageKey: "energy-categoria-estructuras-montaje" },
+  { nombre: "Cableado y conectores", color: "#e8590c", icono: "⬢", imageKey: "energy-categoria-cableado-conectores" },
+  { nombre: "Controladores de carga", color: "#0c8599", icono: "◎", imageKey: "energy-categoria-controladores-carga" },
+  { nombre: "Medición y monitoreo", color: "#5c940d", icono: "◆", imageKey: "energy-categoria-medicion-monitoreo" },
+  { nombre: "Accesorios e instalación", color: "#c92a2a", icono: "⚙", imageKey: "energy-categoria-accesorios-instalacion" },
 ] as const;
 export const energyCategorias: string[] = energyCategoriasData.map((item) => item.nombre);
-
-export function getCategoriasForDivision(division: DivisionName): string[] {
-  if (division === "Import") return importCategorias;
-  if (division === "Plastic") return plasticCategorias;
-  if (division === "Energy") return energyCategorias;
-  return categorias;
-}
-
-export function getCategoriasDataForDivision(division: DivisionName) {
-  if (division === "Import") return importCategoriasData;
-  if (division === "Plastic") return plasticCategoriasData;
-  if (division === "Energy") return energyCategoriasData;
-  return categoriasData;
-}
 
 // Real sub-sector groupings for the Cauchos category menu (e.g. "Alimentos,
 // Farmacéuticos y cosméticos" breaks into its own 3 sectors). The `items`
@@ -251,7 +245,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$239.900",
     precioValor: 189900,
     descuento: "-21%",
-    imagen: "/import-product-luces.jpg",
+    imagen: "/import-product-luces.webp",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -263,7 +257,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$198.000",
     precioValor: 154500,
     descuento: "-18%",
-    imagen: "/import-product-luces.jpg",
+    imagen: "/import-product-luces.webp",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -275,7 +269,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$329.900",
     precioValor: 267900,
     descuento: "-19%",
-    imagen: "/import-product-luces.jpg",
+    imagen: "/import-product-luces.webp",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -287,7 +281,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$279.000",
     precioValor: 221000,
     descuento: "-20%",
-    imagen: "/import-product-luces.jpg",
+    imagen: "/import-product-luces.webp",
     disponibilidad: "Recoger en tienda",
   },
   {
@@ -299,7 +293,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$389.000",
     precioValor: 312400,
     descuento: "-20%",
-    imagen: "/import-product-luces.jpg",
+    imagen: "/import-product-luces.webp",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -311,7 +305,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$410.000",
     precioValor: 338500,
     descuento: "-17%",
-    imagen: "/motor-ventilador-axis-compact.png",
+    imagen: "/motor-ventilador-axis-compact.webp",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -323,7 +317,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$349.000",
     precioValor: 286000,
     descuento: "-18%",
-    imagen: "/motor-ventilador-axis-compact.png",
+    imagen: "/motor-ventilador-axis-compact.webp",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -335,7 +329,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$525.000",
     precioValor: 452900,
     descuento: "-14%",
-    imagen: "/motor-ventilador-axis-compact.png",
+    imagen: "/motor-ventilador-axis-compact.webp",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -347,7 +341,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$620.000",
     precioValor: 518000,
     descuento: "-16%",
-    imagen: "/motor-ventilador-axis-compact.png",
+    imagen: "/motor-ventilador-axis-compact.webp",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -359,7 +353,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$249.000",
     precioValor: 197900,
     descuento: "-21%",
-    imagen: "/motor-ventilador-axis-compact.png",
+    imagen: "/motor-ventilador-axis-compact.webp",
     disponibilidad: "Recoger en tienda",
   },
   {
@@ -521,7 +515,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$182.000",
     precioValor: 148000,
     descuento: "-19%",
-    imagen: "/featured-laminas-caucho.jpg",
+    imagen: "/featured-laminas-caucho.webp",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -535,7 +529,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$379.000",
     precioValor: 312000,
     descuento: "-18%",
-    imagen: "/featured-laminas-caucho.jpg",
+    imagen: "/featured-laminas-caucho.webp",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -549,7 +543,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$249.000",
     precioValor: 198900,
     descuento: "-20%",
-    imagen: "/featured-mangueras-industriales.jpg",
+    imagen: "/featured-mangueras-industriales.webp",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -563,7 +557,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$149.000",
     precioValor: 121500,
     descuento: "-18%",
-    imagen: "/featured-mangueras-industriales.jpg",
+    imagen: "/featured-mangueras-industriales.webp",
     disponibilidad: "Entrega inmediata",
   },
   {
@@ -577,7 +571,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$118.000",
     precioValor: 96000,
     descuento: "-19%",
-    imagen: "/featured-perfiles-caucho.jpg",
+    imagen: "/featured-perfiles-caucho.webp",
     disponibilidad: "Recoger en tienda",
   },
   {
@@ -591,7 +585,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$339.000",
     precioValor: 276000,
     descuento: "-19%",
-    imagen: "/featured-perfiles-caucho.jpg",
+    imagen: "/featured-perfiles-caucho.webp",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -605,7 +599,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$258.000",
     precioValor: 210000,
     descuento: "-19%",
-    imagen: "/offer-productos-caucho.png",
+    imagen: "/offer-productos-caucho.webp",
     disponibilidad: "Disponible por pedido",
   },
   {
@@ -619,7 +613,7 @@ export const productosCatalogo: ProductoCatalogo[] = [
     precioAnterior: "$465.000",
     precioValor: 389000,
     descuento: "-16%",
-    imagen: "/offer-productos-caucho.png",
+    imagen: "/offer-productos-caucho.webp",
     disponibilidad: "Disponible por pedido",
   },
 ];

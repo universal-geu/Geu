@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import GusOrderRunner from "../components/gus-order-runner";
 import { useRouter } from "next/navigation";
 import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-locations";
 import { formatOrderCode } from "@/lib/format-order";
@@ -167,6 +169,7 @@ function getOrderProgressStep(order: AccountOrder) {
 
 function OrderProgressTimeline({ order }: { order: AccountOrder }) {
   const activeStep = getOrderProgressStep(order);
+  const isCancelled = order.status === "CANCELLED" || order.shippingStatus === "CANCELLED";
   const steps = [
     {
       label: "Pedido confirmado",
@@ -251,9 +254,10 @@ function OrderProgressTimeline({ order }: { order: AccountOrder }) {
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
         Seguimiento del pedido
       </p>
-      <div className="mt-5 overflow-x-auto">
+      <div className="mt-2 overflow-x-auto">
         <div className="relative min-w-[620px] px-1 py-2">
-          <div className="absolute left-[12.5%] right-[12.5%] top-8">
+          <GusOrderRunner key={activeStep} activeStep={activeStep} stepCount={steps.length} cancelled={isCancelled} />
+          <div className="absolute left-[12.5%] right-[12.5%] top-[88px]">
             <span className="block h-[4px] rounded-full bg-black/10" />
             <span
               className="absolute left-0 top-0 h-[4px] rounded-full bg-[var(--brand-accent)] transition-all duration-300"
@@ -314,16 +318,18 @@ export default function AccountProfileForm({
   orders,
   quotes,
   division: divisionProp,
+  ordersBannerSrc,
 }: {
   user: AccountUser;
   orders: AccountOrder[];
   quotes: AccountQuote[];
   division?: DivisionName;
+  ordersBannerSrc?: string | null;
 }) {
   const router = useRouter();
   const division = divisionProp ?? user.division ?? "Cauchos";
   const brand = DIVISION_BRAND[division];
-  const [activePanel, setActivePanel] = useState<AccountPanel>("summary");
+  const [activePanel, setActivePanel] = useState<AccountPanel>("orders");
   const [showFullOrderHistory, setShowFullOrderHistory] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(
     orders[0]?.id ?? null,
@@ -457,9 +463,9 @@ export default function AccountProfileForm({
   };
 
   const accountNavItems: { key: AccountPanel; label: string; count?: number }[] = [
+    { key: "orders", label: "Pedidos", count: orders.length },
     { key: "summary", label: "Resumen" },
     { key: "details", label: "Datos" },
-    { key: "orders", label: "Pedidos", count: orders.length },
     { key: "quotes", label: "Cotizaciones", count: quotes.length },
   ];
 
@@ -481,7 +487,7 @@ export default function AccountProfileForm({
             </span>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <nav className="overflow-y-auto px-3 py-4">
             <ul className="space-y-1">
               {accountNavItems.map((item) => (
                 <li key={item.key}>
@@ -523,7 +529,7 @@ export default function AccountProfileForm({
           </div>
         </aside>
 
-        <div className="flex-1 px-6 py-16">
+        <div className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
           <div className="mb-6 flex flex-wrap gap-2 overflow-x-auto md:hidden">
             {accountNavItems.map((item) => (
               <button
@@ -577,7 +583,8 @@ export default function AccountProfileForm({
         </div>
       )}
 
-      <section className="mx-auto w-full max-w-6xl space-y-8">
+      <section className="w-full space-y-8">
+        {(activePanel === "summary" || activePanel === "details") && (
         <section className="rounded-[2rem] bg-white p-8 shadow-lg shadow-black/10 md:p-10">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
@@ -797,78 +804,70 @@ export default function AccountProfileForm({
             </form>
           )}
         </section>
+        )}
 
         {activePanel === "orders" && (
-          <section className="rounded-[2rem] bg-white p-8 shadow-lg shadow-black/10 md:p-10">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
-                Mis pedidos
-              </p>
-              <h2 className="mt-2 text-3xl font-bold text-[#16384f] md:text-4xl">
-                Historial de compras
-              </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-                Aquí verás todos los pedidos que vayas creando desde el checkout,
-                junto con su estado y los productos incluidos.
-              </p>
-            </div>
-
-            <Link
-              href={brand.basePath}
-              className="rounded-full border border-[#16384f]/20 px-5 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
-            >
-              Seguir comprando
-            </Link>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <div className="rounded-[1.3rem] border border-black/8 bg-[#fafaf9] px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                Pedidos totales
-              </p>
-              <p className="mt-3 text-3xl font-bold tracking-[-0.04em] text-[#16384f]">
-                {orders.length}
-              </p>
-            </div>
-            <div className="rounded-[1.3rem] border border-black/8 bg-[#fafaf9] px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                En proceso
-              </p>
-              <p className="mt-3 text-3xl font-bold tracking-[-0.04em] text-[#16384f]">
-                {activeShipments}
-              </p>
-            </div>
-            <div className="rounded-[1.3rem] border border-black/8 bg-[#fafaf9] px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                Entregados
-              </p>
-              <p className="mt-3 text-3xl font-bold tracking-[-0.04em] text-[#16384f]">
-                {deliveredOrders}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-5">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          <section className="rounded-[2rem] bg-white p-5 shadow-lg shadow-black/10 md:p-6">
+          <div
+            className={`relative overflow-hidden rounded-[1.5rem] ${
+              ordersBannerSrc ? "bg-[#0b1624] px-6 py-7 text-white md:px-8" : ""
+            }`}
+          >
+            {ordersBannerSrc && (
+              <>
+                <Image src={ordersBannerSrc} alt={brand.label} fill sizes="(min-width: 1280px) 1216px, 100vw" className="object-cover" priority />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
+              </>
+            )}
+            <div className="relative flex flex-col items-start gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                  Vista del historial
+                <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${ordersBannerSrc ? "text-white/75" : "text-[var(--brand-accent)]"}`}>
+                  Mis pedidos
                 </p>
-                <p className="mt-2 text-sm leading-7 text-[#5d6167]">
-                  Tienes {paidOrders} compra{paidOrders === 1 ? "" : "s"} confirmada
-                  {paidOrders === 1 ? "" : "s"} y {orders.length} pedido
-                  {orders.length === 1 ? "" : "s"} en total.
+                <h2 className={`mt-1 text-2xl font-bold md:text-3xl ${ordersBannerSrc ? "text-white" : "text-[#16384f]"}`}>
+                  Historial de compras
+                </h2>
+                <p className={`mt-1 max-w-2xl text-sm leading-6 ${ordersBannerSrc ? "text-white/80" : "text-slate-600"}`}>
+                  Tus pedidos con su estado y los productos incluidos.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowFullOrderHistory((current) => !current)}
-                className="rounded-full border border-[#16384f]/20 px-5 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+
+              <Link
+                href={brand.basePath}
+                className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-colors duration-200 ${
+                  ordersBannerSrc
+                    ? "bg-white text-[#16384f] hover:bg-white/85"
+                    : "border border-[#16384f]/20 text-[#16384f] hover:bg-[#16384f] hover:text-white"
+                }`}
               >
-                {showFullOrderHistory ? "Ver solo recientes" : "Ver historial completo"}
-              </button>
+                Seguir comprando
+              </Link>
             </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-3 gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+            {[
+              { label: "Pedidos totales", value: orders.length },
+              { label: "En proceso", value: activeShipments },
+              { label: "Entregados", value: deliveredOrders },
+            ].map((stat) => (
+              <div key={stat.label} className="flex flex-col-reverse gap-1 rounded-[1rem] border border-black/8 bg-[#fafaf9] px-4 py-3 lg:flex-row lg:items-baseline lg:justify-between lg:gap-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                  {stat.label}
+                </p>
+                <p className="text-2xl font-bold tracking-[-0.04em] text-[#16384f]">
+                  {stat.value}
+                </p>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setShowFullOrderHistory((current) => !current)}
+              title={`${paidOrders} compra${paidOrders === 1 ? "" : "s"} confirmada${paidOrders === 1 ? "" : "s"} de ${orders.length}`}
+              className="col-span-3 rounded-full border border-[#16384f]/20 px-5 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white md:col-span-1"
+            >
+              {showFullOrderHistory ? "Ver solo recientes" : "Ver historial completo"}
+            </button>
           </div>
 
           {orders.length === 0 ? (
@@ -877,7 +876,7 @@ export default function AccountProfileForm({
               aquí con su dirección, estado y productos.
             </div>
           ) : (
-            <div className="mt-6 space-y-5">
+            <div className="mt-5 space-y-4">
               {recentOrders.map((order) => (
                 <article
                   key={order.id}

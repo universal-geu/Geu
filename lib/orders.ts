@@ -19,7 +19,7 @@ import {
 import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { formatOrderCode } from "@/lib/format-order";
 import { calculateShippingCost } from "@/lib/shipping";
-import { getCauchosSalesMode } from "@/lib/site-settings";
+import { getAllSalesModes } from "@/lib/site-settings";
 
 export { calculateShippingCost };
 
@@ -153,7 +153,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
       ? shippingCities.reduce((total, destinationCity) => total + calculateShippingCost(destinationCity), 0)
       : calculateShippingCost(city);
 
-  const cauchosSalesMode = await getCauchosSalesMode();
+  const salesModes = await getAllSalesModes();
   const checkoutDivision = getDivisionFromBrandParam(input.brand);
 
   const order = await prisma.$transaction(async (tx) => {
@@ -177,19 +177,20 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
 
     // Enforced here (not just in the checkout/cart UI) so it can't be
     // bypassed client-side — this is the one place every checkout path
-    // funnels through before an order is created. Only blocks products that
-    // are Cauchos-only: one cross-listed into `checkoutDivision` (via
-    // "también aplica para otra empresa GEU") is part of that division's
-    // real catalog and should check out normally there.
-    const hasCauchosOnlyItem = products.some(
+    // funnels through before an order is created. Only blocks products
+    // whose own division is WhatsApp-only: one cross-listed into
+    // `checkoutDivision` (via "también aplica para otra empresa GEU") is
+    // part of that division's real catalog and should check out normally
+    // there.
+    const hasWhatsAppOnlyItem = products.some(
       (product) =>
-        product.division === "Cauchos" &&
+        salesModes[product.division as DivisionName] === "whatsapp" &&
         !productSellsInDivision(
           { division: product.division, divisionesAdicionales: product.additionalDivisions },
           checkoutDivision,
         ),
     );
-    if (cauchosSalesMode === "whatsapp" && hasCauchosOnlyItem) {
+    if (hasWhatsAppOnlyItem) {
       throw new Error("CAUCHOS_WHATSAPP_MODE");
     }
 

@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
       // GEU Structure cambió de /innovation a /structure
       { source: "/innovation", destination: "/structure", permanent: true },
       { source: "/innovation/:path*", destination: "/structure/:path*", permanent: true },
+      // Se eliminó la página Nosotros de GEU Innovation
+      { source: "/autoservicio-inteligente/nosotros", destination: "/autoservicio-inteligente", permanent: true },
     ];
   },
   images: {

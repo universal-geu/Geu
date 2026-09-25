@@ -10,6 +10,7 @@ import SiteFooter from "../components/site-footer";
 import { getSiteTexts } from "@/lib/site-texts";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
+import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +125,12 @@ const durabilidadStats = [
 export default async function StructurePage() {
   const siteTexts = await getSiteTexts();
   const siteImages = await getSiteImages();
+  const whatsappNumber = await getWhatsAppNumberForDivision("Innovation");
+  const whatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        "Hola GEU Structure, quiero hablar con un ingeniero.",
+      )}`
+    : "mailto:innovation@geu.com.co";
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -313,7 +320,7 @@ export default async function StructurePage() {
           {isVideoUrl(resolveImage("structure-viento-cfd", siteImages)) ? (
             <video
               src={resolveImage("structure-viento-cfd", siteImages)}
-              poster="/geu-structure-viento-cfd.png"
+              poster="/geu-structure-viento-cfd.webp"
               autoPlay
               loop
               muted
@@ -550,24 +557,14 @@ export default async function StructurePage() {
           <p className="mt-4 text-xs font-bold uppercase tracking-[0.1em] text-white/60">
             M24 · Ingeniería estructural · Galvanizado · Servicios de campo
           </p>
-          <Link
-            href="mailto:innovation@geu.com.co"
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
             className="mt-8 inline-flex items-center gap-3 rounded-[3px] border border-[#0498b4]/70 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-[#0498b4] hover:bg-[#0498b4] hover:text-black"
           >
             Hablar con un ingeniero <span aria-hidden="true">→</span>
-          </Link>
-
-          <div className="mx-auto mt-16 flex max-w-xs flex-col items-center gap-3 border-t border-white/10 pt-10">
-            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-white/45">
-              ¿Buscas el autoservicio inteligente GEU?
-            </p>
-            <Link
-              href="/autoservicio-inteligente"
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] text-white/80 hover:border-white/50 hover:text-white"
-            >
-              Innovation <span aria-hidden="true">→</span>
-            </Link>
-          </div>
+          </a>
         </div>
       </section>
 

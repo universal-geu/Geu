@@ -46,7 +46,7 @@ export default function CompanyPage({ company }: CompanyPageProps) {
 
           <div className="relative min-h-[520px] overflow-hidden border border-white/10 bg-black shadow-[0_28px_80px_rgba(0,0,0,0.42)]">
             <Image
-              src="/geu-consorcio-home.png"
+              src="/geu-consorcio-home.webp"
               alt={company.name}
               fill
               priority

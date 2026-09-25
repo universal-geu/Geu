@@ -3,22 +3,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState, type CSSProperties } from "react";
-import {
-  cauchosCategorySubcategories,
-  categoriasData,
-  importCategoriasData,
-  plasticCategoriasData,
-  getCategoriasForDivision,
-  slugify,
-} from "../data/catalog";
+import { cauchosCategorySubcategories, slugify } from "../data/catalog";
 import { useProducts } from "./products-provider";
+import { useCategories } from "./categories-provider";
 import { useCauchosMenu } from "./cauchos-menu-context";
 import CauchosTechnicalForm from "./cauchos-technical-form";
-import CauchosProjectChat from "./cauchos-project-chat";
+import { useSalesSettings } from "./sales-settings-provider";
 import { useSiteImages } from "./use-site-images";
-import { useSiteTexts } from "./use-site-texts";
 import { resolveImage } from "@/lib/image-slots";
-import { resolveText, categoryLabelKey } from "@/lib/text-slots";
 import type { DivisionName } from "@/lib/divisions";
 import { expandProductCategoryViews } from "@/lib/product-category-views";
 
@@ -243,10 +235,6 @@ const SUBCATEGORY_ICONS: Record<string, () => React.JSX.Element> = {
   Otros: BoxIcon,
 };
 
-const DEPARTMENT_COLORS: Record<string, string> = Object.fromEntries(
-  [...categoriasData, ...importCategoriasData, ...plasticCategoriasData].map((item) => [item.nombre, item.color]),
-);
-
 type Props = {
   basePath?: string;
   division?: DivisionName;
@@ -259,17 +247,36 @@ export default function CauchosCategorySidebarMenu({
   accent = "#075ed8",
 }: Props) {
   const { products } = useProducts();
+  const { categories, getCategoriesForDivision } = useCategories();
   const { isOpen, close } = useCauchosMenu();
+  const { whatsappNumbers } = useSalesSettings();
   const siteImages = useSiteImages();
-  const siteTexts = useSiteTexts();
-  const categoryLabel = (nombre: string) => resolveText(categoryLabelKey(division, nombre), siteTexts, nombre);
+  const importWhatsappNumber = whatsappNumbers.Import;
+  const importWhatsappHref = importWhatsappNumber
+    ? `https://wa.me/${importWhatsappNumber}?text=${encodeURIComponent(
+        "Hola GEU Import, quiero hacer una solicitud de importacion.",
+      )}`
+    : undefined;
+  const plasticWhatsappNumber = whatsappNumbers.Plastic;
+  const plasticWhatsappHref = plasticWhatsappNumber
+    ? `https://wa.me/${plasticWhatsappNumber}?text=${encodeURIComponent(
+        "Hola GEU Plastic, quiero hacer una evaluacion tecnica.",
+      )}`
+    : undefined;
+  const categoryLabel = (nombre: string) => nombre;
+  const departmentColors = useMemo(
+    () => Object.fromEntries(categories.map((item) => [item.name, item.color])),
+    [categories],
+  );
+  const importCategoryRecords = useMemo(() => getCategoriesForDivision("Import"), [getCategoriesForDivision]);
+  const plasticCategoryRecords = useMemo(() => getCategoriesForDivision("Plastic"), [getCategoriesForDivision]);
   const cauchosBasePath = basePath || "/cauchos";
   const [activeDept, setActiveDept] = useState<string | null>(null);
   const [expandedMobileDept, setExpandedMobileDept] = useState<string | null>(null);
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
   const menuData = useMemo(() => {
-    const fallbackDepartments = getCategoriasForDivision(division);
+    const fallbackDepartments = getCategoriesForDivision(division).map((c) => c.name);
     const cauchosProducts = expandProductCategoryViews(products, division);
     const departmentMap = new Map<string, Map<string, typeof cauchosProducts>>();
 
@@ -338,7 +345,7 @@ export default function CauchosCategorySidebarMenu({
 
       return { title, subcategories };
     });
-  }, [products, cauchosBasePath, division, siteImages]);
+  }, [products, cauchosBasePath, division, siteImages, getCategoriesForDivision]);
 
   const active = menuData.find((department) => department.title === activeDept) ?? null;
 
@@ -359,7 +366,7 @@ export default function CauchosCategorySidebarMenu({
   if (division === "Import") {
     return (
       <div
-        className="absolute inset-x-0 top-full z-40 shadow-[0_32px_80px_rgba(0,0,0,0.35)]"
+        className="fixed inset-x-0 top-0 bottom-[60px] z-[60] overflow-y-auto md:absolute md:inset-x-0 md:top-full md:bottom-auto md:z-40 md:overflow-visible bg-[#0b0b0d] shadow-[0_32px_80px_rgba(0,0,0,0.35)] md:bg-transparent"
         style={{ "--brand-accent": accent } as CSSProperties}
       >
         <div className="fixed inset-0 -z-10" aria-hidden="true" onClick={close} />
@@ -370,15 +377,15 @@ export default function CauchosCategorySidebarMenu({
               Categorías
             </p>
             <ul className="grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-3 lg:grid-cols-5">
-              {importCategoriasData.map((category) => (
-                <li key={category.nombre}>
+              {importCategoryRecords.map((category) => (
+                <li key={category.id}>
                   <Link
-                    href={`${cauchosBasePath}/categoria/${slugify(category.nombre)}`}
+                    href={`${cauchosBasePath}/categoria/${slugify(category.name)}`}
                     onClick={close}
                     className="group flex items-center gap-3"
                   >
                     <span className="relative text-[13px] font-bold uppercase leading-tight tracking-[0.02em] text-white/80 transition-colors duration-200 group-hover:text-white">
-                      {categoryLabel(category.nombre)}
+                      {category.name}
                       <span
                         className="absolute -bottom-1.5 left-0 h-px w-0 bg-[var(--brand-accent)] transition-all duration-300 ease-out group-hover:w-full"
                       />
@@ -392,16 +399,19 @@ export default function CauchosCategorySidebarMenu({
             </ul>
 
             <div className="mt-7 border-t border-white/10 pt-5">
-              <CauchosProjectChat
-                division="Import"
-                triggerLabel={
-                  <>
-                    ¿Qué quieres importar?
-                    <span className="ml-2">→</span>
-                  </>
-                }
-                triggerClassName="inline-flex items-center text-[13px] font-medium uppercase tracking-[0.05em] text-[var(--brand-accent)] transition-colors duration-200 hover:text-white"
-              />
+              <a
+                href={importWhatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-disabled={!importWhatsappHref}
+                onClick={(event) => {
+                  if (!importWhatsappHref) event.preventDefault();
+                }}
+                className="inline-flex items-center text-[13px] font-medium uppercase tracking-[0.05em] text-[var(--brand-accent)] transition-colors duration-200 hover:text-white"
+              >
+                ¿Qué quieres importar?
+                <span className="ml-2">→</span>
+              </a>
             </div>
           </div>
         </nav>
@@ -412,7 +422,7 @@ export default function CauchosCategorySidebarMenu({
   if (division === "Plastic") {
     return (
       <div
-        className="absolute inset-x-0 top-full z-40 shadow-[0_24px_70px_rgba(15,23,42,0.16)]"
+        className="fixed inset-x-0 top-0 bottom-[60px] z-[60] overflow-y-auto md:absolute md:inset-x-0 md:top-full md:bottom-auto md:z-40 md:overflow-visible bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)] md:bg-transparent"
         style={{ "--brand-accent": accent } as CSSProperties}
       >
         <div className="fixed inset-0 -z-10" aria-hidden="true" onClick={close} />
@@ -423,31 +433,34 @@ export default function CauchosCategorySidebarMenu({
               Categorías
             </p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {plasticCategoriasData.map((category) => (
+              {plasticCategoryRecords.map((category) => (
                 <Link
-                  key={category.nombre}
-                  href={`${cauchosBasePath}/categoria/${slugify(category.nombre)}`}
+                  key={category.id}
+                  href={`${cauchosBasePath}/categoria/${slugify(category.name)}`}
                   onClick={close}
                   className="group flex flex-col items-start gap-3 rounded-2xl border border-slate-200 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]"
                 >
                   <span className="text-[13px] font-bold uppercase leading-tight tracking-[0.02em] text-slate-800 transition-colors duration-200 group-hover:text-slate-950">
-                    {categoryLabel(category.nombre)}
+                    {category.name}
                   </span>
                 </Link>
               ))}
             </div>
 
             <div className="mt-7 border-t border-slate-200 pt-5">
-              <CauchosProjectChat
-                division="Plastic"
-                triggerLabel={
-                  <>
-                    ¿Qué necesitas producir?
-                    <span className="ml-2">→</span>
-                  </>
-                }
-                triggerClassName="inline-flex items-center text-[13px] font-medium uppercase tracking-[0.05em] text-[var(--brand-accent)] transition-colors duration-200 hover:text-slate-950"
-              />
+              <a
+                href={plasticWhatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-disabled={!plasticWhatsappHref}
+                onClick={(event) => {
+                  if (!plasticWhatsappHref) event.preventDefault();
+                }}
+                className="inline-flex items-center text-[13px] font-medium uppercase tracking-[0.05em] text-[var(--brand-accent)] transition-colors duration-200 hover:text-slate-950"
+              >
+                ¿Qué necesitas producir?
+                <span className="ml-2">→</span>
+              </a>
             </div>
           </div>
         </nav>
@@ -457,7 +470,7 @@ export default function CauchosCategorySidebarMenu({
 
   return (
     <div
-      className="absolute inset-x-0 top-full z-40 border-t border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]"
+      className="fixed inset-x-0 top-0 bottom-[60px] z-[60] overflow-y-auto md:absolute md:inset-x-0 md:top-full md:bottom-auto md:z-40 md:overflow-visible border-t border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]"
       style={{ "--brand-accent": accent } as CSSProperties}
     >
       <div
@@ -465,7 +478,7 @@ export default function CauchosCategorySidebarMenu({
         aria-hidden="true"
         onClick={close}
       />
-      <div className="max-h-[calc(100vh-80px)] overflow-y-auto md:hidden">
+      <div className="md:hidden">
         <p className="px-5 pb-3 pt-4 text-xs font-black uppercase tracking-[0.16em] text-slate-500">
           Categorías
         </p>
@@ -592,7 +605,7 @@ export default function CauchosCategorySidebarMenu({
             <div className="mb-6 flex flex-wrap gap-x-14 gap-y-6 overflow-x-auto pb-1">
               {active.subcategories.slice(0, 10).map((subcategory) => {
                 const SubIcon = SUBCATEGORY_ICONS[subcategory.name] ?? DEPARTMENT_ICONS[active.title] ?? GearIcon;
-                const color = DEPARTMENT_COLORS[active.title] ?? accent;
+                const color = departmentColors[active.title] ?? accent;
 
                 return (
                   <Link

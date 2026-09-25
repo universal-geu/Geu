@@ -12,8 +12,7 @@ const navItems = [
 ];
 
 const metrics = [
-  { value: "20+", label: "Años de experiencia" },
-  { value: "35", label: "Países" },
+  { value: "50+", label: "Años de experiencia" },
   { value: "1200+", label: "Clientes" },
   { value: "5", label: "Unidades de negocio" },
   { value: "98%", label: "Satisfacción del cliente" },
@@ -199,7 +198,7 @@ export default async function QuienesSomosPage() {
       </section>
 
       <section className="border-y border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-[1500px] grid-cols-2 gap-y-10 px-7 py-11 text-center md:grid-cols-5 md:px-12">
+        <div className="mx-auto grid max-w-[1500px] grid-cols-2 gap-y-10 px-7 py-11 text-center md:grid-cols-4 md:px-12">
           {metrics.map((metric, index) => (
             <div
               key={metric.label}

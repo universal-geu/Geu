@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useProducts } from "./products-provider";
 import { productSellsInDivision } from "@/lib/product-category-views";
 import { matchesQuery } from "@/lib/text-match";
-import type { DivisionName } from "@/lib/divisions";
+import { productHref, type DivisionName } from "@/lib/divisions";
 
 type Props = {
   className?: string;
@@ -17,6 +17,35 @@ type Props = {
 
 const MAX_SUGGESTIONS = 6;
 
+export type ProductSuggestion = { slug: string; nombre: string; marca: string; imagen: string };
+
+// Productos de la división que coinciden con la búsqueda (mínimo 2 letras).
+export function useProductSuggestions(query: string, division: DivisionName, limit: number): ProductSuggestion[] {
+  const { products } = useProducts();
+
+  return useMemo(() => {
+    if (query.length < 2) return [];
+
+    const seen = new Set<string>();
+    const matches: ProductSuggestion[] = [];
+
+    for (const product of products) {
+      if (!productSellsInDivision(product, division)) continue;
+      const haystack = [product.nombre, product.marca, product.categoria, product.sku]
+        .filter((v): v is string => Boolean(v))
+        .join(" ");
+      if (!matchesQuery(haystack, query)) continue;
+      if (seen.has(product.slug)) continue;
+
+      seen.add(product.slug);
+      matches.push({ slug: product.slug, nombre: product.nombre, marca: product.marca, imagen: product.imagen });
+      if (matches.length >= limit) break;
+    }
+
+    return matches;
+  }, [products, division, query, limit]);
+}
+
 export default function CauchosSearchForm({
   className,
   basePath = "/cauchos",
@@ -24,7 +53,6 @@ export default function CauchosSearchForm({
   division = "Cauchos",
 }: Props) {
   const router = useRouter();
-  const { products } = useProducts();
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(-1);
@@ -43,27 +71,7 @@ export default function CauchosSearchForm({
 
   const trimmedQuery = value.trim();
 
-  const suggestions = useMemo(() => {
-    if (trimmedQuery.length < 2) return [];
-
-    const seen = new Set<string>();
-    const matches: { slug: string; nombre: string; marca: string }[] = [];
-
-    for (const product of products) {
-      if (!productSellsInDivision(product, division)) continue;
-      const haystack = [product.nombre, product.marca, product.categoria, product.sku]
-        .filter((v): v is string => Boolean(v))
-        .join(" ");
-      if (!matchesQuery(haystack, trimmedQuery)) continue;
-      if (seen.has(product.slug)) continue;
-
-      seen.add(product.slug);
-      matches.push({ slug: product.slug, nombre: product.nombre, marca: product.marca });
-      if (matches.length >= MAX_SUGGESTIONS) break;
-    }
-
-    return matches;
-  }, [products, division, trimmedQuery]);
+  const suggestions = useProductSuggestions(trimmedQuery, division, MAX_SUGGESTIONS);
 
   function goToSearch(query: string) {
     const trimmed = query.trim();
@@ -72,13 +80,13 @@ export default function CauchosSearchForm({
   }
 
   return (
-    <div ref={containerRef} className="relative flex-1">
+    <div ref={containerRef} className="relative min-w-0 flex-1">
       <form
         className={className}
         onSubmit={(event) => {
           event.preventDefault();
           if (highlighted >= 0 && suggestions[highlighted]) {
-            router.push(`/producto/${suggestions[highlighted].slug}`);
+            router.push(productHref(suggestions[highlighted].slug, division));
             setOpen(false);
             return;
           }
@@ -124,7 +132,7 @@ export default function CauchosSearchForm({
           {suggestions.map((suggestion, index) => (
             <Link
               key={suggestion.slug}
-              href={`/producto/${suggestion.slug}`}
+              href={productHref(suggestion.slug, division)}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => setOpen(false)}
               className={`flex flex-col gap-0.5 px-4 py-2.5 text-sm transition-colors duration-100 ${

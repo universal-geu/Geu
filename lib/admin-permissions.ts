@@ -7,10 +7,10 @@ export const ADMIN_TOOL_KEYS = [
   "inventory",
   "orders",
   "quotes",
+  "categories",
   "reports",
   "images",
   "settings",
-  "accounts",
 ] as const;
 
 export type AdminToolKey = (typeof ADMIN_TOOL_KEYS)[number];
@@ -22,10 +22,10 @@ export const ADMIN_TOOL_LABELS: Record<AdminToolKey, string> = {
   inventory: "Inventario",
   orders: "Pedidos",
   quotes: "Cotizaciones",
+  categories: "Categorías",
   reports: "Informes",
   images: "Imágenes",
   settings: "Configuración",
-  accounts: "Cuentas",
 };
 
 export function isAdminToolKey(value: string): value is AdminToolKey {
@@ -46,8 +46,8 @@ export function hasAdminPermission(
 // team-account management — the rest (dashboard, product CRUD, orders,
 // quotes, reports) has nothing to show.
 export const DIVISION_TOOL_RESTRICTIONS: Partial<Record<DivisionName, readonly AdminToolKey[]>> = {
-  Innovation: ["images", "settings", "accounts"],
-  GEU: ["images", "settings", "accounts"],
+  Innovation: ["images", "settings"],
+  GEU: ["images", "settings"],
 };
 
 export function isToolAllowedForDivision(
@@ -55,6 +55,9 @@ export function isToolAllowedForDivision(
   tool: AdminToolKey,
 ): boolean {
   if (!division) return true;
+  // Quotes only make sense for Cauchos (Universal de Cauchos) — the other
+  // brands don't take quote requests, so hide the tool everywhere else.
+  if (tool === "quotes" && division !== "Cauchos") return false;
   const allowed = DIVISION_TOOL_RESTRICTIONS[division];
   return !allowed || allowed.includes(tool);
 }

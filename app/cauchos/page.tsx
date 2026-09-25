@@ -11,8 +11,9 @@ import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
-import { categoryLabelKey } from "@/lib/text-slots";
+import { getCategoriesForDivision } from "@/lib/categories";
 import { getProducts, productSellsInDivision } from "@/lib/products";
+import { productHref } from "@/lib/divisions";
 import { slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
@@ -28,59 +29,6 @@ const navItems = [
   { label: "Contacto", href: "#contacto" },
 ];
 
-const cauchosCategoriesBase = [
-  {
-    label: "Alimentos",
-    title: "Alimentos, Farmacéuticos y cosméticos",
-    imageKey: "categoria-alimentos",
-    count: "Ver productos",
-  },
-  {
-    label: "Agroindustria",
-    title: "Agroindustria",
-    imageKey: "categoria-agroindustria",
-    count: "Ver productos",
-  },
-  {
-    label: "Petróleo",
-    title: "Petróleo, minería, gas, energías renovables y petroquímica",
-    imageKey: "categoria-petroleo",
-    count: "Ver productos",
-  },
-  {
-    label: "Químico",
-    title: "Químico, aseo y plásticos",
-    imageKey: "categoria-quimico",
-    count: "Ver productos",
-  },
-  {
-    label: "Construcción",
-    title: "Construcción, infraestructura, obra civil, cemento y agregados",
-    imageKey: "categoria-construccion",
-    count: "Ver productos",
-  },
-  {
-    label: "Transporte",
-    title: "Transporte, logística y puertos marítimos",
-    imageKey: "categoria-transporte",
-    count: "Ver productos",
-  },
-  {
-    label: "Manufactura",
-    title: "Manufactura, metalmecánica, siderúrgica y textiles",
-    imageKey: "categoria-manufactura",
-    count: "Ver productos",
-  },
-  {
-    label: "Ferretería",
-    title: "Ferretería y otros",
-    imageKey: "categoria-ferreteria",
-    count: "Ver productos",
-  },
-].map((category) => ({
-  ...category,
-  href: `/cauchos/categoria/${slugify(category.title)}`,
-}));
 
 const cauchosOffers = [
   {
@@ -129,16 +77,23 @@ const featuredBrands = [
 ];
 
 export default async function CauchosPage() {
-  const siteImages = await getSiteImages();
-  const siteImageLinks = await getSiteImageLinks();
-  const siteTexts = await getSiteTexts();
+  // Independent reads — fetch them together instead of paying for five
+  // sequential round trips to a remote DB on every page load.
+  const [siteImages, siteImageLinks, siteTexts, cauchosCategoryRecords, allProducts] = await Promise.all([
+    getSiteImages(),
+    getSiteImageLinks(),
+    getSiteTexts(),
+    getCategoriesForDivision("Cauchos"),
+    getProducts(),
+  ]);
   const t = (key: string) => resolveText(key, siteTexts);
-  const cauchosCategories = cauchosCategoriesBase.map((category) => ({
-    ...category,
-    title: resolveText(categoryLabelKey("Cauchos", category.title), siteTexts, category.title),
-    image: resolveImage(category.imageKey, siteImages),
+  const cauchosCategories = cauchosCategoryRecords.map((category) => ({
+    label: category.name,
+    title: category.name,
+    count: "Ver productos",
+    href: `/cauchos/categoria/${slugify(category.name)}`,
+    image: category.imageKey ? resolveImage(category.imageKey, siteImages) : "/home-cauchos.webp",
   }));
-  const allProducts = await getProducts();
   const cauchosCatalog = allProducts.filter((product) => productSellsInDivision(product, "Cauchos"));
   const cauchosFeatured = cauchosCatalog.filter((product) => product.destacado);
   const cauchosProducts = (cauchosFeatured.length > 0 ? cauchosFeatured : cauchosCatalog).slice(0, 4);
@@ -233,18 +188,11 @@ export default async function CauchosPage() {
                     {t("cauchos-productos-subtitulo")}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-[0.06em] text-slate-600">
-                  {["Entrega inmediata", "Por pedido", "A medida"].map((tag) => (
-                    <span key={tag} className="rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
               </div>
 
               <div className="-mx-5 mt-8 flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-3 2xl:grid-cols-4">
                 {cauchosProducts.map((product) => {
-                  const productImage = product.imagen === "/hero-unipars.jpg" ? "/home-cauchos.png" : product.imagen;
+                  const productImage = product.imagen === "/hero-unipars.jpg" ? "/home-cauchos.webp" : product.imagen;
 
                   return (
                   <article
@@ -252,7 +200,7 @@ export default async function CauchosPage() {
                     className="group flex min-h-[455px] w-[calc(100vw-2.5rem)] shrink-0 snap-start flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#075ed8]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)] sm:w-auto sm:shrink"
                   >
                     <Link
-                      href={`/producto/${product.slug}`}
+                      href={productHref(product.slug, "Cauchos")}
                       className="relative block h-52 overflow-hidden bg-white"
                       style={{
                         backgroundImage: `url('${productImage}')`,
@@ -273,7 +221,7 @@ export default async function CauchosPage() {
                         {product.marca}
                       </span>
                       <Link
-                        href={`/producto/${product.slug}`}
+                        href={productHref(product.slug, "Cauchos")}
                         className="mt-2 min-h-14 text-xl font-black leading-7 text-slate-950 hover:text-[#075ed8]"
                       >
                         {product.nombre}
@@ -294,13 +242,15 @@ export default async function CauchosPage() {
                       </span>
                       <CauchosAddToCartButton
                         id={product.slug}
+                        slug={product.slug}
                         nombre={product.nombre}
                         precio={product.precio}
                         imagen={productImage}
+                        sku={product.sku}
                         division="Cauchos"
                       />
                       <Link
-                        href={`/producto/${product.slug}`}
+                        href={productHref(product.slug, "Cauchos")}
                         className="mt-3 inline-flex justify-center rounded-full border border-[#075ed8] bg-white px-4 py-2 text-center text-xs font-black uppercase tracking-[0.08em] text-[#075ed8] transition-colors duration-200 hover:bg-[#075ed8] hover:text-white"
                       >
                         Ver detalle

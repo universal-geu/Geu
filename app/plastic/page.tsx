@@ -5,15 +5,16 @@ import CauchosCategoryCarousel from "../components/cauchos-category-carousel";
 import { BrandClosingBanner, BrandFeaturedSection, BrandOfferSection } from "../components/brand-promo-sections";
 import { ResponsiveBanner } from "../components/responsive-banner";
 import CauchosHeader from "../components/cauchos-header";
-import CauchosProjectChat from "../components/cauchos-project-chat";
 import HeroVideo from "../components/hero-video";
 import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
-import { categoryLabelKey } from "@/lib/text-slots";
+import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
+import { getCategoriesForDivision } from "@/lib/categories";
 import { getProducts, productSellsInDivision } from "@/lib/products";
-import { plasticCategorias, slugify } from "../data/catalog";
+import { productHref } from "@/lib/divisions";
+import { slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -58,38 +59,33 @@ const plasticFeatured = [
   },
 ];
 
-const PLASTIC_CATEGORY_IMAGE_KEYS: Record<string, string> = {
-  "Extrusión en PVC Rígido": "plastic-categoria-pvc-rigido",
-  "Extrusión en PVC Flexible": "plastic-categoria-pvc-flexible",
-  "Desarrollo de empaques magnéticos": "plastic-categoria-empaques-magneticos",
-  "Desarrollo de cintas magnéticas": "plastic-categoria-cintas-magneticas",
-  "Procesos de ensamble de puertas y encimeras": "plastic-categoria-ensamble-puertas-encimeras",
-  "Perfilería para hidroponía": "plastic-categoria-perfileria-hidroponia",
-  "Perfilería para construcción": "plastic-categoria-perfileria-construccion",
-  "Perfilería para carrocería": "plastic-categoria-perfileria-carroceria",
-};
-
-const plasticCategoriesBase = plasticCategorias.map((title) => ({
-  label: title,
-  title,
-  imageKey: PLASTIC_CATEGORY_IMAGE_KEYS[title] ?? "plastic-categoria-pvc-rigido",
-  count: "Ver productos",
-  href: `/plastic/categoria/${slugify(title)}`,
-}));
-
 export default async function PlasticPage() {
-  const siteImages = await getSiteImages();
-  const siteImageLinks = await getSiteImageLinks();
-  const siteTexts = await getSiteTexts();
+  // Independent reads — fetch them together instead of paying for six
+  // sequential round trips to a remote DB on every page load.
+  const [siteImages, siteImageLinks, siteTexts, whatsappNumber, allProducts, plasticCategoryRecords] =
+    await Promise.all([
+      getSiteImages(),
+      getSiteImageLinks(),
+      getSiteTexts(),
+      getWhatsAppNumberForDivision("Plastic"),
+      getProducts(),
+      getCategoriesForDivision("Plastic"),
+    ]);
   const t = (key: string) => resolveText(key, siteTexts);
-  const allProducts = await getProducts();
+  const whatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        "Hola GEU Plastic, quiero hacer una evaluacion tecnica.",
+      )}`
+    : "#contacto";
   const plasticCatalog = allProducts.filter((product) => productSellsInDivision(product, "Plastic"));
   const plasticFeaturedProducts = plasticCatalog.filter((product) => product.destacado);
   const plasticProducts = (plasticFeaturedProducts.length > 0 ? plasticFeaturedProducts : plasticCatalog).slice(0, 4);
-  const plasticCategories = plasticCategoriesBase.map((category) => ({
-    ...category,
-    title: resolveText(categoryLabelKey("Plastic", category.title), siteTexts, category.title),
-    image: resolveImage(category.imageKey, siteImages),
+  const plasticCategories = plasticCategoryRecords.map((category) => ({
+    label: category.name,
+    title: category.name,
+    count: "Ver productos",
+    href: `/plastic/categoria/${slugify(category.name)}`,
+    image: category.imageKey ? resolveImage(category.imageKey, siteImages) : "/home-plastic.webp",
   }));
   const plasticOffersResolved = plasticOffers.map((offer) => ({
     ...offer,
@@ -112,31 +108,30 @@ export default async function PlasticPage() {
         </div>
 
         <div className="mx-auto w-full overflow-hidden bg-[#6b7280]" style={{ maxWidth: "1632px" }}>
-          <CauchosProjectChat
-            division="Plastic"
-            triggerLabel={
-              <>
-                <span className="sr-only">¿Qué necesitas producir?</span>
-                <span aria-hidden="true" className="geu-marquee-track flex w-max items-center">
-                  {[0, 1].map((groupIndex) => (
-                    <span key={groupIndex} className="flex items-center">
-                      {Array.from({ length: 10 }).map((_, i) => (
-                        <span
-                          key={i}
-                          className="flex items-center whitespace-nowrap px-5 text-xs font-black uppercase tracking-[0.14em] text-white"
-                        >
-                          ¿Qué necesitas producir?
-                          <span className="ml-2">→</span>
-                          <span className="ml-5 text-white/45">✦</span>
-                        </span>
-                      ))}
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="geu-marquee-btn block w-full cursor-pointer overflow-hidden py-2.5 text-left"
+          >
+            <span className="sr-only">¿Qué necesitas producir?</span>
+            <span aria-hidden="true" className="geu-marquee-track flex w-max items-center">
+              {[0, 1].map((groupIndex) => (
+                <span key={groupIndex} className="flex items-center">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className="flex items-center whitespace-nowrap px-5 text-xs font-black uppercase tracking-[0.14em] text-white"
+                    >
+                      ¿Qué necesitas producir?
+                      <span className="ml-2">→</span>
+                      <span className="ml-5 text-white/45">✦</span>
                     </span>
                   ))}
                 </span>
-              </>
-            }
-            triggerClassName="geu-marquee-btn block w-full cursor-pointer overflow-hidden py-2.5 text-left"
-          />
+              ))}
+            </span>
+          </a>
         </div>
         <div className="bg-white">
           {isVideoUrl(resolveImage("plastic-principal", siteImages)) ? (
@@ -185,19 +180,12 @@ export default async function PlasticPage() {
                 {t("plastic-productos-subtitulo")}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-[0.06em] text-slate-600">
-              {["Entrega inmediata", "Por pedido", "A medida"].map((tag) => (
-                <span key={tag} className="rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
-                  {tag}
-                </span>
-              ))}
-            </div>
           </div>
 
           {plasticProducts.length > 0 ? (
             <div className="-mx-5 mt-8 flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-3 2xl:grid-cols-4">
               {plasticProducts.map((product) => {
-                const productImage = product.imagen === "/hero-unipars.jpg" ? "/home-plastic.png" : product.imagen;
+                const productImage = product.imagen === "/hero-unipars.jpg" ? "/home-plastic.webp" : product.imagen;
 
                 return (
                 <article
@@ -205,7 +193,7 @@ export default async function PlasticPage() {
                   className="group flex min-h-[455px] w-[calc(100vw-2.5rem)] shrink-0 snap-start flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#6b7280]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)] sm:w-auto sm:shrink"
                 >
                   <Link
-                    href={`/producto/${product.slug}`}
+                    href={productHref(product.slug, "Plastic")}
                     className="relative block h-52 overflow-hidden bg-white"
                     style={{
                       backgroundImage: `url('${productImage}')`,
@@ -226,7 +214,7 @@ export default async function PlasticPage() {
                       {product.marca}
                     </span>
                     <Link
-                      href={`/producto/${product.slug}`}
+                      href={productHref(product.slug, "Plastic")}
                       className="mt-2 min-h-14 text-xl font-black leading-7 text-slate-950 hover:text-[#6b7280]"
                     >
                       {product.nombre}
@@ -247,14 +235,16 @@ export default async function PlasticPage() {
                     </span>
                     <CauchosAddToCartButton
                       id={product.slug}
+                      slug={product.slug}
                       nombre={product.nombre}
                       precio={product.precio}
                       imagen={productImage}
+                      sku={product.sku}
                       division="Plastic"
                       accent="gray"
                     />
                     <Link
-                      href={`/producto/${product.slug}`}
+                      href={productHref(product.slug, "Plastic")}
                       className="mt-3 inline-flex justify-center rounded-full px-4 py-2 text-center text-xs font-black uppercase tracking-[0.08em] text-slate-500 hover:bg-slate-100 hover:text-[#6b7280]"
                     >
                       Ver detalle
@@ -303,11 +293,14 @@ export default async function PlasticPage() {
                 {t("plastic-contacto-subtitulo")}
               </p>
             </div>
-            <CauchosProjectChat
-              division="Plastic"
-              triggerLabel="Hablar con un experto →"
-              triggerClassName="inline-flex w-fit items-center justify-center rounded-[4px] border border-[#a3a3a4] bg-[#a3a3a4] px-7 py-4 text-sm font-black uppercase tracking-[0.08em] text-slate-950 transition hover:border-white hover:bg-white"
-            />
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-fit items-center justify-center rounded-[4px] border border-[#a3a3a4] bg-[#a3a3a4] px-7 py-4 text-sm font-black uppercase tracking-[0.08em] text-slate-950 transition hover:border-white hover:bg-white"
+            >
+              Hablar con un experto →
+            </a>
           </div>
         </div>
       </section>

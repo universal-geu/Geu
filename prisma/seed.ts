@@ -2,7 +2,11 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { hash } from "bcryptjs";
 import { PrismaClient } from "../generated/prisma/client";
 import {
+  categoriasData,
   descripcionProducto,
+  energyCategoriasData,
+  importCategoriasData,
+  plasticCategoriasData,
   productosCatalogo,
 } from "../app/data/catalog";
 import {
@@ -58,6 +62,34 @@ async function main() {
         division,
       },
     });
+  }
+
+  const categorySeeds: Array<{
+    division: "Cauchos" | "Import" | "Plastic" | "Energy";
+    data: readonly { nombre: string; color: string; icono: string; imageKey?: string }[];
+  }> = [
+    { division: "Cauchos", data: categoriasData },
+    { division: "Import", data: importCategoriasData },
+    { division: "Plastic", data: plasticCategoriasData },
+    { division: "Energy", data: energyCategoriasData },
+  ];
+
+  for (const { division, data } of categorySeeds) {
+    const existingCount = await prisma.category.count({ where: { division } });
+    if (existingCount > 0) continue;
+
+    for (const [index, item] of data.entries()) {
+      await prisma.category.create({
+        data: {
+          division,
+          name: item.nombre,
+          color: item.color,
+          icon: item.icono,
+          imageKey: item.imageKey ?? null,
+          order: index,
+        },
+      });
+    }
   }
 
   await prisma.product.deleteMany();

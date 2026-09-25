@@ -1,14 +1,3 @@
-import {
-  categoriasData,
-  energyCategoriasData,
-  importCategoriasData,
-  plasticCategoriasData,
-} from "@/app/data/catalog";
-
-export function categoryLabelKey(division: string, nombre: string): string {
-  return `category-label:${division}:${nombre}`;
-}
-
 export type SiteTexts = Record<string, string>;
 
 export function resolveText(key: string, siteTexts: SiteTexts, fallback?: string): string {
@@ -187,12 +176,6 @@ export const TEXT_SLOTS: TextSlot[] = [
   { key: "innovation-fabricacion-subtitulo", label: "Fabricación · Subtítulo", group: "Innovation", division: "Innovation", defaultValue: "Cada estufa se corta, suelda, arma y pinta a mano en nuestro taller antes de salir hacia una familia.", multiline: true },
   { key: "innovation-doypack-titulo", label: "Doypack · Título producto", group: "Innovation", division: "Innovation", defaultValue: "Doypack" },
   { key: "innovation-doypack-descripcion", label: "Doypack · Descripción producto", group: "Innovation", division: "Innovation", defaultValue: "Empaque flexible con tapa dosificadora, diseñado para acompañar cualquier momento: fácil de abrir, cerrar y volver a usar sin perder frescura. Una solución práctica y liviana para bebidas, salsas y productos líquidos o semilíquidos.", multiline: true },
-  { key: "innovation-nosotros-hero-titulo", label: "Nosotros · Título", group: "Nosotros", division: "Innovation", defaultValue: "¿Quiénes somos?" },
-  { key: "innovation-nosotros-hero-subtitulo", label: "Nosotros · Párrafo introductorio", group: "Nosotros", division: "Innovation", defaultValue: "GEU Innovation es la unidad de desarrollo tecnológico de GEU, dedicada a crear soluciones inteligentes que transforman ideas en nuevos modelos de negocio.", multiline: true },
-  { key: "innovation-nosotros-intro-texto", label: "Nosotros · Párrafos adicionales", group: "Nosotros", division: "Innovation", defaultValue: "Diseñamos productos, plataformas y tecnologías que ayudan a las empresas a crecer, optimizar sus operaciones y crear nuevas formas de acercar sus productos y servicios a las personas.\n\nNuestro primer desarrollo es una plataforma de tiendas inteligentes autónomas, pero nuestra visión es seguir creando soluciones que respondan a los desafíos del comercio, la logística, la automatización y la experiencia del usuario.", multiline: true },
-  { key: "innovation-valores-titulo", label: "Nosotros · Título de valores", group: "Nosotros", division: "Innovation", defaultValue: "Lo que guía cada decisión que tomamos." },
-  { key: "innovation-filosofia-texto", label: "Nosotros · Párrafo de filosofía", group: "Nosotros", division: "Innovation", defaultValue: "Creemos que la mejor innovación no consiste en crear más tecnología, sino en desarrollar soluciones que permitan a las empresas crecer, abrir nuevos canales de negocio y generar mejores experiencias para sus clientes.", multiline: true },
-  { key: "innovation-promesa-titulo", label: "Nosotros · Título de cierre", group: "Nosotros", division: "Innovation", defaultValue: "Buenas ideas. Nuevos negocios." },
   { key: "footer-innovation-tagline", label: "Footer · Frase de marca", group: "Footer", division: "Innovation", defaultValue: "Autoservicio inteligente para empresas en todo el país.", multiline: true },
 
   // ---- Quienes somos (corporativo) ----
@@ -204,34 +187,4 @@ export const TEXT_SLOTS: TextSlot[] = [
   { key: "quienes-somos-contacto-titulo", label: "Título de cierre", group: "Quiénes somos", division: "GEU", defaultValue: "Un ecosistema que trabaja como uno solo." },
   { key: "quienes-somos-contacto-subtitulo", label: "Párrafo de cierre", group: "Quiénes somos", division: "GEU", defaultValue: "Integramos capacidades, tecnología y talento para ofrecer soluciones completas y generar valor en cada industria donde participamos.", multiline: true },
   { key: "footer-quienes-somos-tagline", label: "Footer · Frase de marca", group: "Quiénes somos", division: "GEU", defaultValue: "Impulsamos industrias a través de soluciones integrales, innovación y compromiso con la excelencia.", multiline: true },
-
-  // ---- Nombres de categorías del menú (no cambian la URL ni el filtro de productos) ----
-  ...categoriasData.map((category) => ({
-    key: categoryLabelKey("Cauchos", category.nombre),
-    label: `Categoría · ${category.nombre}`,
-    group: "Nombres de categorías",
-    division: "Cauchos" as const,
-    defaultValue: category.nombre,
-  })),
-  ...importCategoriasData.map((category) => ({
-    key: categoryLabelKey("Import", category.nombre),
-    label: `Categoría · ${category.nombre}`,
-    group: "Nombres de categorías",
-    division: "Import" as const,
-    defaultValue: category.nombre,
-  })),
-  ...plasticCategoriasData.map((category) => ({
-    key: categoryLabelKey("Plastic", category.nombre),
-    label: `Categoría · ${category.nombre}`,
-    group: "Nombres de categorías",
-    division: "Plastic" as const,
-    defaultValue: category.nombre,
-  })),
-  ...energyCategoriasData.map((category) => ({
-    key: categoryLabelKey("Energy", category.nombre),
-    label: `Categoría · ${category.nombre}`,
-    group: "Nombres de categorías",
-    division: "Energy" as const,
-    defaultValue: category.nombre,
-  })),
 ];

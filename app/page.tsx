@@ -6,27 +6,27 @@ import { geuCompanies } from "./data/geu-companies";
 const homeCards = [
   {
     ...geuCompanies[0],
-    image: "/home-cauchos.png",
+    image: "/home-cauchos.webp",
     alt: "Rollos de caucho industrial en una fabrica iluminada en azul.",
   },
   {
     ...geuCompanies[1],
-    image: "/home-import.png",
+    image: "/home-import.webp",
     alt: "Contenedor rojo en puerto industrial al atardecer.",
   },
   {
     ...geuCompanies[2],
-    image: "/home-innovation.png",
+    image: "/home-innovation.webp",
     alt: "Estructura metalica industrial bajo un cielo despejado.",
   },
   {
     ...geuCompanies[3],
-    image: "/home-energy.png",
+    image: "/home-energy.webp",
     alt: "Paneles solares y aerogeneradores al atardecer.",
   },
   {
     ...geuCompanies[4],
-    image: "/home-plastic.png",
+    image: "/home-plastic.webp",
     alt: "Perfiles plasticos industriales sobre materia prima blanca.",
   },
 ];
@@ -57,13 +57,6 @@ export default function Home() {
           gap: "clamp(0.9rem, 1.6vw, 1.5rem)",
         }}
       >
-        <Link
-          href="/login"
-          className="rounded-full bg-[#0b419a] px-4 py-1.5 font-bold leading-none text-white shadow-sm transition-colors hover:bg-[#073174]"
-          style={{ fontSize: "clamp(0.72rem, 0.86vw, 0.9rem)" }}
-        >
-          Iniciar sesión
-        </Link>
         <Link
           href="/autoservicio-inteligente"
           className="rounded-full border border-[#0b419a]/25 px-4 py-1.5 font-bold leading-none text-[#0b419a] transition-colors hover:bg-[#0b419a]/[0.08]"

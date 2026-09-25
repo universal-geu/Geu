@@ -1,5 +1,22 @@
-import { deleteProduct, getProductDivision, updateProduct } from "@/lib/products";
+import { deleteProduct, getProductBySlug, getProductDivision, updateProduct } from "@/lib/products";
 import { requireAdminUser } from "@/lib/admin";
+
+// Public — the product detail page calls this to fill in the fields
+// (specs, gallery, variants) that the storefront's light catalog list
+// (/api/products) leaves out, without re-downloading all 2,000+ products.
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ slug: string }> },
+) {
+  const { slug } = await context.params;
+  const product = await getProductBySlug(slug);
+
+  if (!product) {
+    return Response.json({ error: "Producto no encontrado." }, { status: 404 });
+  }
+
+  return Response.json({ product });
+}
 
 export async function PATCH(
   request: Request,

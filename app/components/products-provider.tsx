@@ -70,6 +70,11 @@ type ProductsContextValue = {
     note?: string,
   ) => Promise<{ ok: true } | { ok: false; message: string }>;
   refreshProducts: () => Promise<void>;
+  /** Upgrades the shared product list to the full, every-field version (specs,
+   * gallery, variants) that the admin edit form needs — call once when the
+   * admin panel mounts, since the storefront's initial list intentionally
+   * leaves those fields out to keep page loads light. */
+  loadFullCatalog: () => Promise<void>;
 };
 
 const ProductsContext = createContext<ProductsContextValue | null>(null);
@@ -384,6 +389,15 @@ export function ProductsProvider({
     },
     refreshProducts: async () => {
       const response = await fetch("/api/products");
+      if (!response.ok) return;
+
+      const payload = (await response.json()) as { products?: StoreProduct[] };
+      if (payload.products) {
+        setProducts(payload.products);
+      }
+    },
+    loadFullCatalog: async () => {
+      const response = await fetch("/api/admin/products");
       if (!response.ok) return;
 
       const payload = (await response.json()) as { products?: StoreProduct[] };

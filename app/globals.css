@@ -1294,3 +1294,60 @@ html.geu-light-mode .geu-theme-page > section:not(:first-of-type) input {
   opacity: 0;
   animation: innovationHeroIntro 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
 }
+
+/* Gus en miniatura dentro del seguimiento del pedido (mi-cuenta y admin).
+   Usa los mismos cuadros del widget de GEU Structure, reducidos a tiras. */
+@keyframes gus-run-in {
+  from { left: var(--gus-from); }
+  to { left: var(--gus-to); }
+}
+@keyframes gus-run-frames {
+  to { background-position: -504px 0; }
+}
+@keyframes gus-run-bob {
+  0%, 50%, 100% { transform: translateY(0); }
+  25%, 75% { transform: translateY(-4px); }
+}
+@keyframes gus-idle-frames {
+  to { background-position: -76px 0; }
+}
+@keyframes gus-celebrate {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.gus-tracker {
+  position: absolute;
+  bottom: 0;
+  left: var(--gus-to);
+  transform: translateX(-50%);
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
+}
+.gus-tracker-running {
+  animation: gus-run-in 1.6s cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+.gus-tracker-run {
+  width: 56px;
+  height: 56px;
+  background: url("/gus/run-strip.png") 0 0 / 504px 56px no-repeat;
+  animation: gus-run-frames 0.55s steps(9) infinite, gus-run-bob 0.55s ease-in-out infinite;
+}
+.gus-tracker-idle {
+  width: 38px;
+  height: 56px;
+  background: url("/gus/idle-strip.png") 0 0 / 76px 56px no-repeat;
+  animation: gus-idle-frames 4.8s steps(2) infinite;
+}
+.gus-tracker-celebrate {
+  width: 41px;
+  height: 56px;
+  background: url("/gus/celebrate-mini.png") 0 0 / 41px 56px no-repeat;
+  animation: gus-celebrate 0.9s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gus-tracker-running,
+  .gus-tracker-run,
+  .gus-tracker-idle,
+  .gus-tracker-celebrate {
+    animation: none;
+  }
+}

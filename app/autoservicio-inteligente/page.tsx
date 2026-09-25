@@ -15,7 +15,6 @@ const navItems = [
   { label: "Structure", href: "/innovation" },
   { label: "Energy", href: "/energy" },
   { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/autoservicio-inteligente/nosotros" },
   { label: "Contacto", href: "mailto:innovation@geu.com.co" },
 ];
 
@@ -43,53 +42,6 @@ function getSolutions(siteImages: SiteImages) {
     },
   ];
 }
-
-function SnowflakeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
-      <path d="M12 2v20M4.5 6.5l15 11M19.5 6.5l-15 11" />
-      <path d="M12 2 9.5 4.5M12 2l2.5 2.5M12 22l-2.5-2.5M12 22l2.5-2.5" />
-    </svg>
-  );
-}
-
-function WifiIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
-      <path d="M2.5 8.5a15 15 0 0 1 19 0" />
-      <path d="M5.8 12.3a10.5 10.5 0 0 1 12.4 0" />
-      <path d="M9 16a5.5 5.5 0 0 1 6 0" />
-      <circle cx="12" cy="19.5" r="1.1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3.5 2" />
-    </svg>
-  );
-}
-
-function PeopleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
-      <circle cx="17.5" cy="9" r="2.4" />
-      <path d="M15.8 14.2c2.6.5 4.4 2.7 4.4 5.3" />
-    </svg>
-  );
-}
-
-const heroStats = [
-  { icon: SnowflakeIcon, value: "150", unit: "+", label: "Puntos inteligentes instalados" },
-  { icon: WifiIcon, value: "99.2", unit: "%", label: "Disponibilidad del sistema" },
-  { icon: ClockIcon, value: "24/7", unit: "", label: "Autoservicio disponible" },
-  { icon: PeopleIcon, value: "40", unit: "+", label: "Empresas conectadas" },
-];
 
 export default async function InnovationPage() {
   const siteImages = await getSiteImages();
@@ -128,26 +80,7 @@ export default async function InnovationPage() {
           </div>
         </div>
 
-        <div className="relative z-10 border-t border-white/10 bg-black/55 backdrop-blur-sm">
-          <div className="mx-auto grid max-w-[1500px] grid-cols-4 gap-x-6 gap-y-8 px-5 pb-24 pt-7 max-[560px]:grid-cols-2 md:px-8 md:pb-7">
-            {heroStats.map((stat) => (
-              <div key={stat.label} className="flex items-center gap-3">
-                <stat.icon />
-                <div>
-                  <p className="font-[family:var(--font-display)] text-2xl font-black leading-none text-white md:text-3xl">
-                    {stat.value}
-                    <span className="text-sm font-black uppercase text-white/70">{stat.unit}</span>
-                  </p>
-                  <p className="mt-1.5 max-w-[10rem] text-[10px] font-bold uppercase leading-tight tracking-[0.06em] text-white/60">
-                    {stat.label}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="pointer-events-none absolute bottom-[7.5rem] left-5 hidden flex-col items-center gap-3 md:left-8 lg:flex">
+        <div className="pointer-events-none absolute bottom-10 left-5 hidden flex-col items-center gap-3 md:left-8 lg:flex">
           <span className="h-8 w-px bg-white/30" />
           <span className="h-1.5 w-1.5 rounded-full border border-[#0498b4]" />
           <span className="[writing-mode:vertical-rl] text-[9px] font-black uppercase tracking-[0.3em] text-white/45">
@@ -190,12 +123,6 @@ export default async function InnovationPage() {
                 <p className="mt-3 hidden max-w-sm text-sm font-semibold leading-6 text-white/80 md:block">
                   {t("innovation-sistema-subtitulo")}
                 </p>
-                <Link
-                  href="mailto:innovation@geu.com.co"
-                  className="mt-4 inline-flex items-center gap-3 rounded-[3px] border border-[#0498b4]/70 px-5 py-3 text-[11px] font-black uppercase tracking-[0.12em] text-[#0498b4] hover:bg-[#0498b4] hover:text-black md:px-6 md:py-3.5 md:text-[12px]"
-                >
-                  Comenzar ahora <span aria-hidden="true">→</span>
-                </Link>
               </div>
             </div>
           </div>

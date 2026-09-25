@@ -99,6 +99,17 @@ export const CART_ACCENT: Record<DivisionName, "blue" | "red" | "gray" | "gold">
   GEU: "blue",
 };
 
+// A product can be cross-listed into other divisions (see
+// Product.additionalDivisions / divisionesAdicionales), so a "ver detalle"
+// link has to carry the division the visitor is currently browsing —
+// otherwise /producto/[slug] falls back to the product's own primary
+// division and the visitor gets bounced to that brand's look, even though
+// they never left e.g. GEU Import.
+export function productHref(slug: string, division: DivisionName): string {
+  const brandParam = division === "Cauchos" ? undefined : division.toLowerCase();
+  return brandParam ? `/producto/${slug}?brand=${brandParam}` : `/producto/${slug}`;
+}
+
 export function getDivisionFromBrandParam(brand: string | null | undefined): DivisionName {
   switch ((brand || "").toLowerCase()) {
     case "import":

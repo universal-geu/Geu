@@ -11,7 +11,7 @@ export default function ComingSoonPage() {
     <div className="fixed inset-0 z-[2147483647] bg-[#0a0f1f]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/geu-coming-soon.png"
+        src="/geu-coming-soon.webp"
         alt="GEU — Ya casi estamos listos. Estamos preparando algo especial para ti."
         className="h-full w-full object-cover"
       />

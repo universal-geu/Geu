@@ -19,6 +19,7 @@ type Props = {
   categoriasHref?: string;
   categoriasLabel?: string;
   accountBrand?: string;
+  hideAccount?: boolean;
   moreItems: MoreItem[];
   breakpointClassName?: string;
 };
@@ -80,6 +81,7 @@ export default function MobileBottomNav({
   categoriasHref,
   categoriasLabel = "Categorías",
   accountBrand,
+  hideAccount = false,
   moreItems,
   breakpointClassName = "md:hidden",
 }: Props) {
@@ -208,14 +210,16 @@ export default function MobileBottomNav({
             </Link>
           )}
 
-          <Link
-            href={accountHref}
-            className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
-            style={{ color: inactiveColor }}
-          >
-            <UserIcon />
-            {accountLabel}
-          </Link>
+          {!hideAccount && (
+            <Link
+              href={accountHref}
+              className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
+              style={{ color: inactiveColor }}
+            >
+              <UserIcon />
+              {accountLabel}
+            </Link>
+          )}
 
           <button
             type="button"
