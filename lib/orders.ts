@@ -547,7 +547,7 @@ export async function getOrdersForUser(userId: string) {
   }
 
   return await prisma.order.findMany({
-    where: { userId },
+    where: { userId, paymentStatus: "PAID" },
     orderBy: { createdAt: "desc" },
     include: {
       items: {

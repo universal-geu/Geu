@@ -118,7 +118,15 @@ export function BrandFeaturedSection({
     : compact
       ? "text-center text-xl font-black tracking-[-0.02em] text-slate-900"
       : "text-center text-2xl font-black tracking-[-0.02em] text-slate-900";
-  const gridClass = compact ? "mt-5 grid gap-3 sm:grid-cols-2" : "mt-7 grid gap-4 lg:grid-cols-2";
+  // En móvil las tarjetas van en carrusel con scroll lateral; desde el breakpoint vuelven a la grilla.
+  const scrollRowClass =
+    "-mx-5 flex snap-x snap-mandatory overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  const gridClass = compact
+    ? `mt-5 gap-3 ${scrollRowClass} sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0`
+    : `mt-7 gap-4 ${scrollRowClass} lg:mx-0 lg:grid lg:snap-none lg:grid-cols-2 lg:overflow-visible lg:px-0 lg:pb-0`;
+  const itemWidthClass = compact
+    ? "w-[85vw] shrink-0 snap-start sm:w-auto sm:shrink"
+    : "w-[85vw] shrink-0 snap-start lg:w-auto lg:shrink";
   const cardClass = compact
     ? "group block aspect-[18/5] overflow-hidden rounded-[4px] bg-[#071225] shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.12)]"
     : "group block h-[190px] overflow-hidden rounded-[4px] bg-[#071225] shadow-[0_12px_28px_rgba(15,23,42,0.1)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(15,23,42,0.16)] sm:h-[230px] lg:h-[215px]";
@@ -135,7 +143,7 @@ export function BrandFeaturedSection({
               key={item.title}
               href={item.href}
               aria-label={item.title}
-              className={`relative ${cardClass}`}
+              className={`relative ${itemWidthClass} ${cardClass}`}
             >
               <Image
                 src={resolveImage(item.imageKey, siteImages)}

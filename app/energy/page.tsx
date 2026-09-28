@@ -322,12 +322,7 @@ export default async function EnergyPage() {
         navItems={navItems}
         accent="#d4a900"
         siteTexts={siteTexts}
-        columns={[
-          {
-            title: t("footer-energy-col3-title"),
-            items: t("footer-energy-col3-items").split(",").map((s) => s.trim()).filter(Boolean),
-          },
-        ]}
+        columns={[]}
       />
     </main>
   );

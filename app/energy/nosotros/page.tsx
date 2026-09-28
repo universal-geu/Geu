@@ -92,16 +92,20 @@ export default async function EnergyNosotrosPage() {
     <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <EnergyHeader />
 
-      <section className="relative overflow-hidden bg-white pt-20">
+      <section className="relative overflow-hidden bg-[#ecf0f7] md:bg-white pt-20">
         <Image
           src={resolveImage("energy-nosotros-banner", siteImages)}
           alt="GEU Energy, infraestructura para granjas solares"
           width={1983}
           height={793}
           priority
-          className="relative block h-64 w-full object-cover object-center sm:h-80 md:absolute md:inset-0 md:h-full md:w-full"
+          className="absolute bottom-0 right-0 h-auto w-[210%] max-w-none md:inset-0 md:h-full md:w-full md:max-w-full md:object-cover md:object-center"
         />
-        <div className="relative mx-auto max-w-[1632px] px-5 py-10 md:px-8 md:py-32">
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[84vw] bg-gradient-to-b from-[#ecf0f7] via-[#ecf0f7]/0 to-transparent md:hidden"
+          aria-hidden="true"
+        />
+        <div className="relative mx-auto max-w-[1632px] px-5 pb-[66vw] pt-10 md:px-8 md:py-32">
           <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.34em] text-[#b38f00]">
             <span className="h-px w-8 bg-[#ffd400]" />
             Nosotros

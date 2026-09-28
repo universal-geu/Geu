@@ -138,16 +138,34 @@ export default async function CauchosPage() {
         </div>
         <div className="bg-white">
           {isVideoUrl(resolveImage("banner-principal", siteImages)) ? (
-            <div
-              className="relative mx-auto aspect-[16/7] w-full overflow-hidden sm:aspect-[16/6]"
-              style={{ maxWidth: "1632px" }}
-            >
-              <HeroVideo
-                src={resolveImage("banner-principal", siteImages)}
-                wrapperClassName="relative h-full w-full"
-                className="absolute inset-0 h-full w-full object-cover object-top"
-              />
-            </div>
+            <>
+              {/* Si ya se subió un banner móvil (imagen), en móvil se muestra ese en vez del video. */}
+              {siteImages["banner-principal-movil"] && !isVideoUrl(siteImages["banner-principal-movil"]) && (
+                <Image
+                  src={siteImages["banner-principal-movil"]}
+                  alt="Todo en caucho para cada industria"
+                  width={1024}
+                  height={1024}
+                  priority
+                  className="mx-auto block h-auto w-full object-contain md:hidden"
+                  style={{ maxWidth: "1632px" }}
+                />
+              )}
+              <div
+                className={`relative mx-auto aspect-[16/7] w-full overflow-hidden sm:aspect-[16/6] ${
+                  siteImages["banner-principal-movil"] && !isVideoUrl(siteImages["banner-principal-movil"])
+                    ? "hidden md:block"
+                    : ""
+                }`}
+                style={{ maxWidth: "1632px" }}
+              >
+                <HeroVideo
+                  src={resolveImage("banner-principal", siteImages)}
+                  wrapperClassName="relative h-full w-full"
+                  className="absolute inset-0 h-full w-full object-cover object-top"
+                />
+              </div>
+            </>
           ) : (
             <>
               <Image
@@ -305,7 +323,7 @@ export default async function CauchosPage() {
         </div>
       </section>
 
-      <section id="contacto" className="mx-auto max-w-[1632px] px-5 pb-8 md:px-8">
+      <section id="contacto" className="mx-auto max-w-[1632px] px-5 pb-6 md:px-8 md:pb-8">
         <div className="relative overflow-hidden rounded-[10px] bg-[linear-gradient(120deg,#020617_0%,#071a3c_48%,#075ed8_100%)] shadow-[0_24px_70px_rgba(7,94,216,0.24)]">
           <span
             className="absolute inset-0 opacity-90"
@@ -334,17 +352,17 @@ export default async function CauchosPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1632px] px-5 pb-10 md:px-8">
+      <section className="mx-auto max-w-[1632px] px-5 pb-6 md:px-8 md:pb-10">
         <ResponsiveBanner
           imageKey="banner-marcas-promo"
           mobileImageKey="banner-marcas-promo-movil"
           alt="Promociones y marcas destacadas"
           siteImages={siteImages}
-          className="rounded-[10px] border border-slate-200 shadow-[0_18px_44px_rgba(15,23,42,0.12)]"
+          className="rounded-[10px] border border-slate-200 shadow-[0_8px_20px_rgba(15,23,42,0.08)] md:shadow-[0_18px_44px_rgba(15,23,42,0.12)]"
         />
       </section>
 
-      <section className="bg-white px-5 py-8 md:px-8">
+      <section className="px-5 pb-8 md:px-8 md:py-8">
         <div className="mx-auto max-w-[1632px] overflow-hidden rounded-[8px] border border-slate-200 shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
           <Image
             src={resolveImage("banner-cierre-movil", siteImages)}
@@ -379,12 +397,7 @@ export default async function CauchosPage() {
         navItems={navItems}
         accent="#075ed8"
         siteTexts={siteTexts}
-        columns={[
-          {
-            title: t("footer-cauchos-col3-title"),
-            items: t("footer-cauchos-col3-items").split(",").map((s) => s.trim()).filter(Boolean),
-          },
-        ]}
+        columns={[]}
       />
     </main>
   );

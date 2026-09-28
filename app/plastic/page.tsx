@@ -337,17 +337,7 @@ export default async function PlasticPage() {
         navItems={navItems}
         accent="#111827"
         siteTexts={siteTexts}
-        columns={[
-          {
-            title: t("footer-plastic-col3-title"),
-            items: t("footer-plastic-col3-items").split(",").map((s) => s.trim()).filter(Boolean),
-          },
-          {
-            title: t("footer-plastic-col4-title"),
-            items: t("footer-plastic-col4-items").split(",").map((s) => s.trim()).filter(Boolean),
-            style: "chips",
-          },
-        ]}
+        columns={[]}
       />
     </main>
   );

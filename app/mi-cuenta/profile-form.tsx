@@ -466,7 +466,9 @@ export default function AccountProfileForm({
     { key: "orders", label: "Pedidos", count: orders.length },
     { key: "summary", label: "Resumen" },
     { key: "details", label: "Datos" },
-    { key: "quotes", label: "Cotizaciones", count: quotes.length },
+    ...(division === "Cauchos"
+      ? [{ key: "quotes" as const, label: "Cotizaciones", count: quotes.length }]
+      : []),
   ];
 
   return (
@@ -546,14 +548,14 @@ export default function AccountProfileForm({
                 {Boolean(item.count) && ` (${item.count})`}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.06em] text-red-600 transition-colors duration-200 active:bg-red-100"
+            >
+              Cerrar sesión
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="fixed bottom-5 right-5 z-[70] rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.06em] text-red-600 shadow-[0_10px_25px_rgba(15,23,42,0.16)] md:hidden"
-          >
-            Cerrar sesión
-          </button>
       {toast && (
         <div className="fixed right-5 top-5 z-[80] w-[min(92vw,380px)]">
           <div
@@ -1035,7 +1037,7 @@ export default function AccountProfileForm({
           </section>
         )}
 
-        {activePanel === "quotes" && (
+        {activePanel === "quotes" && division === "Cauchos" && (
           <section className="rounded-[2rem] bg-white p-8 shadow-lg shadow-black/10 md:p-10">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>

@@ -3686,9 +3686,9 @@ export default function AdminPage() {
                   onClick={() => setShowDivisionSwitcher(false)}
                   disabled={isSwitchingDivision}
                   aria-label="Cerrar"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/8 text-slate-500 transition-colors duration-200 hover:border-black/16 hover:bg-black/5 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#12161c] text-white shadow-[0_8px_20px_rgba(15,23,42,0.25)] transition-colors duration-200 hover:bg-black disabled:cursor-not-allowed disabled:opacity-50 md:h-9 md:w-9 md:border md:border-black/8 md:bg-transparent md:text-slate-500 md:shadow-none md:hover:border-black/16 md:hover:bg-black/5 md:hover:text-slate-800"
                 >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 md:h-4 md:w-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                     <path d="M6 6l12 12M18 6 6 18" />
                   </svg>
                 </button>
@@ -5833,8 +5833,8 @@ export default function AdminPage() {
                   Selecciona un pedido para ver su detalle y actualizar su envío.
                 </div>
               ) : (
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_360px]">
-                  <div className="space-y-6">
+                <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1.65fr)_360px]">
+                  <div className="min-w-0 space-y-6">
                     <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex flex-wrap items-center gap-3">
@@ -5868,21 +5868,21 @@ export default function AdminPage() {
                       </div>
 
                       <div className="mt-4 space-y-2 text-sm text-[#5d6167]">
-                        <p className="flex items-center gap-2.5">
+                        <p className="flex items-center gap-2.5 [overflow-wrap:anywhere]">
                           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="8" r="3.5" />
                             <path d="M5 20c1.2-3.5 4-5.5 7-5.5s5.8 2 7 5.5" />
                           </svg>
                           {selectedOrderPreview.customerName}
                         </p>
-                        <p className="flex items-center gap-2.5">
+                        <p className="flex items-center gap-2.5 [overflow-wrap:anywhere]">
                           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="5" width="18" height="14" rx="2" />
                             <path d="m4 7 8 6 8-6" />
                           </svg>
                           {selectedOrderPreview.customerEmail}
                         </p>
-                        <p className="flex items-center gap-2.5">
+                        <p className="flex items-center gap-2.5 [overflow-wrap:anywhere]">
                           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z" />
                             <circle cx="12" cy="10" r="2.5" />
@@ -5890,7 +5890,7 @@ export default function AdminPage() {
                           {selectedOrderPreview.department}, {selectedOrderPreview.city} · {selectedOrderPreview.addressLine1}
                           {selectedOrderPreview.addressLine2 ? ` · ${selectedOrderPreview.addressLine2}` : ""}
                         </p>
-                        <p className="flex items-center gap-2.5">
+                        <p className="flex items-center gap-2.5 [overflow-wrap:anywhere]">
                           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="4.5" width="18" height="16" rx="2" />
                             <path d="M3 9h18M8 3v3M16 3v3" />
@@ -5998,7 +5998,7 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="min-w-0 space-y-6">
                     <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
                         Información logística

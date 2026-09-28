@@ -131,6 +131,11 @@ export default async function StructurePage() {
         "Hola GEU Structure, quiero hablar con un ingeniero.",
       )}`
     : "mailto:innovation@geu.com.co";
+  const quoteHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        "Hola GEU Structure, quiero solicitar una cotización de la estructura M24.",
+      )}`
+    : "#contacto";
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -166,7 +171,7 @@ export default async function StructurePage() {
           <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#0498b4]">
             Soluciones estructurales para proyectos fotovoltaicos
           </p>
-          <h1 className="mt-4 font-[family:var(--font-display)] text-5xl font-black uppercase leading-none tracking-[0.02em] text-white/90 md:text-7xl">
+          <h1 className="mt-4 font-[family:var(--font-display)] text-[2.5rem] font-black sm:text-5xl uppercase leading-none tracking-[0.02em] text-white/90 md:text-7xl">
             Estructuras que sostienen el futuro
           </h1>
           <p className="mt-5 max-w-xl text-sm font-semibold uppercase tracking-[0.1em] text-white/70 md:text-base">
@@ -292,12 +297,14 @@ export default async function StructurePage() {
                 </dl>
 
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    href="#contacto"
+                  <a
+                    href={quoteHref}
+                    target={whatsappNumber ? "_blank" : undefined}
+                    rel={whatsappNumber ? "noopener noreferrer" : undefined}
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-[3px] bg-[#0498b4] px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#03809a]"
                   >
                     Solicitar cotización <span aria-hidden="true">→</span>
-                  </Link>
+                  </a>
                   <Link
                     href="#ingenieria"
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-[3px] border border-neutral-300 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:border-neutral-900 hover:text-neutral-900"

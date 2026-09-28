@@ -34,7 +34,7 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "energy-mi-cuenta-banner", label: "Mi cuenta · Banner de pedidos", group: "Mi cuenta", division: "Energy", defaultSrc: "/geu-energy-structures-banner.webp", dims: "1920 × 360 px" },
   { key: "plastic-mi-cuenta-banner", label: "Mi cuenta · Banner de pedidos", group: "Mi cuenta", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.webp", dims: "1920 × 360 px" },
   { key: "banner-categorias", label: "Banner de categorías", group: "Página de categorías", division: "Cauchos", defaultSrc: "/cauchos-category-banner.jpg", dims: "1920 × 217 px" },
-  { key: "banner-categorias-movil", label: "Banner de categorías (versión móvil)", group: "Página de categorías", division: "Cauchos", defaultSrc: "/cauchos-category-banner.jpg", dims: "800 × 360 px", isMobile: true },
+  { key: "banner-categorias-movil", label: "Banner de categorías (versión móvil)", group: "Página de categorías", division: "Cauchos", defaultSrc: "/cauchos-category-banner.jpg", dims: "1080 × 200 px", isMobile: true },
   { key: "categoria-alimentos", label: "Categoría · Alimentos, Farmacéuticos y cosméticos", group: "Categorías", division: "Cauchos", defaultSrc: "/subcategorias/alimentos.jpg", dims: "600 × 600 px" },
   { key: "categoria-agroindustria", label: "Categoría · Agroindustria", group: "Categorías", division: "Cauchos", defaultSrc: "/subcategorias/agroindustria.jpg", dims: "600 × 600 px" },
   { key: "categoria-petroleo", label: "Categoría · Petróleo, minería, gas, energías renovables y petroquímica", group: "Categorías", division: "Cauchos", defaultSrc: "/subcategorias/petroleo.jpg", dims: "600 × 600 px" },
@@ -167,7 +167,7 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   { key: "plastic-cierre", label: "Plastic · Banner de cierre", group: "Página de inicio", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.webp", dims: "1920 × 217 px" },
   { key: "plastic-cierre-movil", label: "Plastic · Banner de cierre (versión móvil)", group: "Página de inicio", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.webp", dims: "800 × 360 px", isMobile: true },
   { key: "plastic-banner-categorias", label: "Banner de categorías", group: "Página de categorías", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.webp", dims: "1920 × 217 px" },
-  { key: "plastic-banner-categorias-movil", label: "Banner de categorías (versión móvil)", group: "Página de categorías", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.webp", dims: "800 × 360 px", isMobile: true },
+  { key: "plastic-banner-categorias-movil", label: "Banner de categorías (versión móvil)", group: "Página de categorías", division: "Plastic", defaultSrc: "/geu-plastic-main-banner.webp", dims: "1080 × 200 px", isMobile: true },
   { key: "plastic-oferta-1", label: "Plastic · Oferta 1", group: "Ofertas", division: "Plastic", defaultSrc: "/plastic-oferta-1.webp", dims: "1024 × 1792 px" },
   { key: "plastic-oferta-2", label: "Plastic · Oferta 2", group: "Ofertas", division: "Plastic", defaultSrc: "/plastic-oferta-2.webp", dims: "1024 × 1792 px" },
   { key: "plastic-oferta-3", label: "Plastic · Oferta 3", group: "Ofertas", division: "Plastic", defaultSrc: "/plastic-oferta-3.webp", dims: "1024 × 1792 px" },
@@ -238,7 +238,14 @@ export const IMAGE_SLOTS: ImageSlot[] = [
 export type SiteImages = Record<string, string>;
 
 export function resolveImage(key: string, siteImages: SiteImages): string {
-  return siteImages[key] ?? IMAGE_SLOTS.find((s) => s.key === key)?.defaultSrc ?? "";
+  if (siteImages[key]) return siteImages[key];
+  const slot = IMAGE_SLOTS.find((s) => s.key === key);
+  // Mientras no se suba la versión móvil, usa la imagen que ya se subió para web.
+  if (slot?.isMobile && key.endsWith("-movil")) {
+    const desktopKey = key.slice(0, -"-movil".length);
+    if (siteImages[desktopKey]) return siteImages[desktopKey];
+  }
+  return slot?.defaultSrc ?? "";
 }
 
 const VIDEO_EXTENSIONS = [".mp4", ".webm", ".mov"];

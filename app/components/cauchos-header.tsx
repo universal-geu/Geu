@@ -55,6 +55,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
   const colorOverrideCss = buildDivisionColorOverrideCss(division, siteColors);
   const { salesModes } = useSalesSettings();
   const showCart = salesModes[division] !== "whatsapp";
+  const showQuotes = division === "Cauchos";
   const phone = resolveText("header-phone", siteTexts);
   const brand = DIVISION_BRAND[division];
   const resolvedAccent = resolveColor(
@@ -89,9 +90,11 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
               <span>{phone}</span>
             </div>
             <div className="flex w-full justify-between gap-3 md:w-auto md:justify-end">
-              <Link href={`${brand.basePath}#contacto`} className="hover:text-[var(--brand-accent)]">
-                Cotizaciones
-              </Link>
+              {showQuotes && (
+                <Link href={`${brand.basePath}#contacto`} className="hover:text-[var(--brand-accent)]">
+                  Cotizaciones
+                </Link>
+              )}
               <Link href={`${brand.basePath}#productos`} className="hover:text-[var(--brand-accent)]">
                 Catalogos
               </Link>
@@ -157,7 +160,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
               </Link>
             )}
             {showCart && <CauchosCartLink accent={cartAccent} href={cartHref} />}
-            <CauchosAccountLink className="font-bold hover:text-[var(--brand-accent)]" brand={brandParam} />
+            <CauchosAccountLink className="inline-flex font-bold hover:text-[var(--brand-accent)]" brand={brandParam} accent={resolvedAccent} />
           </div>
         </div>
 
@@ -172,7 +175,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
           moreItems={[
             { label: "Nosotros", href: nosotrosHref },
             ...(extraNavLink ? [extraNavLink] : []),
-            { label: "Cotizaciones", href: `${brand.basePath}#contacto` },
+            ...(showQuotes ? [{ label: "Cotizaciones", href: `${brand.basePath}#contacto` }] : []),
             { label: "Catálogos", href: `${brand.basePath}#productos` },
           ]}
         />

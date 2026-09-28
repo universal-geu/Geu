@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import CauchosAccountLink from "../components/cauchos-account-link";
 import MobileBottomNav from "../components/mobile-bottom-nav";
 import { useSiteColors } from "../components/use-site-colors";
 import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
@@ -151,17 +150,13 @@ export default function StructureHeader() {
           <div className="flex items-center gap-5 text-white">
             <Link
               href="/"
-              className="hidden items-center gap-1.5 rounded-full bg-[#d6006e] px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.08em] text-white shadow-sm transition-colors duration-150 hover:bg-[#b8005e] lg:inline-flex"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#d6006e] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.03em] text-white shadow-sm transition-colors duration-150 hover:bg-[#b8005e] active:bg-[#b8005e] lg:px-3.5 lg:py-2 lg:text-[11px] lg:tracking-[0.08em]"
             >
-              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-current" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0 fill-current lg:h-3.5 lg:w-3.5" aria-hidden="true">
                 <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" />
               </svg>
               Ver todo GEU
             </Link>
-            <CauchosAccountLink
-              brand="innovation"
-              className="hidden text-[11px] font-black uppercase tracking-[0.08em] hover:text-[#0498b4] lg:inline-flex"
-            />
           </div>
         </div>
       </header>
@@ -171,7 +166,7 @@ export default function StructureHeader() {
         accent="#0498b4"
         categoriasHref="/structure#producto"
         categoriasLabel="Producto"
-        accountBrand="innovation"
+        hideAccount
         moreItems={mobileMoreItems}
         breakpointClassName="lg:hidden"
       />

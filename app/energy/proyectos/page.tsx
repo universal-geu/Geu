@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import SolutionsCarousel from "../solutions-carousel";
 import EnergyHeader from "../energy-header";
-import EngineeringModelViewer from "../engineering-model-viewer";
 import GusChat from "../gus-chat";
 import SiteFooter from "../../components/site-footer";
 import { ResponsiveBanner } from "../../components/responsive-banner";
@@ -126,7 +125,7 @@ export default async function EnergyProyectosPage() {
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
       <EnergyHeader />
 
-      <section className="relative isolate flex min-h-screen flex-col overflow-hidden border-b border-white/10">
+      <section className="relative isolate flex flex-col overflow-hidden border-b border-white/10 md:min-h-screen">
         <video
           src={resolveImage("energy-hero-video", siteImages)}
           poster={resolveImage("energy-principal", siteImages)}
@@ -134,12 +133,12 @@ export default async function EnergyProyectosPage() {
           muted
           loop
           playsInline
-          className="absolute inset-0 h-full w-full object-cover object-[58%_28%]"
+          className="relative mt-20 aspect-video w-full object-cover md:absolute md:inset-0 md:mt-0 md:aspect-auto md:h-full md:object-[58%_28%]"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.34)_42%,rgba(0,0,0,0.04)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.1)_0%,rgba(0,0,0,0.06)_56%,rgba(0,0,0,0.55)_100%)]" />
+        <div className="absolute inset-0 hidden md:block bg-[linear-gradient(90deg,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.34)_42%,rgba(0,0,0,0.04)_100%)]" />
+        <div className="absolute inset-0 hidden md:block bg-[linear-gradient(180deg,rgba(0,0,0,0.1)_0%,rgba(0,0,0,0.06)_56%,rgba(0,0,0,0.55)_100%)]" />
 
-        <div className="relative z-10 mx-auto flex w-full max-w-[1500px] flex-1 flex-col justify-center px-5 md:px-8">
+        <div className="relative z-10 mx-auto flex w-full max-w-[1500px] flex-1 flex-col justify-center px-5 py-10 md:px-8 md:py-0">
           <div className="max-w-2xl">
             <span className="block h-1 w-24 bg-[#ffd400] shadow-[0_0_28px_rgba(255,212,0,0.7)]" />
             <p className="mt-6 text-sm font-black uppercase tracking-[0.18em] text-[#ffd400]">
@@ -185,25 +184,6 @@ export default async function EnergyProyectosPage() {
           <span className="[writing-mode:vertical-rl] text-[9px] font-black uppercase tracking-[0.3em] text-white/45">
             Scroll
           </span>
-        </div>
-      </section>
-
-      <section className="flex flex-col border-b border-white/10 bg-black md:flex-row">
-        <div className="flex w-full shrink-0 items-center px-5 py-12 md:w-[30%] md:py-0 md:pl-[max(2rem,calc((100vw-1500px)/2+2rem))] md:pr-8">
-          <div>
-            <h2 className="font-[family:var(--font-display)] text-3xl font-black uppercase leading-[1.05] tracking-[-0.01em] text-white md:text-4xl">
-              Ingeniería
-              <br />
-              <span className="text-[#f5a623]">que sostiene</span>
-              <br />
-              el futuro.
-            </h2>
-            <span className="mt-5 block h-1 w-16 bg-[#f5a623]" />
-          </div>
-        </div>
-
-        <div className="relative w-full md:w-[70%]">
-          <EngineeringModelViewer />
         </div>
       </section>
 

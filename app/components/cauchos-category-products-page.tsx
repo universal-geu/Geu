@@ -349,7 +349,9 @@ export default function CauchosCategoryProductsPage({
   const banner = bannerImageKey
     ? { src: resolveImage(bannerImageKey, siteImages), alt: CATEGORY_BANNER[division].alt }
     : CATEGORY_BANNER[division];
-  const bannerMobileSrc = bannerMobileImageKey ? resolveImage(bannerMobileImageKey, siteImages) : null;
+  // Solo se usa el recorte móvil si se subió un banner propio para móvil; si no,
+  // en móvil se muestra el banner de web completo en su proporción real.
+  const bannerMobileSrc = bannerMobileImageKey ? siteImages[bannerMobileImageKey] ?? null : null;
   const fallbackProductImage = FALLBACK_PRODUCT_IMAGE[division];
 
   return (
@@ -367,7 +369,7 @@ export default function CauchosCategoryProductsPage({
               alt={banner.alt}
               width={800}
               height={360}
-              className="block h-[220px] w-full rounded-[8px] object-cover sm:h-[260px] md:hidden"
+              className="block h-auto w-full rounded-[8px] md:hidden"
               priority
             />
           )}
@@ -376,7 +378,7 @@ export default function CauchosCategoryProductsPage({
             alt={banner.alt}
             width={1920}
             height={217}
-            className={`w-full rounded-[8px] object-cover ${bannerMobileSrc ? "hidden md:block md:h-[150px]" : "h-[118px] md:h-[150px]"}`}
+            className={`w-full rounded-[8px] object-cover ${bannerMobileSrc ? "hidden md:block md:h-[150px]" : "h-auto md:h-[150px]"}`}
             priority
           />
         </div>
@@ -664,7 +666,7 @@ export default function CauchosCategoryProductsPage({
               </div>
 
               {visibleProducts.length > 0 ? (
-                <div className="-mx-5 flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-3">
+                <div className="grid grid-cols-2 gap-3 sm:gap-6 xl:grid-cols-3">
                   {visibleProducts.map((product) => {
               const productImage =
                 product.imagen === "/hero-unipars.jpg"
@@ -674,47 +676,47 @@ export default function CauchosCategoryProductsPage({
               return (
                 <article
                   key={product.slug}
-                  className="group flex min-h-[455px] w-[calc(100vw-2.5rem)] shrink-0 snap-start flex-col overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[var(--brand-accent)]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)] sm:w-auto sm:shrink"
+                  className="group flex min-w-0 flex-col overflow-hidden rounded-[10px] sm:min-h-[455px] border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[var(--brand-accent)]/50 hover:shadow-[0_24px_58px_rgba(15,23,42,0.14)]"
                 >
                   <Link
                     href={productHref(product.slug, division)}
-                    className="relative block h-52 overflow-hidden bg-white"
+                    className="relative block h-36 overflow-hidden bg-white sm:h-52"
                   >
                     <Image
                       src={productImage}
                       alt={product.nombre}
                       fill
-                      sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      className="object-contain p-4 transition duration-500 group-hover:scale-105"
+                      sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, 50vw"
+                      className="object-contain p-2 transition duration-500 group-hover:scale-105 sm:p-4"
                     />
-                    <span className="absolute left-3 top-3 rounded-[4px] bg-[#e4002b] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(228,0,43,0.24)]">
+                    <span className="absolute left-2 top-2 rounded-[4px] bg-[#e4002b] px-2 py-1 text-[10px] font-black sm:left-3 sm:top-3 sm:px-2.5 sm:py-1.5 sm:text-xs text-white shadow-[0_10px_22px_rgba(228,0,43,0.24)]">
                       {product.descuento}
                     </span>
-                    <span className="absolute bottom-3 right-3 rounded-full bg-white/92 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--brand-accent)] shadow-sm">
+                    <span className="absolute bottom-3 right-3 hidden rounded-full bg-white/92 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--brand-accent)] shadow-sm sm:block">
                       Industrial
                     </span>
                   </Link>
-                  <div className="flex flex-1 flex-col p-6">
-                    <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--brand-accent)]">
+                  <div className="flex flex-1 flex-col p-3 sm:p-6">
+                    <span className="truncate text-[9px] font-black uppercase tracking-[0.1em] text-[var(--brand-accent)] sm:text-[11px] sm:tracking-[0.12em]">
                       {product.marca}
                     </span>
                     <Link
                       href={productHref(product.slug, division)}
-                      className="mt-2 min-h-14 text-xl font-black leading-7 text-slate-950 hover:text-[var(--brand-accent)]"
+                      className="mt-1.5 line-clamp-2 min-h-10 text-sm font-black leading-5 text-slate-950 hover:text-[var(--brand-accent)] sm:mt-2 sm:line-clamp-none sm:min-h-14 sm:text-xl sm:leading-7"
                     >
                       {product.nombre}
                     </Link>
-                    <p className="mt-2 min-h-12 text-sm font-semibold leading-6 text-slate-500">
+                    <p className="mt-2 hidden min-h-12 text-sm font-semibold leading-6 text-slate-500 sm:block">
                       {product.descripcion}
                     </p>
-                    <span className="mt-3 inline-flex w-fit rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-black text-slate-600">
+                    <span className="mt-2 inline-flex w-fit rounded-full bg-[#eef5ff] px-2 py-0.5 text-[10px] font-black text-slate-600 sm:mt-3 sm:px-3 sm:py-1 sm:text-xs">
                       {product.disponibilidad}
                     </span>
-                    <div className="mt-auto border-t border-slate-100 pt-5">
+                    <div className="mt-auto border-t border-slate-100 pt-3 sm:pt-5">
                       <span className="block text-xs font-bold text-slate-400 line-through decoration-[#e4002b]/50">
                         {product.precioAnterior}
                       </span>
-                      <span className="mt-1 block text-2xl font-black tracking-[-0.02em] text-slate-950">
+                      <span className="mt-1 block text-lg font-black tracking-[-0.02em] text-slate-950 sm:text-2xl">
                         {product.precio}
                       </span>
                     </div>
@@ -727,10 +729,11 @@ export default function CauchosCategoryProductsPage({
                       sku={product.sku}
                       division={division}
                       accent={cartAccent}
+                      compact
                     />
                     <Link
                       href={productHref(product.slug, division)}
-                      className="mt-3 inline-flex justify-center rounded-full border border-[var(--brand-accent)] bg-white px-4 py-2 text-center text-xs font-black uppercase tracking-[0.08em] text-[var(--brand-accent)] transition-colors duration-200 hover:bg-[var(--brand-accent)] hover:text-white"
+                      className="mt-2 inline-flex justify-center rounded-full border border-[var(--brand-accent)] bg-white px-2 py-2 text-center text-[10px] font-black uppercase tracking-[0.06em] sm:mt-3 sm:px-4 sm:text-xs sm:tracking-[0.08em] text-[var(--brand-accent)] transition-colors duration-200 hover:bg-[var(--brand-accent)] hover:text-white"
                     >
                       Ver detalle
                     </Link>

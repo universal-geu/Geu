@@ -30,6 +30,13 @@ const GREETINGS = [
 
 const WIDGET_SIZE = 190;
 const STORAGE_KEY = "yulo-widget-position";
+// Below the lg breakpoint the page shows MobileBottomNav, so keep Yulo above it.
+const MOBILE_NAV_HEIGHT = 72;
+
+function getMaxY() {
+  const navReserve = window.innerWidth < 1024 ? MOBILE_NAV_HEIGHT : 0;
+  return window.innerHeight - WIDGET_SIZE - 8 - navReserve;
+}
 const WANDER_IDLE_MS = 15000;
 const WANDER_CHECK_MS = 4000;
 // Structure's division key in the rest of the codebase is "Innovation", not
@@ -227,7 +234,7 @@ export default function YuloWidget() {
   useEffect(() => {
     const clamp = (x: number, y: number) => ({
       x: Math.min(Math.max(x, 8), window.innerWidth - WIDGET_SIZE - 8),
-      y: Math.min(Math.max(y, 8), window.innerHeight - WIDGET_SIZE - 8),
+      y: Math.min(Math.max(y, 8), getMaxY()),
     });
 
     try {
@@ -243,7 +250,7 @@ export default function YuloWidget() {
     }
 
     setPosition(
-      clamp(window.innerWidth - WIDGET_SIZE - 28, window.innerHeight - WIDGET_SIZE - 28),
+      clamp(window.innerWidth - WIDGET_SIZE - 28, getMaxY() - 20),
     );
   }, []);
 
@@ -400,7 +407,7 @@ export default function YuloWidget() {
     );
     const nextY = Math.min(
       Math.max(event.clientY - dragOffset.current.y, 8),
-      window.innerHeight - WIDGET_SIZE - 8,
+      getMaxY(),
     );
     setPosition({ x: nextX, y: nextY });
   };

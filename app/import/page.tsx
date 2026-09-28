@@ -329,12 +329,7 @@ export default async function ImportPage() {
         navItems={navItems}
         accent="#e31313"
         siteTexts={siteTexts}
-        columns={[
-          {
-            title: t("footer-import-col3-title"),
-            items: t("footer-import-col3-items").split(",").map((s) => s.trim()).filter(Boolean),
-          },
-        ]}
+        columns={[]}
       />
     </main>
   );

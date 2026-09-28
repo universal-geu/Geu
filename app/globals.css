@@ -50,12 +50,6 @@ body {
   }
 }
 
-button,
-input,
-textarea {
-  font: inherit;
-}
-
 ::selection {
   background: rgba(64, 244, 255, 0.24);
   color: white;

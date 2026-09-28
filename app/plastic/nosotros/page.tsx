@@ -84,16 +84,20 @@ export default async function PlasticNosotrosPage() {
     <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <CauchosHeader division="Plastic" />
 
-      <section className="relative overflow-hidden bg-white">
+      <section className="relative overflow-hidden bg-[#e3e8f1] md:bg-white">
         <Image
           src={resolveImage("plastic-nosotros-banner", siteImages)}
           alt="GEU Plastic"
           width={1983}
           height={793}
           priority
-          className="relative block h-64 w-full object-cover object-center sm:h-80 md:absolute md:inset-0 md:h-full md:w-full"
+          className="absolute bottom-0 right-0 h-auto w-[210%] max-w-none md:inset-0 md:h-full md:w-full md:max-w-full md:object-cover md:object-center"
         />
-        <div className="relative mx-auto max-w-[1632px] px-5 py-10 md:px-8 md:py-32">
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[84vw] bg-gradient-to-b from-[#e3e8f1] via-[#e3e8f1]/0 to-transparent md:hidden"
+          aria-hidden="true"
+        />
+        <div className="relative mx-auto max-w-[1632px] px-5 pb-[66vw] pt-10 md:px-8 md:py-32">
           <h1 className="max-w-2xl text-4xl font-medium leading-[1.15] tracking-[-0.01em] text-slate-950 md:text-6xl">
             {t("plastic-nosotros-hero-titulo")}
           </h1>
@@ -219,17 +223,7 @@ export default async function PlasticNosotrosPage() {
         navItems={navItems}
         accent="#111827"
         siteTexts={siteTexts}
-        columns={[
-          {
-            title: t("footer-plastic-col3-title"),
-            items: t("footer-plastic-col3-items").split(",").map((s) => s.trim()).filter(Boolean),
-          },
-          {
-            title: t("footer-plastic-col4-title"),
-            items: t("footer-plastic-col4-items").split(",").map((s) => s.trim()).filter(Boolean),
-            style: "chips",
-          },
-        ]}
+        columns={[]}
       />
     </main>
   );

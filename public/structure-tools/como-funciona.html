@@ -42,7 +42,10 @@
     position:absolute; left:20px; top:18px; font-size:9px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
     color:rgba(255,255,255,.7); background:rgba(4,20,25,.55); border:1px solid rgba(255,255,255,.12);
     border-radius:999px; padding:7px 13px; backdrop-filter:blur(6px);
+    transition:opacity .4s ease;
   }
+  .mv-hint.gone{opacity:0; pointer-events:none;}
+  .mv-hint .touch{display:none;}
   .fs-btn{
     position:absolute; right:20px; top:16px; display:inline-flex; align-items:center; gap:8px;
     background:rgba(4,20,25,.6); border:1px solid rgba(255,255,255,.16); color:#fff;
@@ -147,6 +150,7 @@
     font-family:var(--disp); font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center;
   }
   .part.on .k{background:var(--geu);}
+  .part .txt .nm, .part .txt .ct{display:block;}
   .part .txt .nm{font-family:var(--disp); font-weight:800; font-size:13px; color:var(--ink); letter-spacing:-.01em;}
   .part .txt .ct{font-size:10px; font-weight:700; color:var(--ink3); text-transform:uppercase; letter-spacing:.06em; margin-top:1px;}
   .part .txt .ds{font-size:11px; color:var(--ink2); line-height:1.5; margin-top:5px; display:none;}
@@ -168,11 +172,28 @@
   body.is-fs > a{ display:none !important; }
 
   @media (max-width:900px){
-    :root{ --hud-w:0px; }
+    :root{ --hud-w:0px; --sheet-h:44vh; }
     #stage3d, .stage-ui{ width:100vw; height:calc(100vh - var(--top) - var(--sheet-h)); height:calc(100dvh - var(--top) - var(--sheet-h)); }
-    .hud{ top:auto; left:0; right:0; bottom:0; width:auto; height:var(--sheet-h); border-left:none; border-top:1px solid var(--line); padding:16px 18px 30px; }
-    .stage-dock{ width:calc(100% - 40px); bottom:14px; }
-    .fs-btn{top:auto; bottom:118px;}
+    .hud{ top:auto; left:0; right:0; bottom:0; width:auto; height:var(--sheet-h); border-left:none; border-top:1px solid var(--line);
+      border-radius:18px 18px 0 0; padding:22px 18px 30px; box-shadow:0 -18px 40px -18px rgba(3,15,22,.6); }
+    .hud::before{ content:""; position:absolute; top:8px; left:50%; width:38px; height:4px; margin-left:-19px; border-radius:4px; background:var(--line2); }
+    .hud-head h1{ font-size:21px; }
+
+    /* Controles: chips arriba a la izquierda, pantalla completa arriba a la derecha,
+       slider compacto abajo. Así el modelo queda libre en el centro. */
+    .stage-dock{ position:static; }
+    .toggle-row{ position:absolute; left:12px; top:12px; }
+    .chip{ padding:8px 11px; }
+    .fs-btn{ top:12px; right:12px; bottom:auto; padding:8px 10px; }
+    .fs-btn .fs-txt{ display:none; }
+    .explode-ctl{ position:absolute; left:12px; right:12px; bottom:12px; padding:9px 14px; gap:12px; }
+    .mv-hint{ top:auto; bottom:64px; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:8.5px; padding:6px 11px; }
+    .mv-hint .desk{display:none;}
+    .mv-hint .touch{display:inline;}
+
+    /* Pantalla completa (también la versión CSS para iPhone): solo el visor. */
+    body.is-fs .hud{ display:none; }
+    body.is-fs #stage3d, body.is-fs .stage-ui{ top:0; height:100vh; height:100dvh; }
   }
 </style>
 </head>
@@ -181,8 +202,8 @@
 <canvas id="stage3d"></canvas>
 
 <div class="stage-ui" id="stageUi">
-  <div class="mv-hint">Arrastra para rotar · scroll para acercar</div>
-  <button class="fs-btn" id="fsBtn" type="button">⛶ Pantalla completa</button>
+  <div class="mv-hint" id="mvHint"><span class="desk">Arrastra para rotar · scroll para acercar</span><span class="touch">Arrastra para rotar · pellizca para acercar</span></div>
+  <button class="fs-btn" id="fsBtn" type="button" aria-label="Pantalla completa">⛶ <span class="fs-txt">Pantalla completa</span></button>
   <div class="stage-dock">
     <div class="explode-ctl">
       <span class="lbl">Vista explotada</span>
@@ -266,6 +287,7 @@ controls.autoRotateSpeed = 0.6;
 controls.minPolarAngle = 0.15;
 controls.maxPolarAngle = Math.PI / 2 - 0.015;
 controls.enablePan = false;
+controls.addEventListener('start', () => document.getElementById('mvHint').classList.add('gone'), { once:true });
 
 scene.add(new THREE.HemisphereLight(0xeef6ff, 0x33404a, 1.5));
 const sun = new THREE.DirectionalLight(0xffffff, 2.6); sun.position.set(9, 14, 7); scene.add(sun);
@@ -683,21 +705,35 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 
 // ---------- pantalla completa ----------
 const fsBtn = document.getElementById('fsBtn');
-fsBtn.addEventListener('click', () => {
-  if(document.fullscreenElement) document.exitFullscreen();
-  else document.documentElement.requestFullscreen?.();
-});
-document.addEventListener('fullscreenchange', () => {
-  document.body.classList.toggle('is-fs', !!document.fullscreenElement);
-  fsBtn.textContent = document.fullscreenElement ? '⤢ Salir' : '⛶ Pantalla completa';
+function setFsUi(on){
+  document.body.classList.toggle('is-fs', on);
+  fsBtn.innerHTML = on ? '⤢ <span class="fs-txt">Salir</span>' : '⛶ <span class="fs-txt">Pantalla completa</span>';
+  fsBtn.setAttribute('aria-label', on ? 'Salir de pantalla completa' : 'Pantalla completa');
   requestAnimationFrame(resize);
+}
+fsBtn.addEventListener('click', () => {
+  if(document.fullscreenElement){ document.exitFullscreen(); return; }
+  if(document.body.classList.contains('is-fs')){ setFsUi(false); return; }
+  const req = document.documentElement.requestFullscreen;
+  if(req) req.call(document.documentElement).catch(() => setFsUi(true));
+  else setFsUi(true);
 });
+document.addEventListener('fullscreenchange', () => setFsUi(!!document.fullscreenElement));
 
+// En visores estrechos (móvil) aleja la cámara para que la mesa quepa a lo ancho.
+const FIT_ASPECT = 1.25;
+let fitK = 1;
 function resize(){
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if(!w || !h) return;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
+  const k = Math.max(1, FIT_ASPECT / camera.aspect);
+  if(k !== fitK){
+    homeCam.copy(worldC).addScaledVector(camDir, fitR * k);
+    camera.position.sub(controls.target).multiplyScalar(k / fitK).add(controls.target);
+    fitK = k;
+  }
   camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(canvas);
