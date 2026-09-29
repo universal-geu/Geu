@@ -1,12 +1,14 @@
 import { requireAdminUser } from "@/lib/admin";
 import { createSupabaseStorageClient, getStorageBucket } from "@/lib/supabase-storage";
 import { IMAGE_SLOTS } from "@/lib/image-slots";
+import sharp from "sharp";
 
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
+const MAX_IMAGE_WIDTH = 1920;
+const WEBP_QUALITY = 80;
+const IMAGE_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const ALLOWED_FILE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
+  ...IMAGE_FILE_TYPES,
   "video/mp4",
   "video/webm",
   "video/quicktime",
@@ -39,13 +41,28 @@ export async function POST(request: Request) {
       return Response.json({ error: "El archivo supera el límite de 4 MB." }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    // Images are compressed here because next/image runs unoptimized (see
+    // next.config.ts): whatever lands in storage is exactly what visitors
+    // download. Videos are stored as-is.
+    let body: File | Buffer = file;
+    let contentType = file.type;
+    let ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    if (IMAGE_FILE_TYPES.includes(file.type)) {
+      body = await sharp(Buffer.from(await file.arrayBuffer()))
+        .rotate()
+        .resize({ width: MAX_IMAGE_WIDTH, withoutEnlargement: true })
+        .webp({ quality: WEBP_QUALITY })
+        .toBuffer();
+      contentType = "image/webp";
+      ext = "webp";
+    }
+
     const filePath = `site-images/${key}-${Date.now()}.${ext}`;
     const bucket = getStorageBucket();
 
     const { error: uploadError } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file, { contentType: file.type, upsert: false });
+      .upload(filePath, body, { contentType, upsert: false });
 
     if (uploadError) return Response.json({ error: `Error al subir: ${uploadError.message}` }, { status: 500 });
 
