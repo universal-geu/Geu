@@ -18,19 +18,6 @@ import { slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos" },
-  { label: "Import", href: "/import" },
-  { label: "Structure", href: "/structure" },
-  { label: "Energy", href: "/energy", active: true },
-  { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/energy/nosotros" },
-  { label: "Proyectos", href: "/energy/proyectos" },
-  { label: "Contacto", href: "#contacto" },
-];
-
-
 const energyOffers = [
   { title: "Paneles solares", href: "/energy/categoria/paneles-solares", imageKey: "energy-oferta-1" },
   { title: "Baterías y respaldo", href: "/energy/categoria/baterias-y-respaldo", imageKey: "energy-oferta-2" },
@@ -120,7 +107,7 @@ export default async function EnergyPage() {
         </div>
         <div className="bg-white">
           <div
-            className="relative mx-auto aspect-[16/7] w-full overflow-hidden bg-slate-950 sm:aspect-[16/6]"
+            className={`relative mx-auto w-full overflow-hidden bg-slate-950 md:aspect-[16/6] ${isVideoUrl(resolveImage("energy-tienda-principal", siteImages)) ? "aspect-[16/7]" : ""}`}
             style={{ maxWidth: "1632px" }}
           >
             {isVideoUrl(resolveImage("energy-tienda-principal", siteImages)) ? (
@@ -134,10 +121,11 @@ export default async function EnergyPage() {
                 <Image
                   src={resolveImage("energy-tienda-principal-movil", siteImages)}
                   alt="GEU Energy: soluciones solares para tu operación"
-                  fill
+                  width={1254}
+                  height={1254}
                   priority
                   sizes="100vw"
-                  className="block object-cover object-center md:hidden"
+                  className="block h-auto w-full md:hidden"
                 />
                 <Image
                   src={resolveImage("energy-tienda-principal", siteImages)}
@@ -319,7 +307,6 @@ export default async function EnergyPage() {
         logoSrc="/logo-geu-energy.png"
         logoAlt="GEU Energy"
         tagline={t("footer-energy-tagline")}
-        navItems={navItems}
         accent="#d4a900"
         siteTexts={siteTexts}
         columns={[]}

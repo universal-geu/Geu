@@ -176,7 +176,6 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
             { label: "Nosotros", href: nosotrosHref },
             ...(extraNavLink ? [extraNavLink] : []),
             ...(showQuotes ? [{ label: "Cotizaciones", href: `${brand.basePath}#contacto` }] : []),
-            { label: "Catálogos", href: `${brand.basePath}#productos` },
           ]}
         />
       </header>

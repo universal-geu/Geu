@@ -18,17 +18,6 @@ import { slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos" },
-  { label: "Import", href: "/import" },
-  { label: "Structure", href: "/structure" },
-  { label: "Energy", href: "/energy" },
-  { label: "Plastic", href: "/plastic", active: true },
-  { label: "Nosotros", href: "/plastic/nosotros" },
-  { label: "Contacto", href: "#contacto" },
-];
-
 const plasticOffers = [
   { title: "Extrusion PVC Rigido", href: "/plastic/categoria/extrusion-en-pvc-rigido", imageKey: "plastic-oferta-1" },
   { title: "Extrusion PVC Flexible", href: "/plastic/categoria/extrusion-en-pvc-flexible", imageKey: "plastic-oferta-2" },
@@ -142,16 +131,17 @@ export default async function PlasticPage() {
             />
           ) : (
             <div
-              className="relative mx-auto aspect-[8/3] w-full overflow-hidden bg-slate-950"
+              className="relative mx-auto w-full overflow-hidden bg-slate-950 md:aspect-[8/3]"
               style={{ maxWidth: "1632px" }}
             >
               <Image
                 src={resolveImage("plastic-principal-movil", siteImages)}
                 alt="GEU Plastic, perfiles en PVC de alta calidad para todas las industrias"
-                fill
+                width={1254}
+                height={1254}
                 priority
                 sizes="100vw"
-                className="block object-cover object-center md:hidden"
+                className="block h-auto w-full md:hidden"
               />
               <Image
                 src={resolveImage("plastic-principal", siteImages)}
@@ -334,7 +324,6 @@ export default async function PlasticPage() {
         logoSrc="/logo-geu-plastic.png"
         logoAlt="GEU Plastic"
         tagline={t("footer-plastic-tagline")}
-        navItems={navItems}
         accent="#111827"
         siteTexts={siteTexts}
         columns={[]}

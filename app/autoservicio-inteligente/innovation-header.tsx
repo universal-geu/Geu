@@ -7,11 +7,7 @@ import MobileBottomNav from "../components/mobile-bottom-nav";
 import { useSiteColors } from "../components/use-site-colors";
 import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
 
-const navItems = [
-  { label: "Contacto", href: "/autoservicio-inteligente#contacto" },
-];
-
-const mobileMoreItems = [...navItems, { label: "Ver todo GEU", href: "/" }];
+const mobileMoreItems = [{ label: "Ver todo GEU", href: "/" }];
 
 const solutionsMenu = [
   { label: "Estufas", href: "/autoservicio-inteligente/estufas" },
@@ -92,12 +88,6 @@ export default function InnovationHeader() {
               </div>
             </div>
           </div>
-
-          {navItems.map((item) => (
-            <Link key={item.label} href={item.href} className="inline-flex items-center gap-1 border-b border-transparent py-2 hover:border-[#0498b4] hover:text-[#0498b4]">
-              {item.label}
-            </Link>
-          ))}
         </nav>
         <div className="flex items-center gap-5 text-white">
           <Link

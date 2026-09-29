@@ -18,18 +18,6 @@ import { slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos", active: true },
-  { label: "Import", href: "/import" },
-  { label: "Structure", href: "/structure" },
-  { label: "Energy", href: "/energy" },
-  { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/cauchos/nosotros" },
-  { label: "Contacto", href: "#contacto" },
-];
-
-
 const cauchosOffers = [
   {
     title: "Productos de caucho",
@@ -394,7 +382,6 @@ export default async function CauchosPage() {
         logoAlt="GEU Universal de Cauchos"
         logoWidth={260}
         tagline={t("footer-cauchos-tagline")}
-        navItems={navItems}
         accent="#075ed8"
         siteTexts={siteTexts}
         columns={[]}

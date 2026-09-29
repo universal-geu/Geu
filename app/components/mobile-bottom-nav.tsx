@@ -63,6 +63,15 @@ function UserIcon() {
   );
 }
 
+function InfoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5M12 8h.01" />
+    </svg>
+  );
+}
+
 function MoreIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -221,15 +230,27 @@ export default function MobileBottomNav({
             </Link>
           )}
 
-          <button
-            type="button"
-            onClick={() => setShowMore((value) => !value)}
-            className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
-            style={{ color: showMore ? accent : inactiveColor }}
-          >
-            <MoreIcon />
-            Más
-          </button>
+          {/* Con una sola opción no tiene sentido abrir el menú: se enlaza directo. */}
+          {moreItems.length === 1 ? (
+            <Link
+              href={moreItems[0].href}
+              className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
+              style={{ color: pathname === moreItems[0].href ? accent : inactiveColor }}
+            >
+              <InfoIcon />
+              {moreItems[0].label}
+            </Link>
+          ) : moreItems.length > 1 ? (
+            <button
+              type="button"
+              onClick={() => setShowMore((value) => !value)}
+              className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
+              style={{ color: showMore ? accent : inactiveColor }}
+            >
+              <MoreIcon />
+              Más
+            </button>
+          ) : null}
         </div>
       </nav>
     </>

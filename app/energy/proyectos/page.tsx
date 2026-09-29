@@ -11,18 +11,6 @@ import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos" },
-  { label: "Import", href: "/import" },
-  { label: "Structure", href: "/structure" },
-  { label: "Energy", href: "/energy" },
-  { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/energy/nosotros" },
-  { label: "Proyectos", href: "/energy/proyectos", active: true },
-  { label: "Contacto", href: "/energy/proyectos#contacto" },
-];
-
 function getSolutions(siteImages: SiteImages) {
   return [
     {
@@ -295,7 +283,6 @@ export default async function EnergyProyectosPage() {
         logoAlt="GEU Energy"
         logoWidth={220}
         tagline={t("footer-energy-tagline")}
-        navItems={navItems}
         accent="#ffd400"
         variant="dark"
         darkBg="#050505"

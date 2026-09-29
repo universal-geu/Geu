@@ -6,17 +6,6 @@ import { getSiteTexts, resolveText } from "@/lib/site-texts";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos" },
-  { label: "Import", href: "/import" },
-  { label: "Structure", href: "/structure" },
-  { label: "Energy", href: "/energy" },
-  { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/import/nosotros", active: true },
-  { label: "Contacto", href: "/import#contacto" },
-];
-
 const pilares = [
   {
     title: "Misión",
@@ -215,7 +204,6 @@ export default async function ImportNosotrosPage() {
         logoAlt="GEU Import"
         logoWidth={220}
         tagline={t("footer-import-tagline")}
-        navItems={navItems}
         accent="#e31313"
         siteTexts={siteTexts}
         columns={[]}

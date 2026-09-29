@@ -242,12 +242,6 @@ export default async function QuienesSomosPage() {
         logoAlt="GEU Grupo Empresarial Universal"
         logoWidth={150}
         tagline={t("footer-quienes-somos-tagline")}
-        navItems={[
-          { label: "Inicio", href: "/" },
-          { label: "Nosotros", href: "/quienes-somos", active: true },
-          { label: "Unidades de negocio", href: "#ecosistema" },
-          { label: "Contacto", href: "#contacto" },
-        ]}
         accent="#075ed8"
         variant="dark"
         siteTexts={siteTexts}

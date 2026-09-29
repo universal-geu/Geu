@@ -8,16 +8,6 @@ import { getSiteImages, resolveImage } from "@/lib/site-images";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos" },
-  { label: "Import", href: "/import" },
-  { label: "Structure", href: "/innovation" },
-  { label: "Energy", href: "/energy" },
-  { label: "Plastic", href: "/plastic" },
-  { label: "Contacto", href: "/autoservicio-inteligente/estufas#contacto" },
-];
-
 const stovesProjectBase = [
   {
     title: "Encuentro con la comunidad",
@@ -196,7 +186,6 @@ export default async function InnovationEstufasPage() {
         logoAlt="GEU Innovation"
         logoWidth={220}
         tagline={t("footer-innovation-tagline")}
-        navItems={navItems}
         accent="#0498b4"
         variant="dark"
         darkBg="#050505"

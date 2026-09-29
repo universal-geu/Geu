@@ -6,18 +6,6 @@ import { getSiteTexts, resolveText } from "@/lib/site-texts";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos" },
-  { label: "Import", href: "/import" },
-  { label: "Structure", href: "/structure" },
-  { label: "Energy", href: "/energy" },
-  { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/energy/nosotros", active: true },
-  { label: "Proyectos", href: "/energy/proyectos" },
-  { label: "Contacto", href: "/energy/proyectos#contacto" },
-];
-
 const pilares = [
   {
     title: "Misión",
@@ -225,7 +213,6 @@ export default async function EnergyNosotrosPage() {
         logoAlt="GEU Energy"
         logoWidth={220}
         tagline={t("footer-energy-tagline")}
-        navItems={navItems}
         accent="#ffd400"
         variant="dark"
         darkBg="#050505"

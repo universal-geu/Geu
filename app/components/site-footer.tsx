@@ -32,7 +32,6 @@ type SiteFooterProps = {
   logoAlt: string;
   logoWidth?: number;
   tagline: string;
-  navItems: FooterNavItem[];
   columns: FooterColumn[];
   accent: string;
   variant?: "light" | "dark";
@@ -83,9 +82,7 @@ export default function SiteFooter({
   logoAlt,
   logoWidth = 250,
   tagline,
-  navItems,
   columns,
-  accent,
   variant = "light",
   darkBg = "#061735",
   siteTexts,
@@ -113,7 +110,7 @@ export default function SiteFooter({
         style={
           {
             maxWidth,
-            "--footer-cols": `1.2fr repeat(${1 + columns.length}, 1fr)`,
+            "--footer-cols": `1.2fr repeat(${columns.length}, 1fr)`,
           } as CSSProperties
         }
       >
@@ -129,24 +126,6 @@ export default function SiteFooter({
           <p className={`mt-5 max-w-[280px] text-sm leading-6 ${isDark ? "text-white/70" : "text-slate-600"}`}>
             {tagline}
           </p>
-        </div>
-
-        <div>
-          <h3 className={`text-sm font-black uppercase tracking-[0.12em] ${isDark ? "text-white" : "text-slate-950"}`}>
-            Enlaces rapidos
-          </h3>
-          <div className={`mt-4 grid gap-2 text-sm font-bold ${isDark ? "text-white/82" : "text-slate-500"}`}>
-            {navItems.slice(0, 7).map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                style={item.active ? { color: accent } : undefined}
-                className={item.active ? "" : isDark ? "hover:text-white" : "hover:opacity-70"}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
         </div>
 
         {columns.map((column) => (

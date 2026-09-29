@@ -14,16 +14,6 @@ import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos" },
-  { label: "Import", href: "/import" },
-  { label: "Structure", href: "/structure", active: true },
-  { label: "Energy", href: "/energy" },
-  { label: "Plastic", href: "/plastic" },
-  { label: "Contacto", href: "mailto:innovation@geu.com.co" },
-];
-
 function ShieldIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
@@ -141,7 +131,8 @@ export default async function StructurePage() {
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
       <StructureHeader />
 
-      <section className="relative isolate flex min-h-screen flex-col overflow-hidden border-b border-white/10">
+      {/* En móvil el video (16:9) va completo arriba y el texto debajo; desde md es fondo a pantalla completa. */}
+      <section className="relative isolate flex flex-col overflow-hidden border-b border-white/10 md:min-h-screen">
         {isVideoUrl(resolveImage("structure-hero-video", siteImages)) ? (
           <video
             src={resolveImage("structure-hero-video", siteImages)}
@@ -152,22 +143,23 @@ export default async function StructurePage() {
             playsInline
             preload="auto"
             aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover object-[50%_65%]"
+            className="relative mt-20 aspect-video w-full object-cover md:absolute md:inset-0 md:mt-0 md:aspect-auto md:h-full md:object-[50%_65%]"
           />
         ) : (
           <Image
             src={resolveImage("structure-hero-video", siteImages)}
             alt="Estructura fotovoltaica galvanizada al amanecer en la montaña"
-            fill
+            width={1920}
+            height={1080}
             priority
             sizes="100vw"
-            className="absolute inset-0 object-cover object-[50%_65%]"
+            className="relative mt-20 aspect-video w-full object-cover md:absolute md:inset-0 md:mt-0 md:aspect-auto md:h-full md:object-[50%_65%]"
           />
         )}
-        <div className="absolute inset-0 bg-black/45" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.25)_0%,rgba(0,0,0,0.1)_50%,rgba(0,0,0,0.65)_100%)]" />
+        <div className="absolute inset-0 hidden bg-black/45 md:block" />
+        <div className="absolute inset-0 hidden bg-[linear-gradient(180deg,rgba(0,0,0,0.25)_0%,rgba(0,0,0,0.1)_50%,rgba(0,0,0,0.65)_100%)] md:block" />
 
-        <div className="relative z-10 mx-auto flex w-full max-w-[1500px] flex-1 flex-col items-center justify-center px-5 text-center md:px-8">
+        <div className="relative z-10 mx-auto flex w-full max-w-[1500px] flex-1 flex-col items-center justify-center px-5 py-10 text-center md:px-8 md:py-0">
           <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#0498b4]">
             Soluciones estructurales para proyectos fotovoltaicos
           </p>
@@ -580,7 +572,6 @@ export default async function StructurePage() {
         logoAlt="GEU Structure"
         logoWidth={190}
         tagline="Estructuras que sostienen el futuro."
-        navItems={navItems}
         accent="#0498b4"
         variant="dark"
         darkBg="#050505"

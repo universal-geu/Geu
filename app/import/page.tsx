@@ -18,18 +18,6 @@ import { slugify } from "../data/catalog";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos" },
-  { label: "Import", href: "/import", active: true },
-  { label: "Structure", href: "/structure" },
-  { label: "Energy", href: "/energy" },
-  { label: "Plastic", href: "/plastic" },
-  { label: "Nosotros", href: "/import/nosotros" },
-  { label: "Contacto", href: "#contacto" },
-];
-
-
 const importOffers = [
   { title: "Repuestos importados", href: "/import/categoria/autopartes", imageKey: "import-oferta-1" },
   { title: "Abastecimiento global", href: "/import", imageKey: "import-oferta-2" },
@@ -135,7 +123,7 @@ export default async function ImportPage() {
         </div>
         <div className="bg-white">
           <div
-            className="relative mx-auto aspect-[8/3] w-full overflow-hidden bg-slate-950"
+            className={`relative mx-auto w-full overflow-hidden bg-slate-950 md:aspect-[8/3] ${isVideoUrl(resolveImage("import-principal", siteImages)) ? "aspect-[8/3]" : ""}`}
             style={{ maxWidth: "1632px" }}
           >
             {isVideoUrl(resolveImage("import-principal", siteImages)) ? (
@@ -148,10 +136,11 @@ export default async function ImportPage() {
                 <Image
                   src={resolveImage("import-principal-movil", siteImages)}
                   alt="GEU Import conecta proveedores y mercados internacionales"
-                  fill
+                  width={1254}
+                  height={1254}
                   priority
                   sizes="100vw"
-                  className="block object-cover object-center md:hidden"
+                  className="block h-auto w-full md:hidden"
                 />
                 <Image
                   src={resolveImage("import-principal", siteImages)}
@@ -326,7 +315,6 @@ export default async function ImportPage() {
         logoSrc="/logo-geu-import.png"
         logoAlt="GEU Import"
         tagline={t("footer-import-tagline")}
-        navItems={navItems}
         accent="#e31313"
         siteTexts={siteTexts}
         columns={[]}

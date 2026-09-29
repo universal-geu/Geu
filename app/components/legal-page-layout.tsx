@@ -4,11 +4,6 @@ import type { ReactNode } from "react";
 import SiteFooter from "./site-footer";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Nosotros", href: "/quienes-somos" },
-];
-
 const legalNavItems = [
   { label: "Términos y condiciones", href: "/terminos-y-condiciones" },
   { label: "Política de privacidad", href: "/politica-de-privacidad" },
@@ -65,7 +60,6 @@ export default async function LegalPageLayout({ title, updatedAt, children }: Le
         logoAlt="GEU Grupo Empresarial Universal"
         logoWidth={190}
         tagline={t("footer-copyright-name")}
-        navItems={navItems}
         accent="#075ed8"
         siteTexts={siteTexts}
         columns={[]}

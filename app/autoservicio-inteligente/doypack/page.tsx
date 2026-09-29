@@ -6,16 +6,6 @@ import { getSiteImages, resolveImage } from "@/lib/site-images";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos" },
-  { label: "Import", href: "/import" },
-  { label: "Structure", href: "/innovation" },
-  { label: "Energy", href: "/energy" },
-  { label: "Plastic", href: "/plastic" },
-  { label: "Contacto", href: "mailto:innovation@geu.com.co" },
-];
-
 const stripPhotosBase = [
   { key: "doypack-galeria-1", alt: "Amigos compartiendo un doypack en una noche de juegos" },
   { key: "doypack-galeria-2", alt: "Pareja compartiendo un doypack en un festival de música" },
@@ -148,7 +138,6 @@ export default async function InnovationDoypackPage() {
         logoAlt="GEU Innovation"
         logoWidth={220}
         tagline={t("footer-innovation-tagline")}
-        navItems={navItems}
         accent="#0498b4"
         variant="dark"
         darkBg="#050505"

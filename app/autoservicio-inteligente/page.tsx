@@ -8,16 +8,6 @@ import { getSiteTexts, resolveText } from "@/lib/site-texts";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { label: "Inicio", href: "/" },
-  { label: "Cauchos", href: "/cauchos" },
-  { label: "Import", href: "/import" },
-  { label: "Structure", href: "/innovation" },
-  { label: "Energy", href: "/energy" },
-  { label: "Plastic", href: "/plastic" },
-  { label: "Contacto", href: "mailto:innovation@geu.com.co" },
-];
-
 function getSolutions(siteImages: SiteImages) {
   return [
     {
@@ -135,7 +125,6 @@ export default async function InnovationPage() {
         logoAlt="GEU Innovation"
         logoWidth={220}
         tagline={t("footer-innovation-tagline")}
-        navItems={navItems}
         accent="#0498b4"
         variant="dark"
         darkBg="#050505"
