@@ -20,7 +20,7 @@ const MAX_SUGGESTIONS = 6;
 export type ProductSuggestion = { slug: string; nombre: string; marca: string; imagen: string };
 
 // Productos de la división cuyo nombre contiene la búsqueda (mínimo 2 letras).
-// Si ningún nombre coincide, cae a la búsqueda aproximada (marca, categoría, SKU, errores de tipeo).
+// Si ningún nombre coincide, cae a la búsqueda aproximada (errores de tipeo en nombre, marca y SKU).
 export function useProductSuggestions(query: string, division: DivisionName, limit: number): ProductSuggestion[] {
   const { products } = useProducts();
 
@@ -41,7 +41,7 @@ export function useProductSuggestions(query: string, division: DivisionName, lim
     if (matches.length === 0) {
       matches = divisionProducts.filter((product) =>
         matchesQuery(
-          [product.nombre, product.marca, product.categoria, product.sku].filter((v): v is string => Boolean(v)).join(" "),
+          [product.nombre, product.marca, product.sku].filter((v): v is string => Boolean(v)).join(" "),
           query,
         ),
       );

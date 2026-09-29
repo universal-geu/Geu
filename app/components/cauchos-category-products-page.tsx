@@ -132,22 +132,13 @@ export default function CauchosCategoryProductsPage({
         .sort((a, b) => nameMatchRank(a.nombre, trimmedSearchQuery) - nameMatchRank(b.nombre, trimmedSearchQuery));
       if (byName.length > 0) return byName;
 
-      // Sin coincidencias por nombre: búsqueda aproximada en marca, categorías y SKU.
-      return divisionProducts.filter((product) => {
-        const haystack = [
-          product.nombre,
-          product.marca,
-          product.categoria,
-          ...(product.subcategorias ?? [product.subcategoria]),
-          product.sku,
-          ...(product.categoriasAdicionales?.flatMap((entry) => [entry.categoria, ...(entry.subcategorias ?? [])]) ??
-            []),
-        ]
-          .filter((value): value is string => Boolean(value))
-          .join(" ");
-
-        return matchesQuery(haystack, trimmedSearchQuery);
-      });
+      // Sin coincidencias por nombre: búsqueda aproximada (errores de tipeo) en nombre, marca y SKU.
+      return divisionProducts.filter((product) =>
+        matchesQuery(
+          [product.nombre, product.marca, product.sku].filter((value): value is string => Boolean(value)).join(" "),
+          trimmedSearchQuery,
+        ),
+      );
     }
 
     return expandProductCategoryViews(products, division).filter((product) => {

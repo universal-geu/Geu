@@ -61,23 +61,31 @@ export function matchesQuery(haystack: string, query: string): boolean {
   return queryTokens.every((token) => haystackWords.some((word) => tokenMatchesWord(token, word)));
 }
 
+// Formas de una palabra sin su plural: "empaques" -> ["empaques", "empaque", "empaqu"].
+function singularForms(token: string): string[] {
+  const forms = [token];
+  if (token.length > 3 && token.endsWith("s")) forms.push(token.slice(0, -1));
+  if (token.length > 4 && token.endsWith("es")) forms.push(token.slice(0, -2));
+  return forms;
+}
+
 /**
- * Coincidencia por nombre: cada palabra de la búsqueda debe aparecer dentro
- * del nombre (sin tildes ni mayúsculas). "mang" encuentra "Manguera".
+ * Coincidencia por nombre: cada palabra de la búsqueda (o su singular) debe
+ * aparecer dentro del nombre, sin tildes ni mayúsculas. "mang" encuentra
+ * "Manguera" y "empaques" encuentra "Empaque".
  */
 export function nameMatchesQuery(name: string, query: string): boolean {
   const queryTokens = tokenize(query);
   if (queryTokens.length === 0) return true;
   const normalizedName = normalizeText(name);
-  return queryTokens.every((token) => normalizedName.includes(token));
+  return queryTokens.every((token) => singularForms(token).some((form) => normalizedName.includes(form)));
 }
 
 /** 0 = el nombre empieza por la búsqueda, 1 = alguna palabra empieza por ella, 2 = la contiene. */
 export function nameMatchRank(name: string, query: string): number {
   const normalizedName = normalizeText(name);
-  const normalizedQuery = tokenize(query).join(" ");
-  if (normalizedName.startsWith(normalizedQuery)) return 0;
-  const firstToken = tokenize(query)[0] ?? "";
-  if (tokenize(name).some((word) => word.startsWith(firstToken))) return 1;
+  const firstForms = singularForms(tokenize(query)[0] ?? "");
+  if (firstForms.some((form) => normalizedName.startsWith(form))) return 0;
+  if (tokenize(name).some((word) => firstForms.some((form) => word.startsWith(form)))) return 1;
   return 2;
 }
