@@ -12,7 +12,7 @@ import { useSiteImages } from "./use-site-images";
 import { resolveImage } from "@/lib/image-slots";
 import { CART_ACCENT, DIVISION_BRAND, productHref, type DivisionName } from "@/lib/divisions";
 import { expandProductCategoryViews, productSellsInDivision } from "@/lib/product-category-views";
-import { matchesQuery } from "@/lib/text-match";
+import { matchesQuery, nameMatchesQuery, nameMatchRank } from "@/lib/text-match";
 
 type Props = {
   segments?: string[];
@@ -124,9 +124,16 @@ export default function CauchosCategoryProductsPage({
 
   const categoryProducts = useMemo(() => {
     if (isSearchMode) {
-      return products.filter((product) => {
-        if (!productSellsInDivision(product, division)) return false;
+      const divisionProducts = products.filter((product) => productSellsInDivision(product, division));
 
+      // Todos los productos cuyo nombre contiene la palabra buscada.
+      const byName = divisionProducts
+        .filter((product) => nameMatchesQuery(product.nombre, trimmedSearchQuery))
+        .sort((a, b) => nameMatchRank(a.nombre, trimmedSearchQuery) - nameMatchRank(b.nombre, trimmedSearchQuery));
+      if (byName.length > 0) return byName;
+
+      // Sin coincidencias por nombre: búsqueda aproximada en marca, categorías y SKU.
+      return divisionProducts.filter((product) => {
         const haystack = [
           product.nombre,
           product.marca,

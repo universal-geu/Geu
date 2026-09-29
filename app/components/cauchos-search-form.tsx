@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useProducts } from "./products-provider";
 import { productSellsInDivision } from "@/lib/product-category-views";
-import { matchesQuery } from "@/lib/text-match";
+import { matchesQuery, nameMatchesQuery, nameMatchRank } from "@/lib/text-match";
 import { productHref, type DivisionName } from "@/lib/divisions";
 
 type Props = {
@@ -19,7 +19,8 @@ const MAX_SUGGESTIONS = 6;
 
 export type ProductSuggestion = { slug: string; nombre: string; marca: string; imagen: string };
 
-// Productos de la división que coinciden con la búsqueda (mínimo 2 letras).
+// Productos de la división cuyo nombre contiene la búsqueda (mínimo 2 letras).
+// Si ningún nombre coincide, cae a la búsqueda aproximada (marca, categoría, SKU, errores de tipeo).
 export function useProductSuggestions(query: string, division: DivisionName, limit: number): ProductSuggestion[] {
   const { products } = useProducts();
 
@@ -27,22 +28,28 @@ export function useProductSuggestions(query: string, division: DivisionName, lim
     if (query.length < 2) return [];
 
     const seen = new Set<string>();
-    const matches: ProductSuggestion[] = [];
-
-    for (const product of products) {
-      if (!productSellsInDivision(product, division)) continue;
-      const haystack = [product.nombre, product.marca, product.categoria, product.sku]
-        .filter((v): v is string => Boolean(v))
-        .join(" ");
-      if (!matchesQuery(haystack, query)) continue;
-      if (seen.has(product.slug)) continue;
-
+    const divisionProducts = products.filter((product) => {
+      if (!productSellsInDivision(product, division) || seen.has(product.slug)) return false;
       seen.add(product.slug);
-      matches.push({ slug: product.slug, nombre: product.nombre, marca: product.marca, imagen: product.imagen });
-      if (matches.length >= limit) break;
+      return true;
+    });
+
+    let matches = divisionProducts
+      .filter((product) => nameMatchesQuery(product.nombre, query))
+      .sort((a, b) => nameMatchRank(a.nombre, query) - nameMatchRank(b.nombre, query));
+
+    if (matches.length === 0) {
+      matches = divisionProducts.filter((product) =>
+        matchesQuery(
+          [product.nombre, product.marca, product.categoria, product.sku].filter((v): v is string => Boolean(v)).join(" "),
+          query,
+        ),
+      );
     }
 
-    return matches;
+    return matches
+      .slice(0, limit)
+      .map((product) => ({ slug: product.slug, nombre: product.nombre, marca: product.marca, imagen: product.imagen }));
   }, [products, division, query, limit]);
 }
 

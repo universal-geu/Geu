@@ -60,3 +60,24 @@ export function matchesQuery(haystack: string, query: string): boolean {
   const haystackWords = tokenize(haystack);
   return queryTokens.every((token) => haystackWords.some((word) => tokenMatchesWord(token, word)));
 }
+
+/**
+ * Coincidencia por nombre: cada palabra de la búsqueda debe aparecer dentro
+ * del nombre (sin tildes ni mayúsculas). "mang" encuentra "Manguera".
+ */
+export function nameMatchesQuery(name: string, query: string): boolean {
+  const queryTokens = tokenize(query);
+  if (queryTokens.length === 0) return true;
+  const normalizedName = normalizeText(name);
+  return queryTokens.every((token) => normalizedName.includes(token));
+}
+
+/** 0 = el nombre empieza por la búsqueda, 1 = alguna palabra empieza por ella, 2 = la contiene. */
+export function nameMatchRank(name: string, query: string): number {
+  const normalizedName = normalizeText(name);
+  const normalizedQuery = tokenize(query).join(" ");
+  if (normalizedName.startsWith(normalizedQuery)) return 0;
+  const firstToken = tokenize(query)[0] ?? "";
+  if (tokenize(name).some((word) => word.startsWith(firstToken))) return 1;
+  return 2;
+}
