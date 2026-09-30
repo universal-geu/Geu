@@ -48,6 +48,10 @@ import {
   type AdminToolKey,
 } from "@/lib/admin-permissions";
 import GusOrderRunner from "../components/gus-order-runner";
+import {
+  formatShippingDestinationAddress,
+  readShippingDestinations,
+} from "@/lib/shipping-destinations";
 
 const IMAGE_GROUP_SECTIONS: { label: string; groups: string[] }[] = [
   { label: "Sitio GEU Structure", groups: ["Sitio Structure"] },
@@ -392,6 +396,8 @@ type AdminOrder = {
   carrier: string | null;
   trackingNumber: string | null;
   adminNotes: string | null;
+  notes: string | null;
+  shippingDestinations: unknown;
   preparingAt: string | Date | null;
   shippedAt: string | Date | null;
   deliveredAt: string | Date | null;
@@ -462,6 +468,41 @@ type ProductImageChoice = {
   image: string | null;
 };
 
+// wa.me needs the full international number with no symbols. GEU only
+// sells in Colombia, so a bare 10-digit mobile (3xx…) gets the +57 prefix.
+function toWhatsAppNumber(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 10 && digits.startsWith("3")) return `57${digits}`;
+  if (digits.length === 12 && digits.startsWith("57")) return digits;
+  return digits.length >= 11 ? digits : "";
+}
+
+const INVENTORY_PAGE_SIZE = 10;
+
+const INVENTORY_MOVEMENT_LABELS: Record<string, string> = {
+  CREATED: "Producto creado",
+  ADJUSTMENT: "Ajuste manual",
+  ORDER_DEDUCTION: "Venta (pedido)",
+};
+
+// Page numbers with ellipses: 1 … 4 5 6 … 20
+function getPageList(current: number, total: number): Array<number | "gap"> {
+  const pages = new Set([1, total, current - 1, current, current + 1]);
+  const sorted = [...pages].filter((page) => page >= 1 && page <= total).sort((a, b) => a - b);
+  return sorted.flatMap((page, index) =>
+    index > 0 && page - sorted[index - 1] > 1 ? (["gap", page] as const) : [page],
+  );
+}
+
+function InventoryBoxIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 8 12 3 3 8v8l9 5 9-5V8Z" />
+      <path d="m3 8 9 5 9-5M12 13v8" />
+    </svg>
+  );
+}
+
 function getInventoryTone(
   status?: ProductoCatalogo["estadoInventario"],
 ) {
@@ -469,19 +510,22 @@ function getInventoryTone(
     return {
       label: "Agotado",
       className: "bg-[#fff1f1] text-[#c53b3b]",
+      dot: "bg-[#c53b3b]",
     };
   }
 
   if (status === "low-stock") {
     return {
       label: "Stock bajo",
-      className: "bg-[var(--admin-accent-soft)] text-[var(--admin-accent)]",
+      className: "bg-[#fff6e5] text-[#9a6200]",
+      dot: "bg-[#e0a100]",
     };
   }
 
   return {
     label: "En stock",
     className: "bg-[#effaf2] text-[#1f6b39]",
+    dot: "bg-[#22a04b]",
   };
 }
 
@@ -1786,6 +1830,16 @@ export default function AdminPage() {
   const [adminName, setAdminName] = useState("");
   const [adminPermissions, setAdminPermissions] = useState<string[]>([]);
   const [inventoryAdjustments, setInventoryAdjustments] = useState<Record<string, string>>({});
+  const [inventoryPage, setInventoryPage] = useState(1);
+  // Quick-edit modal opened by the pencil in the inventory list, so stock
+  // fixes don't throw the admin out to the full product editor.
+  const [inventoryEdit, setInventoryEdit] = useState<{
+    slug: string;
+    stock: string;
+    stockMinimo: string;
+    note: string;
+  } | null>(null);
+  const [isSavingInventoryEdit, setIsSavingInventoryEdit] = useState(false);
   const [inventoryMovements, setInventoryMovements] = useState<InventoryMovementSummary[]>([]);
   const [isLoadingInventory, setIsLoadingInventory] = useState(false);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
@@ -1872,6 +1926,10 @@ export default function AdminPage() {
       adminNotes: orderForm.adminNotes.trim() || null,
     };
   }, [orderForm, selectedOrder]);
+  const selectedOrderDestinations = useMemo(
+    () => readShippingDestinations(selectedOrder?.shippingDestinations),
+    [selectedOrder],
+  );
   // Only this division's official categories are selectable here — they're
   // the ones that actually appear in the storefront's category navigation.
   // Legacy seed products carry older category strings (e.g. "Mangueras",
@@ -1941,6 +1999,21 @@ export default function AdminPage() {
       return matchesCategory && matchesSearch && matchesInventory;
     });
   }, [adminProducts, editCategoryFilter, editSearch, inventoryStatusFilter]);
+  const inventoryCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const product of adminProducts) {
+      counts[product.categoria] = (counts[product.categoria] ?? 0) + 1;
+    }
+    return counts;
+  }, [adminProducts]);
+  const inventoryTotalPages = Math.max(1, Math.ceil(filteredProducts.length / INVENTORY_PAGE_SIZE));
+  // Clamped instead of reset-in-an-effect: a filter that shrinks the list
+  // just lands on its last page.
+  const currentInventoryPage = Math.min(inventoryPage, inventoryTotalPages);
+  const inventoryPageProducts = filteredProducts.slice(
+    (currentInventoryPage - 1) * INVENTORY_PAGE_SIZE,
+    currentInventoryPage * INVENTORY_PAGE_SIZE,
+  );
   const filteredOrders = useMemo(() => {
     const search = orderSearch.trim();
 
@@ -2827,6 +2900,53 @@ export default function AdminPage() {
       message: "Inventario ajustado correctamente.",
     });
     await loadInventoryMovements();
+  };
+
+  const inventoryEditProduct = inventoryEdit
+    ? adminProducts.find((product) => product.slug === inventoryEdit.slug) ?? null
+    : null;
+
+  const openInventoryEdit = (slug: string) => {
+    const product = adminProducts.find((entry) => entry.slug === slug);
+    if (!product) return;
+    setInventoryEdit({
+      slug,
+      stock: String(product.stock ?? 0),
+      stockMinimo: String(product.stockMinimo ?? 0),
+      note: "",
+    });
+  };
+
+  const handleSaveInventoryEdit = async () => {
+    if (!inventoryEdit || !inventoryEditProduct) return;
+
+    const nextStock = Math.max(0, Math.trunc(Number(inventoryEdit.stock) || 0));
+    const nextMinimum = Math.max(0, Math.trunc(Number(inventoryEdit.stockMinimo) || 0));
+    const delta = nextStock - (inventoryEditProduct.stock ?? 0);
+    const minimumChanged = nextMinimum !== (inventoryEditProduct.stockMinimo ?? 0);
+
+    if (delta === 0 && !minimumChanged) {
+      setInventoryEdit(null);
+      return;
+    }
+
+    setIsSavingInventoryEdit(true);
+    const result = await adjustInventory(
+      inventoryEdit.slug,
+      delta,
+      inventoryEdit.note.trim() || "Ajuste desde inventario",
+      minimumChanged ? { minimumStock: nextMinimum } : undefined,
+    );
+    setIsSavingInventoryEdit(false);
+
+    if (!result.ok) {
+      setToast({ tone: "error", message: result.message });
+      return;
+    }
+
+    setInventoryEdit(null);
+    setToast({ tone: "success", message: "Inventario actualizado." });
+    if (delta !== 0) await loadInventoryMovements();
   };
 
   const openCreateView = () => {
@@ -5882,6 +6002,42 @@ export default function AdminPage() {
                           </svg>
                           {selectedOrderPreview.customerEmail}
                         </p>
+                        {selectedOrderPreview.customerPhone && (
+                          <p className="flex items-center gap-2.5 [overflow-wrap:anywhere]">
+                            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />
+                            </svg>
+                            <a
+                              href={`tel:${selectedOrderPreview.customerPhone.replace(/[^\d+]/g, "")}`}
+                              className="transition-colors hover:text-[var(--admin-accent)] hover:underline"
+                            >
+                              {selectedOrderPreview.customerPhone}
+                            </a>
+                            {toWhatsAppNumber(selectedOrderPreview.customerPhone) && (
+                              <a
+                                href={`https://wa.me/${toWhatsAppNumber(selectedOrderPreview.customerPhone)}?text=${encodeURIComponent(
+                                  `Hola ${selectedOrderPreview.customerName}, te escribimos de ${adminBrand.label} sobre tu pedido ${formatOrderCode(selectedOrderPreview.orderNumber)}.`,
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-[#1ebe5a]"
+                              >
+                                <svg aria-hidden="true" viewBox="0 0 32 32" className="h-3.5 w-3.5 fill-white">
+                                  <path d="M16.004 2.667c-7.363 0-13.333 5.97-13.333 13.333 0 2.352.615 4.646 1.784 6.667L2.667 29.333l6.83-1.766a13.28 13.28 0 0 0 6.507 1.706h.006c7.362 0 13.333-5.97 13.333-13.333S23.366 2.667 16.004 2.667Zm7.82 18.81c-.332.933-1.65 1.71-2.694 1.933-.716.153-1.652.276-4.802-1.032-4.03-1.67-6.626-5.75-6.828-6.014-.194-.267-1.64-2.183-1.64-4.166 0-1.982 1.036-2.955 1.404-3.36.368-.406.803-.507 1.07-.507.267 0 .535.003.767.014.246.011.577-.093.902.688.332.798 1.128 2.767 1.226 2.968.098.2.164.435.033.7-.13.267-.196.434-.39.667-.196.234-.41.522-.586.7-.196.196-.4.408-.172.8.229.392 1.017 1.68 2.183 2.72 1.5 1.34 2.764 1.755 3.156 1.95.392.196.62.164.85-.1.229-.267.98-1.144 1.243-1.535.264-.392.527-.327.884-.196.36.13 2.28 1.075 2.672 1.27.392.196.653.294.751.457.098.163.098.947-.234 1.88Z" />
+                                </svg>
+                                WhatsApp
+                              </a>
+                            )}
+                          </p>
+                        )}
+                        {selectedOrderPreview.company && (
+                          <p className="flex items-center gap-2.5 [overflow-wrap:anywhere]">
+                            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M15 9h4a1 1 0 0 1 1 1v11M3 21h18M8 8h3M8 12h3M8 16h3" />
+                            </svg>
+                            {selectedOrderPreview.company}
+                          </p>
+                        )}
                         <p className="flex items-center gap-2.5 [overflow-wrap:anywhere]">
                           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z" />
@@ -5898,6 +6054,51 @@ export default function AdminPage() {
                           Creado: {new Date(selectedOrderPreview.createdAt).toLocaleString("es-CO")}
                         </p>
                       </div>
+
+                      {selectedOrderDestinations.length > 0 && (
+                        <div className="mt-5 border-t border-black/8 pt-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--admin-accent)]">
+                            Envío a {selectedOrderDestinations.length} direcciones
+                          </p>
+                          <div className="mt-3 space-y-3">
+                            {selectedOrderDestinations.map((destination, index) => (
+                              <div
+                                key={`${destination.label}-${index}`}
+                                className="rounded-[1rem] border border-black/8 bg-[#fafaf9] px-4 py-3 text-sm"
+                              >
+                                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                  <p className="font-semibold text-[#16384f]">{destination.label}</p>
+                                  <p className="text-xs text-[#8b8d91]">
+                                    Envío {formatCurrency(destination.shippingCost)}
+                                  </p>
+                                </div>
+                                <p className="mt-1 text-[#5d6167] [overflow-wrap:anywhere]">
+                                  {formatShippingDestinationAddress(destination)}
+                                </p>
+                                <ul className="mt-2 space-y-0.5 text-[#1f2328]">
+                                  {destination.items.map((item) => (
+                                    <li key={item.cartItemId} className="flex justify-between gap-3">
+                                      <span className="min-w-0 truncate">{item.name}</span>
+                                      <span className="shrink-0 font-semibold">× {item.quantity}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedOrderPreview.notes && (
+                        <div className="mt-5 border-t border-black/8 pt-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
+                            Notas del cliente
+                          </p>
+                          <p className="mt-2 whitespace-pre-line text-sm leading-6 text-[#5d6167]">
+                            {selectedOrderPreview.notes}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
@@ -6572,230 +6773,440 @@ export default function AdminPage() {
             </div>
           )}
 
+          {activeTab === "inventory" && !isServiceAdmin && inventoryEdit && inventoryEditProduct && (
+            <div
+              className="fixed inset-0 z-[95] flex items-center justify-center bg-[#0f172a]/45 px-4 backdrop-blur-[2px]"
+              onClick={() => !isSavingInventoryEdit && setInventoryEdit(null)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && !isSavingInventoryEdit) setInventoryEdit(null);
+              }}
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="inventory-edit-title"
+                onClick={(event) => event.stopPropagation()}
+                className="w-full max-w-md rounded-[1.5rem] bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.28)]"
+              >
+                <div className="flex items-start gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={inventoryEditProduct.imagen}
+                    alt=""
+                    className="h-14 w-14 shrink-0 rounded-xl border border-black/8 bg-[#fafaf9] object-contain"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">
+                      Editar inventario
+                    </p>
+                    <h2 id="inventory-edit-title" className="mt-0.5 text-lg font-semibold leading-6 text-[#16384f]">
+                      {inventoryEditProduct.nombre}
+                    </h2>
+                    <p className="mt-0.5 text-xs text-[#8b8d91]">SKU: {inventoryEditProduct.sku || "Sin SKU"}</p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Cerrar"
+                    onClick={() => setInventoryEdit(null)}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 text-[#5d6167] hover:bg-[#f3f4f6]"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {(() => {
+                  const hasVariants = (inventoryEditProduct.variantes?.length ?? 0) > 0;
+                  const delta =
+                    Math.max(0, Math.trunc(Number(inventoryEdit.stock) || 0)) - (inventoryEditProduct.stock ?? 0);
+                  return (
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="text-sm font-medium text-[#4f545a]">Stock actual</span>
+                        <input
+                          type="number"
+                          min={0}
+                          inputMode="numeric"
+                          autoFocus={!hasVariants}
+                          disabled={hasVariants}
+                          value={inventoryEdit.stock}
+                          onChange={(event) =>
+                            setInventoryEdit((current) => current && { ...current, stock: event.target.value })
+                          }
+                          className="mt-1.5 w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-2.5 text-lg font-semibold text-[#16384f] outline-none focus:border-[var(--admin-accent)] disabled:opacity-60"
+                        />
+                        <span className="mt-1 block text-xs text-[#8b8d91]">
+                          {hasVariants
+                            ? "Se maneja por medidas: ajústalo en el editor completo."
+                            : delta === 0
+                              ? `Actual: ${inventoryEditProduct.stock ?? 0}`
+                              : `Actual: ${inventoryEditProduct.stock ?? 0} · Cambio: ${delta > 0 ? "+" : ""}${delta}`}
+                        </span>
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-medium text-[#4f545a]">Stock mínimo</span>
+                        <input
+                          type="number"
+                          min={0}
+                          inputMode="numeric"
+                          value={inventoryEdit.stockMinimo}
+                          onChange={(event) =>
+                            setInventoryEdit((current) => current && { ...current, stockMinimo: event.target.value })
+                          }
+                          className="mt-1.5 w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-2.5 text-lg font-semibold text-[#16384f] outline-none focus:border-[var(--admin-accent)]"
+                        />
+                        <span className="mt-1 block text-xs text-[#8b8d91]">Por debajo se marca “Stock bajo”.</span>
+                      </label>
+                      <label className="block sm:col-span-2">
+                        <span className="text-sm font-medium text-[#4f545a]">Motivo del cambio (opcional)</span>
+                        <input
+                          type="text"
+                          value={inventoryEdit.note}
+                          onChange={(event) =>
+                            setInventoryEdit((current) => current && { ...current, note: event.target.value })
+                          }
+                          placeholder="Ej: conteo físico, llegada de mercancía…"
+                          className="mt-1.5 w-full rounded-xl border border-black/10 bg-[#fafaf9] px-4 py-2.5 text-sm text-[#1f2328] outline-none focus:border-[var(--admin-accent)]"
+                        />
+                      </label>
+                    </div>
+                  );
+                })()}
+
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const slug = inventoryEdit.slug;
+                      setInventoryEdit(null);
+                      handleEditProduct(slug);
+                    }}
+                    className="text-sm font-semibold text-[#5d6167] underline-offset-4 hover:text-[#16384f] hover:underline"
+                  >
+                    Abrir editor completo
+                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setInventoryEdit(null)}
+                      className="rounded-xl border border-black/10 px-4 py-2.5 text-sm font-semibold text-[#16384f] hover:bg-[#f3f4f6]"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSavingInventoryEdit}
+                      onClick={() => void handleSaveInventoryEdit()}
+                      className="rounded-xl bg-[#16384f] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0f2a3b] disabled:opacity-60"
+                    >
+                      {isSavingInventoryEdit ? "Guardando…" : "Guardar"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === "inventory" && !isServiceAdmin && (
             <div className="admin-fade-up space-y-8">
-              <div className="grid gap-8 xl:grid-cols-[300px_minmax(0,1fr)]">
-                <aside className="space-y-5">
-                  <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
-                      Inventario
-                    </p>
-                    <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                      Control rápido
-                    </h2>
-                    <p className="mt-3 text-sm leading-7 text-[#6e7379]">
+              <div className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
+                <aside className="space-y-4">
+                  <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8b8d91]">
+                          Inventario
+                        </p>
+                        <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-[#16384f]">
+                          Control rápido
+                        </h2>
+                      </div>
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f3f4f6] text-[#16384f]">
+                        <InventoryBoxIcon className="h-5 w-5" />
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-[#6e7379]">
                       Ajusta existencias sin abrir el editor completo y revisa los últimos movimientos del stock.
                     </p>
                   </div>
 
-                  <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-[#16384f]">
+                  <div className="rounded-[1.5rem] border border-black/8 bg-white p-4 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                    <h3 className="px-2 pt-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#16384f]">
                       Categorías
                     </h3>
-                    <div className="mt-4 space-y-2">
-                      <button
-                        type="button"
-                        onClick={() => setEditCategoryFilter("Todas")}
-                        className={`block w-full rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors duration-200 ${
-                          editCategoryFilter === "Todas"
-                            ? "bg-[#16384f] text-white shadow-[0_12px_24px_rgba(22,56,79,0.18)]"
-                            : "bg-[#f8f8f7] text-[#5d6167] hover:bg-[#ececea]"
-                        }`}
-                      >
-                        Todas
-                      </button>
-                      {categoryOptions.map((categoria) => (
-                        <button
-                          key={categoria}
-                          type="button"
-                          onClick={() => setEditCategoryFilter(categoria)}
-                          className={`block w-full rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors duration-200 ${
-                            editCategoryFilter === categoria
-                              ? "bg-[#16384f] text-white shadow-[0_12px_24px_rgba(22,56,79,0.18)]"
-                              : "bg-[#f8f8f7] text-[#5d6167] hover:bg-[#ececea]"
-                          }`}
-                        >
-                          {categoria}
-                        </button>
-                      ))}
+                    <div className="mt-3 space-y-1">
+                      {(["Todas", ...categoryOptions] as const).map((categoria) => {
+                        const isActive = editCategoryFilter === categoria;
+                        const count =
+                          categoria === "Todas" ? adminProducts.length : inventoryCategoryCounts[categoria] ?? 0;
+                        return (
+                          <button
+                            key={categoria}
+                            type="button"
+                            onClick={() => {
+                              setEditCategoryFilter(categoria);
+                              setInventoryPage(1);
+                            }}
+                            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors duration-200 ${
+                              isActive
+                                ? "bg-[#16384f] text-white shadow-[0_10px_20px_rgba(22,56,79,0.18)]"
+                                : "text-[#5d6167] hover:bg-[#f3f4f6]"
+                            }`}
+                          >
+                            <InventoryBoxIcon className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-[#8b8d91]"}`} />
+                            <span className="min-w-0 flex-1 truncate">{categoria}</span>
+                            <span className={`text-xs tabular-nums ${isActive ? "text-white/80" : "text-[#8b8d91]"}`}>
+                              {count}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </aside>
 
-                <div className="space-y-8">
-                  <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                    <label className="space-y-2">
+                <div className="min-w-0 space-y-4">
+                  <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
+                    <label className="block space-y-2">
                       <span className="text-sm font-medium text-[#4f545a]">
                         Buscar por nombre, marca o SKU
                       </span>
-                      <input
-                        type="search"
-                        value={editSearch}
-                        onChange={(event) => setEditSearch(event.target.value)}
-                        placeholder="Ej: sello, Universal de Cauchos, CAUCHO001..."
-                        className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                      />
+                      <span className="relative block">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8b8d91]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <circle cx="11" cy="11" r="7" />
+                          <path d="m20 20-3.5-3.5" />
+                        </svg>
+                        <input
+                          type="search"
+                          value={editSearch}
+                          onChange={(event) => {
+                            setEditSearch(event.target.value);
+                            setInventoryPage(1);
+                          }}
+                          placeholder="Ej: sello, Universal de Cauchos, CAUCHO001..."
+                          className="w-full rounded-xl border border-black/10 bg-[#fafaf9] py-3 pl-11 pr-4 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                        />
+                      </span>
                     </label>
 
-                    <p className="mt-4 text-sm text-[#6e7379]">
+                    <p className="mt-3 text-sm text-[#6e7379]">
                       Mostrando {filteredProducts.length} producto{filteredProducts.length === 1 ? "" : "s"} para control de stock.
                     </p>
 
-                    <div className="mt-5 flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setInventoryStatusFilter("all")}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
-                          inventoryStatusFilter === "all"
-                            ? "bg-[#16384f] text-white"
-                            : "border border-black/10 bg-[#fafaf9] text-[#5d6167] hover:bg-[#ececea]"
-                        }`}
-                      >
-                        Todos
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setInventoryStatusFilter("low-stock")}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
-                          inventoryStatusFilter === "low-stock"
-                            ? "bg-[var(--admin-accent)] text-white"
-                            : "border border-[var(--admin-accent)]/20 bg-[var(--admin-accent-soft)] text-[var(--admin-accent)] hover:bg-[#dbeafe]"
-                        }`}
-                      >
-                        Solo stock bajo
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setInventoryStatusFilter("out-of-stock")}
-                        className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
-                          inventoryStatusFilter === "out-of-stock"
-                            ? "bg-[#c53b3b] text-white"
-                            : "border border-[#c53b3b]/20 bg-[#fff1f1] text-[#c53b3b] hover:bg-[#ffe2e2]"
-                        }`}
-                      >
-                        Solo agotados
-                      </button>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {(
+                        [
+                          ["all", "Todos", "bg-[#16384f] text-white", "border border-black/10 bg-white text-[#5d6167] hover:bg-[#f3f4f6]"],
+                          ["low-stock", "Solo stock bajo", "bg-[#e0a100] text-white", "border border-[#e0a100]/30 bg-[#fff6e5] text-[#9a6200] hover:bg-[#ffedc7]"],
+                          ["out-of-stock", "Solo agotados", "bg-[#c53b3b] text-white", "border border-[#c53b3b]/25 bg-[#fff1f1] text-[#c53b3b] hover:bg-[#ffe2e2]"],
+                        ] as const
+                      ).map(([value, label, activeClass, idleClass]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => {
+                            setInventoryStatusFilter(value);
+                            setInventoryPage(1);
+                          }}
+                          className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors duration-200 ${
+                            inventoryStatusFilter === value ? activeClass : idleClass
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="grid gap-4">
-                    {filteredProducts.map((product) => {
+                  <div className="space-y-3">
+                    {inventoryPageProducts.length === 0 && (
+                      <p className="rounded-[1.25rem] border border-dashed border-black/12 bg-white p-8 text-center text-sm text-[#6e7379]">
+                        No hay productos con estos filtros.
+                      </p>
+                    )}
+                    {inventoryPageProducts.map((product) => {
                       const inventoryTone = getInventoryTone(product.estadoInventario);
                       const adjustmentValue = inventoryAdjustments[product.slug] || "";
+                      const adjustment = Number(adjustmentValue) || 0;
+                      const isLow = product.estadoInventario === "low-stock" || product.estadoInventario === "out-of-stock";
+                      const setAdjustment = (value: string) =>
+                        setInventoryAdjustments((current) => ({ ...current, [product.slug]: value }));
 
                       return (
                         <article
                           key={`inventory-${product.slug}`}
-                          className="rounded-[1.5rem] border border-black/8 bg-white p-5 shadow-[0_14px_28px_rgba(15,23,42,0.05)]"
+                          className="grid gap-4 rounded-[1.25rem] border border-black/8 bg-white p-4 shadow-[0_10px_22px_rgba(15,23,42,0.04)] lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
                         >
-                          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                          <div className="flex min-w-0 items-center gap-4">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={product.imagen}
+                              alt=""
+                              className="h-16 w-16 shrink-0 rounded-xl border border-black/8 bg-[#fafaf9] object-contain"
+                            />
                             <div className="min-w-0">
-                              <p className="text-xs font-medium uppercase tracking-[0.22em] text-[#8b8d91]">
+                              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">
                                 {product.categoria} · {product.marca}
                               </p>
-                              <h3 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-[#1f2328]">
+                              <h3 className="mt-0.5 truncate text-base font-semibold text-[#1f2328]">
                                 {product.nombre}
                               </h3>
-                              <div className="mt-3 flex flex-wrap gap-2 text-sm">
-                                <span className="rounded-full border border-black/8 bg-[#fafaf9] px-3 py-1 text-[#5d6167]">
+                              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f3f4f6] px-2.5 py-1 text-[#5d6167]">
                                   SKU: {product.sku || "Sin SKU"}
+                                  {product.sku && (
+                                    <button
+                                      type="button"
+                                      aria-label={`Copiar SKU ${product.sku}`}
+                                      onClick={() => {
+                                        void navigator.clipboard?.writeText(product.sku ?? "");
+                                        setToast({ tone: "success", message: `SKU ${product.sku} copiado.` });
+                                      }}
+                                      className="text-[#8b8d91] transition-colors hover:text-[#16384f]"
+                                    >
+                                      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="9" y="9" width="11" height="11" rx="2" />
+                                        <path d="M5 15V6a2 2 0 0 1 2-2h8" />
+                                      </svg>
+                                    </button>
+                                  )}
                                 </span>
-                                <span className={`rounded-full px-3 py-1 font-semibold ${inventoryTone.className}`}>
+                                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold ${inventoryTone.className}`}>
+                                  <span className={`h-1.5 w-1.5 rounded-full ${inventoryTone.dot}`} />
                                   {inventoryTone.label}
                                 </span>
                               </div>
                             </div>
-
-                            <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[540px]">
-                              <div className="rounded-[1.1rem] border border-black/8 bg-[#fafaf9] px-4 py-3">
-                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                                  Stock actual
-                                </p>
-                                <p className="mt-2 text-2xl font-semibold text-[#16384f]">
-                                  {product.stock ?? 0}
-                                </p>
-                              </div>
-
-                              <div className="rounded-[1.1rem] border border-black/8 bg-[#fafaf9] px-4 py-3">
-                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                                  Stock mínimo
-                                </p>
-                                <p className="mt-2 text-2xl font-semibold text-[#16384f]">
-                                  {product.stockMinimo ?? 0}
-                                </p>
-                              </div>
-
-                              <div className="rounded-[1.1rem] border border-black/8 bg-[#fafaf9] px-4 py-3">
-                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                                  Ajuste rápido
-                                </p>
-                                <input
-                                  type="number"
-                                  value={adjustmentValue}
-                                  onChange={(event) =>
-                                    setInventoryAdjustments((current) => ({
-                                      ...current,
-                                      [product.slug]: event.target.value,
-                                    }))
-                                  }
-                                  placeholder="+5 o -2"
-                                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                                />
-                              </div>
-                            </div>
                           </div>
 
-                          <div className="mt-4 flex flex-wrap gap-3">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleQuickInventoryAdjust(
-                                  product.slug,
-                                  Number(adjustmentValue || 0),
-                                )
-                              }
-                              className="inline-flex rounded-full bg-[#16384f] px-5 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#0f2a3b]"
-                            >
-                              Aplicar ajuste
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleQuickInventoryAdjust(
-                                  product.slug,
-                                  1,
-                                  "Entrada rápida de una unidad",
-                                )
-                              }
-                              className="inline-flex rounded-full border border-[#1f8b45]/20 bg-[#effaf2] px-5 py-3 text-sm font-semibold text-[#1f6b39] transition-colors duration-200 hover:bg-[#dcf5e4]"
-                            >
-                              +1 unidad
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleQuickInventoryAdjust(
-                                  product.slug,
-                                  -1,
-                                  "Salida rápida de una unidad",
-                                )
-                              }
-                              className="inline-flex rounded-full border border-[var(--admin-accent)]/20 bg-[var(--admin-accent-soft)] px-5 py-3 text-sm font-semibold text-[var(--admin-accent)] transition-colors duration-200 hover:bg-[#dbeafe]"
-                            >
-                              -1 unidad
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleEditProduct(product.slug)}
-                              className="inline-flex rounded-full border border-black/10 px-5 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
-                            >
-                              Editar completo
-                            </button>
+                          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 lg:flex-nowrap">
+                            <div className="w-28 lg:border-l lg:border-black/8 lg:pl-5">
+                              <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                                Stock actual
+                              </p>
+                              <p className={`mt-1 text-2xl font-semibold tabular-nums ${isLow ? "text-[#c53b3b]" : "text-[#16384f]"}`}>
+                                {product.stock ?? 0}
+                              </p>
+                            </div>
+                            <div className="w-28 lg:border-l lg:border-black/8 lg:pl-5">
+                              <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                                Stock mínimo
+                              </p>
+                              <p className="mt-1 text-2xl font-semibold tabular-nums text-[#16384f]">
+                                {product.stockMinimo ?? 0}
+                              </p>
+                            </div>
+                            <div className="lg:border-l lg:border-black/8 lg:pl-5">
+                              <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+                                Ajuste
+                              </p>
+                              <div className="mt-1 flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  aria-label="Restar una unidad al ajuste"
+                                  onClick={() => setAdjustment(String(adjustment - 1))}
+                                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f3f4f6] text-lg font-semibold text-[#16384f] transition-colors hover:bg-[#e5e7eb]"
+                                >
+                                  −
+                                </button>
+                                <input
+                                  type="number"
+                                  inputMode="numeric"
+                                  aria-label={`Ajuste de stock para ${product.nombre}`}
+                                  value={adjustmentValue}
+                                  onChange={(event) => setAdjustment(event.target.value)}
+                                  placeholder="0"
+                                  className="h-9 w-14 rounded-lg border border-black/10 bg-white text-center text-sm font-semibold text-[#1f2328] outline-none [appearance:textfield] focus:border-[var(--admin-accent)] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                />
+                                <button
+                                  type="button"
+                                  aria-label="Sumar una unidad al ajuste"
+                                  onClick={() => setAdjustment(String(adjustment + 1))}
+                                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f3f4f6] text-lg font-semibold text-[#16384f] transition-colors hover:bg-[#e5e7eb]"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 lg:ml-2">
+                              <button
+                                type="button"
+                                disabled={adjustment === 0}
+                                onClick={() => handleQuickInventoryAdjust(product.slug, adjustment)}
+                                className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#16384f] px-5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#0f2a3b] disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="m5 12 5 5L20 7" />
+                                </svg>
+                                Aplicar
+                              </button>
+                              <button
+                                type="button"
+                                aria-label={`Editar ${product.nombre}`}
+                                title="Editar inventario"
+                                onClick={() => openInventoryEdit(product.slug)}
+                                className="flex h-11 w-11 items-center justify-center rounded-xl border border-black/10 text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                              >
+                                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
                         </article>
                       );
                     })}
                   </div>
+
+                  {filteredProducts.length > 0 && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+                      <p className="text-sm text-[#6e7379]">
+                        Mostrando {(currentInventoryPage - 1) * INVENTORY_PAGE_SIZE + 1}–
+                        {Math.min(currentInventoryPage * INVENTORY_PAGE_SIZE, filteredProducts.length)} de{" "}
+                        {filteredProducts.length} productos
+                      </p>
+                      {inventoryTotalPages > 1 && (
+                        <nav aria-label="Páginas de inventario" className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            aria-label="Página anterior"
+                            disabled={currentInventoryPage === 1}
+                            onClick={() => setInventoryPage(currentInventoryPage - 1)}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg border border-black/10 bg-white text-[#16384f] disabled:opacity-40"
+                          >
+                            ‹
+                          </button>
+                          {getPageList(currentInventoryPage, inventoryTotalPages).map((page, index) =>
+                            page === "gap" ? (
+                              <span key={`gap-${index}`} className="px-1 text-sm text-[#8b8d91]">…</span>
+                            ) : (
+                              <button
+                                key={page}
+                                type="button"
+                                aria-current={page === currentInventoryPage ? "page" : undefined}
+                                onClick={() => setInventoryPage(page)}
+                                className={`h-9 min-w-9 rounded-lg px-2 text-sm font-semibold ${
+                                  page === currentInventoryPage
+                                    ? "bg-[#16384f] text-white"
+                                    : "text-[#16384f] hover:bg-[#f3f4f6]"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            ),
+                          )}
+                          <button
+                            type="button"
+                            aria-label="Página siguiente"
+                            disabled={currentInventoryPage === inventoryTotalPages}
+                            onClick={() => setInventoryPage(currentInventoryPage + 1)}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg border border-black/10 bg-white text-[#16384f] disabled:opacity-40"
+                          >
+                            ›
+                          </button>
+                        </nav>
+                      )}
+                    </div>
+                  )}
 
                   <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
                     <div className="flex items-center justify-between gap-4">
@@ -6835,7 +7246,7 @@ export default function AdminPage() {
                                   {movement.productName}
                                 </p>
                                 <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#8b8d91]">
-                                  {movement.productSku || "Sin SKU"} · {movement.type}
+                                  {movement.productSku || "Sin SKU"} · {INVENTORY_MOVEMENT_LABELS[movement.type] ?? movement.type}
                                 </p>
                               </div>
                               <div className="text-right">

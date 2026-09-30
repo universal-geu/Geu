@@ -1,4 +1,8 @@
-import { adjustProductInventory, getProductDivision } from "@/lib/products";
+import {
+  adjustProductInventory,
+  getProductDivision,
+  updateProductMinimumStock,
+} from "@/lib/products";
 import { requireAdminUser } from "@/lib/admin";
 
 export async function PATCH(
@@ -17,13 +21,20 @@ export async function PATCH(
     const body = (await request.json()) as {
       quantity?: number;
       note?: string;
+      minimumStock?: number;
     };
 
-    const product = await adjustProductInventory(
-      slug,
-      Number(body.quantity || 0),
-      body.note,
-    );
+    // Either field alone is a valid request (the inventory modal may change
+    // just the minimum, just the stock, or both).
+    const hasMinimum = body.minimumStock !== undefined && body.minimumStock !== null;
+    const quantity = Number(body.quantity || 0);
+
+    let product = hasMinimum
+      ? await updateProductMinimumStock(slug, Number(body.minimumStock))
+      : null;
+    if (quantity !== 0 || !hasMinimum) {
+      product = await adjustProductInventory(slug, quantity, body.note);
+    }
 
     return Response.json({ product });
   } catch (error) {

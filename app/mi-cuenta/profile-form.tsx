@@ -9,6 +9,10 @@ import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-lo
 import { formatOrderCode } from "@/lib/format-order";
 import CauchosHeader from "../components/cauchos-header";
 import { DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
+import {
+  formatShippingDestinationAddress,
+  readShippingDestinations,
+} from "@/lib/shipping-destinations";
 
 type AccountUser = {
   id: string;
@@ -43,6 +47,8 @@ type AccountOrder = {
   subtotal: number;
   shippingCost: number;
   createdAt: Date;
+  division: DivisionName;
+  shippingDestinations: unknown;
   items: Array<{
     id: string;
     name: string;
@@ -157,6 +163,57 @@ function getShippingStatusLabel(status: AccountOrder["shippingStatus"]) {
   if (status === "DELIVERED") return "Entregado";
   if (status === "CANCELLED") return "Envío cancelado";
   return "Pendiente de despacho";
+}
+
+// The storefront the customer bought from (Order.division). Lines keep the
+// owning unit for revenue instead, so a Cauchos product bought while
+// shopping Import would otherwise be tagged "Cauchos" here.
+function getOrderDivisions(order: AccountOrder): DivisionName[] {
+  return [order.division];
+}
+
+function OrderDivisionTags({ order }: { order: AccountOrder }) {
+  return (
+    <>
+      {getOrderDivisions(order).map((orderDivision) => (
+        <span
+          key={orderDivision}
+          className="whitespace-nowrap rounded-md border px-1.5 py-0.5 text-[11px] font-semibold"
+          style={{
+            color: DIVISION_BRAND[orderDivision].accent,
+            borderColor: `${DIVISION_BRAND[orderDivision].accent}40`,
+          }}
+        >
+          {orderDivision}
+        </span>
+      ))}
+    </>
+  );
+}
+
+// One status per row in the compact order list: until the payment clears
+// that's what matters; after that, where the shipment is.
+function OrderStatusBadge({ order }: { order: AccountOrder }) {
+  const isCancelled = order.status === "CANCELLED" || order.shippingStatus === "CANCELLED";
+  const isPaid = order.paymentStatus === "PAID";
+  const label = isCancelled
+    ? "Cancelado"
+    : isPaid
+      ? getShippingStatusLabel(order.shippingStatus)
+      : getPaymentStatusLabel(order.paymentStatus);
+  const tone = isCancelled
+    ? "bg-[#fdeeee] text-[#b42318]"
+    : !isPaid
+      ? "bg-[#fff6e5] text-[#9a6200]"
+      : order.shippingStatus === "DELIVERED"
+        ? "bg-[#effaf2] text-[#1f6b39]"
+        : "bg-[#eef5ff] text-[var(--brand-accent)]";
+
+  return (
+    <span className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone}`}>
+      {label}
+    </span>
+  );
 }
 
 function getOrderProgressStep(order: AccountOrder) {
@@ -331,6 +388,7 @@ export default function AccountProfileForm({
   const brand = DIVISION_BRAND[division];
   const [activePanel, setActivePanel] = useState<AccountPanel>("orders");
   const [showFullOrderHistory, setShowFullOrderHistory] = useState(false);
+  const [orderDivisionFilter, setOrderDivisionFilter] = useState<DivisionName | "all">("all");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(
     orders[0]?.id ?? null,
   );
@@ -381,7 +439,12 @@ export default function AccountProfileForm({
   const deliveredOrders = orders.filter(
     (order) => order.shippingStatus === "DELIVERED",
   ).length;
-  const recentOrders = showFullOrderHistory ? orders : orders.slice(0, 3);
+  const orderDivisions = Array.from(new Set(orders.flatMap(getOrderDivisions)));
+  const filteredOrders =
+    orderDivisionFilter === "all"
+      ? orders
+      : orders.filter((order) => getOrderDivisions(order).includes(orderDivisionFilter));
+  const recentOrders = showFullOrderHistory ? filteredOrders : filteredOrders.slice(0, 3);
 
   useEffect(() => {
     if (!toast) return;
@@ -878,12 +941,37 @@ export default function AccountProfileForm({
               aquí con su dirección, estado y productos.
             </div>
           ) : (
-            <div className="mt-5 space-y-4">
+            <>
+            {orderDivisions.length > 1 && (
+              <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Filtrar pedidos por unidad">
+                {(["all", ...orderDivisions] as const).map((option) => {
+                  const isActive = orderDivisionFilter === option;
+                  const count =
+                    option === "all"
+                      ? orders.length
+                      : orders.filter((order) => getOrderDivisions(order).includes(option)).length;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setOrderDivisionFilter(option)}
+                      aria-pressed={isActive}
+                      className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors duration-200 ${
+                        isActive
+                          ? "border-[#16384f] bg-[#16384f] text-white"
+                          : "border-black/10 bg-white text-[#16384f] hover:border-[#16384f]/40"
+                      }`}
+                    >
+                      {option === "all" ? "Todos" : option}{" "}
+                      <span className={isActive ? "text-white/70" : "text-[#8b8d91]"}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div className="mt-3 divide-y divide-black/8 overflow-hidden rounded-[1.25rem] border border-black/8 bg-[#fafaf9]">
               {recentOrders.map((order) => (
-                <article
-                  key={order.id}
-                  className="overflow-hidden rounded-[1.75rem] border border-black/8 bg-[#fafaf9]"
-                >
+                <article key={order.id}>
                   <button
                     type="button"
                     onClick={() =>
@@ -891,65 +979,52 @@ export default function AccountProfileForm({
                         current === order.id ? null : order.id,
                       )
                     }
-                    className="flex w-full flex-col gap-4 p-5 text-left transition-colors duration-200 hover:bg-white/45"
+                    aria-expanded={expandedOrderId === order.id}
+                    className="grid w-full grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-3 text-left text-sm transition-colors duration-200 hover:bg-white md:grid-cols-[minmax(8rem,auto)_1fr_auto_auto_auto]"
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
-                          Pedido
-                        </p>
-                        <h3 className="mt-2 text-lg font-semibold text-[#16384f] md:text-xl">
-                          {formatOrderCode(order.orderNumber)}
-                        </h3>
-                        <p className="mt-2 text-sm text-[#6e7379]">
-                          {new Date(order.createdAt).toLocaleDateString("es-CO")} ·{" "}
-                          {order.city} · {order.totalItems} producto
-                          {order.totalItems === 1 ? "" : "s"}
-                        </p>
-                      </div>
-
-                      <div className="flex flex-wrap items-center justify-end gap-2">
-                        <span className="rounded-full bg-[#16384f] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white">
-                          {getOrderStatusLabel(order.status)}
-                        </span>
-                        <span className="rounded-full border border-[var(--brand-accent)]/18 bg-[#eef5ff] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-accent)]">
-                          {getPaymentStatusLabel(order.paymentStatus)}
-                        </span>
-                        <span className="rounded-full border border-[#1f8b45]/18 bg-[#effaf2] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#1f6b39]">
-                          {getShippingStatusLabel(order.shippingStatus)}
-                        </span>
-                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/8 bg-white text-[#16384f]">
-                          <svg
-                            aria-hidden="true"
-                            viewBox="0 0 24 24"
-                            className={`h-4 w-4 transition-transform duration-200 ${
-                              expandedOrderId === order.id ? "rotate-180" : ""
-                            }`}
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="m6 9 6 6 6-6" />
-                          </svg>
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-3 border-t border-black/8 pt-4 text-sm">
-                      <span className="text-[#6e7379]">
-                        {order.carrier || "Transportadora pendiente"} ·{" "}
-                        {order.trackingNumber || "Sin guía"}
-                      </span>
-                      <span className="text-lg font-semibold text-[var(--brand-accent)]">
-                        {formatCurrency(order.subtotal + order.shippingCost)}
-                      </span>
-                    </div>
+                    <span className="flex items-center gap-2 font-semibold text-[#16384f]">
+                      {formatOrderCode(order.orderNumber)}
+                      <OrderDivisionTags order={order} />
+                    </span>
+                    <span className="order-3 col-span-2 truncate text-[#6e7379] md:order-none md:col-span-1">
+                      {new Date(order.createdAt).toLocaleDateString("es-CO")} · {order.city} ·{" "}
+                      {order.totalItems} producto{order.totalItems === 1 ? "" : "s"}
+                    </span>
+                    <span className="order-4 col-span-2 justify-self-start md:order-none md:col-span-1 md:justify-self-end">
+                      <OrderStatusBadge order={order} />
+                    </span>
+                    <span className="font-semibold text-[var(--brand-accent)] md:text-right">
+                      {formatCurrency(order.subtotal + order.shippingCost)}
+                    </span>
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      className={`hidden h-4 w-4 text-[#16384f] transition-transform duration-200 md:block ${
+                        expandedOrderId === order.id ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
                   </button>
 
                   {expandedOrderId === order.id && (
-                    <div className="border-t border-black/8 px-5 pb-5 pt-5">
+                    <div className="border-t border-black/8 bg-white/60 px-4 pb-5 pt-4">
+                      <div className="mb-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.12em]">
+                        <span className="rounded-full bg-[#16384f] px-3 py-1 text-white">
+                          {getOrderStatusLabel(order.status)}
+                        </span>
+                        <span className="rounded-full bg-[#eef5ff] px-3 py-1 text-[var(--brand-accent)]">
+                          {getPaymentStatusLabel(order.paymentStatus)}
+                        </span>
+                        <span className="rounded-full bg-[#effaf2] px-3 py-1 text-[#1f6b39]">
+                          {getShippingStatusLabel(order.shippingStatus)}
+                        </span>
+                      </div>
                       <OrderProgressTimeline order={order} />
 
                       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -991,15 +1066,44 @@ export default function AccountProfileForm({
                         </div>
                       </div>
 
-                      <div className="mt-5 rounded-[1.1rem] border border-black/8 bg-white px-4 py-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                          Dirección de entrega
-                        </p>
-                        <p className="mt-2 text-sm leading-7 text-[#5d6167]">
-                          {order.department} · {order.city} · {order.addressLine1}
-                          {order.addressLine2 ? ` · ${order.addressLine2}` : ""}
-                        </p>
-                      </div>
+                      {readShippingDestinations(order.shippingDestinations).length > 0 ? (
+                        <div className="mt-5 rounded-[1.1rem] border border-black/8 bg-white px-4 py-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
+                            Envío a varias direcciones
+                          </p>
+                          <div className="mt-3 grid gap-3 md:grid-cols-2">
+                            {readShippingDestinations(order.shippingDestinations).map((destination, index) => (
+                              <div
+                                key={`${destination.label}-${index}`}
+                                className="rounded-[0.9rem] border border-black/8 bg-[#fafaf9] px-3 py-3 text-sm"
+                              >
+                                <p className="font-semibold text-[#16384f]">{destination.label}</p>
+                                <p className="mt-1 text-[#5d6167]">
+                                  {formatShippingDestinationAddress(destination)}
+                                </p>
+                                <ul className="mt-2 space-y-0.5 text-[#1f2328]">
+                                  {destination.items.map((item) => (
+                                    <li key={item.cartItemId} className="flex justify-between gap-3">
+                                      <span className="min-w-0 truncate">{item.name}</span>
+                                      <span className="shrink-0 font-semibold">× {item.quantity}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-5 rounded-[1.1rem] border border-black/8 bg-white px-4 py-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
+                            Dirección de entrega
+                          </p>
+                          <p className="mt-2 text-sm leading-7 text-[#5d6167]">
+                            {order.department} · {order.city} · {order.addressLine1}
+                            {order.addressLine2 ? ` · ${order.addressLine2}` : ""}
+                          </p>
+                        </div>
+                      )}
 
                       <div className="mt-5 grid gap-3 md:grid-cols-2">
                         {order.items.map((item) => (
@@ -1033,6 +1137,7 @@ export default function AccountProfileForm({
                 </article>
               ))}
             </div>
+            </>
           )}
           </section>
         )}

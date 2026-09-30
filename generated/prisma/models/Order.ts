@@ -132,6 +132,7 @@ export type OrderCountAggregateOutputType = {
   totalItems: number
   paymentReference: number
   wompiTransactionId: number
+  shippingDestinations: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -244,6 +245,7 @@ export type OrderCountAggregateInputType = {
   totalItems?: true
   paymentReference?: true
   wompiTransactionId?: true
+  shippingDestinations?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -363,6 +365,7 @@ export type OrderGroupByOutputType = {
   totalItems: number
   paymentReference: string | null
   wompiTransactionId: string | null
+  shippingDestinations: runtime.JsonValue | null
   createdAt: Date
   updatedAt: Date
   _count: OrderCountAggregateOutputType | null
@@ -418,6 +421,7 @@ export type OrderWhereInput = {
   totalItems?: Prisma.IntFilter<"Order"> | number
   paymentReference?: Prisma.StringNullableFilter<"Order"> | string | null
   wompiTransactionId?: Prisma.StringNullableFilter<"Order"> | string | null
+  shippingDestinations?: Prisma.JsonNullableFilter<"Order">
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -452,6 +456,7 @@ export type OrderOrderByWithRelationInput = {
   totalItems?: Prisma.SortOrder
   paymentReference?: Prisma.SortOrderInput | Prisma.SortOrder
   wompiTransactionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  shippingDestinations?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -489,6 +494,7 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   totalItems?: Prisma.IntFilter<"Order"> | number
   paymentReference?: Prisma.StringNullableFilter<"Order"> | string | null
   wompiTransactionId?: Prisma.StringNullableFilter<"Order"> | string | null
+  shippingDestinations?: Prisma.JsonNullableFilter<"Order">
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -523,6 +529,7 @@ export type OrderOrderByWithAggregationInput = {
   totalItems?: Prisma.SortOrder
   paymentReference?: Prisma.SortOrderInput | Prisma.SortOrder
   wompiTransactionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  shippingDestinations?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.OrderCountOrderByAggregateInput
@@ -563,6 +570,7 @@ export type OrderScalarWhereWithAggregatesInput = {
   totalItems?: Prisma.IntWithAggregatesFilter<"Order"> | number
   paymentReference?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   wompiTransactionId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  shippingDestinations?: Prisma.JsonNullableWithAggregatesFilter<"Order">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Order"> | Date | string
 }
@@ -594,6 +602,7 @@ export type OrderCreateInput = {
   totalItems: number
   paymentReference?: string | null
   wompiTransactionId?: string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutOrdersInput
@@ -628,6 +637,7 @@ export type OrderUncheckedCreateInput = {
   totalItems: number
   paymentReference?: string | null
   wompiTransactionId?: string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
@@ -659,6 +669,7 @@ export type OrderUpdateInput = {
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wompiTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutOrdersNestedInput
@@ -693,6 +704,7 @@ export type OrderUncheckedUpdateInput = {
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wompiTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
@@ -726,6 +738,7 @@ export type OrderCreateManyInput = {
   totalItems: number
   paymentReference?: string | null
   wompiTransactionId?: string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -756,6 +769,7 @@ export type OrderUpdateManyMutationInput = {
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wompiTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -788,6 +802,7 @@ export type OrderUncheckedUpdateManyInput = {
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wompiTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -830,6 +845,7 @@ export type OrderCountOrderByAggregateInput = {
   totalItems?: Prisma.SortOrder
   paymentReference?: Prisma.SortOrder
   wompiTransactionId?: Prisma.SortOrder
+  shippingDestinations?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1016,6 +1032,7 @@ export type OrderCreateWithoutUserInput = {
   totalItems: number
   paymentReference?: string | null
   wompiTransactionId?: string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
@@ -1048,6 +1065,7 @@ export type OrderUncheckedCreateWithoutUserInput = {
   totalItems: number
   paymentReference?: string | null
   wompiTransactionId?: string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
@@ -1110,6 +1128,7 @@ export type OrderScalarWhereInput = {
   totalItems?: Prisma.IntFilter<"Order"> | number
   paymentReference?: Prisma.StringNullableFilter<"Order"> | string | null
   wompiTransactionId?: Prisma.StringNullableFilter<"Order"> | string | null
+  shippingDestinations?: Prisma.JsonNullableFilter<"Order">
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
 }
@@ -1141,6 +1160,7 @@ export type OrderCreateWithoutItemsInput = {
   totalItems: number
   paymentReference?: string | null
   wompiTransactionId?: string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutOrdersInput
@@ -1174,6 +1194,7 @@ export type OrderUncheckedCreateWithoutItemsInput = {
   totalItems: number
   paymentReference?: string | null
   wompiTransactionId?: string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1220,6 +1241,7 @@ export type OrderUpdateWithoutItemsInput = {
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wompiTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutOrdersNestedInput
@@ -1253,6 +1275,7 @@ export type OrderUncheckedUpdateWithoutItemsInput = {
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wompiTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1284,6 +1307,7 @@ export type OrderCreateManyUserInput = {
   totalItems: number
   paymentReference?: string | null
   wompiTransactionId?: string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1314,6 +1338,7 @@ export type OrderUpdateWithoutUserInput = {
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wompiTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
@@ -1346,6 +1371,7 @@ export type OrderUncheckedUpdateWithoutUserInput = {
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wompiTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
@@ -1378,6 +1404,7 @@ export type OrderUncheckedUpdateManyWithoutUserInput = {
   totalItems?: Prisma.IntFieldUpdateOperationsInput | number
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   wompiTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shippingDestinations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1441,6 +1468,7 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   totalItems?: boolean
   paymentReference?: boolean
   wompiTransactionId?: boolean
+  shippingDestinations?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1476,6 +1504,7 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   totalItems?: boolean
   paymentReference?: boolean
   wompiTransactionId?: boolean
+  shippingDestinations?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1509,6 +1538,7 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   totalItems?: boolean
   paymentReference?: boolean
   wompiTransactionId?: boolean
+  shippingDestinations?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1542,11 +1572,12 @@ export type OrderSelectScalar = {
   totalItems?: boolean
   paymentReference?: boolean
   wompiTransactionId?: boolean
+  shippingDestinations?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderNumber" | "userId" | "status" | "paymentStatus" | "shippingStatus" | "division" | "customerName" | "customerEmail" | "customerPhone" | "company" | "department" | "city" | "addressLine1" | "addressLine2" | "notes" | "carrier" | "trackingNumber" | "adminNotes" | "preparingAt" | "shippedAt" | "deliveredAt" | "subtotal" | "shippingCost" | "totalItems" | "paymentReference" | "wompiTransactionId" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderNumber" | "userId" | "status" | "paymentStatus" | "shippingStatus" | "division" | "customerName" | "customerEmail" | "customerPhone" | "company" | "department" | "city" | "addressLine1" | "addressLine2" | "notes" | "carrier" | "trackingNumber" | "adminNotes" | "preparingAt" | "shippedAt" | "deliveredAt" | "subtotal" | "shippingCost" | "totalItems" | "paymentReference" | "wompiTransactionId" | "shippingDestinations" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
 export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   items?: boolean | Prisma.Order$itemsArgs<ExtArgs>
@@ -1593,6 +1624,7 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     totalItems: number
     paymentReference: string | null
     wompiTransactionId: string | null
+    shippingDestinations: runtime.JsonValue | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["order"]>
@@ -2047,6 +2079,7 @@ export interface OrderFieldRefs {
   readonly totalItems: Prisma.FieldRef<"Order", 'Int'>
   readonly paymentReference: Prisma.FieldRef<"Order", 'String'>
   readonly wompiTransactionId: Prisma.FieldRef<"Order", 'String'>
+  readonly shippingDestinations: Prisma.FieldRef<"Order", 'Json'>
   readonly createdAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Order", 'DateTime'>
 }

@@ -243,21 +243,26 @@ export default function CheckoutForm({
     setDestinations((current) => current.filter((destination) => destination.key !== key));
   };
 
-  const buildSplitNotes = () => {
-    const lines = destinations
-      .filter((destination) => Object.values(destination.quantities).some((qty) => qty > 0))
-      .map((destination) => {
-        const addressText = [destination.addressLine1, destination.addressLine2, destination.city, destination.department]
-          .filter(Boolean)
-          .join(", ");
-        const itemLines = items
-          .filter((item) => (destination.quantities[item.id] ?? 0) > 0)
-          .map((item) => `  - ${item.nombre} x${destination.quantities[item.id]}`)
-          .join("\n");
-        return `📍 ${destination.label} (${addressText || "sin dirección especificada"}):\n${itemLines}`;
-      });
+  // Destinations that actually receive something; empty ones are ignored.
+  const usedDestinations = destinations.filter((destination) =>
+    Object.values(destination.quantities).some((qty) => qty > 0),
+  );
 
-    return lines.join("\n\n");
+  // Mirrors the server's check (lib/orders.ts resolveShippingDestinations)
+  // so the customer gets a specific message before the order is sent.
+  const getSplitShippingError = () => {
+    const unassigned = items.find((item) => (splitTotals[item.id] ?? 0) !== item.cantidad);
+    if (unassigned) {
+      return `Asigna todas las unidades de "${unassigned.nombre}" a un destino (${splitTotals[unassigned.id] ?? 0}/${unassigned.cantidad}).`;
+    }
+    const incomplete = usedDestinations.find(
+      (destination) =>
+        !destination.department || !destination.city.trim() || !destination.addressLine1.trim(),
+    );
+    if (incomplete) {
+      return `Completa departamento, ciudad y dirección de "${incomplete.label || "Destino"}".`;
+    }
+    return "";
   };
 
   useEffect(() => {
@@ -314,12 +319,14 @@ export default function CheckoutForm({
       return;
     }
 
-    setIsSubmitting(true);
+    const splitShippingError = splitShipping ? getSplitShippingError() : "";
+    if (splitShippingError) {
+      setInlineError(splitShippingError);
+      setToast({ tone: "error", message: splitShippingError });
+      return;
+    }
 
-    const splitNotes = splitShipping ? buildSplitNotes() : "";
-    const finalNotes = [form.notes, splitNotes ? `ENVÍO A DIFERENTES DIRECCIONES:\n${splitNotes}` : ""]
-      .filter(Boolean)
-      .join("\n\n");
+    setIsSubmitting(true);
 
     const response = await fetch("/api/orders", {
       method: "POST",
@@ -328,8 +335,18 @@ export default function CheckoutForm({
       },
       body: JSON.stringify({
         ...form,
-        notes: finalNotes,
-        shippingCities: splitShipping ? shippingDestinationCities : undefined,
+        shippingDestinations: splitShipping
+          ? usedDestinations.map((destination) => ({
+              label: destination.label,
+              department: destination.department,
+              city: destination.city,
+              addressLine1: destination.addressLine1,
+              addressLine2: destination.addressLine2,
+              items: Object.entries(destination.quantities)
+                .filter(([, quantity]) => quantity > 0)
+                .map(([cartItemId, quantity]) => ({ cartItemId, quantity })),
+            }))
+          : undefined,
         brand: brandParam,
         // Only read when there's no session (guest checkout) — the server
         // has no DB cart to fall back to in that case, so it needs the
@@ -851,7 +868,7 @@ export default function CheckoutForm({
               </div>
             </div>
 
-            {items.length >= 2 && (
+            {totalItems >= 2 && (
               <div className="mt-8 rounded-[1.25rem] border border-black/8 bg-[#fafaf9] p-5">
                 <label className="flex cursor-pointer items-start gap-3">
                   <input

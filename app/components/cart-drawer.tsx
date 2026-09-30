@@ -3,11 +3,17 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "./cart-provider";
 import { useProducts } from "./products-provider";
 import { formatearMoneda } from "../data/catalog";
-import { CART_ACCENT, DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
+import {
+  CART_ACCENT,
+  DIVISION_BRAND,
+  getDivisionFromLocation,
+  type DivisionName,
+} from "@/lib/divisions";
+import { productSellsInDivision } from "@/lib/product-category-views";
 import {
   parsePrecio,
   resolveProductSlug,
@@ -18,6 +24,8 @@ import {
 
 export default function CartDrawer() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const {
     items,
     totalItems,
@@ -46,8 +54,16 @@ export default function CartDrawer() {
     };
   }, [isDrawerOpen, closeDrawer]);
 
-  const getItemDivision = (itemId: string): DivisionName =>
-    products.find((entry) => entry.slug === resolveProductSlug(itemId))?.division ?? "Cauchos";
+  // The storefront being browsed, not each product's owning unit: a Cauchos
+  // product cross-listed into Import and added from /import must keep the
+  // shopper in Import (drawer look, item label and the checkout it opens).
+  const storefront = getDivisionFromLocation(pathname, searchParams.get("brand"));
+  const storefrontParam = storefront === "Cauchos" ? undefined : storefront.toLowerCase();
+  const getItemDivision = (itemId: string): DivisionName => {
+    const product = products.find((entry) => entry.slug === resolveProductSlug(itemId));
+    if (!product) return storefront;
+    return productSellsInDivision(product, storefront) ? storefront : (product.division ?? storefront);
+  };
 
   const subtotal = items.reduce(
     (total, item) => total + parsePrecio(item.precio) * item.cantidad,
@@ -55,8 +71,7 @@ export default function CartDrawer() {
   );
   const missingForMinimum = Math.max(0, MINIMUM_ORDER_TOTAL - subtotal);
   const lastAddedItem = items.find((item) => item.id === lastAddedItemId);
-  const focusItem = lastAddedItem ?? items[0];
-  const division = focusItem ? getItemDivision(focusItem.id) : "Cauchos";
+  const division = storefront;
   const brand = DIVISION_BRAND[division];
   const cartAccent = CART_ACCENT[division];
   const actionClasses = CART_ACTION_BUTTON_CLASS[cartAccent];
@@ -236,14 +251,14 @@ export default function CartDrawer() {
                 disabled={missingForMinimum > 0}
                 onClick={() => {
                   closeDrawer();
-                  router.push("/checkout");
+                  router.push(storefrontParam ? `/checkout?brand=${storefrontParam}` : "/checkout");
                 }}
                 className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full border px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${primaryClasses}`}
               >
                 Continuar compra →
               </button>
               <Link
-                href="/carrito"
+                href={storefrontParam ? `/carrito?brand=${storefrontParam}` : "/carrito"}
                 onClick={closeDrawer}
                 className={`mt-3 inline-flex w-full items-center justify-center rounded-full border bg-white px-6 py-3 text-sm font-black uppercase tracking-[0.08em] transition-colors duration-200 ${actionClasses} hover:text-white`}
               >

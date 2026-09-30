@@ -191,6 +191,10 @@ model Order {
   // `wompiTransactionId` is filled in once Wompi assigns one.
   paymentReference   String?
   wompiTransactionId String?
+  // Split-shipping orders only: one entry per destination with its own
+  // address, shipping fee and the quantities of each line sent there (see
+  // lib/shipping-destinations.ts). Null for a regular single-address order.
+  shippingDestinations Json?
   items              OrderItem[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt

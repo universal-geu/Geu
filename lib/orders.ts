@@ -20,6 +20,10 @@ import { emailLayout, escapeHtml, sendEmail } from "@/lib/email";
 import { formatOrderCode } from "@/lib/format-order";
 import { calculateShippingCost } from "@/lib/shipping";
 import { getAllSalesModes } from "@/lib/site-settings";
+import type {
+  ShippingDestination,
+  ShippingDestinationInput,
+} from "@/lib/shipping-destinations";
 
 export { calculateShippingCost };
 
@@ -33,12 +37,14 @@ export type CheckoutInput = {
   addressLine1: string;
   addressLine2?: string;
   notes?: string;
-  // Present only for split-shipping orders: one entry per destination that
-  // actually has items assigned. The order still stores a single primary
-  // department/city/address (the other destinations are detailed in
-  // `notes`), but the shipping fee charged sums every destination's cost
-  // instead of only the primary one's.
+  // Legacy split-shipping input (just the destination cities, for the fee).
+  // Superseded by `shippingDestinations`, which also carries each
+  // destination's address and quantities.
   shippingCities?: string[];
+  // Split-shipping orders: every cart line's full quantity must be spread
+  // across these destinations. Stored on Order.shippingDestinations, and the
+  // fee charged is one per destination instead of the primary address's.
+  shippingDestinations?: ShippingDestinationInput[];
   // The `?brand=` the customer checked out under (e.g. "import"). Used to
   // exempt products cross-listed into that division from the Cauchos
   // WhatsApp-only block below, and to pick which division's colors the
@@ -105,6 +111,63 @@ export type SalesReport = {
   }>;
 };
 
+function cartItemKey(item: { productId: string; variantSku: string }) {
+  return item.variantSku ? `${item.productId}::${item.variantSku}` : item.productId;
+}
+
+// Validates split-shipping destinations against the real (server-side) cart:
+// each destination needs a full address, and every cart line's quantity must
+// be assigned exactly — nothing left unassigned, nothing invented.
+function resolveShippingDestinations(
+  input: ShippingDestinationInput[],
+  cartItems: Array<{ productId: string; variantSku: string; name: string; quantity: number }>,
+): ShippingDestination[] {
+  const cartByKey = new Map(cartItems.map((item) => [cartItemKey(item), item]));
+  const assigned = new Map<string, number>();
+
+  const destinations = input.flatMap((destination, index) => {
+    const items = (destination.items ?? []).flatMap((item) => {
+      const quantity = Math.floor(Number(item.quantity) || 0);
+      const cartItem = cartByKey.get(String(item.cartItemId ?? ""));
+      if (quantity <= 0) return [];
+      if (!cartItem) throw new Error("INVALID_SHIPPING_DESTINATIONS");
+      const key = cartItemKey(cartItem);
+      assigned.set(key, (assigned.get(key) ?? 0) + quantity);
+      return [{ cartItemId: key, name: cartItem.name, quantity }];
+    });
+
+    if (items.length === 0) return [];
+
+    const department = destination.department?.trim() ?? "";
+    const city = destination.city?.trim() ?? "";
+    const addressLine1 = destination.addressLine1?.trim() ?? "";
+    if (!department || !city || !addressLine1) {
+      throw new Error("INVALID_SHIPPING_DESTINATIONS");
+    }
+
+    return [
+      {
+        label: destination.label?.trim() || `Destino ${index + 1}`,
+        department,
+        city,
+        addressLine1,
+        addressLine2: destination.addressLine2?.trim() || null,
+        shippingCost: calculateShippingCost(city),
+        items,
+      },
+    ];
+  });
+
+  const fullyAssigned = cartItems.every(
+    (item) => assigned.get(cartItemKey(item)) === item.quantity,
+  );
+  if (destinations.length === 0 || !fullyAssigned || assigned.size !== cartItems.length) {
+    throw new Error("INVALID_SHIPPING_DESTINATIONS");
+  }
+
+  return destinations;
+}
+
 export async function createOrderFromCart(userId: string, input: CheckoutInput) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
@@ -142,14 +205,18 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
 
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  // Never trust a client-submitted total — recompute from the list of
-  // destination cities server-side, summing one shipping fee per
-  // destination for split-shipping orders.
+  const shippingDestinations = input.shippingDestinations?.length
+    ? resolveShippingDestinations(input.shippingDestinations, cartItems)
+    : null;
+
+  // Never trust a client-submitted total — recompute the fee server-side,
+  // one per destination for split-shipping orders.
   const shippingCities = (input.shippingCities ?? [])
     .map((destinationCity) => destinationCity.trim())
     .filter(Boolean);
-  const shippingCost =
-    shippingCities.length > 0
+  const shippingCost = shippingDestinations
+    ? shippingDestinations.reduce((total, destination) => total + destination.shippingCost, 0)
+    : shippingCities.length > 0
       ? shippingCities.reduce((total, destinationCity) => total + calculateShippingCost(destinationCity), 0)
       : calculateShippingCost(city);
 
@@ -255,8 +322,8 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
 
     // `Order.division` is only used for cosmetic purposes (e.g. which brand's
     // colors to show on the confirmation page) — the source of truth for who
-    // actually owns each line, and thus each division's revenue, is the
-    // `division` stored on every OrderItem below. Prefer the division the
+    // sold each line, and thus which admin sees the order, is the `division`
+    // stored on every OrderItem below. Prefer the division the
     // customer actually checked out under (so a cross-listed item bought
     // while shopping Import shows Import's confirmation page), falling back
     // to the product's own division for older calls with no brand context.
@@ -275,6 +342,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
         addressLine1,
         addressLine2,
         notes,
+        shippingDestinations: shippingDestinations ?? undefined,
         subtotal,
         shippingCost,
         totalItems,
@@ -287,7 +355,20 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
               productId: item.productId,
               variantSku: item.variantSku || null,
               variantLabel: item.variantLabel || null,
-              division: product?.division ?? orderDivision,
+              // A product cross-listed into the storefront the customer
+              // bought from counts as that unit's sale (its admin handles
+              // the order); otherwise it stays with the product's owner.
+              division:
+                product &&
+                !(
+                  input.brand &&
+                  productSellsInDivision(
+                    { division: product.division, divisionesAdicionales: product.additionalDivisions },
+                    checkoutDivision,
+                  )
+                )
+                  ? product.division
+                  : orderDivision,
               name: item.name,
               image: item.image,
               unitPrice,

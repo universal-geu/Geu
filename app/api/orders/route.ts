@@ -2,8 +2,9 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { requireAdminUser } from "@/lib/admin";
 import { createOrderFromCart, getAllOrders } from "@/lib/orders";
 import { MINIMUM_ORDER_TOTAL } from "@/lib/cart-format";
-import { syncCartItemsForUser, type PersistedCartItem } from "@/lib/cart";
+import { replaceCartItemsForUser, type PersistedCartItem } from "@/lib/cart";
 import { findOrCreateGuestUser } from "@/lib/users";
+import type { ShippingDestinationInput } from "@/lib/shipping-destinations";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-CO", {
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
       addressLine2?: string;
       notes?: string;
       shippingCities?: string[];
+      shippingDestinations?: ShippingDestinationInput[];
       brand?: string;
       items?: PersistedCartItem[];
     };
@@ -81,7 +83,7 @@ export async function POST(request: Request) {
         ).id;
 
     if (!session) {
-      await syncCartItemsForUser(userId, Array.isArray(body.items) ? body.items : []);
+      await replaceCartItemsForUser(userId, Array.isArray(body.items) ? body.items : []);
     }
 
     const order = await createOrderFromCart(userId, {
@@ -93,6 +95,9 @@ export async function POST(request: Request) {
       city: body.city || "",
       addressLine1: body.addressLine1 || "",
       shippingCities: Array.isArray(body.shippingCities) ? body.shippingCities : undefined,
+      shippingDestinations: Array.isArray(body.shippingDestinations)
+        ? body.shippingDestinations
+        : undefined,
       addressLine2: body.addressLine2,
       notes: body.notes,
       brand: body.brand,
@@ -115,6 +120,8 @@ export async function POST(request: Request) {
     const message =
       error instanceof Error && error.message === "INVALID_CHECKOUT"
         ? "Completa los datos principales de entrega para continuar."
+        : error instanceof Error && error.message === "INVALID_SHIPPING_DESTINATIONS"
+          ? "Revisa los destinos: cada uno necesita departamento, ciudad y dirección, y todas las unidades del pedido deben quedar asignadas."
         : error instanceof Error && error.message === "EMPTY_CART"
           ? "Tu carrito está vacío en este momento."
           : error instanceof Error && error.message === "INSUFFICIENT_STOCK"
@@ -132,7 +139,8 @@ export async function POST(request: Request) {
             : "No fue posible crear el pedido.";
 
     const status =
-      error instanceof Error && error.message === "INVALID_CHECKOUT"
+      error instanceof Error &&
+      (error.message === "INVALID_CHECKOUT" || error.message === "INVALID_SHIPPING_DESTINATIONS")
         ? 400
         : error instanceof Error && error.message === "EMPTY_CART"
           ? 400

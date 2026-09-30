@@ -58,7 +58,7 @@ export default async function CheckoutSuccessPage({
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           {!isGuest && (
             <Link
-              href="/mi-cuenta"
+              href={division === "Cauchos" ? "/mi-cuenta" : `/mi-cuenta?brand=${division.toLowerCase()}`}
               className="rounded-full px-6 py-3 text-sm font-semibold text-white transition-colors duration-200"
               style={{ backgroundColor: brand.accent }}
             >

@@ -198,6 +198,22 @@ export async function clearCartForUser(userId: string) {
   return [];
 }
 
+// Guest checkout: the browser cart is the whole truth for this order, so it
+// replaces whatever the (email-resolved) user had saved instead of being
+// added on top — otherwise a retried checkout doubles every quantity, and a
+// guest using a registered customer's email would also buy their saved cart.
+export async function replaceCartItemsForUser(
+  userId: string,
+  items: PersistedCartItem[],
+) {
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  await prisma.cartItem.deleteMany({ where: { userId } });
+  return syncCartItemsForUser(userId, items);
+}
+
 export async function syncCartItemsForUser(
   userId: string,
   items: PersistedCartItem[],

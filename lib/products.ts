@@ -1250,6 +1250,35 @@ export async function adjustProductInventory(
   return toStoreProduct(updated);
 }
 
+export async function updateProductMinimumStock(slug: string, minimumStock: number) {
+  if (!prisma) {
+    throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  const nextMinimum = Math.max(0, Math.trunc(minimumStock));
+  const product = await prisma.product.findUnique({ where: { slug }, select: { stock: true } });
+  if (!product) {
+    throw new Error("PRODUCT_NOT_FOUND");
+  }
+
+  const updated = await prisma.product.update({
+    where: { slug },
+    data: {
+      minimumStock: nextMinimum,
+      // Same availability rule as adjustProductInventory — the minimum is
+      // what decides "Disponible por pedido" vs "Entrega inmediata".
+      availability:
+        product.stock <= 0
+          ? "Agotado"
+          : product.stock <= nextMinimum
+            ? "Disponible por pedido"
+            : "Entrega inmediata",
+    },
+  });
+
+  return toStoreProduct(updated);
+}
+
 export async function getRecentInventoryMovements(division: DivisionName, limit = 16) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");

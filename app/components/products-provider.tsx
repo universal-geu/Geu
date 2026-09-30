@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -68,6 +69,7 @@ type ProductsContextValue = {
     slug: string,
     quantity: number,
     note?: string,
+    options?: { minimumStock?: number },
   ) => Promise<{ ok: true } | { ok: false; message: string }>;
   refreshProducts: () => Promise<void>;
   /** Upgrades the shared product list to the full, every-field version (specs,
@@ -180,6 +182,12 @@ export function ProductsProvider({
   initialProducts: StoreProduct[];
 }) {
   const [products, setProducts] = useState<StoreProduct[]>(initialProducts);
+  // When each product was last saved from this tab. A full-catalog fetch
+  // that started before a save carries a stale copy of that product, so it
+  // must not overwrite the fresher one already in state (in dev the load
+  // even runs twice in parallel, which is why this is a timestamp and not
+  // a per-request set).
+  const lastSavedAt = useRef(new Map<string, number>());
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -279,6 +287,8 @@ export function ProductsProvider({
         };
       }
 
+      lastSavedAt.current.set(slug, Date.now());
+      lastSavedAt.current.set(payload.product.slug, Date.now());
       setProducts((current) => {
         const nextProducts = current.map((product) =>
           product.slug === slug ? payload.product! : product,
@@ -317,13 +327,13 @@ export function ProductsProvider({
 
       return { ok: true };
     },
-    adjustInventory: async (slug, quantity, note) => {
+    adjustInventory: async (slug, quantity, note, options) => {
       const response = await fetch(`/api/inventory/${slug}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ quantity, note }),
+        body: JSON.stringify({ quantity, note, minimumStock: options?.minimumStock }),
       });
 
       const payload = (await response.json()) as {
@@ -377,6 +387,7 @@ export function ProductsProvider({
         };
       }
 
+      lastSavedAt.current.set(slug, Date.now());
       setProducts((current) => {
         const nextProducts = current.map((product) =>
           product.slug === slug ? payload.product! : product,
@@ -397,12 +408,20 @@ export function ProductsProvider({
       }
     },
     loadFullCatalog: async () => {
+      const startedAt = Date.now();
       const response = await fetch("/api/admin/products");
       if (!response.ok) return;
 
       const payload = (await response.json()) as { products?: StoreProduct[] };
-      if (payload.products) {
-        setProducts(payload.products);
+      const fullProducts = payload.products;
+      if (fullProducts) {
+        setProducts((current) =>
+          fullProducts.map((product) =>
+            (lastSavedAt.current.get(product.slug) ?? 0) >= startedAt
+              ? { ...product, ...current.find((entry) => entry.slug === product.slug) }
+              : product,
+          ),
+        );
       }
     },
   };

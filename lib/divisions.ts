@@ -110,6 +110,24 @@ export function productHref(slug: string, division: DivisionName): string {
   return brandParam ? `/producto/${slug}?brand=${brandParam}` : `/producto/${slug}`;
 }
 
+// Which storefront the visitor is currently browsing: an explicit `?brand=`
+// wins (shared pages like /producto, /carrito, /checkout), otherwise the
+// route prefix. Client components mounted in the root layout (cart drawer,
+// WhatsApp button) use this since they don't get a `division` prop.
+export function getDivisionFromLocation(
+  pathname: string,
+  brandParam: string | null | undefined,
+): DivisionName {
+  if (brandParam) return getDivisionFromBrandParam(brandParam);
+  if (pathname.startsWith("/import")) return "Import";
+  if (pathname.startsWith("/plastic")) return "Plastic";
+  if (pathname.startsWith("/energy")) return "Energy";
+  if (pathname.startsWith("/structure")) return "Innovation";
+  if (pathname.startsWith("/autoservicio-inteligente")) return "Innovation";
+  if (pathname.startsWith("/quienes-somos")) return "GEU";
+  return "Cauchos";
+}
+
 export function getDivisionFromBrandParam(brand: string | null | undefined): DivisionName {
   switch ((brand || "").toLowerCase()) {
     case "import":

@@ -1,27 +1,16 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { getDivisionFromBrandParam, type DivisionName } from "@/lib/divisions";
+import { getDivisionFromLocation, type DivisionName } from "@/lib/divisions";
 
 type WhatsAppFloatButtonProps = {
   whatsappNumbers: Record<DivisionName, string | null>;
 };
 
-function resolveDivision(pathname: string, brandParam: string | null): DivisionName {
-  if (brandParam) return getDivisionFromBrandParam(brandParam);
-  if (pathname.startsWith("/import")) return "Import";
-  if (pathname.startsWith("/plastic")) return "Plastic";
-  if (pathname.startsWith("/energy")) return "Energy";
-  if (pathname.startsWith("/structure")) return "Innovation";
-  if (pathname.startsWith("/autoservicio-inteligente")) return "Innovation";
-  if (pathname.startsWith("/quienes-somos")) return "GEU";
-  return "Cauchos";
-}
-
 export default function WhatsAppFloatButton({ whatsappNumbers }: WhatsAppFloatButtonProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const division = resolveDivision(pathname, searchParams.get("brand"));
+  const division = getDivisionFromLocation(pathname, searchParams.get("brand"));
   const whatsappNumber = whatsappNumbers[division];
 
   if (!whatsappNumber) return null;
