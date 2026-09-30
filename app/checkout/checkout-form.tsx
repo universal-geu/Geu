@@ -150,6 +150,10 @@ export default function CheckoutForm({
   const [paymentCode, setPaymentCode] = useState("");
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
   const [isPayingWithWompi, setIsPayingWithWompi] = useState(false);
+  // Lets the team run the whole order flow (paid status, success page,
+  // admin, mi-cuenta) without a real Wompi charge. Reuses the demo-code
+  // endpoint, so it still needs SIMULATED_PAYMENT_CODE to go through.
+  const [showTestPayment, setShowTestPayment] = useState(false);
   const [splitShipping, setSplitShipping] = useState(false);
   const [destinations, setDestinations] = useState<Destination[]>([createDestination(1)]);
   const cityOptions = useMemo(
@@ -524,13 +528,15 @@ export default function CheckoutForm({
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 px-6 backdrop-blur-[2px]">
           <div className="w-full max-w-lg rounded-[1.9rem] border border-black/8 bg-white p-7 shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--brand-accent)]">
-              {wompiEnabled ? "Pago con Wompi" : "Pago demo"}
+              {wompiEnabled && !showTestPayment ? "Pago con Wompi" : "Pago de prueba"}
             </p>
             <h2 className="mt-3 text-3xl font-bold text-[#16384f]">
-              {wompiEnabled ? "Paga tu pedido con Wompi" : "Simular pago del pedido"}
+              {wompiEnabled && !showTestPayment ? "Paga tu pedido con Wompi" : "Simular pago del pedido"}
             </h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
-              {wompiEnabled ? (
+              {wompiEnabled && showTestPayment ? (
+                "Aprueba el pedido sin cobro real para probar todo el flujo: confirmación, estado del pedido, mi cuenta y panel admin. Requiere el código de prueba."
+              ) : wompiEnabled ? (
                 "Se abrirá la ventana segura de Wompi para completar el pago con tarjeta, PSE, Nequi u otros medios disponibles."
               ) : (
                 <>
@@ -557,7 +563,8 @@ export default function CheckoutForm({
               </div>
             </div>
 
-            {wompiEnabled ? (
+            {wompiEnabled && !showTestPayment ? (
+              <>
               <div className="mt-6 flex gap-3">
                 <button
                   type="button"
@@ -575,6 +582,14 @@ export default function CheckoutForm({
                   {isPayingWithWompi ? "Abriendo Wompi..." : "Pagar con Wompi"}
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowTestPayment(true)}
+                className="mt-4 w-full text-center text-sm font-medium text-slate-500 underline-offset-4 transition-colors duration-200 hover:text-[#16384f] hover:underline"
+              >
+                Simular pago de prueba
+              </button>
+              </>
             ) : (
               <form onSubmit={handleConfirmPayment} className="mt-6 space-y-4">
                 <div>
@@ -582,7 +597,7 @@ export default function CheckoutForm({
                     htmlFor="paymentCode"
                     className="mb-2 block text-sm font-medium text-slate-700"
                   >
-                    Código de pago demo
+                    {wompiEnabled ? "Código de pago de prueba" : "Código de pago demo"}
                   </label>
                   <input
                     id="paymentCode"
@@ -600,12 +615,16 @@ export default function CheckoutForm({
                   <button
                     type="button"
                     onClick={() => {
-                      setPendingOrder(null);
+                      if (wompiEnabled) {
+                        setShowTestPayment(false);
+                      } else {
+                        setPendingOrder(null);
+                      }
                       setPaymentCode("");
                     }}
                     className="flex-1 rounded-xl border border-[#16384f]/20 px-4 py-3 font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
                   >
-                    Pagar luego
+                    {wompiEnabled ? "Volver" : "Pagar luego"}
                   </button>
                   <button
                     type="submit"
