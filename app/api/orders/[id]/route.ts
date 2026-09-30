@@ -16,6 +16,7 @@ export async function PATCH(
       carrier?: string;
       trackingNumber?: string;
       adminNotes?: string;
+      estimatedDeliveryAt?: string | null;
     };
 
     if (!id || !body.shippingStatus) {
@@ -33,6 +34,7 @@ export async function PATCH(
         carrier: body.carrier,
         trackingNumber: body.trackingNumber,
         adminNotes: body.adminNotes,
+        estimatedDeliveryAt: body.estimatedDeliveryAt,
       },
       admin.division,
     );

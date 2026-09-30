@@ -43,6 +43,7 @@ type AccountOrder = {
   adminNotes: string | null;
   shippedAt: Date | null;
   deliveredAt: Date | null;
+  estimatedDeliveryAt: Date | null;
   totalItems: number;
   subtotal: number;
   shippingCost: number;
@@ -1056,12 +1057,21 @@ export default function AccountProfileForm({
                         </div>
                         <div className="rounded-[1.1rem] border border-black/8 bg-white px-4 py-3">
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                            Fecha de entrega
+                            {order.deliveredAt || !order.estimatedDeliveryAt
+                              ? "Fecha de entrega"
+                              : "Entrega estimada"}
                           </p>
                           <p className="mt-2 text-sm font-semibold text-[#16384f]">
                             {order.deliveredAt
                               ? new Date(order.deliveredAt).toLocaleDateString("es-CO")
-                              : "Sin confirmar"}
+                              : order.estimatedDeliveryAt && order.shippingStatus !== "CANCELLED"
+                                ? new Date(order.estimatedDeliveryAt).toLocaleDateString("es-CO", {
+                                    weekday: "short",
+                                    day: "numeric",
+                                    month: "short",
+                                    timeZone: "America/Bogota",
+                                  })
+                                : "Sin confirmar"}
                           </p>
                         </div>
                       </div>

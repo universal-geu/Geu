@@ -182,6 +182,9 @@ model Order {
   preparingAt        DateTime?
   shippedAt          DateTime?
   deliveredAt        DateTime?
+  // Set by the admin once the shipment is planned; shown to the customer
+  // in Mi cuenta and in the "enviado" email until the real deliveredAt.
+  estimatedDeliveryAt DateTime?
   subtotal           Int
   shippingCost       Int            @default(0)
   totalItems         Int

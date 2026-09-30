@@ -401,6 +401,7 @@ type AdminOrder = {
   preparingAt: string | Date | null;
   shippedAt: string | Date | null;
   deliveredAt: string | Date | null;
+  estimatedDeliveryAt: string | Date | null;
   totalItems: number;
   subtotal: number;
   shippingCost: number;
@@ -427,6 +428,7 @@ type OrderEditState = {
   carrier: string;
   trackingNumber: string;
   adminNotes: string;
+  estimatedDeliveryAt: string;
 };
 
 type QuoteStatusValue = "NEW" | "CONTACTED" | "CLOSED";
@@ -598,7 +600,14 @@ function getOrderEditState(order: AdminOrder): OrderEditState {
     carrier: order.carrier || "",
     trackingNumber: order.trackingNumber || "",
     adminNotes: order.adminNotes || "",
+    estimatedDeliveryAt: toDateInputValue(order.estimatedDeliveryAt),
   };
+}
+
+// "YYYY-MM-DD" in Colombia time, for <input type="date">.
+function toDateInputValue(value: string | Date | null) {
+  if (!value) return "";
+  return new Date(value).toLocaleDateString("en-CA", { timeZone: "America/Bogota" });
 }
 
 function getDerivedOrderStatus(
@@ -1869,6 +1878,7 @@ export default function AdminPage() {
     carrier: "",
     trackingNumber: "",
     adminNotes: "",
+    estimatedDeliveryAt: "",
   });
   const [isSavingOrder, setIsSavingOrder] = useState(false);
   const editFormRef = useRef<HTMLFormElement | null>(null);
@@ -5357,267 +5367,205 @@ export default function AdminPage() {
           )}
 
           {activeTab === "reports" && (
-            <div className="admin-fade-up space-y-8">
-              <div className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
-                      Informes
-                    </p>
-                    <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                      Métricas de ventas
-                    </h2>
-                    <p className="mt-3 max-w-2xl text-sm leading-7 text-[#6e7379]">
-                      Datos calculados desde los pedidos reales: unidades vendidas, productos líderes, ingresos y estado de pagos.
-                    </p>
-                  </div>
+            <div className="admin-fade-up space-y-4">
+              <div className="flex flex-wrap items-end justify-between gap-3 rounded-[1.5rem] border border-black/8 bg-white px-5 py-4 shadow-[0_10px_22px_rgba(15,23,42,0.04)]">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8b8d91]">Informes</p>
+                  <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#16384f]">Métricas de ventas</h2>
+                  <p className="mt-1 text-sm text-[#6e7379]">Calculado desde los pedidos reales de esta unidad.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {salesReport && (
+                    <span className="text-xs text-[#8b8d91]">
+                      Actualizado {new Date(salesReport.generatedAt).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}
+                    </span>
+                  )}
                   <button
                     type="button"
                     onClick={() => void loadSalesReport()}
-                    className="inline-flex rounded-full border border-black/10 px-5 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                    disabled={isLoadingReport}
+                    className="inline-flex items-center gap-2 rounded-xl border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white disabled:opacity-60"
                   >
-                    Recargar informes
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className={`h-4 w-4 ${isLoadingReport ? "animate-spin" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4h-4" />
+                    </svg>
+                    Recargar
                   </button>
                 </div>
-
-                {isLoadingReport ? (
-                  <p className="mt-8 text-sm text-[#6e7379]">Cargando métricas...</p>
-                ) : !salesReport ? (
-                  <div className="mt-8 rounded-[1.75rem] border border-dashed border-black/12 bg-[#fafaf9] p-8 text-center text-sm leading-7 text-[#6e7379]">
-                    Aún no se ha cargado el informe. Usa el botón para consultar las métricas.
-                  </div>
-                ) : (
-                  <div className="mt-8 space-y-8">
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                      {[
-                        {
-                          label: "Total de productos",
-                          value: formatNumber(salesReport.totals.totalProducts),
-                          helper: "Productos activos en el catálogo",
-                        },
-                        {
-                          label: "Unidades vendidas",
-                          value: formatNumber(salesReport.totals.productsSold),
-                          helper: `${formatNumber(salesReport.totals.orders)} pedidos no cancelados`,
-                        },
-                        {
-                          label: "Ingresos confirmados",
-                          value: formatCurrency(salesReport.totals.paidRevenue),
-                          helper: `${formatNumber(salesReport.totals.paidOrders)} pagos confirmados`,
-                        },
-                        {
-                          label: "Ticket promedio",
-                          value: formatCurrency(salesReport.totals.averageOrderValue),
-                          helper: "Promedio sobre pedidos activos",
-                        },
-                        {
-                          label: "Pendientes",
-                          value: formatNumber(salesReport.totals.pendingOrders),
-                          helper: `${formatNumber(salesReport.totals.cancelledOrders)} cancelados`,
-                        },
-                      ].map((metric) => (
-                        <div
-                          key={metric.label}
-                          className="rounded-[1.5rem] border border-black/8 bg-[#fafaf9] px-5 py-5"
-                        >
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
-                            {metric.label}
-                          </p>
-                          <p className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[var(--admin-accent)]">
-                            {metric.value}
-                          </p>
-                          <p className="mt-2 text-sm text-[#6e7379]">{metric.helper}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-                      <div className="rounded-[1.75rem] border border-black/8 bg-[#16384f] p-6 text-white shadow-[0_18px_35px_rgba(22,56,79,0.18)]">
-                        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/58">
-                          Producto más vendido
-                        </p>
-                        {salesReport.topProduct ? (
-                          <>
-                            <h3 className="mt-4 text-2xl font-semibold tracking-[-0.04em]">
-                              {salesReport.topProduct.name}
-                            </h3>
-                            <p className="mt-3 text-sm leading-7 text-white/72">
-                              {salesReport.topProduct.category}
-                            </p>
-                            <div className="mt-6 grid grid-cols-2 gap-3">
-                              <div className="rounded-[1.2rem] bg-white/10 px-4 py-4">
-                                <p className="text-xs uppercase tracking-[0.18em] text-white/58">
-                                  Vendidos
-                                </p>
-                                <p className="mt-2 text-2xl font-semibold">
-                                  {formatNumber(salesReport.topProduct.quantitySold)}
-                                </p>
-                              </div>
-                              <div className="rounded-[1.2rem] bg-white/10 px-4 py-4">
-                                <p className="text-xs uppercase tracking-[0.18em] text-white/58">
-                                  Ingresos
-                                </p>
-                                <p className="mt-2 text-xl font-semibold">
-                                  {formatCurrency(salesReport.topProduct.revenue)}
-                                </p>
-                              </div>
-                            </div>
-                            <p className="mt-5 text-sm text-white/68">
-                              Stock actual: {salesReport.topProduct.stock ?? "Sin dato"}
-                            </p>
-                          </>
-                        ) : (
-                          <p className="mt-4 text-sm leading-7 text-white/72">
-                            Todavía no hay ventas registradas para identificar un producto líder.
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="rounded-[1.75rem] border border-black/8 bg-[#fafaf9] p-6">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8b8d91]">
-                              Ranking
-                            </p>
-                            <h3 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                              Top productos
-                            </h3>
-                          </div>
-                          <span className="rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#0f766e] shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
-                            Top 5
-                          </span>
-                        </div>
-
-                        <div className="mt-5 space-y-3">
-                          {salesReport.topProducts.length === 0 ? (
-                            <p className="text-sm text-[#6e7379]">Aún no hay productos vendidos.</p>
-                          ) : (
-                            salesReport.topProducts.map((product, index) => {
-                              const maxSold = salesReport.topProducts[0]?.quantitySold || 1;
-                              const progress = Math.max(
-                                8,
-                                Math.round((product.quantitySold / maxSold) * 100),
-                              );
-
-                              return (
-                                <div
-                                  key={product.productId}
-                                  className="rounded-[1.15rem] border border-black/8 bg-white px-4 py-4"
-                                >
-                                  <div className="flex flex-wrap items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                      <p className="text-sm font-semibold text-[#1f2328]">
-                                        {index + 1}. {product.name}
-                                      </p>
-                                      <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#8b8d91]">
-                                        {product.category}
-                                      </p>
-                                    </div>
-                                    <div className="text-right text-sm">
-                                      <p className="font-semibold text-[var(--admin-accent)]">
-                                        {formatNumber(product.quantitySold)} vendidos
-                                      </p>
-                                      <p className="mt-1 text-[#6e7379]">
-                                        {formatCurrency(product.revenue)}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#e5e7eb]">
-                                    <span
-                                      className="block h-full rounded-full bg-[#0f766e]"
-                                      style={{ width: `${progress}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-6 xl:grid-cols-2">
-                      <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                        <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                          Ventas por categoría
-                        </h3>
-                        <div className="mt-5 space-y-3">
-                          {salesReport.categories.length === 0 ? (
-                            <p className="text-sm text-[#6e7379]">Aún no hay categorías con ventas.</p>
-                          ) : (
-                            salesReport.categories.map((category) => (
-                              <div
-                                key={category.category}
-                                className="flex flex-wrap items-center justify-between gap-3 rounded-[1.1rem] border border-black/8 bg-[#fafaf9] px-4 py-4"
-                              >
-                                <div>
-                                  <p className="text-sm font-semibold text-[#1f2328]">
-                                    {category.category}
-                                  </p>
-                                  <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#8b8d91]">
-                                    {formatNumber(category.quantitySold)} unidades
-                                  </p>
-                                </div>
-                                <p className="text-sm font-semibold text-[var(--admin-accent)]">
-                                  {formatCurrency(category.revenue)}
-                                </p>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                        <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[#16384f]">
-                          Pedidos recientes
-                        </h3>
-                        <div className="mt-5 space-y-3">
-                          {salesReport.recentOrders.length === 0 ? (
-                            <p className="text-sm text-[#6e7379]">Aún no hay pedidos registrados.</p>
-                          ) : (
-                            salesReport.recentOrders.map((order) => (
-                              <div
-                                key={order.id}
-                                className="rounded-[1.1rem] border border-black/8 bg-[#fafaf9] px-4 py-4"
-                              >
-                                <div className="flex flex-wrap items-start justify-between gap-3">
-                                  <div>
-                                    <p className="text-sm font-semibold text-[#1f2328]">
-                                      {order.customerName}
-                                    </p>
-                                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#8b8d91]">
-                                      {formatOrderCode(order.orderNumber)}
-                                    </p>
-                                    <p className="mt-2 text-xs text-[#6e7379]">
-                                      {new Date(order.createdAt).toLocaleString("es-CO")}
-                                    </p>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="rounded-full border border-[var(--admin-accent)]/18 bg-[var(--admin-accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--admin-accent)]">
-                                      {getPaymentStatusLabel(order.paymentStatus)}
-                                    </span>
-                                    <p className="mt-3 text-sm font-semibold text-[#16384f]">
-                                      {formatCurrency(order.subtotal)}
-                                    </p>
-                                    <p className="mt-1 text-xs text-[#6e7379]">
-                                      {order.totalItems} producto
-                                      {order.totalItems === 1 ? "" : "s"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-[#8b8d91]">
-                      Actualizado: {new Date(salesReport.generatedAt).toLocaleString("es-CO")}
-                    </p>
-                  </div>
-                )}
               </div>
+
+              {isLoadingReport && !salesReport ? (
+                <p className="rounded-[1.25rem] border border-black/8 bg-white p-6 text-sm text-[#6e7379]">Cargando métricas...</p>
+              ) : !salesReport ? (
+                <div className="rounded-[1.25rem] border border-dashed border-black/12 bg-white p-8 text-center text-sm text-[#6e7379]">
+                  Aún no se ha cargado el informe. Usa “Recargar” para consultar las métricas.
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 overflow-hidden rounded-[1.5rem] border border-black/8 bg-white shadow-[0_10px_22px_rgba(15,23,42,0.04)] md:grid-cols-3 xl:grid-cols-5">
+                    {[
+                      {
+                        label: "Ingresos confirmados",
+                        value: formatCurrency(salesReport.totals.paidRevenue),
+                        helper: `${formatNumber(salesReport.totals.paidOrders)} ${salesReport.totals.paidOrders === 1 ? "pago confirmado" : "pagos confirmados"}`,
+                        primary: true,
+                      },
+                      {
+                        label: "Unidades vendidas",
+                        value: formatNumber(salesReport.totals.productsSold),
+                        helper: `${formatNumber(salesReport.totals.orders)} ${salesReport.totals.orders === 1 ? "pedido no cancelado" : "pedidos no cancelados"}`,
+                      },
+                      {
+                        label: "Ticket promedio",
+                        value: formatCurrency(salesReport.totals.averageOrderValue),
+                        helper: "Por pedido activo",
+                      },
+                      {
+                        label: "Pendientes de pago",
+                        value: formatNumber(salesReport.totals.pendingOrders),
+                        helper: `${formatNumber(salesReport.totals.cancelledOrders)} ${salesReport.totals.cancelledOrders === 1 ? "cancelado" : "cancelados"}`,
+                      },
+                      {
+                        label: "Productos activos",
+                        value: formatNumber(salesReport.totals.totalProducts),
+                        helper: "En el catálogo",
+                      },
+                    ].map((metric) => (
+                      <div key={metric.label} className="border-b border-r border-black/8 px-5 py-4 last:border-r-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">{metric.label}</p>
+                        <p className={`mt-1.5 text-2xl font-semibold tabular-nums tracking-[-0.03em] ${metric.primary ? "text-[var(--admin-accent)]" : "text-[#16384f]"}`}>
+                          {metric.value}
+                        </p>
+                        <p className="mt-0.5 text-xs text-[#6e7379]">{metric.helper}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 shadow-[0_10px_22px_rgba(15,23,42,0.04)]">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h3 className="text-base font-semibold text-[#16384f]">Productos más vendidos</h3>
+                      <span className="text-xs text-[#8b8d91]">Unidades vendidas · top {salesReport.topProducts.length}</span>
+                    </div>
+                    {salesReport.topProducts.length === 0 ? (
+                      <p className="mt-4 text-sm text-[#6e7379]">Aún no hay productos vendidos.</p>
+                    ) : (
+                      <ol className="mt-3 divide-y divide-black/6">
+                        {salesReport.topProducts.map((product, index) => {
+                          const maxSold = salesReport.topProducts[0]?.quantitySold || 1;
+                          const width = Math.max(2, Math.round((product.quantitySold / maxSold) * 100));
+                          return (
+                            <li
+                              key={product.productId}
+                              className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 py-3 md:grid-cols-[1.5rem_minmax(0,1.2fr)_minmax(0,1fr)_5.5rem_7.5rem]"
+                            >
+                              <span className="text-sm font-semibold tabular-nums text-[#8b8d91]">{index + 1}</span>
+                              <div className="min-w-0">
+                                <p className="flex items-center gap-2 truncate text-sm font-semibold text-[#1f2328]">
+                                  <span className="truncate">{product.name}</span>
+                                  {index === 0 && (
+                                    <span className="shrink-0 rounded-full bg-[var(--admin-accent-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#16384f]">
+                                      Más vendido
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="truncate text-xs text-[#8b8d91]">{product.category}</p>
+                              </div>
+                              <div
+                                className="order-last col-span-3 h-2 rounded-full bg-[#eef0f2] md:order-none md:col-span-1"
+                                title={`${product.name}: ${formatNumber(product.quantitySold)} unidades`}
+                              >
+                                <span className="block h-full rounded-full bg-[var(--admin-accent)]" style={{ width: `${width}%` }} />
+                              </div>
+                              <span className="hidden text-right text-sm font-semibold tabular-nums text-[#16384f] md:block">
+                                {formatNumber(product.quantitySold)} und.
+                              </span>
+                              <span className="text-right text-sm tabular-nums text-[#5d6167]">
+                                <span className="font-semibold text-[#16384f] md:hidden">{formatNumber(product.quantitySold)} und. · </span>
+                                {formatCurrency(product.revenue)}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 xl:grid-cols-2">
+                    <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 shadow-[0_10px_22px_rgba(15,23,42,0.04)]">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <h3 className="text-base font-semibold text-[#16384f]">Ventas por categoría</h3>
+                        <span className="text-xs text-[#8b8d91]">Ingresos</span>
+                      </div>
+                      {salesReport.categories.length === 0 ? (
+                        <p className="mt-4 text-sm text-[#6e7379]">Aún no hay categorías con ventas.</p>
+                      ) : (
+                        <ul className="mt-3 space-y-3">
+                          {salesReport.categories.map((category) => {
+                            const maxRevenue = Math.max(...salesReport.categories.map((entry) => entry.revenue), 1);
+                            return (
+                              <li key={category.category}>
+                                <div className="flex items-baseline justify-between gap-3 text-sm">
+                                  <span className="min-w-0 truncate font-medium text-[#1f2328]">{category.category}</span>
+                                  <span className="shrink-0 tabular-nums text-[#5d6167]">
+                                    <span className="text-xs text-[#8b8d91]">{formatNumber(category.quantitySold)} und. · </span>
+                                    <span className="font-semibold text-[#16384f]">{formatCurrency(category.revenue)}</span>
+                                  </span>
+                                </div>
+                                <div
+                                  className="mt-1.5 h-1.5 rounded-full bg-[#eef0f2]"
+                                  title={`${category.category}: ${formatCurrency(category.revenue)}`}
+                                >
+                                  <span
+                                    className="block h-full rounded-full bg-[var(--admin-accent)]"
+                                    style={{ width: `${Math.max(2, Math.round((category.revenue / maxRevenue) * 100))}%` }}
+                                  />
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+
+                    <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 shadow-[0_10px_22px_rgba(15,23,42,0.04)]">
+                      <h3 className="text-base font-semibold text-[#16384f]">Pedidos recientes</h3>
+                      {salesReport.recentOrders.length === 0 ? (
+                        <p className="mt-4 text-sm text-[#6e7379]">Aún no hay pedidos registrados.</p>
+                      ) : (
+                        <ul className="mt-2 divide-y divide-black/6">
+                          {salesReport.recentOrders.map((order) => (
+                            <li key={order.id} className="flex items-center gap-3 py-2.5 text-sm">
+                              <span className="w-14 shrink-0 font-semibold tabular-nums text-[#16384f]">
+                                {formatOrderCode(order.orderNumber)}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate font-medium text-[#1f2328]">{order.customerName}</p>
+                                <p className="text-xs text-[#8b8d91]">
+                                  {new Date(order.createdAt).toLocaleDateString("es-CO")} · {order.totalItems} producto{order.totalItems === 1 ? "" : "s"}
+                                </p>
+                              </div>
+                              <span
+                                className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                  order.paymentStatus === "PAID"
+                                    ? "bg-[#effaf2] text-[#1f6b39]"
+                                    : order.paymentStatus === "FAILED"
+                                      ? "bg-[#fff1f1] text-[#c53b3b]"
+                                      : "bg-[#fff6e5] text-[#9a6200]"
+                                }`}
+                              >
+                                {getPaymentStatusLabel(order.paymentStatus)}
+                              </span>
+                              <span className="w-24 shrink-0 text-right font-semibold tabular-nums text-[#16384f]">
+                                {formatCurrency(order.subtotal)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -6239,6 +6187,19 @@ export default function AdminPage() {
                             placeholder="Ej. 123456789"
                             className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-2.5 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                           />
+                        </label>
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-[#4f545a]">Fecha estimada de entrega</span>
+                          <input
+                            type="date"
+                            name="estimatedDeliveryAt"
+                            value={orderForm.estimatedDeliveryAt}
+                            onChange={handleOrderFieldChange}
+                            className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-2.5 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                          />
+                          <span className="block text-xs text-[#8b8d91]">
+                            El cliente la ve en Mi cuenta y en el correo de envío.
+                          </span>
                         </label>
                       </div>
                     </div>

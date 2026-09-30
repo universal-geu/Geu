@@ -942,6 +942,9 @@ export async function updateOrderShipping(
     carrier?: string;
     trackingNumber?: string;
     adminNotes?: string;
+    // "YYYY-MM-DD" from the admin's date input; "" clears it, undefined
+    // leaves it untouched.
+    estimatedDeliveryAt?: string | null;
   },
   adminDivision?: DivisionName,
 ) {
@@ -954,6 +957,15 @@ export async function updateOrderShipping(
   const carrier = input.carrier?.trim() || null;
   const trackingNumber = input.trackingNumber?.trim() || null;
   const adminNotes = input.adminNotes?.trim() || null;
+  let estimatedDeliveryAt: Date | null | undefined;
+  if (input.estimatedDeliveryAt !== undefined) {
+    const value = input.estimatedDeliveryAt?.trim() ?? "";
+    if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      throw new Error("INVALID_ESTIMATED_DELIVERY");
+    }
+    // Noon in Colombia so the calendar day never shifts across timezones.
+    estimatedDeliveryAt = value ? new Date(`${value}T12:00:00-05:00`) : null;
+  }
 
   if (!["PENDING", "PREPARING", "SHIPPED", "DELIVERED", "CANCELLED"].includes(shippingStatus)) {
     throw new Error("INVALID_SHIPPING_STATUS");
@@ -974,6 +986,8 @@ export async function updateOrderShipping(
       paymentStatus: true,
       shippingStatus: true,
       preparingAt: true,
+      shippedAt: true,
+      deliveredAt: true,
       customerName: true,
       customerEmail: true,
       division: true,
@@ -997,11 +1011,14 @@ export async function updateOrderShipping(
         ? "PAID"
         : "PENDING";
 
+  // Keep the original dates when the order was already in that state —
+  // saving an unrelated field (e.g. the estimated date) must not move them.
   const shippedAt =
     shippingStatus === "SHIPPED" || shippingStatus === "DELIVERED"
-      ? new Date()
+      ? currentOrder.shippedAt ?? new Date()
       : null;
-  const deliveredAt = shippingStatus === "DELIVERED" ? new Date() : null;
+  const deliveredAt =
+    shippingStatus === "DELIVERED" ? currentOrder.deliveredAt ?? new Date() : null;
   const preparingAt =
     shippingStatus === "PREPARING" && !currentOrder.preparingAt
       ? new Date()
@@ -1019,6 +1036,7 @@ export async function updateOrderShipping(
       preparingAt,
       shippedAt,
       deliveredAt,
+      estimatedDeliveryAt,
     },
     include: {
       user: {
@@ -1043,6 +1061,7 @@ export async function updateOrderShipping(
       shippingStatus,
       carrier,
       trackingNumber,
+      estimatedDeliveryAt: updatedOrder.estimatedDeliveryAt,
     });
   }
 
@@ -1057,6 +1076,15 @@ const SHIPPING_STATUS_LABELS: Record<ShippingStatus, string> = {
   CANCELLED: "Cancelado",
 };
 
+function formatEstimatedDelivery(date: Date) {
+  return date.toLocaleDateString("es-CO", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "America/Bogota",
+  });
+}
+
 async function sendShippingStatusEmail({
   orderNumber,
   division,
@@ -1065,6 +1093,7 @@ async function sendShippingStatusEmail({
   shippingStatus,
   carrier,
   trackingNumber,
+  estimatedDeliveryAt,
 }: {
   orderNumber: number;
   division: DivisionName;
@@ -1073,6 +1102,7 @@ async function sendShippingStatusEmail({
   shippingStatus: ShippingStatus;
   carrier: string | null;
   trackingNumber: string | null;
+  estimatedDeliveryAt: Date | null;
 }) {
   const label = SHIPPING_STATUS_LABELS[shippingStatus];
   const trackingHtml =
@@ -1080,6 +1110,12 @@ async function sendShippingStatusEmail({
       ? `<p style="color:#6e7379;font-size:14px;line-height:22px;">
           ${carrier ? `Transportadora: <strong>${escapeHtml(carrier)}</strong>. ` : ""}
           ${trackingNumber ? `Número de guía: <strong>${escapeHtml(trackingNumber)}</strong>.` : ""}
+        </p>`
+      : "";
+  const estimateHtml =
+    (shippingStatus === "PREPARING" || shippingStatus === "SHIPPED") && estimatedDeliveryAt
+      ? `<p style="color:#6e7379;font-size:14px;line-height:22px;">
+          Entrega estimada: <strong>${formatEstimatedDelivery(estimatedDeliveryAt)}</strong>.
         </p>`
       : "";
 
@@ -1092,7 +1128,7 @@ async function sendShippingStatusEmail({
         Hola ${escapeHtml(customerName)}, tu pedido <strong>${formatOrderCode(orderNumber)}</strong> cambió de estado a
         <strong style="color:${DIVISION_BRAND[division].accent};">${label}</strong>.
       </p>
-      ${trackingHtml}`,
+      ${trackingHtml}${estimateHtml}`,
       division,
     ),
   });
