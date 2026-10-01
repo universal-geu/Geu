@@ -19,10 +19,10 @@ import { slugify } from "../data/catalog";
 export const dynamic = "force-dynamic";
 
 const plasticOffers = [
-  { title: "Extrusion PVC Rigido", href: "/plastic/categoria/extrusion-en-pvc-rigido", imageKey: "plastic-oferta-1" },
-  { title: "Extrusion PVC Flexible", href: "/plastic/categoria/extrusion-en-pvc-flexible", imageKey: "plastic-oferta-2" },
-  { title: "Perfileria para construccion", href: "/plastic/categoria/perfileria-para-construccion", imageKey: "plastic-oferta-3" },
-  { title: "Perfileria para carroceria", href: "/plastic/categoria/perfileria-para-carroceria", imageKey: "plastic-oferta-4" },
+  { title: "Extrusión PVC Rígido", href: "/plastic/categoria/extrusion-en-pvc-rigido", imageKey: "plastic-oferta-1" },
+  { title: "Extrusión PVC Flexible", href: "/plastic/categoria/extrusion-en-pvc-flexible", imageKey: "plastic-oferta-2" },
+  { title: "Perfilería para construcción", href: "/plastic/categoria/perfileria-para-construccion", imageKey: "plastic-oferta-3" },
+  { title: "Perfilería para carrocería", href: "/plastic/categoria/perfileria-para-carroceria", imageKey: "plastic-oferta-4" },
 ];
 
 const plasticFeatured = [
@@ -37,12 +37,12 @@ const plasticFeatured = [
     imageKey: "plastic-destacada-2",
   },
   {
-    title: "Piezas tecnicas",
+    title: "Piezas técnicas",
     href: "#contacto",
     imageKey: "plastic-destacada-3",
   },
   {
-    title: "Extrusion",
+    title: "Extrusión",
     href: "#contacto",
     imageKey: "plastic-destacada-4",
   },
@@ -63,7 +63,7 @@ export default async function PlasticPage() {
   const t = (key: string) => resolveText(key, siteTexts);
   const whatsappHref = whatsappNumber
     ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        "Hola GEU Plastic, quiero hacer una evaluacion tecnica.",
+        "Hola GEU Plastic, quiero hacer una evaluación técnica.",
       )}`
     : "#contacto";
   const plasticCatalog = allProducts.filter((product) => productSellsInDivision(product, "Plastic"));
@@ -246,7 +246,7 @@ export default async function PlasticPage() {
             </div>
           ) : (
             <p className="mt-8 text-sm font-semibold text-slate-500">
-              Pronto publicaremos aqui nuestras fichas de producto.
+              Pronto publicaremos aquí nuestras fichas de producto.
             </p>
           )}
         </div>

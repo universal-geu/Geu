@@ -2233,39 +2233,69 @@ export default function AdminPage() {
     return counts;
   }, [customers]);
 
-  const filteredOrders = useMemo(() => {
+  // Search first (it also drives the status chip counts), then the chip.
+  const searchedOrders = useMemo(() => {
     const search = orderSearch.trim();
+    if (!search) return orders;
 
-    return orders.filter((order) => {
-      const matchesFilter =
-        orderShippingFilter === "all" || order.shippingStatus === orderShippingFilter;
-      const matchesSearch =
-        search.length === 0 ||
-        matchesQuery(
-          [
-            formatOrderCode(order.orderNumber),
-            order.customerName,
-            order.customerEmail,
-            order.city,
-            order.trackingNumber,
-            ...order.items.map((item) => item.name),
-          ]
-            .filter((value): value is string => Boolean(value))
-            .join(" "),
-          search,
-        );
+    // A number ("12", "0012", "#0012") is an order code: match it exactly by
+    // code prefix instead of fuzzily, or "0001" would also hit #0011, a "1/4"
+    // in a product name, etc. Long digit runs can also be a phone/guide.
+    const digits = search.replace(/^#/, "");
+    if (/^\d+$/.test(digits)) {
+      return orders.filter(
+        (order) =>
+          formatOrderCode(order.orderNumber).slice(1).startsWith(digits.padStart(Math.min(digits.length, 4), "0")) ||
+          order.orderNumber === Number(digits) ||
+          (digits.length >= 5 &&
+            [order.customerPhone, order.trackingNumber].some((value) => value?.replace(/\D/g, "").includes(digits))),
+      );
+    }
 
-      return matchesFilter && matchesSearch;
-    });
-  }, [orderSearch, orderShippingFilter, orders]);
+    return orders.filter((order) =>
+      matchesQuery(
+        [
+          formatOrderCode(order.orderNumber),
+          order.customerName,
+          order.customerEmail,
+          order.city,
+          order.trackingNumber,
+          ...order.items.map((item) => item.name),
+        ]
+          .filter((value): value is string => Boolean(value))
+          .join(" "),
+        search,
+      ),
+    );
+  }, [orderSearch, orders]);
+
+  const filteredOrders = useMemo(
+    () =>
+      orderShippingFilter === "all"
+        ? searchedOrders
+        : searchedOrders.filter((order) => order.shippingStatus === orderShippingFilter),
+    [orderShippingFilter, searchedOrders],
+  );
+
+  // Typing a search jumps straight to the first match when the open order
+  // isn't among the results.
+  const [prevOrderSearch, setPrevOrderSearch] = useState(orderSearch);
+  if (orderSearch !== prevOrderSearch) {
+    setPrevOrderSearch(orderSearch);
+    const firstMatch = filteredOrders[0];
+    if (orderSearch.trim() && firstMatch && !filteredOrders.some((order) => order.id === selectedOrderId)) {
+      setSelectedOrderId(firstMatch.id);
+      setOrderForm(getOrderEditState(firstMatch));
+    }
+  }
 
   const orderStatusCounts = useMemo(() => {
-    const counts = { all: orders.length } as Record<"all" | ShippingStatus, number>;
+    const counts = { all: searchedOrders.length } as Record<"all" | ShippingStatus, number>;
     for (const status of shippingStatuses) {
-      counts[status] = orders.filter((order) => order.shippingStatus === status).length;
+      counts[status] = searchedOrders.filter((order) => order.shippingStatus === status).length;
     }
     return counts;
-  }, [orders]);
+  }, [searchedOrders]);
 
   const quoteColumns = useMemo(() => {
     return quoteStatuses.map((status) => ({
@@ -6957,10 +6987,10 @@ export default function AdminPage() {
                         const getDetail = (key: string) => details[key]?.trim() ?? "";
                         const hasFormDetails = Object.keys(details).length > 0;
 
-                        const yesNoFields = [
-                          { label: "Adjunta plano del producto", key: "Adjunta plano del producto" },
-                          { label: "Adjunta muestra física", key: "Adjunta muestra física" },
-                          { label: "Realiza dibujo del producto", key: "Realiza dibujo del producto" },
+                        const yesNoFields: Array<{ label: string; key: string; extraKey?: string; filesKey?: string }> = [
+                          { label: "Adjunta plano del producto", key: "Adjunta plano del producto", filesKey: "Plano del producto · archivos" },
+                          { label: "Adjunta muestra física", key: "Adjunta muestra física", filesKey: "Fotos de la muestra · archivos" },
+                          { label: "Realiza dibujo del producto", key: "Realiza dibujo del producto", filesKey: "Dibujo del producto · archivos" },
                           {
                             label: "Cliente suministra material",
                             key: "Cliente suministra material",
@@ -7055,11 +7085,29 @@ export default function AdminPage() {
                               <div className="grid gap-4 lg:grid-cols-2">
                                 <Card title="Información del producto">
                                   <Row label="Color">{getDetail("Color del producto") || <Empty />}</Row>
-                                  {yesNoFields.map(({ label, key, extraKey }) => (
-                                    <Row key={key} label={label}>
-                                      <YesNoValue value={getDetail(key)} extra={extraKey ? getDetail(extraKey) : ""} />
-                                    </Row>
-                                  ))}
+                                  {yesNoFields.map(({ label, key, extraKey, filesKey }) => {
+                                    const files = filesKey ? getDetail(filesKey).split("\n").filter(Boolean) : [];
+                                    return (
+                                      <Row key={key} label={label}>
+                                        <YesNoValue value={getDetail(key)} extra={extraKey ? getDetail(extraKey) : ""} />
+                                        {files.length > 0 && (
+                                          <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                            {files.map((url, index) => (
+                                              <a
+                                                key={url}
+                                                href={url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex items-center gap-1 rounded-full bg-[var(--admin-accent-soft)] px-2.5 py-1 text-xs font-bold text-[var(--admin-accent)] hover:underline"
+                                              >
+                                                📎 {/\.pdf$/i.test(url) ? "PDF" : "Imagen"} {index + 1}
+                                              </a>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </Row>
+                                    );
+                                  })}
                                   <Row label="Material sugerido">{getDetail("Material sugerido") || <Empty />}</Row>
                                   <Row label="Dureza">{getDetail("Dureza") || <Empty />}</Row>
                                 </Card>
@@ -7960,7 +8008,7 @@ export default function AdminPage() {
                                     </span>
                                     {previews.length > 1 && (
                                       <span className="mt-2 flex items-center gap-1">
-                                        {previews.slice(0, 5).map((preview) => (
+                                        {previews.slice(0, 3).map((preview) => (
                                           <span
                                             key={preview.key}
                                             className="h-4 w-6 overflow-hidden rounded-[3px] bg-[#e5e8eb] ring-1 ring-black/5"
@@ -7971,8 +8019,8 @@ export default function AdminPage() {
                                             )}
                                           </span>
                                         ))}
-                                        {previews.length > 5 && (
-                                          <span className="text-[10px] font-semibold text-[#8b8d91]">+{previews.length - 5}</span>
+                                        {previews.length > 3 && (
+                                          <span className="text-[10px] font-semibold text-[#8b8d91]">+{previews.length - 3}</span>
                                         )}
                                       </span>
                                     )}
@@ -8483,7 +8531,7 @@ export default function AdminPage() {
                       Precios
                     </span>
                     <span className="mt-1 block text-xs leading-5 text-[#6e7379]">
-                      Carrito y checkout normales (actual).
+                      Carrito y checkout normales.
                     </span>
                   </button>
                   <button

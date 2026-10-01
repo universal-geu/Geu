@@ -21,13 +21,13 @@ export const dynamic = "force-dynamic";
 const importOffers = [
   { title: "Repuestos importados", href: "/import/categoria/autopartes", imageKey: "import-oferta-1" },
   { title: "Abastecimiento global", href: "/import", imageKey: "import-oferta-2" },
-  { title: "Logistica internacional", href: "#contacto", imageKey: "import-oferta-3" },
+  { title: "Logística internacional", href: "#contacto", imageKey: "import-oferta-3" },
   { title: "Compras por pedido", href: "#contacto", imageKey: "import-oferta-4" },
 ];
 
 const importFeatured = [
   {
-    title: "Importacion empresarial",
+    title: "Importación empresarial",
     href: "/import",
     imageKey: "import-destacada-1",
   },
@@ -37,7 +37,7 @@ const importFeatured = [
     imageKey: "import-destacada-2",
   },
   {
-    title: "Logistica y aduana",
+    title: "Logística y aduana",
     href: "#contacto",
     imageKey: "import-destacada-3",
   },

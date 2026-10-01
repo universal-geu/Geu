@@ -254,13 +254,13 @@ export default function CauchosCategorySidebarMenu({
   const importWhatsappNumber = whatsappNumbers.Import;
   const importWhatsappHref = importWhatsappNumber
     ? `https://wa.me/${importWhatsappNumber}?text=${encodeURIComponent(
-        "Hola GEU Import, quiero hacer una solicitud de importacion.",
+        "Hola GEU Import, quiero hacer una solicitud de importación.",
       )}`
     : undefined;
   const plasticWhatsappNumber = whatsappNumbers.Plastic;
   const plasticWhatsappHref = plasticWhatsappNumber
     ? `https://wa.me/${plasticWhatsappNumber}?text=${encodeURIComponent(
-        "Hola GEU Plastic, quiero hacer una evaluacion tecnica.",
+        "Hola GEU Plastic, quiero hacer una evaluación técnica.",
       )}`
     : undefined;
   const categoryLabel = (nombre: string) => nombre;

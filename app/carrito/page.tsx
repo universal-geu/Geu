@@ -117,7 +117,7 @@ export default function CarritoPage() {
                 className="mb-2 text-xs font-black uppercase tracking-[0.16em]"
                 style={{ color: accent }}
               >
-                {isImportCart ? "Importacion empresarial" : "Compra empresarial"}
+                {isImportCart ? "Importación empresarial" : "Compra empresarial"}
               </p>
               <h1 className="text-4xl font-black uppercase tracking-[-0.02em] text-slate-950 md:text-6xl">
                 Carrito

@@ -76,7 +76,7 @@ export function BrandOfferSection({
           </Link>
         </div>
 
-        <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-4">
+        <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth scroll-px-5 px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-4">
           {items.map((item) => (
             <Link
               key={item.title}
@@ -120,7 +120,7 @@ export function BrandFeaturedSection({
       : "text-center text-2xl font-black tracking-[-0.02em] text-slate-900";
   // En móvil las tarjetas van en carrusel con scroll lateral; desde el breakpoint vuelven a la grilla.
   const scrollRowClass =
-    "-mx-5 flex snap-x snap-mandatory overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+    "-mx-5 flex snap-x snap-mandatory overflow-x-auto scroll-smooth scroll-px-5 px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
   const gridClass = compact
     ? `mt-5 gap-3 ${scrollRowClass} sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0`
     : `mt-7 gap-4 ${scrollRowClass} lg:mx-0 lg:grid lg:snap-none lg:grid-cols-2 lg:overflow-visible lg:px-0 lg:pb-0`;

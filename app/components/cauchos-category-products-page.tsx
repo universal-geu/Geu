@@ -38,7 +38,7 @@ const SIDEBAR_OFFERS: Partial<Record<DivisionName, { title: string; href: string
   Import: [
     { title: "Repuestos importados", href: "/import/categoria/autopartes", imageKey: "import-oferta-1" },
     { title: "Abastecimiento global", href: "/import", imageKey: "import-oferta-2" },
-    { title: "Logistica internacional", href: "/import#contacto", imageKey: "import-oferta-3" },
+    { title: "Logística internacional", href: "/import#contacto", imageKey: "import-oferta-3" },
     { title: "Compras por pedido", href: "/import#contacto", imageKey: "import-oferta-4" },
   ],
   Energy: [
@@ -48,10 +48,10 @@ const SIDEBAR_OFFERS: Partial<Record<DivisionName, { title: string; href: string
     { title: "Instalación por proyecto", href: "/energy#contacto", imageKey: "energy-oferta-4" },
   ],
   Plastic: [
-    { title: "Extrusion PVC Rigido", href: "/plastic/categoria/extrusion-en-pvc-rigido", imageKey: "plastic-oferta-1" },
-    { title: "Extrusion PVC Flexible", href: "/plastic/categoria/extrusion-en-pvc-flexible", imageKey: "plastic-oferta-2" },
-    { title: "Perfileria para construccion", href: "/plastic/categoria/perfileria-para-construccion", imageKey: "plastic-oferta-3" },
-    { title: "Perfileria para carroceria", href: "/plastic/categoria/perfileria-para-carroceria", imageKey: "plastic-oferta-4" },
+    { title: "Extrusión PVC Rígido", href: "/plastic/categoria/extrusion-en-pvc-rigido", imageKey: "plastic-oferta-1" },
+    { title: "Extrusión PVC Flexible", href: "/plastic/categoria/extrusion-en-pvc-flexible", imageKey: "plastic-oferta-2" },
+    { title: "Perfilería para construcción", href: "/plastic/categoria/perfileria-para-construccion", imageKey: "plastic-oferta-3" },
+    { title: "Perfilería para carrocería", href: "/plastic/categoria/perfileria-para-carroceria", imageKey: "plastic-oferta-4" },
   ],
 };
 

@@ -3,57 +3,11 @@ import EnergyHeader from "../energy-header";
 import SiteFooter from "../../components/site-footer";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import { getNosotrosContent } from "@/lib/nosotros-texts";
 
 export const dynamic = "force-dynamic";
 
-const pilares = [
-  {
-    title: "Misión",
-    description:
-      "Impulsar la transición energética mediante soluciones innovadoras que generen eficiencia, sostenibilidad y valor para nuestros clientes y la sociedad.",
-  },
-  {
-    title: "Visión",
-    description:
-      "Para el año 2035, ser una empresa referente en Latinoamérica en soluciones para infraestructura energética, reconocida por su innovación, calidad y compromiso con el desarrollo sostenible.",
-  },
-  {
-    title: "Propósito",
-    description:
-      "Contribuir a un futuro más sostenible desarrollando soluciones que impulsen la transformación energética de Latinoamérica.",
-  },
-];
 
-const valores = [
-  {
-    title: "Compromiso",
-    description: "Trabajamos con responsabilidad para construir un mejor futuro.",
-  },
-  {
-    title: "Innovación",
-    description: "Buscamos constantemente nuevas tecnologías que generen impacto positivo.",
-  },
-  {
-    title: "Sostenibilidad",
-    description: "Cada decisión considera el bienestar del planeta y de las futuras generaciones.",
-  },
-  {
-    title: "Excelencia",
-    description: "Diseñamos soluciones con altos estándares de calidad y desempeño.",
-  },
-  {
-    title: "Integridad",
-    description: "Actuamos con transparencia, ética y responsabilidad.",
-  },
-  {
-    title: "Trabajo en equipo",
-    description: "Creemos que los grandes proyectos se construyen colaborando.",
-  },
-  {
-    title: "Pasión por transformar",
-    description: "Nos inspira crear soluciones que generen un cambio positivo.",
-  },
-];
 
 const destacadas = [
   { src: "/energy-nosotros-equipo-1.jpg", alt: "Equipo GEU Energy instalando estructura monoposte" },
@@ -75,6 +29,7 @@ export default async function EnergyNosotrosPage() {
   const siteImages = await getSiteImages();
   const siteTexts = await getSiteTexts();
   const t = (key: string) => resolveText(key, siteTexts);
+  const nosotros = getNosotrosContent("Energy", t);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
@@ -96,7 +51,7 @@ export default async function EnergyNosotrosPage() {
         <div className="relative mx-auto max-w-[1632px] px-5 pb-[66vw] pt-10 md:px-8 md:py-32">
           <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.34em] text-[#b38f00]">
             <span className="h-px w-8 bg-[#ffd400]" />
-            Nosotros
+            {nosotros.label("eyebrow")}
           </p>
           <h1 className="mt-6 max-w-2xl text-4xl font-medium leading-[1.15] tracking-[-0.01em] text-slate-950 md:text-6xl">
             {t("energy-nosotros-hero-titulo")}
@@ -114,9 +69,9 @@ export default async function EnergyNosotrosPage() {
         />
         <div className="relative mx-auto max-w-[1632px] px-5 py-20 md:px-8">
           <ul className="grid gap-y-14 md:grid-cols-3 md:gap-x-14 md:gap-y-0">
-            {pilares.map((pilar, index) => (
+            {nosotros.pilares.map((pilar, index) => (
               <li
-                key={pilar.title}
+                key={index}
                 className={`pt-8 md:pt-0 ${index === 0 ? "" : "border-t border-slate-200 md:border-t-0 md:border-l md:pl-14"}`}
               >
                 <h2 className="text-lg font-bold uppercase tracking-[0.06em] text-[#b38f00]">
@@ -137,14 +92,14 @@ export default async function EnergyNosotrosPage() {
           aria-hidden="true"
         />
         <div className="relative mx-auto max-w-[1632px] px-5 py-20 md:px-8">
-          <SectionLabel>Valores corporativos</SectionLabel>
+          <SectionLabel>{nosotros.label("valores")}</SectionLabel>
           <h2 className="mt-5 max-w-lg text-2xl font-medium leading-tight tracking-[-0.01em] text-slate-950 md:text-3xl">
             {t("energy-valores-titulo")}
           </h2>
 
           <ul className="mt-14 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-            {valores.map((valor, index) => (
-              <li key={valor.title} className="group border-t border-slate-200 pt-6">
+            {nosotros.valores.map((valor, index) => (
+              <li key={index} className="group border-t border-slate-200 pt-6">
                 <div className="flex items-center gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#b38f00]/25 bg-[#ffd400]/[0.08] font-mono text-[10px] font-medium tabular-nums text-[#b38f00]">
                     {String(index + 1).padStart(2, "0")}
@@ -181,7 +136,7 @@ export default async function EnergyNosotrosPage() {
 
       <section className="border-b border-slate-200">
         <div className="mx-auto max-w-[1632px] px-5 py-20 md:px-8">
-          <SectionLabel>Filosofía empresarial</SectionLabel>
+          <SectionLabel>{nosotros.label("filosofia")}</SectionLabel>
           <p className="mt-8 max-w-2xl border-l border-[#b38f00]/40 pl-8 text-xl font-normal leading-9 tracking-[-0.005em] text-slate-700 md:text-2xl">
             {t("energy-filosofia-texto")}
           </p>
@@ -200,7 +155,7 @@ export default async function EnergyNosotrosPage() {
         <div className="relative mx-auto max-w-[1632px] px-5 py-24 md:px-8 md:py-28">
           <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.34em] text-[#ffe680]">
             <span className="h-px w-8 bg-[#ffd400]" />
-            Promesa de marca
+            {nosotros.label("promesa")}
           </p>
           <p className="mt-8 max-w-3xl text-3xl font-medium leading-tight tracking-[-0.015em] text-white md:text-5xl">
             {t("energy-promesa-titulo")}

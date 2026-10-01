@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type YesNo = "" | "SI" | "NO";
 
@@ -15,9 +16,6 @@ type FormState = {
   proceso: string[];
   procesoOtroCual: string;
   colorProducto: string;
-  adjuntaPlano: YesNo;
-  adjuntaMuestra: YesNo;
-  realizaDibujo: YesNo;
   clienteSuministraMaterial: YesNo;
   clienteSuministraCual: string;
   hidrocarburos: YesNo;
@@ -48,9 +46,6 @@ const INITIAL_STATE: FormState = {
   proceso: [],
   procesoOtroCual: "",
   colorProducto: "",
-  adjuntaPlano: "",
-  adjuntaMuestra: "",
-  realizaDibujo: "",
   clienteSuministraMaterial: "",
   clienteSuministraCual: "",
   hidrocarburos: "",
@@ -70,6 +65,52 @@ const INITIAL_STATE: FormState = {
   dureza: "",
   cantidad: "",
 };
+
+type Attachment = { name: string; url: string };
+type AttachmentField = "adjuntaPlano" | "adjuntaMuestra" | "realizaDibujo";
+
+// Files the customer can attach (plano, fotos de la muestra, dibujo). The
+// quote's `details` keep the old SI/NO answers (SI = something attached) and
+// the URLs under `detailKey`, one per line.
+const ATTACHMENT_FIELDS: Array<{ field: AttachmentField; label: string; detailKey: string }> = [
+  { field: "adjuntaPlano", label: "Adjunta plano del producto", detailKey: "Plano del producto · archivos" },
+  { field: "adjuntaMuestra", label: "Adjunta muestra física (fotos)", detailKey: "Fotos de la muestra · archivos" },
+  { field: "realizaDibujo", label: "Adjunta dibujo del producto", detailKey: "Dibujo del producto · archivos" },
+];
+
+const EMPTY_ATTACHMENTS: Record<AttachmentField, Attachment[]> = {
+  adjuntaPlano: [],
+  adjuntaMuestra: [],
+  realizaDibujo: [],
+};
+
+async function uploadQuoteAttachment(file: File): Promise<Attachment> {
+  const signResponse = await fetch("/api/quotes/attachments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fileName: file.name, contentType: file.type, fileSize: file.size }),
+  });
+  const sign = (await signResponse.json()) as {
+    error?: string;
+    path?: string;
+    token?: string;
+    bucket?: string;
+    supabaseUrl?: string;
+    anonKey?: string;
+    publicUrl?: string;
+  };
+  if (!signResponse.ok || !sign.token || !sign.publicUrl) {
+    throw new Error(sign.error || "No fue posible subir el archivo.");
+  }
+
+  const supabase = createSupabaseBrowserClient(sign.supabaseUrl!, sign.anonKey!);
+  const { error } = await supabase.storage
+    .from(sign.bucket!)
+    .uploadToSignedUrl(sign.path!, sign.token, file, { contentType: file.type });
+  if (error) throw new Error("No fue posible subir el archivo.");
+
+  return { name: file.name, url: sign.publicUrl };
+}
 
 const PROCESO_OPTIONS = [
   "Vulcanizado",
@@ -186,6 +227,28 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [submitState, setSubmitState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [authState, setAuthState] = useState<"loading" | "guest" | "user">("loading");
+  const [attachments, setAttachments] = useState(EMPTY_ATTACHMENTS);
+  const [uploadingField, setUploadingField] = useState<AttachmentField | null>(null);
+  const [attachmentError, setAttachmentError] = useState("");
+
+  const addAttachments = async (field: AttachmentField, files: FileList | null) => {
+    if (!files?.length) return;
+    setUploadingField(field);
+    setAttachmentError("");
+    try {
+      for (const file of Array.from(files)) {
+        const attachment = await uploadQuoteAttachment(file);
+        setAttachments((current) => ({ ...current, [field]: [...current[field], attachment] }));
+      }
+    } catch (error) {
+      setAttachmentError(error instanceof Error ? error.message : "No fue posible subir el archivo.");
+    } finally {
+      setUploadingField(null);
+    }
+  };
+
+  const removeAttachment = (field: AttachmentField, url: string) =>
+    setAttachments((current) => ({ ...current, [field]: current[field].filter((item) => item.url !== url) }));
 
   useEffect(() => {
     let cancelled = false;
@@ -235,6 +298,7 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
     setOpen(false);
     if (submitState === "sent") {
       setForm(INITIAL_STATE);
+      setAttachments(EMPTY_ATTACHMENTS);
       setSubmitState("idle");
     }
   };
@@ -269,11 +333,17 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
       "Descripción de la solicitud": form.descripcion,
       "Proceso solicitado": proceso.join(", "),
       "Color del producto": form.colorProducto,
-      "Adjunta plano del producto": form.adjuntaPlano,
-      "Adjunta muestra física": form.adjuntaMuestra,
-      "Realiza dibujo del producto": form.realizaDibujo,
+      "Adjunta plano del producto": attachments.adjuntaPlano.length ? "SI" : "NO",
+      "Adjunta muestra física": attachments.adjuntaMuestra.length ? "SI" : "NO",
+      "Realiza dibujo del producto": attachments.realizaDibujo.length ? "SI" : "NO",
       "Cliente suministra material": form.clienteSuministraMaterial,
       "Cliente suministra material · cuál": form.clienteSuministraCual,
+      ...Object.fromEntries(
+        ATTACHMENT_FIELDS.filter(({ field }) => attachments[field].length > 0).map(({ field, detailKey }) => [
+          detailKey,
+          attachments[field].map((item) => item.url).join("\n"),
+        ]),
+      ),
       Hidrocarburos: form.hidrocarburos,
       Impacto: form.impacto,
       Abrasión: form.abrasion,
@@ -439,16 +509,59 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
                       <SectionTitle>Información del producto</SectionTitle>
                       <div className="mt-4 space-y-3">
                         <TextField label="Color del producto" value={form.colorProducto} onChange={(v) => update("colorProducto", v)} />
-                        <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2 sm:gap-y-2">
-                          <YesNoField label="Adjunta plano del producto" value={form.adjuntaPlano} onChange={(v) => update("adjuntaPlano", v)} />
-                          <YesNoField label="Adjunta muestra física" value={form.adjuntaMuestra} onChange={(v) => update("adjuntaMuestra", v)} />
-                          <YesNoField label="Realiza dibujo del producto" value={form.realizaDibujo} onChange={(v) => update("realizaDibujo", v)} />
-                          <YesNoField
-                            label="Cliente suministra material"
-                            value={form.clienteSuministraMaterial}
-                            onChange={(v) => update("clienteSuministraMaterial", v)}
-                          />
-                        </div>
+                        {ATTACHMENT_FIELDS.map(({ field, label }) => (
+                          <div key={field} className="border-b border-slate-100 pb-2.5">
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="min-w-0 text-[11px] font-black uppercase tracking-[0.06em] text-slate-600">{label}</span>
+                              <label
+                                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-[var(--brand-accent)] px-3 py-1 text-xs font-black text-[var(--brand-accent)] transition hover:bg-[var(--brand-accent)] hover:text-white ${
+                                  uploadingField ? "pointer-events-none opacity-60" : ""
+                                }`}
+                              >
+                                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="m21 11-8.6 8.6a5 5 0 0 1-7-7l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l8-8" />
+                                </svg>
+                                {uploadingField === field ? "Subiendo…" : "Adjuntar"}
+                                <input
+                                  type="file"
+                                  multiple
+                                  accept="application/pdf,image/jpeg,image/png,image/webp"
+                                  className="sr-only"
+                                  onChange={(event) => {
+                                    void addAttachments(field, event.target.files);
+                                    event.target.value = "";
+                                  }}
+                                />
+                              </label>
+                            </div>
+                            {attachments[field].length > 0 && (
+                              <ul className="mt-2 space-y-1">
+                                {attachments[field].map((item) => (
+                                  <li key={item.url} className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700">
+                                    <a href={item.url} target="_blank" rel="noreferrer" className="truncate hover:underline">
+                                      {item.name}
+                                    </a>
+                                    <button
+                                      type="button"
+                                      aria-label={`Quitar ${item.name}`}
+                                      onClick={() => removeAttachment(field, item.url)}
+                                      className="shrink-0 text-slate-400 hover:text-red-600"
+                                    >
+                                      ✕
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        ))}
+                        <p className="text-[11px] font-semibold text-slate-400">PDF o imagen, hasta 10 MB por archivo.</p>
+                        {attachmentError && <p className="text-xs font-semibold text-red-600">{attachmentError}</p>}
+                        <YesNoField
+                          label="Cliente suministra material"
+                          value={form.clienteSuministraMaterial}
+                          onChange={(v) => update("clienteSuministraMaterial", v)}
+                        />
                         <TextField label="¿Cuál?" value={form.clienteSuministraCual} onChange={(v) => update("clienteSuministraCual", v)} />
                         <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2">
                           <TextField label="Material sugerido" value={form.materialSugerido} onChange={(v) => update("materialSugerido", v)} placeholder="Ej: EPDM" />
@@ -514,7 +627,7 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={submitState === "sending"}
+                    disabled={submitState === "sending" || uploadingField !== null}
                     className="inline-flex w-full items-center justify-center rounded-full bg-[var(--brand-accent)] px-5 py-3.5 text-sm font-black uppercase tracking-[0.06em] text-white transition hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     {submitState === "sending" ? "Enviando..." : "Enviar solicitud"}

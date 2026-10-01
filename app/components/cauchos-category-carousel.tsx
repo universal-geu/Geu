@@ -69,7 +69,9 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
       const available = container.clientWidth;
       if (cardWidth <= 0 || available <= 0) return;
 
-      const wholeCount = Math.max(1, Math.floor((available + gap) / (cardWidth + gap)));
+      // On phones show a single category at a time.
+      const isPhone = window.matchMedia("(max-width: 767px)").matches;
+      const wholeCount = isPhone ? 1 : Math.max(1, Math.floor((available + gap) / (cardWidth + gap)));
       const width = wholeCount * (cardWidth + gap) - gap;
       setVisibleWidth(width);
       setCanScroll(scroller.scrollWidth > width + 1);
@@ -84,11 +86,13 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
     return () => observer.disconnect();
   }, [categories]);
 
+  // Arrows move exactly one card.
   const scroll = (direction: "left" | "right") => {
-    scrollerRef.current?.scrollBy({
-      left: direction === "left" ? -360 : 360,
-      behavior: "smooth",
-    });
+    const scroller = scrollerRef.current;
+    const firstCard = scroller?.children[0] as HTMLElement | undefined;
+    if (!scroller || !firstCard) return;
+    const step = firstCard.getBoundingClientRect().width + parseFloat(getComputedStyle(scroller).columnGap || "0");
+    scroller.scrollBy({ left: direction === "left" ? -step : step, behavior: "smooth" });
   };
 
   return (
@@ -96,7 +100,7 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
       {canScroll && !atStart && (
         <button
           type="button"
-          aria-label="Ver categorias anteriores"
+          aria-label="Ver categorías anteriores"
           onClick={() => scroll("left")}
           className={`absolute left-0 md:left-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-black shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition md:h-10 md:w-10 ${tone.arrow}`}
         >
@@ -159,7 +163,7 @@ export default function CauchosCategoryCarousel({ categories, accent = "blue" }:
       {canScroll && !atEnd && (
         <button
           type="button"
-          aria-label="Ver mas categorias"
+          aria-label="Ver más categorías"
           onClick={() => scroll("right")}
           className={`absolute right-0 md:right-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-black shadow-[0_14px_34px_rgba(15,23,42,0.14)] transition md:h-10 md:w-10 ${tone.arrow}`}
         >

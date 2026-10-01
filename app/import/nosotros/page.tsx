@@ -3,57 +3,11 @@ import CauchosHeader from "../../components/cauchos-header";
 import SiteFooter from "../../components/site-footer";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import { getNosotrosContent } from "@/lib/nosotros-texts";
 
 export const dynamic = "force-dynamic";
 
-const pilares = [
-  {
-    title: "Misión",
-    description:
-      "Conectar la industria con soluciones de clase mundial, generando valor a través de la innovación, la confianza y un servicio excepcional.",
-  },
-  {
-    title: "Visión",
-    description:
-      "Para el año 2035, ser uno de los grupos empresariales líderes en Latinoamérica en soluciones industriales y tecnológicas, reconocido por su innovación, excelencia y generación de valor para clientes, aliados y colaboradores.",
-  },
-  {
-    title: "Propósito",
-    description:
-      "Impulsar el desarrollo de la industria conectando oportunidades globales con las necesidades de Latinoamérica.",
-  },
-];
 
-const valores = [
-  {
-    title: "Integridad",
-    description: "Actuamos con ética, transparencia y coherencia en cada decisión.",
-  },
-  {
-    title: "Compromiso",
-    description: "Cumplimos lo que prometemos y asumimos cada desafío con responsabilidad.",
-  },
-  {
-    title: "Innovación",
-    description: "Buscamos constantemente mejores soluciones para nuestros clientes y el mercado.",
-  },
-  {
-    title: "Excelencia",
-    description: "Trabajamos con altos estándares de calidad en todo lo que hacemos.",
-  },
-  {
-    title: "Orientación al cliente",
-    description: "Escuchamos, entendemos y generamos soluciones que aportan valor.",
-  },
-  {
-    title: "Trabajo en equipo",
-    description: "Creemos en la colaboración como motor del crecimiento y los resultados.",
-  },
-  {
-    title: "Pasión por servir",
-    description: "Disfrutamos ayudar a nuestros clientes a alcanzar sus objetivos.",
-  },
-];
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -68,6 +22,7 @@ export default async function ImportNosotrosPage() {
   const siteImages = await getSiteImages();
   const siteTexts = await getSiteTexts();
   const t = (key: string) => resolveText(key, siteTexts);
+  const nosotros = getNosotrosContent("Import", t);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
@@ -103,9 +58,9 @@ export default async function ImportNosotrosPage() {
         />
         <div className="relative mx-auto max-w-[1632px] px-5 py-20 md:px-8">
           <ul className="grid gap-y-14 md:grid-cols-3 md:gap-x-14 md:gap-y-0">
-            {pilares.map((pilar, index) => (
+            {nosotros.pilares.map((pilar, index) => (
               <li
-                key={pilar.title}
+                key={index}
                 className={`pt-8 md:pt-0 ${index === 0 ? "" : "border-t border-slate-200 md:border-t-0 md:border-l md:pl-14"}`}
               >
                 <h2 className="text-lg font-bold uppercase tracking-[0.06em] text-[#e31313]">
@@ -126,14 +81,14 @@ export default async function ImportNosotrosPage() {
           aria-hidden="true"
         />
         <div className="relative mx-auto max-w-[1632px] px-5 py-20 md:px-8">
-          <SectionLabel>Valores corporativos</SectionLabel>
+          <SectionLabel>{nosotros.label("valores")}</SectionLabel>
           <h2 className="mt-5 max-w-lg text-2xl font-medium leading-tight tracking-[-0.01em] text-slate-950 md:text-3xl">
             {t("import-valores-titulo")}
           </h2>
 
           <ul className="mt-14 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-            {valores.map((valor, index) => (
-              <li key={valor.title} className="group border-t border-slate-200 pt-6">
+            {nosotros.valores.map((valor, index) => (
+              <li key={index} className="group border-t border-slate-200 pt-6">
                 <div className="flex items-center gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#e31313]/25 bg-[#e31313]/[0.06] font-mono text-[10px] font-medium tabular-nums text-[#e31313]">
                     {String(index + 1).padStart(2, "0")}
@@ -172,7 +127,7 @@ export default async function ImportNosotrosPage() {
 
       <section className="border-b border-slate-200">
         <div className="mx-auto max-w-[1632px] px-5 py-20 md:px-8">
-          <SectionLabel>Filosofía empresarial</SectionLabel>
+          <SectionLabel>{nosotros.label("filosofia")}</SectionLabel>
           <p className="mt-8 max-w-2xl border-l border-[#e31313]/40 pl-8 text-xl font-normal leading-9 tracking-[-0.005em] text-slate-700 md:text-2xl">
             {t("import-filosofia-texto")}
           </p>
@@ -191,7 +146,7 @@ export default async function ImportNosotrosPage() {
         <div className="relative mx-auto max-w-[1632px] px-5 py-24 md:px-8 md:py-28">
           <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.34em] text-[#ff8080]">
             <span className="h-px w-8 bg-[#e31313]" />
-            Promesa de marca
+            {nosotros.label("promesa")}
           </p>
           <p className="mt-8 max-w-3xl text-3xl font-medium leading-tight tracking-[-0.015em] text-white md:text-5xl">
             {t("import-promesa-titulo")}

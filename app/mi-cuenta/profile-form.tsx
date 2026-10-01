@@ -90,6 +90,9 @@ const QUOTE_DETAIL_SECTIONS: Array<{ title: string; fields: string[] }> = [
       "Cliente suministra material · cuál",
       "Material sugerido",
       "Dureza",
+      "Plano del producto · archivos",
+      "Fotos de la muestra · archivos",
+      "Dibujo del producto · archivos",
     ],
   },
   {
@@ -130,7 +133,7 @@ type FormState = {
   confirmPassword: string;
 };
 
-type AccountPanel = "summary" | "details" | "orders" | "quotes";
+type AccountPanel = "details" | "orders" | "quotes";
 
 const QUOTE_STATUS_LABEL: Record<AccountQuote["status"], string> = {
   NEW: "Recibida",
@@ -389,9 +392,8 @@ export default function AccountProfileForm({
   const brand = DIVISION_BRAND[division];
   const [activePanel, setActivePanel] = useState<AccountPanel>("orders");
   const [orderDivisionFilter, setOrderDivisionFilter] = useState<DivisionName | "all">("all");
-  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(
-    orders[0]?.id ?? null,
-  );
+  // Every order starts collapsed; the customer opens the one they want.
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({
     fullName: user.fullName,
     company: user.company || "",
@@ -411,27 +413,32 @@ export default function AccountProfileForm({
     () => getCitiesForDepartment(form.department),
     [form.department],
   );
-  const summaryItems = [
-    {
-      label: "Correo principal",
-      value: user.email,
-    },
-    {
-      label: "Teléfono",
-      value: user.phone || "Por completar",
-    },
-    {
-      label: "Ubicación",
-      value:
-        user.department && user.city
-          ? `${user.department} · ${user.city}`
-          : "Aún sin ubicación guardada",
-    },
-    {
-      label: "Dirección",
-      value: user.addressLine1 || "Sin dirección principal",
-    },
+  const accountDetails = [
+    { label: "Nombre completo", value: user.fullName },
+    { label: "Empresa o taller", value: user.company },
+    { label: "Correo electrónico", value: user.email },
+    { label: "Teléfono", value: user.phone },
+    { label: "Departamento", value: user.department },
+    { label: "Ciudad", value: user.city },
+    { label: "Dirección principal", value: user.addressLine1 },
+    { label: "Complemento de dirección", value: user.addressLine2 },
   ];
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  // Quotes start collapsed, like orders; the customer opens the one they want.
+  const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
+  const resetDetailsForm = () =>
+    setForm({
+      fullName: user.fullName,
+      company: user.company || "",
+      email: user.email,
+      phone: user.phone || "",
+      department: user.department || "",
+      city: user.city || "",
+      addressLine1: user.addressLine1 || "",
+      addressLine2: user.addressLine2 || "",
+      newPassword: "",
+      confirmPassword: "",
+    });
   const activeShipments = orders.filter((order) =>
     ["PREPARING", "SHIPPED"].includes(order.shippingStatus),
   ).length;
@@ -505,6 +512,7 @@ export default function AccountProfileForm({
       newPassword: "",
       confirmPassword: "",
     }));
+    setIsEditingDetails(false);
     setToast({
       tone: "success",
       message: payload.message || "Cuenta actualizada correctamente.",
@@ -528,7 +536,6 @@ export default function AccountProfileForm({
 
   const accountNavItems: { key: AccountPanel; label: string; count?: number }[] = [
     { key: "orders", label: "Pedidos", count: orders.length },
-    { key: "summary", label: "Resumen" },
     { key: "details", label: "Datos" },
     ...(division === "Cauchos"
       ? [{ key: "quotes" as const, label: "Cotizaciones", count: quotes.length }]
@@ -650,18 +657,46 @@ export default function AccountProfileForm({
       )}
 
       <section className="w-full space-y-8">
-        {(activePanel === "summary" || activePanel === "details") && (
+        {activePanel === "details" && (
         <section className="rounded-[2rem] bg-white p-8 shadow-lg shadow-black/10 md:p-10">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
-              Cuenta cliente
-            </p>
-            <h1 className="mt-2 text-3xl font-bold text-[#16384f] md:text-4xl">
-              Mi cuenta
-            </h1>
-            <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600">
-              Aquí puedes revisar y actualizar tus datos principales.
-            </p>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
+                Cuenta cliente
+              </p>
+              <h1 className="mt-2 text-3xl font-bold text-[#16384f] md:text-4xl">
+                Mis datos
+              </h1>
+              <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600">
+                {isEditingDetails
+                  ? "Actualiza tus datos y guarda los cambios."
+                  : "Estos son los datos de tu cuenta. Usa “Editar datos” para cambiarlos."}
+              </p>
+            </div>
+            {isEditingDetails ? (
+              <button
+                type="button"
+                onClick={() => {
+                  resetDetailsForm();
+                  setInlineError("");
+                  setIsEditingDetails(false);
+                }}
+                className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 transition-colors duration-200 hover:bg-slate-50"
+              >
+                Cancelar
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsEditingDetails(true)}
+                className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-accent)] px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[var(--brand-accent-hover)]"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" />
+                </svg>
+                Editar datos
+              </button>
+            )}
           </div>
 
           <div className="mt-8 rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-5 text-sm text-[#5d6167]">
@@ -671,33 +706,20 @@ export default function AccountProfileForm({
             </span>
           </div>
 
-          {activePanel === "summary" && (
-            <div className="mt-8 space-y-6">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {summaryItems.map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-[1.3rem] border border-black/8 bg-white px-5 py-4"
-                  >
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                      {item.label}
-                    </p>
-                    <p className="mt-3 text-sm font-semibold leading-7 text-[#16384f]">
-                      {item.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="rounded-[1.5rem] border border-black/8 bg-[#fafaf9] px-5 py-5 text-sm leading-7 text-[#5d6167]">
-                Desde aquí puedes entrar a <span className="font-semibold text-[#16384f]">Datos</span>{" "}
-                para actualizar tu cuenta o a <span className="font-semibold text-[#16384f]">Pedidos</span>{" "}
-                para revisar el estado de tus compras.
-              </div>
-            </div>
+          {!isEditingDetails && (
+            <dl className="mt-8 grid gap-px overflow-hidden rounded-[1.3rem] border border-black/8 bg-black/[0.06] sm:grid-cols-2">
+              {accountDetails.map((item) => (
+                <div key={item.label} className="bg-white px-5 py-4">
+                  <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">{item.label}</dt>
+                  <dd className="mt-2 text-sm font-semibold leading-6 text-[#16384f]">
+                    {item.value || <span className="font-normal text-[#b4b7bb]">Sin completar</span>}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           )}
 
-          {activePanel === "details" && (
+          {isEditingDetails && (
             <form onSubmit={handleSubmit} className="mt-8 grid gap-5 md:grid-cols-2">
               <div>
                 <label htmlFor="fullName" className="mb-2 block text-sm font-medium text-slate-700">
@@ -864,7 +886,7 @@ export default function AccountProfileForm({
                   disabled={isSubmitting}
                   className="w-full rounded-xl bg-[var(--brand-accent)] px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {isSubmitting ? "Guardando cambios..." : "Actualizar cuenta"}
+                  {isSubmitting ? "Guardando cambios..." : "Guardar cambios"}
                 </button>
               </div>
             </form>
@@ -1167,23 +1189,27 @@ export default function AccountProfileForm({
                 evaluación técnica y la verás aquí.
               </div>
             ) : (
-              <div className="mt-6 space-y-5">
-                {quotes.map((quote) => (
-                  <article
-                    key={quote.id}
-                    className="rounded-[1.5rem] border border-black/8 bg-[#fafaf9] p-6"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                          {new Date(quote.createdAt).toLocaleString("es-CO")}
-                        </p>
-                        <p className="mt-2 text-lg font-semibold text-[#1f2328]">
-                          {quote.requestType || "Solicitud de evaluación técnica"}
-                        </p>
-                      </div>
+              <div className="mt-6 divide-y divide-black/8 overflow-hidden rounded-[1.25rem] border border-black/8 bg-[#fafaf9]">
+                {quotes.map((quote) => {
+                  const isExpanded = expandedQuoteId === quote.id;
+                  const product = quote.details?.["Producto"]?.trim() || quote.productDetails;
+                  return (
+                  <article key={quote.id}>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedQuoteId(isExpanded ? null : quote.id)}
+                      aria-expanded={isExpanded}
+                      className="grid w-full grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-3 text-left text-sm transition-colors duration-200 hover:bg-white md:grid-cols-[minmax(10rem,auto)_1fr_auto_auto]"
+                    >
+                      <span className="font-semibold text-[#16384f]">
+                        {quote.requestType || "Solicitud de evaluación técnica"}
+                      </span>
+                      <span className="order-3 col-span-2 truncate text-[#6e7379] md:order-none md:col-span-1">
+                        {new Date(quote.createdAt).toLocaleDateString("es-CO")}
+                        {product ? ` · ${product}` : ""}
+                      </span>
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        className={`justify-self-end rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                           quote.status === "CLOSED"
                             ? "bg-[#effaf2] text-[#1f6b39]"
                             : quote.status === "CONTACTED"
@@ -1193,7 +1219,27 @@ export default function AccountProfileForm({
                       >
                         {QUOTE_STATUS_LABEL[quote.status]}
                       </span>
-                    </div>
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        className={`hidden h-4 w-4 text-[#16384f] transition-transform duration-200 md:block ${
+                          isExpanded ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </button>
+
+                    {isExpanded && (
+                    <div className="border-t border-black/6 bg-white px-4 py-5 md:px-6">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
+                      Enviada el {new Date(quote.createdAt).toLocaleString("es-CO")}
+                    </p>
 
                     {quote.details && Object.keys(quote.details).length > 0 ? (
                       <div className="mt-5 space-y-5 divide-y divide-black/6">
@@ -1215,7 +1261,25 @@ export default function AccountProfileForm({
                                     <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8b8d91]">
                                       {label}
                                     </dt>
-                                    <dd className="mt-0.5 text-sm font-semibold text-[#1f2328]">{value}</dd>
+                                    <dd className="mt-0.5 text-sm font-semibold text-[#1f2328]">
+                                      {label.endsWith("· archivos") ? (
+                                        <span className="flex flex-wrap gap-1.5">
+                                          {value!.split("\n").filter(Boolean).map((url, index) => (
+                                            <a
+                                              key={url}
+                                              href={url}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              className="rounded-full bg-[#eef5ff] px-2.5 py-0.5 text-xs font-bold text-[var(--brand-accent)] hover:underline"
+                                            >
+                                              📎 Archivo {index + 1}
+                                            </a>
+                                          ))}
+                                        </span>
+                                      ) : (
+                                        value
+                                      )}
+                                    </dd>
                                   </div>
                                 ))}
                               </dl>
@@ -1264,8 +1328,11 @@ export default function AccountProfileForm({
                         <p className="mt-2 text-sm leading-7 text-[#5d6167]">{quote.adminNotes}</p>
                       </div>
                     )}
+                    </div>
+                    )}
                   </article>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>

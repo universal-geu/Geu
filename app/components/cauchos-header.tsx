@@ -96,7 +96,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
                 </Link>
               )}
               <Link href={`${brand.basePath}#productos`} className="hover:text-[var(--brand-accent)]">
-                Catalogos
+                Catálogos
               </Link>
             </div>
           </div>

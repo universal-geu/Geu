@@ -1,4 +1,5 @@
 import { LIVE_TEXT_EDIT_FLAG, encodeLiveTextMarker } from "@/lib/live-text-markers";
+import { getNosotrosTextSlots } from "@/lib/nosotros-texts";
 
 export type SiteTexts = Record<string, string>;
 
@@ -58,9 +59,9 @@ export const TEXT_SLOTS: TextSlot[] = [
   // ---- Cauchos · Home ----
   { key: "cauchos-productos-eyebrow", label: "Productos · Antetítulo", group: "Página de inicio", division: "Cauchos", defaultValue: "Productos destacados" },
   { key: "cauchos-productos-titulo", label: "Productos · Título", group: "Página de inicio", division: "Cauchos", defaultValue: "Cauchos para compra empresarial" },
-  { key: "cauchos-productos-subtitulo", label: "Productos · Subtítulo", group: "Página de inicio", division: "Cauchos", defaultValue: "Seleccion industrial para compras recurrentes, proyectos especiales y reposicion tecnica.", multiline: true },
+  { key: "cauchos-productos-subtitulo", label: "Productos · Subtítulo", group: "Página de inicio", division: "Cauchos", defaultValue: "Selección industrial para compras recurrentes, proyectos especiales y reposición técnica.", multiline: true },
   { key: "cauchos-ofertas-eyebrow", label: "Ofertas · Antetítulo", group: "Página de inicio", division: "Cauchos", defaultValue: "Ofertas especiales" },
-  { key: "cauchos-ofertas-titulo", label: "Ofertas · Título", group: "Página de inicio", division: "Cauchos", defaultValue: "Soluciones listas para tu operacion" },
+  { key: "cauchos-ofertas-titulo", label: "Ofertas · Título", group: "Página de inicio", division: "Cauchos", defaultValue: "Soluciones listas para tu operación" },
   { key: "oferta-cauchos-productos", label: "Oferta 1 · Texto", group: "Ofertas", division: "Cauchos", defaultValue: "Productos de caucho" },
   { key: "oferta-cauchos-industriales", label: "Oferta 2 · Texto", group: "Ofertas", division: "Cauchos", defaultValue: "Cauchos industriales" },
   { key: "oferta-mangueras-industriales", label: "Oferta 3 · Texto", group: "Ofertas", division: "Cauchos", defaultValue: "Mangueras industriales" },
@@ -70,14 +71,14 @@ export const TEXT_SLOTS: TextSlot[] = [
   { key: "marca-destacada-laminas", label: "Marca destacada 3 · Texto", group: "Marcas destacadas", division: "Cauchos", defaultValue: "Laminas de caucho" },
   { key: "marca-destacada-soportes", label: "Marca destacada 4 · Texto", group: "Marcas destacadas", division: "Cauchos", defaultValue: "Soportes industriales" },
   { key: "cauchos-marcas-titulo", label: "Título de sección de marcas", group: "Página de inicio", division: "Cauchos", defaultValue: "Nuestras marcas destacadas" },
-  { key: "cauchos-contacto-eyebrow", label: "Contacto · Antetítulo", group: "Página de inicio", division: "Cauchos", defaultValue: "Necesitas una solucion en caucho?" },
+  { key: "cauchos-contacto-eyebrow", label: "Contacto · Antetítulo", group: "Página de inicio", division: "Cauchos", defaultValue: "¿Necesitas una solución en caucho?" },
   { key: "cauchos-contacto-titulo", label: "Contacto · Título", group: "Página de inicio", division: "Cauchos", defaultValue: "Hablemos de tu proyecto" },
-  { key: "cauchos-contacto-subtitulo", label: "Contacto · Subtítulo", group: "Página de inicio", division: "Cauchos", defaultValue: "Cuentanos que necesitas y nuestro asistente arma contigo la evaluacion tecnica para tu producto.", multiline: true },
+  { key: "cauchos-contacto-subtitulo", label: "Contacto · Subtítulo", group: "Página de inicio", division: "Cauchos", defaultValue: "Cuéntanos qué necesitas y nuestro asistente arma contigo la evaluación técnica para tu producto.", multiline: true },
 
   // ---- Cauchos · Footer ----
   { key: "footer-cauchos-tagline", label: "Footer · Frase de marca", group: "Footer", division: "Cauchos", defaultValue: "Construimos empresas que transforman industrias y generan valor para un futuro mejor.", multiline: true },
   { key: "footer-cauchos-col3-title", label: "Footer · Columna 3 (título)", group: "Footer", division: "Cauchos", defaultValue: "Cauchos" },
-  { key: "footer-cauchos-col3-items", label: "Footer · Columna 3 (items, separados por coma)", group: "Footer", division: "Cauchos", defaultValue: "Soluciones, Productos, Industrias, Catalogos, Cotizacion" },
+  { key: "footer-cauchos-col3-items", label: "Footer · Columna 3 (ítems, separados por coma)", group: "Footer", division: "Cauchos", defaultValue: "Soluciones, Productos, Industrias, Catálogos, Cotización" },
 
   // ---- Cauchos · Nosotros ----
   { key: "cauchos-nosotros-hero-titulo", label: "Nosotros · Título (usa salto de línea para 2 líneas)", group: "Nosotros", division: "Cauchos", defaultValue: "Impulsamos industrias.\nConstruimos el futuro.", multiline: true },
@@ -92,26 +93,26 @@ export const TEXT_SLOTS: TextSlot[] = [
   // ---- Import · Home ----
   { key: "import-productos-eyebrow", label: "Productos · Antetítulo", group: "Página de inicio", division: "Import", defaultValue: "Productos destacados" },
   { key: "import-productos-titulo", label: "Productos · Título", group: "Página de inicio", division: "Import", defaultValue: "Importados para compra empresarial" },
-  { key: "import-productos-subtitulo", label: "Productos · Subtítulo", group: "Página de inicio", division: "Import", defaultValue: "Seleccion de referencias para abastecimiento continuo, pedidos especiales y homologacion tecnica.", multiline: true },
+  { key: "import-productos-subtitulo", label: "Productos · Subtítulo", group: "Página de inicio", division: "Import", defaultValue: "Selección de referencias para abastecimiento continuo, pedidos especiales y homologación técnica.", multiline: true },
   { key: "import-ofertas-eyebrow", label: "Ofertas · Antetítulo", group: "Página de inicio", division: "Import", defaultValue: "Ofertas Import" },
   { key: "import-ofertas-titulo", label: "Ofertas · Título", group: "Página de inicio", division: "Import", defaultValue: "Soluciones listas para importar" },
   { key: "import-oferta-1", label: "Oferta 1 · Texto", group: "Ofertas", division: "Import", defaultValue: "Repuestos importados" },
   { key: "import-oferta-2", label: "Oferta 2 · Texto", group: "Ofertas", division: "Import", defaultValue: "Abastecimiento global" },
-  { key: "import-oferta-3", label: "Oferta 3 · Texto", group: "Ofertas", division: "Import", defaultValue: "Logistica internacional" },
+  { key: "import-oferta-3", label: "Oferta 3 · Texto", group: "Ofertas", division: "Import", defaultValue: "Logística internacional" },
   { key: "import-oferta-4", label: "Oferta 4 · Texto", group: "Ofertas", division: "Import", defaultValue: "Compras por pedido" },
-  { key: "import-destacada-1", label: "Marca destacada 1 · Texto", group: "Marcas destacadas", division: "Import", defaultValue: "Importacion empresarial" },
+  { key: "import-destacada-1", label: "Marca destacada 1 · Texto", group: "Marcas destacadas", division: "Import", defaultValue: "Importación empresarial" },
   { key: "import-destacada-2", label: "Marca destacada 2 · Texto", group: "Marcas destacadas", division: "Import", defaultValue: "Proveedores verificados" },
-  { key: "import-destacada-3", label: "Marca destacada 3 · Texto", group: "Marcas destacadas", division: "Import", defaultValue: "Logistica y aduana" },
+  { key: "import-destacada-3", label: "Marca destacada 3 · Texto", group: "Marcas destacadas", division: "Import", defaultValue: "Logística y aduana" },
   { key: "import-destacada-4", label: "Marca destacada 4 · Texto", group: "Marcas destacadas", division: "Import", defaultValue: "Abastecimiento recurrente" },
   { key: "import-marcas-titulo", label: "Título de sección de marcas", group: "Página de inicio", division: "Import", defaultValue: "Nuestras marcas destacadas" },
-  { key: "import-contacto-eyebrow", label: "Contacto · Antetítulo", group: "Página de inicio", division: "Import", defaultValue: "Necesitas traer una referencia?" },
+  { key: "import-contacto-eyebrow", label: "Contacto · Antetítulo", group: "Página de inicio", division: "Import", defaultValue: "¿Necesitas traer una referencia?" },
   { key: "import-contacto-titulo", label: "Contacto · Título", group: "Página de inicio", division: "Import", defaultValue: "Hablemos de tu importacion" },
   { key: "import-contacto-subtitulo", label: "Contacto · Subtítulo", group: "Página de inicio", division: "Import", defaultValue: "Te ayudamos a comprar, importar, nacionalizar y entregar las partes que tu operacion necesita.", multiline: true },
 
   // ---- Import · Footer ----
   { key: "footer-import-tagline", label: "Footer · Frase de marca", group: "Footer", division: "Import", defaultValue: "Conectamos mercados y generamos oportunidades para que tu negocio no tenga limites.", multiline: true },
   { key: "footer-import-col3-title", label: "Footer · Columna 3 (título)", group: "Footer", division: "Import", defaultValue: "Servicios" },
-  { key: "footer-import-col3-items", label: "Footer · Columna 3 (items, separados por coma)", group: "Footer", division: "Import", defaultValue: "Importacion, Fletes, Aduana, Abastecimiento, Distribucion" },
+  { key: "footer-import-col3-items", label: "Footer · Columna 3 (ítems, separados por coma)", group: "Footer", division: "Import", defaultValue: "Importación, Fletes, Aduana, Abastecimiento, Distribución" },
 
   // ---- Import · Nosotros ----
   { key: "import-nosotros-hero-titulo", label: "Nosotros · Título", group: "Nosotros", division: "Import", defaultValue: "¿Quiénes somos?" },
@@ -122,28 +123,28 @@ export const TEXT_SLOTS: TextSlot[] = [
 
   { key: "plastic-productos-eyebrow", label: "Productos · Antetítulo", group: "Página de inicio", division: "Plastic", defaultValue: "Productos destacados" },
   { key: "plastic-productos-titulo", label: "Productos · Título", group: "Página de inicio", division: "Plastic", defaultValue: "Fichas de producto listas para cotizar." },
-  { key: "plastic-productos-subtitulo", label: "Productos · Subtítulo", group: "Página de inicio", division: "Plastic", defaultValue: "Seleccion tecnica para compras recurrentes, proyectos especiales y desarrollo por aplicacion.", multiline: true },
+  { key: "plastic-productos-subtitulo", label: "Productos · Subtítulo", group: "Página de inicio", division: "Plastic", defaultValue: "Selección técnica para compras recurrentes, proyectos especiales y desarrollo por aplicación.", multiline: true },
   { key: "plastic-ofertas-eyebrow", label: "Ofertas · Antetítulo", group: "Página de inicio", division: "Plastic", defaultValue: "Ofertas Plastic" },
   { key: "plastic-ofertas-titulo", label: "Ofertas · Título", group: "Página de inicio", division: "Plastic", defaultValue: "Soluciones listas para producir" },
-  { key: "plastic-oferta-1", label: "Oferta 1 · Texto", group: "Ofertas", division: "Plastic", defaultValue: "Extrusion PVC Rigido" },
-  { key: "plastic-oferta-2", label: "Oferta 2 · Texto", group: "Ofertas", division: "Plastic", defaultValue: "Extrusion PVC Flexible" },
-  { key: "plastic-oferta-3", label: "Oferta 3 · Texto", group: "Ofertas", division: "Plastic", defaultValue: "Perfileria para construccion" },
-  { key: "plastic-oferta-4", label: "Oferta 4 · Texto", group: "Ofertas", division: "Plastic", defaultValue: "Perfileria para carroceria" },
+  { key: "plastic-oferta-1", label: "Oferta 1 · Texto", group: "Ofertas", division: "Plastic", defaultValue: "Extrusión PVC Rígido" },
+  { key: "plastic-oferta-2", label: "Oferta 2 · Texto", group: "Ofertas", division: "Plastic", defaultValue: "Extrusión PVC Flexible" },
+  { key: "plastic-oferta-3", label: "Oferta 3 · Texto", group: "Ofertas", division: "Plastic", defaultValue: "Perfilería para construcción" },
+  { key: "plastic-oferta-4", label: "Oferta 4 · Texto", group: "Ofertas", division: "Plastic", defaultValue: "Perfilería para carrocería" },
   { key: "plastic-destacada-1", label: "Marca destacada 1 · Texto", group: "Marcas destacadas", division: "Plastic", defaultValue: "Perfiles" },
   { key: "plastic-destacada-2", label: "Marca destacada 2 · Texto", group: "Marcas destacadas", division: "Plastic", defaultValue: "Resinas" },
-  { key: "plastic-destacada-3", label: "Marca destacada 3 · Texto", group: "Marcas destacadas", division: "Plastic", defaultValue: "Piezas tecnicas" },
-  { key: "plastic-destacada-4", label: "Marca destacada 4 · Texto", group: "Marcas destacadas", division: "Plastic", defaultValue: "Extrusion" },
+  { key: "plastic-destacada-3", label: "Marca destacada 3 · Texto", group: "Marcas destacadas", division: "Plastic", defaultValue: "Piezas técnicas" },
+  { key: "plastic-destacada-4", label: "Marca destacada 4 · Texto", group: "Marcas destacadas", division: "Plastic", defaultValue: "Extrusión" },
   { key: "plastic-marcas-titulo", label: "Título de sección de marcas", group: "Página de inicio", division: "Plastic", defaultValue: "Nuestras marcas destacadas" },
-  { key: "plastic-contacto-eyebrow", label: "Contacto · Antetítulo", group: "Página de inicio", division: "Plastic", defaultValue: "Tienes un proyecto plastico?" },
+  { key: "plastic-contacto-eyebrow", label: "Contacto · Antetítulo", group: "Página de inicio", division: "Plastic", defaultValue: "¿Tienes un proyecto plástico?" },
   { key: "plastic-contacto-titulo", label: "Contacto · Título", group: "Página de inicio", division: "Plastic", defaultValue: "Revisemos material, medidas y cantidades." },
-  { key: "plastic-contacto-subtitulo", label: "Contacto · Subtítulo", group: "Página de inicio", division: "Plastic", defaultValue: "Envia tu requerimiento y te ayudamos a aterrizar la solucion tecnica y comercial.", multiline: true },
+  { key: "plastic-contacto-subtitulo", label: "Contacto · Subtítulo", group: "Página de inicio", division: "Plastic", defaultValue: "Envía tu requerimiento y te ayudamos a aterrizar la solución técnica y comercial.", multiline: true },
 
   // ---- Plastic · Footer ----
-  { key: "footer-plastic-tagline", label: "Footer · Frase de marca", group: "Footer", division: "Plastic", defaultValue: "Soluciones plasticas tecnicas para empresas, manufactura, comercio y proyectos especiales.", multiline: true },
+  { key: "footer-plastic-tagline", label: "Footer · Frase de marca", group: "Footer", division: "Plastic", defaultValue: "Soluciones plásticas técnicas para empresas, manufactura, comercio y proyectos especiales.", multiline: true },
   { key: "footer-plastic-col3-title", label: "Footer · Columna 3 (título)", group: "Footer", division: "Plastic", defaultValue: "Servicios" },
-  { key: "footer-plastic-col3-items", label: "Footer · Columna 3 (items, separados por coma)", group: "Footer", division: "Plastic", defaultValue: "Perfiles, Resinas, Piezas, Extrusion, Mecanizado" },
+  { key: "footer-plastic-col3-items", label: "Footer · Columna 3 (ítems, separados por coma)", group: "Footer", division: "Plastic", defaultValue: "Perfiles, Resinas, Piezas, Extrusión, Mecanizado" },
   { key: "footer-plastic-col4-title", label: "Footer · Columna 4 (título)", group: "Footer", division: "Plastic", defaultValue: "Materiales" },
-  { key: "footer-plastic-col4-items", label: "Footer · Columna 4 (items, separados por coma)", group: "Footer", division: "Plastic", defaultValue: "PVC, Policarbonato, Acrilico, Polietileno" },
+  { key: "footer-plastic-col4-items", label: "Footer · Columna 4 (ítems, separados por coma)", group: "Footer", division: "Plastic", defaultValue: "PVC, Policarbonato, Acrilico, Polietileno" },
 
   // ---- Plastic · Nosotros ----
   { key: "plastic-nosotros-hero-titulo", label: "Nosotros · Título", group: "Nosotros", division: "Plastic", defaultValue: "¿Quiénes somos?" },
@@ -172,7 +173,7 @@ export const TEXT_SLOTS: TextSlot[] = [
   { key: "energy-contacto-subtitulo", label: "Contacto · Subtítulo", group: "Página de inicio", division: "Energy", defaultValue: "Te ayudamos a diseñar, cotizar e instalar la solución solar que tu operación necesita.", multiline: true },
   { key: "footer-energy-tagline", label: "Footer · Frase de marca", group: "Footer", division: "Energy", defaultValue: "Soluciones energéticas inteligentes para un futuro sostenible.", multiline: true },
   { key: "footer-energy-col3-title", label: "Footer · Columna 3 (título)", group: "Footer", division: "Energy", defaultValue: "Soluciones" },
-  { key: "footer-energy-col3-items", label: "Footer · Columna 3 (items, separados por coma)", group: "Footer", division: "Energy", defaultValue: "Paneles solares, Baterías, Estructuras, Instalación, Mantenimiento" },
+  { key: "footer-energy-col3-items", label: "Footer · Columna 3 (ítems, separados por coma)", group: "Footer", division: "Energy", defaultValue: "Paneles solares, Baterías, Estructuras, Instalación, Mantenimiento" },
 
   // ---- Energy · Proyectos ----
   { key: "energy-hero-eyebrow", label: "Héroe · Antetítulo", group: "Proyectos", division: "Energy", defaultValue: "GEU Energy" },
@@ -217,4 +218,7 @@ export const TEXT_SLOTS: TextSlot[] = [
   { key: "quienes-somos-contacto-titulo", label: "Título de cierre", group: "Quiénes somos", division: "GEU", defaultValue: "Un ecosistema que trabaja como uno solo." },
   { key: "quienes-somos-contacto-subtitulo", label: "Párrafo de cierre", group: "Quiénes somos", division: "GEU", defaultValue: "Integramos capacidades, tecnología y talento para ofrecer soluciones completas y generar valor en cada industria donde participamos.", multiline: true },
   { key: "footer-quienes-somos-tagline", label: "Footer · Frase de marca", group: "Quiénes somos", division: "GEU", defaultValue: "Impulsamos industrias a través de soluciones integrales, innovación y compromiso con la excelencia.", multiline: true },
+
+  // ---- Nosotros (misión, visión, valores, cifras) · all units ----
+  ...getNosotrosTextSlots(),
 ];

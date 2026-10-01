@@ -4,64 +4,12 @@ import CauchosHeader from "../../components/cauchos-header";
 import SiteFooter from "../../components/site-footer";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import { getNosotrosContent } from "@/lib/nosotros-texts";
 
 export const dynamic = "force-dynamic";
 
-const pilares = [
-  {
-    title: "Misión",
-    description:
-      "Consolidar empresas industriales que creen soluciones confiables y eleven el estándar técnico del mercado colombiano.",
-  },
-  {
-    title: "Visión",
-    description:
-      "Para el año 2035, ser uno de los grupos empresariales líderes en Latinoamérica en soluciones industriales y tecnológicas, reconocido por su innovación, excelencia y generación de valor para clientes, aliados y colaboradores.",
-  },
-  {
-    title: "Propósito",
-    description:
-      "Impulsar el desarrollo de la industria conectando oportunidades globales con las necesidades de Latinoamérica.",
-  },
-];
 
-const valores = [
-  {
-    title: "Integridad",
-    description: "Actuamos con ética, transparencia y coherencia en cada decisión.",
-  },
-  {
-    title: "Compromiso",
-    description: "Cumplimos lo que prometemos y asumimos cada desafío con responsabilidad.",
-  },
-  {
-    title: "Innovación",
-    description: "Buscamos constantemente mejores soluciones para nuestros clientes y el mercado.",
-  },
-  {
-    title: "Excelencia",
-    description: "Trabajamos con altos estándares de calidad en todo lo que hacemos.",
-  },
-  {
-    title: "Orientación al cliente",
-    description: "Escuchamos, entendemos y generamos soluciones que aportan valor.",
-  },
-  {
-    title: "Trabajo en equipo",
-    description: "Creemos en la colaboración como motor del crecimiento y los resultados.",
-  },
-  {
-    title: "Pasión por servir",
-    description: "Disfrutamos ayudar a nuestros clientes a alcanzar sus objetivos.",
-  },
-];
 
-const metricas = [
-  { value: "50+", label: "Años de experiencia" },
-  { value: "1200+", label: "Clientes" },
-  { value: "5", label: "Unidades de negocio" },
-  { value: "98%", label: "Satisfacción del cliente" },
-];
 
 const ecosistema = [
   { label: "Import", href: "/import" },
@@ -84,6 +32,7 @@ export default async function CauchosNosotrosPage() {
   const siteImages = await getSiteImages();
   const siteTexts = await getSiteTexts();
   const t = (key: string) => resolveText(key, siteTexts);
+  const nosotros = getNosotrosContent("Cauchos", t);
   const heroTitleLines = t("cauchos-nosotros-hero-titulo").split("\n");
 
   return (
@@ -123,9 +72,9 @@ export default async function CauchosNosotrosPage() {
         />
         <div className="relative mx-auto max-w-[1632px] px-5 py-20 md:px-8">
           <ul className="grid gap-y-14 md:grid-cols-3 md:gap-x-14 md:gap-y-0">
-            {pilares.map((pilar, index) => (
+            {nosotros.pilares.map((pilar, index) => (
               <li
-                key={pilar.title}
+                key={index}
                 className={`pt-8 md:pt-0 ${index === 0 ? "" : "border-t border-slate-200 md:border-t-0 md:border-l md:pl-14"}`}
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#075ed8]/25 bg-[#075ed8]/[0.06] font-mono text-[11px] font-medium tabular-nums text-[#075ed8]">
@@ -149,14 +98,14 @@ export default async function CauchosNosotrosPage() {
           aria-hidden="true"
         />
         <div className="relative mx-auto max-w-[1632px] px-5 py-20 md:px-8">
-          <SectionLabel>Valores corporativos</SectionLabel>
+          <SectionLabel>{nosotros.label("valores")}</SectionLabel>
           <h2 className="mt-5 max-w-lg text-2xl font-medium leading-tight tracking-[-0.01em] text-slate-950 md:text-3xl">
             {t("cauchos-valores-titulo")}
           </h2>
 
           <ul className="mt-14 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-            {valores.map((valor, index) => (
-              <li key={valor.title} className="group border-t border-slate-200 pt-6">
+            {nosotros.valores.map((valor, index) => (
+              <li key={index} className="group border-t border-slate-200 pt-6">
                 <div className="flex items-center gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#075ed8]/25 bg-[#075ed8]/[0.06] font-mono text-[10px] font-medium tabular-nums text-[#075ed8]">
                     {String(index + 1).padStart(2, "0")}
@@ -200,7 +149,7 @@ export default async function CauchosNosotrosPage() {
 
       <section className="border-b border-slate-200">
         <div className="mx-auto max-w-[1632px] px-5 py-20 md:px-8">
-          <SectionLabel>Filosofía empresarial</SectionLabel>
+          <SectionLabel>{nosotros.label("filosofia")}</SectionLabel>
           <p className="mt-8 max-w-2xl border-l border-[#075ed8]/40 pl-8 text-xl font-normal leading-9 tracking-[-0.005em] text-slate-700 md:text-2xl">
             {t("cauchos-filosofia-texto")}
           </p>
@@ -209,14 +158,14 @@ export default async function CauchosNosotrosPage() {
 
       <section className="border-b border-slate-200 bg-slate-50">
         <div className="mx-auto max-w-[1632px] px-5 py-20 md:px-8">
-          <SectionLabel>Cifras del grupo</SectionLabel>
+          <SectionLabel>{nosotros.label("cifras")}</SectionLabel>
           <h2 className="mt-5 max-w-lg text-2xl font-medium leading-tight tracking-[-0.01em] text-slate-950 md:text-3xl">
             {t("cauchos-cifras-titulo")}
           </h2>
 
           <ul className="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-4">
-            {metricas.map((metrica) => (
-              <li key={metrica.label}>
+            {nosotros.metricas.map((metrica, index) => (
+              <li key={index}>
                 <p className="text-4xl font-medium tracking-[-0.02em] text-slate-950">
                   {metrica.value}
                 </p>
@@ -231,7 +180,7 @@ export default async function CauchosNosotrosPage() {
 
       <section className="border-b border-slate-200">
         <div className="mx-auto max-w-[1632px] px-5 py-20 md:px-8">
-          <SectionLabel>Nuestro ecosistema</SectionLabel>
+          <SectionLabel>{nosotros.label("ecosistema")}</SectionLabel>
           <h2 className="mt-5 max-w-lg text-2xl font-medium leading-tight tracking-[-0.01em] text-slate-950 md:text-3xl">
             {t("cauchos-ecosistema-titulo")}
           </h2>
@@ -269,7 +218,7 @@ export default async function CauchosNosotrosPage() {
         <div className="relative mx-auto max-w-[1632px] px-5 py-24 md:px-8 md:py-28">
           <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.34em] text-[#8fc0ff]">
             <span className="h-px w-8 bg-[#075ed8]" />
-            Promesa de marca
+            {nosotros.label("promesa")}
           </p>
           <p className="mt-8 max-w-3xl text-3xl font-medium leading-tight tracking-[-0.015em] text-white md:text-5xl">
             {t("cauchos-promesa-titulo")}

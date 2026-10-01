@@ -47,7 +47,7 @@ export default async function EnergyPage() {
   const t = (key: string) => resolveText(key, siteTexts);
   const whatsappHref = whatsappNumber
     ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        "Hola GEU Energy, quiero hacer una evaluacion tecnica.",
+        "Hola GEU Energy, quiero hacer una evaluación técnica.",
       )}`
     : "#contacto";
   const energyCatalog = allProducts.filter((product) => productSellsInDivision(product, "Energy"));

@@ -16,7 +16,7 @@ const stovesProjectBase = [
   },
   {
     title: "Transporte hasta la vereda",
-    text: "Llevamos cada estufa hasta comunidades de dificil acceso en zonas rurales.",
+    text: "Llevamos cada estufa hasta comunidades de difícil acceso en zonas rurales.",
     key: "estufas-proyecto-2",
   },
   {

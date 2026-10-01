@@ -17,7 +17,7 @@ const homeCards = [
   {
     ...geuCompanies[2],
     image: "/home-innovation.webp",
-    alt: "Estructura metalica industrial bajo un cielo despejado.",
+    alt: "Estructura metálica industrial bajo un cielo despejado.",
   },
   {
     ...geuCompanies[3],
@@ -27,7 +27,7 @@ const homeCards = [
   {
     ...geuCompanies[4],
     image: "/home-plastic.webp",
-    alt: "Perfiles plasticos industriales sobre materia prima blanca.",
+    alt: "Perfiles plásticos industriales sobre materia prima blanca.",
   },
 ];
 
