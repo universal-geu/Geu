@@ -1,3 +1,4 @@
+import type { DateRange } from "@/lib/date-range";
 import { prisma } from "@/lib/prisma";
 import type { DivisionName } from "@/lib/divisions";
 import {
@@ -369,6 +370,7 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
                 )
                   ? product.division
                   : orderDivision,
+              ownerDivision: product?.division ?? orderDivision,
               name: item.name,
               image: item.image,
               unitPrice,
@@ -550,7 +552,13 @@ async function sendOrderConfirmationEmails(order: {
   subtotal: number;
   shippingCost: number;
   totalItems: number;
-  items: Array<{ name: string; quantity: number; lineTotal: number }>;
+  items: Array<{
+    name: string;
+    quantity: number;
+    lineTotal: number;
+    division: DivisionName;
+    ownerDivision: DivisionName | null;
+  }>;
 }) {
   const itemsHtml = order.items
     .map(
@@ -581,17 +589,35 @@ async function sendOrderConfirmationEmails(order: {
     ),
   });
 
-  await sendEmail({
-    to: DIVISION_ADMIN_EMAILS[order.division],
-    subject: `Nuevo pedido ${formatOrderCode(order.orderNumber)}`,
-    html: emailLayout(
-      "Nuevo pedido recibido",
-      `<p style="color:#6e7379;font-size:14px;line-height:22px;">
-        ${customerName} (${customerEmail}) hizo un pedido de ${order.totalItems} producto${order.totalItems === 1 ? "" : "s"} por ${formatCurrency(grandTotal)} (incluye envío de ${formatCurrency(order.shippingCost)}).
-      </p>`,
-      order.division,
+  // Every unit involved hears about it: the one(s) that sold the lines and
+  // the one(s) that own the products (and must ship them from their stock).
+  const involvedDivisions = new Set<DivisionName>([order.division]);
+  for (const item of order.items) {
+    involvedDivisions.add(item.division);
+    if (item.ownerDivision) involvedDivisions.add(item.ownerDivision);
+  }
+  const sharedNote =
+    involvedDivisions.size > 1
+      ? `<p style="color:#6e7379;font-size:13px;line-height:20px;">Pedido compartido entre: ${[...involvedDivisions]
+          .map((division) => escapeHtml(DIVISION_BRAND[division].label))
+          .join(", ")}.</p>`
+      : "";
+
+  await Promise.all(
+    [...involvedDivisions].map((division) =>
+      sendEmail({
+        to: DIVISION_ADMIN_EMAILS[division],
+        subject: `Nuevo pedido ${formatOrderCode(order.orderNumber)}`,
+        html: emailLayout(
+          "Nuevo pedido recibido",
+          `<p style="color:#6e7379;font-size:14px;line-height:22px;">
+            ${customerName} (${customerEmail}) hizo un pedido de ${order.totalItems} producto${order.totalItems === 1 ? "" : "s"} por ${formatCurrency(grandTotal)} (incluye envío de ${formatCurrency(order.shippingCost)}).
+          </p>${sharedNote}`,
+          division,
+        ),
+      }),
     ),
-  });
+  );
 }
 
 export async function getOrderDivision(orderId: string): Promise<DivisionName | null> {
@@ -644,7 +670,16 @@ export async function getAllOrders(division?: DivisionName) {
   }
 
   return await prisma.order.findMany({
-    where: division ? { items: { some: { division } } } : undefined,
+    // Only paid orders reach the admin's Pedidos list — unpaid/failed
+    // checkouts show up per customer in Clientes instead. A shared order
+    // (cross-listed product) reaches both the unit that sold it and the unit
+    // that owns the product.
+    where: {
+      paymentStatus: "PAID",
+      ...(division
+        ? { items: { some: { OR: [{ division }, { ownerDivision: division }] } } }
+        : {}),
+    },
     orderBy: { createdAt: "desc" },
     include: {
       user: {
@@ -661,13 +696,19 @@ export async function getAllOrders(division?: DivisionName) {
   });
 }
 
-export async function getSalesReport(division?: DivisionName): Promise<SalesReport> {
+// `range` limits the orders counted (all time when omitted); the product
+// totals and price ranges always describe the current catalog.
+export async function getSalesReport(
+  division?: DivisionName,
+  range?: DateRange,
+): Promise<SalesReport> {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
 
   const [orders, products] = await Promise.all([
     prisma.order.findMany({
+      where: range ? { createdAt: { gte: range.from, lt: range.to } } : undefined,
       orderBy: { createdAt: "desc" },
       include: {
         items: {
@@ -832,32 +873,35 @@ export async function getSalesReportOverview(): Promise<SalesReportOverview> {
 }
 
 export type DashboardMetrics = {
-  todayRevenue: number;
-  todayOrders: number;
-  weekRevenue: number;
-  weekOrders: number;
-  monthRevenue: number;
-  monthOrders: number;
-  newCustomersThisMonth: number;
-  customersThisMonth: number;
+  from: string;
+  to: string;
+  revenue: number;
+  orders: number;
+  unitsSold: number;
+  averageTicket: number;
+  newCustomers: number;
+  customers: number;
+  topProduct: { name: string; quantitySold: number } | null;
   topCategory: { category: string; quantitySold: number } | null;
 };
 
-export async function getDashboardMetrics(division?: DivisionName): Promise<DashboardMetrics> {
+// Metrics for the admin dashboard over [from, to). The range comes from the
+// browser so "today"/"this week" follow the admin's local calendar rather
+// than the server's timezone. Only paid, non-cancelled orders count as sales.
+export async function getDashboardMetrics(
+  division: DivisionName | undefined,
+  from: Date,
+  to: Date,
+): Promise<DashboardMetrics> {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
 
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfWeek = new Date(startOfToday);
-  const daysSinceMonday = (startOfWeek.getDay() + 6) % 7;
-  startOfWeek.setDate(startOfWeek.getDate() - daysSinceMonday);
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const paidOrderWhere = { paymentStatus: "PAID" as const, status: { not: "CANCELLED" as const } };
 
   const [orders, products] = await Promise.all([
     prisma.order.findMany({
-      where: { status: { not: "CANCELLED" } },
+      where: { ...paidOrderWhere, createdAt: { gte: from, lt: to } },
       include: { items: true },
     }),
     prisma.product.findMany({
@@ -869,65 +913,64 @@ export async function getDashboardMetrics(division?: DivisionName): Promise<Dash
   const matchesDivision = (productSlug: string) =>
     !division || productLookup.get(productSlug)?.division === division;
 
-  let todayRevenue = 0;
-  let weekRevenue = 0;
-  let monthRevenue = 0;
-  const todayOrderIds = new Set<string>();
-  const weekOrderIds = new Set<string>();
-  const monthOrderIds = new Set<string>();
-  const monthCustomers = new Set<string>();
-  const customerFirstOrder = new Map<string, Date>();
+  let revenue = 0;
+  let unitsSold = 0;
+  const orderIds = new Set<string>();
+  const customers = new Set<string>();
   const categoryQuantity = new Map<string, number>();
+  const productQuantity = new Map<string, { name: string; quantitySold: number }>();
 
   for (const order of orders) {
     const matchingItems = order.items.filter((item) => matchesDivision(item.productId));
     if (matchingItems.length === 0) continue;
 
-    const orderRevenue = matchingItems.reduce((sum, item) => sum + item.lineTotal, 0);
-    const email = order.customerEmail;
-    const existingFirst = customerFirstOrder.get(email);
-    if (!existingFirst || order.createdAt < existingFirst) {
-      customerFirstOrder.set(email, order.createdAt);
-    }
+    orderIds.add(order.id);
+    customers.add(order.customerEmail);
 
-    if (order.createdAt >= startOfToday) {
-      todayRevenue += orderRevenue;
-      todayOrderIds.add(order.id);
-    }
-    if (order.createdAt >= startOfWeek) {
-      weekRevenue += orderRevenue;
-      weekOrderIds.add(order.id);
-    }
-    if (order.createdAt >= startOfMonth) {
-      monthRevenue += orderRevenue;
-      monthOrderIds.add(order.id);
-      monthCustomers.add(email);
+    for (const item of matchingItems) {
+      revenue += item.lineTotal;
+      unitsSold += item.quantity;
 
-      for (const item of matchingItems) {
-        const category = productLookup.get(item.productId)?.category || "Sin categoría";
-        categoryQuantity.set(category, (categoryQuantity.get(category) || 0) + item.quantity);
-      }
+      const category = productLookup.get(item.productId)?.category || "Sin categoría";
+      categoryQuantity.set(category, (categoryQuantity.get(category) || 0) + item.quantity);
+
+      const product = productQuantity.get(item.productId) || { name: item.name, quantitySold: 0 };
+      product.quantitySold += item.quantity;
+      productQuantity.set(item.productId, product);
     }
   }
 
-  const newCustomersThisMonth = Array.from(monthCustomers).filter((email) => {
-    const firstOrderDate = customerFirstOrder.get(email);
-    return firstOrderDate && firstOrderDate >= startOfMonth;
-  }).length;
+  // A buyer is "new" when none of their earlier paid orders touched this unit.
+  const earlierOrders = customers.size
+    ? await prisma.order.findMany({
+        where: {
+          ...paidOrderWhere,
+          createdAt: { lt: from },
+          customerEmail: { in: Array.from(customers) },
+        },
+        select: { customerEmail: true, items: { select: { productId: true } } },
+      })
+    : [];
+  const returningCustomers = new Set(
+    earlierOrders
+      .filter((order) => order.items.some((item) => matchesDivision(item.productId)))
+      .map((order) => order.customerEmail),
+  );
 
-  const topCategoryEntry = Array.from(categoryQuantity.entries()).sort(
-    (a, b) => b[1] - a[1],
-  )[0];
+  const topCategoryEntry = Array.from(categoryQuantity.entries()).sort((a, b) => b[1] - a[1])[0];
+  const topProduct =
+    Array.from(productQuantity.values()).sort((a, b) => b.quantitySold - a.quantitySold)[0] ?? null;
 
   return {
-    todayRevenue,
-    todayOrders: todayOrderIds.size,
-    weekRevenue,
-    weekOrders: weekOrderIds.size,
-    monthRevenue,
-    monthOrders: monthOrderIds.size,
-    newCustomersThisMonth,
-    customersThisMonth: monthCustomers.size,
+    from: from.toISOString(),
+    to: to.toISOString(),
+    revenue,
+    orders: orderIds.size,
+    unitsSold,
+    averageTicket: orderIds.size > 0 ? Math.round(revenue / orderIds.size) : 0,
+    newCustomers: customers.size - returningCustomers.size,
+    customers: customers.size,
+    topProduct,
     topCategory: topCategoryEntry
       ? { category: topCategoryEntry[0], quantitySold: topCategoryEntry[1] }
       : null,
@@ -991,7 +1034,7 @@ export async function updateOrderShipping(
       customerName: true,
       customerEmail: true,
       division: true,
-      items: { select: { division: true } },
+      items: { select: { division: true, ownerDivision: true } },
     },
   });
 
@@ -999,7 +1042,12 @@ export async function updateOrderShipping(
     throw new Error("ORDER_NOT_FOUND");
   }
 
-  if (adminDivision && !currentOrder.items.some((item) => item.division === adminDivision)) {
+  if (
+    adminDivision &&
+    !currentOrder.items.some(
+      (item) => item.division === adminDivision || item.ownerDivision === adminDivision,
+    )
+  ) {
     throw new Error("FORBIDDEN");
   }
 

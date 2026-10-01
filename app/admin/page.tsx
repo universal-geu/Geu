@@ -26,6 +26,7 @@ import type { InventoryMovementSummary, StoreProduct } from "@/lib/products";
 import { expandProductCategoryViews } from "@/lib/product-category-views";
 import { matchesQuery } from "@/lib/text-match";
 import type { DashboardMetrics, SalesReport, SalesReportOverview, ShippingStatus } from "@/lib/orders";
+import type { AdminCustomer, CustomerPurchaseStatus } from "@/lib/customers";
 import { formatOrderCode } from "@/lib/format-order";
 import { IMAGE_SLOTS, isVideoUrl } from "@/lib/image-slots";
 import { TEXT_SLOTS } from "@/lib/text-slots";
@@ -369,11 +370,6 @@ const shippingStatuses: ShippingStatus[] = [
   "DELIVERED",
   "CANCELLED",
 ];
-const paymentStatuses: Array<"PENDING" | "PAID" | "FAILED"> = [
-  "PENDING",
-  "PAID",
-  "FAILED",
-];
 type ToastState = {
   tone: "success" | "error";
   message: string;
@@ -415,6 +411,8 @@ type AdminOrder = {
     id: string;
     name: string;
     image: string;
+    division: DivisionName;
+    ownerDivision: DivisionName | null;
     variantSku: string | null;
     quantity: number;
     unitPrice: number;
@@ -591,6 +589,160 @@ function getPaymentStatusLabel(status: "PENDING" | "PAID" | "FAILED") {
   if (status === "PAID") return "Pago confirmado";
   if (status === "FAILED") return "Pago fallido";
   return "Pago pendiente";
+}
+
+const CUSTOMER_STATUS_ORDER: CustomerPurchaseStatus[] = [
+  "RECURRENT",
+  "BUYER",
+  "PAYMENT_PENDING",
+  "CART",
+  "NO_PURCHASES",
+];
+
+const CUSTOMER_STATUS_META: Record<CustomerPurchaseStatus, { label: string; className: string }> = {
+  RECURRENT: { label: "Cliente recurrente", className: "bg-emerald-600 text-white" },
+  BUYER: { label: "Ha comprado", className: "bg-emerald-50 text-emerald-700" },
+  PAYMENT_PENDING: { label: "Pago pendiente", className: "bg-amber-50 text-amber-700" },
+  CART: { label: "Carrito sin comprar", className: "bg-blue-50 text-blue-700" },
+  NO_PURCHASES: { label: "Sin compras", className: "bg-slate-100 text-slate-600" },
+};
+
+type DashboardPreset = "all" | "today" | "yesterday" | "week" | "month" | "year" | "custom";
+type DateRangePreset = Exclude<DashboardPreset, "custom">;
+type DateInputRange = { from: string; to: string };
+
+const DASHBOARD_PRESETS: Array<{ key: DateRangePreset; label: string; period: string }> = [
+  { key: "today", label: "Hoy", period: "hoy" },
+  { key: "yesterday", label: "Ayer", period: "ayer" },
+  { key: "week", label: "Esta semana", period: "esta semana" },
+  { key: "month", label: "Este mes", period: "este mes" },
+  { key: "year", label: "Este año", period: "este año" },
+];
+
+// <input type="date"> values (YYYY-MM-DD) in the admin's local calendar.
+function toLocalDateInputValue(date: Date) {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function parseDateInputValue(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+const REPORT_PRESETS: Array<{ key: DateRangePreset; label: string; period: string }> = [
+  { key: "all", label: "Todo", period: "todo el historial" },
+  ...DASHBOARD_PRESETS,
+];
+
+// Inclusive first/last day of a preset, weeks starting on Monday. "all" is
+// an open range (no dates sent to the API).
+function getDashboardPresetRange(preset: DateRangePreset): DateInputRange {
+  if (preset === "all") return { from: "", to: "" };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const from = new Date(today);
+  const to = new Date(today);
+
+  if (preset === "yesterday") {
+    from.setDate(from.getDate() - 1);
+    to.setDate(to.getDate() - 1);
+  } else if (preset === "week") {
+    from.setDate(from.getDate() - ((from.getDay() + 6) % 7));
+  } else if (preset === "month") {
+    from.setDate(1);
+  } else if (preset === "year") {
+    from.setMonth(0, 1);
+  }
+
+  return { from: toLocalDateInputValue(from), to: toLocalDateInputValue(to) };
+}
+
+// Query string for the admin APIs: [from, to) as ISO instants, empty for "all".
+function toDateRangeQuery(range: DateInputRange) {
+  if (!range.from || !range.to) return "";
+  const to = parseDateInputValue(range.to);
+  to.setDate(to.getDate() + 1);
+  return `?${new URLSearchParams({
+    from: parseDateInputValue(range.from).toISOString(),
+    to: to.toISOString(),
+  })}`;
+}
+
+// Moves one end of a date range, keeping it valid (from <= to).
+function updateDateInputRange(range: DateInputRange, field: "from" | "to", value: string): DateInputRange {
+  const next = { ...range, [field]: value };
+  if (!next.from) next.from = value;
+  if (!next.to) next.to = value;
+  if (next.from > next.to) {
+    if (field === "from") next.to = value;
+    else next.from = value;
+  }
+  return next;
+}
+
+function DateRangeFilter({
+  presets,
+  preset,
+  range,
+  accent,
+  isLoading,
+  onPresetChange,
+  onDateChange,
+}: {
+  presets: Array<{ key: DateRangePreset; label: string }>;
+  preset: DashboardPreset;
+  range: DateInputRange;
+  accent: string;
+  isLoading: boolean;
+  onPresetChange: (preset: DateRangePreset) => void;
+  onDateChange: (field: "from" | "to", value: string) => void;
+}) {
+  const today = toLocalDateInputValue(new Date());
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-[1.5rem] border border-black/8 bg-white p-2 shadow-[0_2px_10px_rgba(15,23,42,0.03)]">
+      {presets.map((item) => (
+        <button
+          key={item.key}
+          type="button"
+          onClick={() => onPresetChange(item.key)}
+          className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
+            preset === item.key ? "text-white" : "text-[#5d6167] hover:bg-[#fafaf9]"
+          }`}
+          style={preset === item.key ? { backgroundColor: accent } : undefined}
+        >
+          {item.label}
+        </button>
+      ))}
+      <div
+        className={`ml-auto flex flex-wrap items-center gap-2 rounded-full px-3 py-1 ${
+          preset === "custom" ? "ring-2 ring-[var(--admin-accent)]/30" : ""
+        }`}
+      >
+        {(["from", "to"] as const).map((field) => (
+          <label key={field} className="flex items-center gap-2 text-xs font-semibold text-[#8b8d91]">
+            {field === "from" ? "Desde" : "Hasta"}
+            <input
+              type="date"
+              value={range[field]}
+              max={today}
+              onChange={(event) => event.target.value && onDateChange(field, event.target.value)}
+              className="rounded-full border border-black/10 bg-[#fafaf9] px-3 py-1.5 text-sm font-medium text-[#1f2328] outline-none focus:border-[var(--admin-accent)]"
+            />
+          </label>
+        ))}
+        {isLoading && <span className="text-xs text-[#8b8d91]">Actualizando…</span>}
+      </div>
+    </div>
+  );
+}
+
+function formatShortDate(value: string) {
+  return new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short", year: "numeric" }).format(
+    new Date(value),
+  );
 }
 
 function getOrderEditState(order: AdminOrder): OrderEditState {
@@ -1488,6 +1640,26 @@ function QuotesIcon() {
   );
 }
 
+function CategoriesIcon() {
+  return (
+    <SidebarIconShell>
+      <path d="M3 11.5V5a2 2 0 0 1 2-2h6.5L21 12.5 12.5 21 3 11.5Z" />
+      <circle cx="7.5" cy="7.5" r="1.3" />
+    </SidebarIconShell>
+  );
+}
+
+function CustomersIcon() {
+  return (
+    <SidebarIconShell>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+      <circle cx="17.5" cy="9" r="2.4" />
+      <path d="M15.8 14.3c2.6.5 4.4 2.6 4.4 5.2" />
+    </SidebarIconShell>
+  );
+}
+
 function ReportsIcon() {
   return (
     <SidebarIconShell>
@@ -1682,7 +1854,9 @@ const SIDEBAR_ICONS: Partial<Record<AdminToolKey | "dashboard" | "overview", () 
   edit: EditIcon,
   inventory: InventoryIcon,
   orders: OrdersIcon,
+  customers: CustomersIcon,
   quotes: QuotesIcon,
+  categories: CategoriesIcon,
   reports: ReportsIcon,
   overview: ReportsIcon,
   settings: SettingsIcon,
@@ -1732,6 +1906,7 @@ export default function AdminPage() {
     | "edit"
     | "inventory"
     | "orders"
+    | "customers"
     | "quotes"
     | "categories"
     | "reports"
@@ -1758,12 +1933,6 @@ export default function AdminPage() {
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
-  const [siteTextsAdmin, setSiteTextsAdmin] = useState<Record<string, string>>({});
-  const [isLoadingTexts, setIsLoadingTexts] = useState(false);
-  const [textsError, setTextsError] = useState<string | null>(null);
-  const [savingTextKey, setSavingTextKey] = useState<string | null>(null);
-  const [savedTextKey, setSavedTextKey] = useState<string | null>(null);
-  const [selectedTextGroup, setSelectedTextGroup] = useState<string | null>(null);
   const [siteColorsAdmin, setSiteColorsAdmin] = useState<Record<string, string>>({});
   const [isLoadingColors, setIsLoadingColors] = useState(false);
   const [colorsError, setColorsError] = useState<string | null>(null);
@@ -1806,6 +1975,11 @@ export default function AdminPage() {
     "all" | "low-stock" | "out-of-stock"
   >("all");
   const [orderSearch, setOrderSearch] = useState("");
+  const [customers, setCustomers] = useState<AdminCustomer[]>([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [customerStatusFilter, setCustomerStatusFilter] = useState<CustomerPurchaseStatus | "all">("all");
+  const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
   const [orderShippingFilter, setOrderShippingFilter] = useState<
     "all" | ShippingStatus
   >("all");
@@ -1856,6 +2030,8 @@ export default function AdminPage() {
   const [quotes, setQuotes] = useState<AdminQuote[]>([]);
   const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
+  const [draggingQuoteId, setDraggingQuoteId] = useState<string | null>(null);
+  const [quoteDropStatus, setQuoteDropStatus] = useState<QuoteStatusValue | null>(null);
   const [isSavingQuoteStatus, setIsSavingQuoteStatus] = useState(false);
   const [quoteNotesDraft, setQuoteNotesDraft] = useState("");
   const [prevSelectedQuoteId, setPrevSelectedQuoteId] = useState<string | null>(null);
@@ -1870,6 +2046,10 @@ export default function AdminPage() {
   const [divisionOverview, setDivisionOverview] = useState<SalesReportOverview | null>(null);
   const [expandedOverviewDivision, setExpandedOverviewDivision] = useState<DivisionName | null>(null);
   const [dashboardMetrics, setDashboardMetrics] = useState<DashboardMetrics | null>(null);
+  const [dashboardPreset, setDashboardPreset] = useState<DashboardPreset>("month");
+  const [dashboardRange, setDashboardRange] = useState(() => getDashboardPresetRange("month"));
+  const [reportsPreset, setReportsPreset] = useState<DashboardPreset>("all");
+  const [reportsRange, setReportsRange] = useState<DateInputRange>({ from: "", to: "" });
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [orderForm, setOrderForm] = useState<OrderEditState>({
@@ -2024,6 +2204,35 @@ export default function AdminPage() {
     (currentInventoryPage - 1) * INVENTORY_PAGE_SIZE,
     currentInventoryPage * INVENTORY_PAGE_SIZE,
   );
+  const filteredCustomers = useMemo(() => {
+    const search = customerSearch.trim();
+
+    return customers.filter(
+      (customer) =>
+        (customerStatusFilter === "all" || customer.status === customerStatusFilter) &&
+        (search.length === 0 ||
+          matchesQuery(
+            [customer.fullName, customer.email, customer.phone, customer.company, customer.city]
+              .filter((value): value is string => Boolean(value))
+              .join(" "),
+            search,
+          )),
+    );
+  }, [customerSearch, customerStatusFilter, customers]);
+
+  const customerStatusCounts = useMemo(() => {
+    const counts: Record<CustomerPurchaseStatus | "all", number> = {
+      all: customers.length,
+      RECURRENT: 0,
+      BUYER: 0,
+      PAYMENT_PENDING: 0,
+      CART: 0,
+      NO_PURCHASES: 0,
+    };
+    for (const customer of customers) counts[customer.status] += 1;
+    return counts;
+  }, [customers]);
+
   const filteredOrders = useMemo(() => {
     const search = orderSearch.trim();
 
@@ -2146,6 +2355,7 @@ export default function AdminPage() {
               ? []
               : ([["inventory", openInventoryView]] as Array<[AdminToolKey, () => void]>)),
             ["orders", openOrdersView],
+            ["customers", openCustomersView],
             ["quotes", openQuotesView],
             ["reports", openReportsView],
             ["images", () => openSettingsSection("images")],
@@ -2656,7 +2866,7 @@ export default function AdminPage() {
     setInventoryMovements(payload.movements);
   }
 
-  async function loadOrders() {
+  async function loadOrders(focusOrderId?: string) {
     setIsLoadingOrders(true);
 
     const response = await fetch("/api/orders");
@@ -2677,10 +2887,39 @@ export default function AdminPage() {
 
     setOrders(payload.orders);
 
-    if (!selectedOrderId && payload.orders[0]) {
+    const focusOrder = focusOrderId
+      ? payload.orders.find((order) => order.id === focusOrderId)
+      : undefined;
+
+    if (focusOrder) {
+      setSelectedOrderId(focusOrder.id);
+      setOrderForm(getOrderEditState(focusOrder));
+    } else if (!selectedOrderId && payload.orders[0]) {
       setSelectedOrderId(payload.orders[0].id);
       setOrderForm(getOrderEditState(payload.orders[0]));
     }
+  }
+
+  async function loadCustomers() {
+    setIsLoadingCustomers(true);
+
+    const response = await fetch("/api/admin/customers");
+    const payload = (await response.json()) as {
+      error?: string;
+      customers?: AdminCustomer[];
+    };
+
+    setIsLoadingCustomers(false);
+
+    if (!response.ok || !payload.customers) {
+      setToast({
+        tone: "error",
+        message: payload.error || "No fue posible cargar los clientes.",
+      });
+      return;
+    }
+
+    setCustomers(payload.customers);
   }
 
   async function loadQuotes() {
@@ -2729,6 +2968,36 @@ export default function AdminPage() {
       current.map((quote) => (quote.id === id ? { ...quote, status } : quote)),
     );
     setToast({ tone: "success", message: "Cotización actualizada correctamente." });
+  }
+
+  // Kanban drag & drop: move the card right away, roll back if the save fails.
+  async function moveQuoteToStatus(id: string, status: QuoteStatusValue) {
+    const previousStatus = quotes.find((quote) => quote.id === id)?.status;
+    if (!previousStatus || previousStatus === status) return;
+
+    setQuotes((current) =>
+      current.map((quote) => (quote.id === id ? { ...quote, status } : quote)),
+    );
+
+    const response = await fetch(`/api/quotes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    const payload = (await response.json()) as { error?: string; quote?: AdminQuote };
+
+    if (!response.ok || !payload.quote) {
+      setQuotes((current) =>
+        current.map((quote) => (quote.id === id ? { ...quote, status: previousStatus } : quote)),
+      );
+      setToast({
+        tone: "error",
+        message: payload.error || "No fue posible mover la cotización.",
+      });
+      return;
+    }
+
+    setToast({ tone: "success", message: `Cotización movida a ${getQuoteStatusLabel(status)}.` });
   }
 
   async function handleSaveQuoteNotes(id: string) {
@@ -2828,10 +3097,10 @@ export default function AdminPage() {
     }
   }
 
-  async function loadSalesReport() {
+  async function loadSalesReport(range = reportsRange) {
     setIsLoadingReport(true);
 
-    const response = await fetch("/api/admin/reports");
+    const response = await fetch(`/api/admin/reports${toDateRangeQuery(range)}`);
     const payload = (await response.json()) as {
       error?: string;
       report?: SalesReport;
@@ -2862,10 +3131,10 @@ export default function AdminPage() {
     }
   }
 
-  async function loadDashboardMetrics() {
+  async function loadDashboardMetrics(range = dashboardRange) {
     setIsLoadingDashboard(true);
 
-    const response = await fetch("/api/admin/dashboard");
+    const response = await fetch(`/api/admin/dashboard${toDateRangeQuery(range)}`);
     const payload = (await response.json()) as {
       error?: string;
       metrics?: DashboardMetrics;
@@ -3002,6 +3271,68 @@ export default function AdminPage() {
     void loadOrders();
   };
 
+  const openOrderFromCustomer = (orderId: string, orderNumber: number) => {
+    setSelectedImage(null);
+    setRequestError("");
+    setPrimaryImageIndex(0);
+    setEditingSlug(null);
+    setOrderShippingFilter("all");
+    setOrderSearch(formatOrderCode(orderNumber));
+    setActiveTab("orders");
+    void loadOrders(orderId);
+  };
+
+  const selectDashboardPreset = (preset: DateRangePreset) => {
+    const range = getDashboardPresetRange(preset);
+    setDashboardPreset(preset);
+    setDashboardRange(range);
+    void loadDashboardMetrics(range);
+  };
+
+  const selectReportsPreset = (preset: DateRangePreset) => {
+    const range = getDashboardPresetRange(preset);
+    setReportsPreset(preset);
+    setReportsRange(range);
+    void loadSalesReport(range);
+  };
+
+  const changeReportsDate = (field: "from" | "to", value: string) => {
+    const range = updateDateInputRange(reportsRange, field, value);
+    setReportsPreset("custom");
+    setReportsRange(range);
+    void loadSalesReport(range);
+  };
+
+  const changeDashboardDate = (field: "from" | "to", value: string) => {
+    const range = updateDateInputRange(dashboardRange, field, value);
+    setDashboardPreset("custom");
+    setDashboardRange(range);
+    void loadDashboardMetrics(range);
+  };
+
+  const [isStartingLiveTextEdit, setIsStartingLiveTextEdit] = useState(false);
+
+  async function startLiveTextEdit() {
+    setIsStartingLiveTextEdit(true);
+    const response = await fetch("/api/admin/live-text-edit", { method: "POST" });
+    if (!response.ok) {
+      setIsStartingLiveTextEdit(false);
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      setToast({ tone: "error", message: payload.error || "No fue posible activar la edición en vivo." });
+      return;
+    }
+    window.location.href = adminBrand.siteHref;
+  }
+
+  const openCustomersView = () => {
+    setSelectedImage(null);
+    setRequestError("");
+    setPrimaryImageIndex(0);
+    setEditingSlug(null);
+    setActiveTab("customers");
+    void loadCustomers();
+  };
+
   const openQuotesView = () => {
     setSelectedImage(null);
     setRequestError("");
@@ -3089,12 +3420,6 @@ export default function AdminPage() {
     return siteImageLinks[key] ?? "";
   };
 
-  const resolveAdminText = (key: string, fallback: string) => {
-    const draft = contentDrafts[key];
-    if (draft?.kind === "text") return draft.value;
-    return siteTextsAdmin[key] ?? fallback;
-  };
-
   const resolveAdminColor = (key: string, fallback: string) => {
     const draft = contentDrafts[key];
     if (draft?.kind === "color") return draft.value;
@@ -3133,7 +3458,7 @@ export default function AdminPage() {
       setIsPublishModalOpen(false);
       setPublishNotice(`✓ ${payload.published?.length ?? 0} cambios publicados`);
       window.setTimeout(() => setPublishNotice(null), 3000);
-      await Promise.all([loadSiteImages(), loadSiteTexts(), loadSiteColors(), loadContentDrafts()]);
+      await Promise.all([loadSiteImages(), loadSiteColors(), loadContentDrafts()]);
     } catch (error) {
       setImageError(error instanceof Error ? error.message : "No se pudieron publicar los cambios.");
     } finally {
@@ -3163,7 +3488,6 @@ export default function AdminPage() {
       window.setTimeout(() => setPublishNotice(null), 3000);
       await Promise.all([
         loadSiteImages(),
-        loadSiteTexts(),
         loadSiteColors(),
         loadContentDrafts(),
         loadContentVersions(),
@@ -3313,50 +3637,6 @@ export default function AdminPage() {
     }
   };
 
-  const loadSiteTexts = async () => {
-    setIsLoadingTexts(true);
-    setTextsError(null);
-    try {
-      const response = await fetch("/api/admin/texts");
-      const payload = (await response.json()) as { texts?: Record<string, string>; error?: string };
-      if (!response.ok || !payload.texts) {
-        throw new Error(payload.error || "No fue posible cargar los textos.");
-      }
-      setSiteTextsAdmin(payload.texts);
-    } catch (error) {
-      setTextsError(error instanceof Error ? error.message : "No fue posible cargar los textos.");
-    } finally {
-      setIsLoadingTexts(false);
-    }
-  };
-
-  const handleSaveText = async (key: string, value: string) => {
-    setSavingTextKey(key);
-    setTextsError(null);
-    try {
-      const response = await fetch("/api/admin/content-drafts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key, kind: "text", value }),
-      });
-      const payload = (await response.json()) as {
-        draft?: { kind: "text"; division: string; value: string; link: string | null };
-        error?: string;
-      };
-      if (!response.ok || !payload.draft) {
-        throw new Error(payload.error || "No se pudo guardar el texto.");
-      }
-      contentDraftsMutationRef.current += 1;
-      setContentDrafts((current) => ({ ...current, [key]: payload.draft! }));
-      setSavedTextKey(key);
-      setTimeout(() => setSavedTextKey((current) => (current === key ? null : current)), 1500);
-    } catch (error) {
-      setTextsError(error instanceof Error ? error.message : "No se pudo guardar el texto.");
-    } finally {
-      setSavingTextKey(null);
-    }
-  };
-
   const loadSiteColors = async () => {
     setIsLoadingColors(true);
     setColorsError(null);
@@ -3410,14 +3690,12 @@ export default function AdminPage() {
     setIsSettingsMenuOpen(true);
     setSettingsSection(section);
     setSelectedImageGroup(null);
-    setSelectedTextGroup(null);
     if (section === "images") {
       void loadSiteImages();
       void loadContentDrafts();
       void loadImageHistory();
     }
     if (section === "texts") {
-      void loadSiteTexts();
       void loadContentDrafts();
     }
     if (section === "colors") {
@@ -3649,6 +3927,16 @@ export default function AdminPage() {
 
   const pendingQuotesCount = quotes.filter((quote) => quote.status === "NEW").length;
 
+  const getPeriodLabel = (preset: DashboardPreset, range: DateInputRange) =>
+    REPORT_PRESETS.find((item) => item.key === preset)?.period ??
+    (range.from === range.to
+      ? `el ${formatShortDate(parseDateInputValue(range.from).toISOString())}`
+      : `del ${formatShortDate(parseDateInputValue(range.from).toISOString())} al ${formatShortDate(
+          parseDateInputValue(range.to).toISOString(),
+        )}`);
+  const dashboardPeriodLabel = getPeriodLabel(dashboardPreset, dashboardRange);
+  const reportsPeriodLabel = getPeriodLabel(reportsPreset, reportsRange);
+
   const canAccessTool = (tool: AdminToolKey) =>
     isToolAllowedForDivision(adminDivision, tool) && hasAdminPermission(adminPermissions, tool);
 
@@ -3669,6 +3957,7 @@ export default function AdminPage() {
         ? [{ key: "inventory", label: "Inventario", active: activeTab === "inventory", onClick: openInventoryView }]
         : []),
       { key: "orders", label: "Pedidos", active: activeTab === "orders", onClick: openOrdersView },
+      { key: "customers", label: "Clientes", active: activeTab === "customers", onClick: openCustomersView },
       { key: "quotes", label: "Cotizaciones", active: activeTab === "quotes", onClick: openQuotesView, count: pendingQuotesCount },
       { key: "categories", label: "Categorías", active: activeTab === "categories", onClick: openCategoriesView },
       { key: "reports", label: "Informes", active: activeTab === "reports", onClick: openReportsView },
@@ -4222,6 +4511,16 @@ export default function AdminPage() {
                 </p>
               </div>
 
+              <DateRangeFilter
+                presets={DASHBOARD_PRESETS}
+                preset={dashboardPreset}
+                range={dashboardRange}
+                accent={adminBrand.accent}
+                isLoading={isLoadingDashboard && Boolean(dashboardMetrics)}
+                onPresetChange={selectDashboardPreset}
+                onDateChange={changeDashboardDate}
+              />
+
               {isLoadingDashboard && !dashboardMetrics ? (
                 <p className="text-sm text-[#6e7379]">Cargando métricas...</p>
               ) : !dashboardMetrics || !salesReport ? (
@@ -4230,158 +4529,143 @@ export default function AdminPage() {
                 </div>
               ) : (
                 <>
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    {[
-                      {
-                        label: "Vendido hoy",
-                        value: formatCurrency(dashboardMetrics.todayRevenue),
-                        helper: `${formatNumber(dashboardMetrics.todayOrders)} pedidos hoy`,
-                        Icon: DashboardMetricRevenueIcon,
-                      },
-                      {
-                        label: "Vendido esta semana",
-                        value: formatCurrency(dashboardMetrics.weekRevenue),
-                        helper: `${formatNumber(dashboardMetrics.weekOrders)} pedidos esta semana`,
-                        Icon: DashboardMetricRevenueIcon,
-                      },
-                      {
-                        label: "Vendido este mes",
-                        value: formatCurrency(dashboardMetrics.monthRevenue),
-                        helper: `${formatNumber(dashboardMetrics.monthOrders)} pedidos este mes`,
-                        Icon: DashboardMetricRevenueIcon,
-                      },
-                      {
-                        label: "Pedidos totales",
-                        value: formatNumber(salesReport.totals.orders),
-                        helper: `${formatNumber(salesReport.totals.paidOrders)} pagados`,
-                        Icon: DashboardMetricOrdersIcon,
-                      },
-                      {
-                        label: "Ticket promedio",
-                        value: formatCurrency(salesReport.totals.averageOrderValue),
-                        helper: "Promedio por pedido",
-                        Icon: DashboardMetricTicketIcon,
-                      },
-                      {
-                        label: "Clientes nuevos",
-                        value: formatNumber(dashboardMetrics.newCustomersThisMonth),
-                        helper: "Compradores nuevos este mes",
-                        Icon: DashboardMetricCustomersIcon,
-                      },
-                      {
-                        label: "Pedidos pendientes",
-                        value: formatNumber(salesReport.totals.pendingOrders),
-                        helper: `${formatNumber(salesReport.totals.cancelledOrders)} cancelados`,
-                        Icon: DashboardMetricClockIcon,
-                      },
-                      {
-                        label: "Alertas de stock",
-                        value: formatNumber(stockAlerts.lowStock + stockAlerts.outOfStock),
-                        helper: `${formatNumber(stockAlerts.outOfStock)} agotados`,
-                        Icon: DashboardMetricAlertIcon,
-                      },
-                    ].map((metric) => (
-                      <div
-                        key={metric.label}
-                        className="rounded-[1.5rem] border border-black/8 bg-[#fafaf9] px-5 py-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] transition-shadow duration-200 hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)]"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
+                  <section className="overflow-hidden rounded-2xl border border-black/8 bg-white">
+                    <header className="flex items-center justify-between gap-3 border-b border-black/6 px-6 py-4">
+                      <h3 className="text-sm font-semibold text-[#16384f]">Resumen de ventas</h3>
+                      <span className="text-xs capitalize text-[#8b8d91]">{dashboardPeriodLabel}</span>
+                    </header>
+                    <dl className="grid gap-px bg-black/[0.06] sm:grid-cols-2 xl:grid-cols-4">
+                      {[
+                        {
+                          label: "Vendido",
+                          value: formatCurrency(dashboardMetrics.revenue),
+                          helper: "Solo pedidos pagados",
+                          Icon: DashboardMetricRevenueIcon,
+                        },
+                        {
+                          label: "Pedidos",
+                          value: formatNumber(dashboardMetrics.orders),
+                          helper: `${formatNumber(dashboardMetrics.unitsSold)} ${dashboardMetrics.unitsSold === 1 ? "unidad vendida" : "unidades vendidas"}`,
+                          Icon: DashboardMetricOrdersIcon,
+                        },
+                        {
+                          label: "Ticket promedio",
+                          value: formatCurrency(dashboardMetrics.averageTicket),
+                          helper: "Valor promedio por pedido",
+                          Icon: DashboardMetricTicketIcon,
+                        },
+                        {
+                          label: "Clientes nuevos",
+                          value: formatNumber(dashboardMetrics.newCustomers),
+                          helper: `De ${formatNumber(dashboardMetrics.customers)} ${dashboardMetrics.customers === 1 ? "comprador" : "compradores"} en el periodo`,
+                          Icon: DashboardMetricCustomersIcon,
+                        },
+                      ].map((metric) => (
+                        <div key={metric.label} className="bg-white px-6 py-5">
+                          <dt className="flex items-center gap-2 text-xs font-medium text-[#6e7379]">
+                            <span className="text-[#9a9da2] [&_svg]:h-3.5 [&_svg]:w-3.5">
+                              <metric.Icon />
+                            </span>
                             {metric.label}
-                          </p>
-                          <span
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                            style={{ backgroundColor: `rgba(${adminAccentRgb}, 0.1)`, color: adminBrand.accent }}
-                          >
-                            <metric.Icon />
-                          </span>
+                          </dt>
+                          <dd className="mt-2 text-2xl font-semibold tabular-nums tracking-[-0.02em] text-[#16384f]">
+                            {metric.value}
+                          </dd>
+                          <dd className="mt-1 text-xs text-[#8b8d91]">{metric.helper}</dd>
                         </div>
-                        <p
-                          className="mt-3 text-3xl font-semibold tracking-[-0.04em]"
-                          style={{ color: adminBrand.accent }}
-                        >
-                          {metric.value}
-                        </p>
-                        <p className="mt-2 text-sm text-[#6e7379]">{metric.helper}</p>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </dl>
+                  </section>
 
-                  <div>
-                    <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-[#8b8d91]">
-                      Destacados del mes
-                    </p>
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <div
-                        className="rounded-[1.75rem] border border-black/8 p-6 text-white shadow-[0_18px_35px_rgba(15,23,42,0.18)]"
-                        style={{ backgroundColor: adminBrand.accent }}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
-                            Producto más vendido
-                          </p>
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15">
-                            <DashboardTrophyIcon />
-                          </span>
-                        </div>
-                        {salesReport.topProduct ? (
-                          <>
-                            <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em]">
-                              {salesReport.topProduct.name}
-                            </h3>
-                            <p className="mt-2 text-sm text-white/72">
-                              {formatNumber(salesReport.topProduct.quantitySold)} unidades vendidas
-                            </p>
-                          </>
-                        ) : (
-                          <p className="mt-3 text-sm text-white/72">Aún no hay ventas registradas.</p>
-                        )}
-                      </div>
+                  <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+                    <section className="rounded-2xl border border-black/8 bg-white">
+                      <header className="flex items-center justify-between gap-3 border-b border-black/6 px-6 py-4">
+                        <h3 className="text-sm font-semibold text-[#16384f]">Destacados</h3>
+                        <span className="text-xs capitalize text-[#8b8d91]">{dashboardPeriodLabel}</span>
+                      </header>
+                      <dl className="divide-y divide-black/6">
+                        {[
+                          {
+                            label: "Producto más vendido",
+                            Icon: DashboardTrophyIcon,
+                            value: dashboardMetrics.topProduct?.name,
+                            detail: dashboardMetrics.topProduct
+                              ? `${formatNumber(dashboardMetrics.topProduct.quantitySold)} ${dashboardMetrics.topProduct.quantitySold === 1 ? "unidad" : "unidades"}`
+                              : null,
+                          },
+                          {
+                            label: "Categoría más vendida",
+                            Icon: DashboardTagIcon,
+                            value: dashboardMetrics.topCategory?.category,
+                            detail: dashboardMetrics.topCategory
+                              ? `${formatNumber(dashboardMetrics.topCategory.quantitySold)} ${dashboardMetrics.topCategory.quantitySold === 1 ? "unidad" : "unidades"}`
+                              : null,
+                          },
+                          {
+                            label: "Clientes atendidos",
+                            Icon: DashboardMetricCustomersIcon,
+                            value: `${formatNumber(dashboardMetrics.customers)} ${dashboardMetrics.customers === 1 ? "comprador" : "compradores distintos"}`,
+                            detail: null,
+                          },
+                        ].map((row) => (
+                          <div key={row.label} className="grid gap-1 px-6 py-4 sm:grid-cols-[200px_minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+                            <dt className="flex items-center gap-2 text-xs font-medium text-[#6e7379]">
+                              <span className="text-[#9a9da2] [&_svg]:h-3.5 [&_svg]:w-3.5">
+                                <row.Icon />
+                              </span>
+                              {row.label}
+                            </dt>
+                            <dd className="text-sm font-semibold text-[#1f2328]">
+                              {row.value ?? <span className="font-normal text-[#8b8d91]">Sin ventas en este periodo</span>}
+                            </dd>
+                            {row.detail && (
+                              <dd className="text-xs tabular-nums text-[#8b8d91] sm:text-right">{row.detail}</dd>
+                            )}
+                          </div>
+                        ))}
+                      </dl>
+                    </section>
 
-                      <div className="rounded-[1.75rem] border border-black/8 bg-[#fafaf9] p-6 shadow-[0_2px_10px_rgba(15,23,42,0.03)] transition-shadow duration-200 hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)]">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
-                            Categoría más vendida
-                          </p>
-                          <span
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                            style={{ backgroundColor: `rgba(${adminAccentRgb}, 0.1)`, color: adminBrand.accent }}
-                          >
-                            <DashboardTagIcon />
-                          </span>
-                        </div>
-                        {dashboardMetrics.topCategory ? (
-                          <>
-                            <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-[#1f2328]">
-                              {dashboardMetrics.topCategory.category}
-                            </h3>
-                            <p className="mt-2 text-sm text-[#6e7379]">
-                              {formatNumber(dashboardMetrics.topCategory.quantitySold)} unidades este mes
-                            </p>
-                          </>
-                        ) : (
-                          <p className="mt-3 text-sm text-[#6e7379]">Sin ventas este mes todavía.</p>
-                        )}
-                      </div>
-
-                      <div className="rounded-[1.75rem] border border-black/8 bg-[#fafaf9] p-6 shadow-[0_2px_10px_rgba(15,23,42,0.03)] transition-shadow duration-200 hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)]">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8b8d91]">
-                            Clientes atendidos
-                          </p>
-                          <span
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                            style={{ backgroundColor: `rgba(${adminAccentRgb}, 0.1)`, color: adminBrand.accent }}
-                          >
-                            <DashboardMetricCustomersIcon />
-                          </span>
-                        </div>
-                        <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-[#1f2328]">
-                          {formatNumber(dashboardMetrics.customersThisMonth)}
-                        </h3>
-                        <p className="mt-2 text-sm text-[#6e7379]">Compradores distintos este mes</p>
-                      </div>
-                    </div>
+                    <section className="rounded-2xl border border-black/8 bg-white">
+                      <header className="border-b border-black/6 px-6 py-4">
+                        <h3 className="text-sm font-semibold text-[#16384f]">Estado actual</h3>
+                      </header>
+                      <dl className="divide-y divide-black/6">
+                        {[
+                          {
+                            label: "Pedidos con pago pendiente",
+                            Icon: DashboardMetricClockIcon,
+                            value: salesReport.totals.pendingOrders,
+                            detail: `${formatNumber(salesReport.totals.cancelledOrders)} cancelados`,
+                            warn: salesReport.totals.pendingOrders > 0,
+                          },
+                          {
+                            label: "Alertas de stock",
+                            Icon: DashboardMetricAlertIcon,
+                            value: stockAlerts.lowStock + stockAlerts.outOfStock,
+                            detail: `${formatNumber(stockAlerts.lowStock)} con stock bajo · ${formatNumber(stockAlerts.outOfStock)} agotados`,
+                            warn: stockAlerts.outOfStock > 0,
+                          },
+                        ].map((row) => (
+                          <div key={row.label} className="flex items-center justify-between gap-4 px-6 py-4">
+                            <div>
+                              <dt className="flex items-center gap-2 text-xs font-medium text-[#6e7379]">
+                                <span className="text-[#9a9da2] [&_svg]:h-3.5 [&_svg]:w-3.5">
+                                  <row.Icon />
+                                </span>
+                                {row.label}
+                              </dt>
+                              <dd className="mt-1 text-xs text-[#8b8d91]">{row.detail}</dd>
+                            </div>
+                            <dd
+                              className={`text-2xl font-semibold tabular-nums ${row.warn ? "text-[#b42318]" : "text-[#16384f]"}`}
+                            >
+                              {formatNumber(row.value)}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </section>
                   </div>
 
                   <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
@@ -5372,7 +5656,9 @@ export default function AdminPage() {
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8b8d91]">Informes</p>
                   <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em] text-[#16384f]">Métricas de ventas</h2>
-                  <p className="mt-1 text-sm text-[#6e7379]">Calculado desde los pedidos reales de esta unidad.</p>
+                  <p className="mt-1 text-sm text-[#6e7379]">
+                    Calculado desde los pedidos reales de esta unidad · <span className="font-semibold text-[#16384f]">{reportsPeriodLabel}</span>
+                  </p>
                 </div>
                 <div className="flex items-center gap-3">
                   {salesReport && (
@@ -5393,6 +5679,16 @@ export default function AdminPage() {
                   </button>
                 </div>
               </div>
+
+              <DateRangeFilter
+                presets={REPORT_PRESETS}
+                preset={reportsPreset}
+                range={reportsRange}
+                accent={adminBrand.accent}
+                isLoading={isLoadingReport && Boolean(salesReport)}
+                onPresetChange={selectReportsPreset}
+                onDateChange={changeReportsDate}
+              />
 
               {isLoadingReport && !salesReport ? (
                 <p className="rounded-[1.25rem] border border-black/8 bg-white p-6 text-sm text-[#6e7379]">Cargando métricas...</p>
@@ -6077,6 +6373,12 @@ export default function AdminPage() {
                               {item.variantSku && (
                                 <p className="mt-0.5 text-xs text-[#8b8d91]">Código: {item.variantSku}</p>
                               )}
+                              {item.ownerDivision && item.ownerDivision !== item.division && (
+                                <p className="mt-1 inline-flex rounded-full bg-[#fff6e5] px-2 py-0.5 text-[11px] font-semibold text-[#9a6200]">
+                                  Compartido · producto de {ADMIN_BRAND_CONFIG[item.ownerDivision].label}, vendido en{" "}
+                                  {ADMIN_BRAND_CONFIG[item.division].label}
+                                </p>
+                              )}
                             </div>
                             <div className="shrink-0 text-right">
                               <p className="text-xs text-[#8b8d91]">
@@ -6206,27 +6508,6 @@ export default function AdminPage() {
 
                     <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
-                        Estado de pago
-                      </p>
-                      <label className="mt-4 block space-y-1.5">
-                        <span className="text-sm font-medium text-[#4f545a]">Pago</span>
-                        <select
-                          name="paymentStatus"
-                          value={orderForm.paymentStatus}
-                          onChange={handleOrderFieldChange}
-                          className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-2.5 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                        >
-                          {paymentStatuses.map((status) => (
-                            <option key={status} value={status}>
-                              {getPaymentStatusLabel(status)}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
-
-                    <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8b8d91]">
                         Historial del pedido
                       </p>
                       <ul className="mt-4 space-y-4">
@@ -6270,6 +6551,240 @@ export default function AdminPage() {
             </div>
           )}
 
+          {activeTab === "customers" && (
+            <div className="admin-fade-up space-y-6">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-3xl font-semibold tracking-[-0.03em] text-[#16384f]">Clientes</h2>
+                  <p className="mt-1 text-sm text-[#6e7379]">
+                    Todas las cuentas creadas en la tienda y lo que cada cliente ha comprado en {adminBrand.label}.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void loadCustomers()}
+                  className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[#5d6167] transition-colors duration-200 hover:bg-[#fafaf9]"
+                >
+                  Actualizar
+                </button>
+              </div>
+
+              <div className="relative">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8b8d91]"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.4-3.4" />
+                </svg>
+                <input
+                  type="search"
+                  value={customerSearch}
+                  onChange={(event) => setCustomerSearch(event.target.value)}
+                  placeholder="Buscar por nombre, correo, teléfono, empresa o ciudad..."
+                  className="w-full rounded-full border border-black/10 bg-white py-3 pl-11 pr-4 text-sm text-[#1f2328] shadow-[0_8px_20px_rgba(15,23,42,0.05)] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {(["all", ...CUSTOMER_STATUS_ORDER] as const).map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setCustomerStatusFilter(status)}
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
+                      customerStatusFilter === status
+                        ? "bg-[#16384f] text-white"
+                        : "border border-black/10 bg-white text-[#5d6167] hover:bg-[#fafaf9]"
+                    }`}
+                  >
+                    {status === "all" ? "Todos" : CUSTOMER_STATUS_META[status].label} {customerStatusCounts[status]}
+                  </button>
+                ))}
+              </div>
+
+              <div className="overflow-hidden rounded-2xl border border-black/8 bg-white shadow-[0_8px_18px_rgba(15,23,42,0.05)]">
+                <div className="hidden grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1fr)_90px_minmax(0,1fr)_minmax(0,1fr)] gap-4 border-b border-black/8 bg-[#fafaf9] px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8d91] lg:grid">
+                  <span>Cliente</span>
+                  <span>Ciudad</span>
+                  <span>Registro</span>
+                  <span className="text-right">Pedidos</span>
+                  <span className="text-right">Total comprado</span>
+                  <span className="text-right">Estado</span>
+                </div>
+
+                {isLoadingCustomers && customers.length === 0 ? (
+                  <p className="px-5 py-6 text-sm text-[#6e7379]">Cargando clientes...</p>
+                ) : filteredCustomers.length === 0 ? (
+                  <p className="px-5 py-6 text-sm text-[#6e7379]">
+                    Aún no hay clientes que coincidan con los filtros actuales.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-black/6">
+                    {filteredCustomers.map((customer) => {
+                      const isExpanded = expandedCustomerId === customer.id;
+                      const statusMeta = CUSTOMER_STATUS_META[customer.status];
+
+                      return (
+                        <li key={customer.id}>
+                          <button
+                            type="button"
+                            aria-expanded={isExpanded}
+                            onClick={() => setExpandedCustomerId(isExpanded ? null : customer.id)}
+                            className={`grid w-full grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-5 py-4 text-left transition-colors duration-200 hover:bg-[#fafaf9] lg:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1fr)_90px_minmax(0,1fr)_minmax(0,1fr)] lg:items-center ${
+                              isExpanded ? "bg-[#fafaf9]" : ""
+                            }`}
+                          >
+                            <span className="min-w-0">
+                              <span className="flex items-center gap-2">
+                                <span className="truncate text-sm font-semibold text-[#16384f]">
+                                  {customer.fullName || "Sin nombre"}
+                                </span>
+                                {!customer.active && (
+                                  <span className="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                                    Desactivado
+                                  </span>
+                                )}
+                              </span>
+                              <span className="block truncate text-xs text-[#8b8d91]">{customer.email}</span>
+                            </span>
+                            <span className="text-right lg:hidden">
+                              <span
+                                className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusMeta.className}`}
+                              >
+                                {statusMeta.label}
+                              </span>
+                            </span>
+                            <span className="hidden truncate text-sm text-[#5d6167] lg:block">
+                              {[customer.city, customer.department].filter(Boolean).join(", ") || "—"}
+                            </span>
+                            <span className="hidden text-sm text-[#5d6167] lg:block">
+                              {formatShortDate(customer.createdAt)}
+                            </span>
+                            <span className="hidden text-right text-sm font-semibold text-[#16384f] lg:block">
+                              {customer.paidOrdersCount}
+                            </span>
+                            <span className="hidden text-right text-sm font-semibold text-[#16384f] lg:block">
+                              {formatCurrency(customer.totalSpent)}
+                            </span>
+                            <span className="col-span-2 text-xs text-[#8b8d91] lg:hidden">
+                              {customer.paidOrdersCount} pedido{customer.paidOrdersCount === 1 ? "" : "s"} pagado
+                              {customer.paidOrdersCount === 1 ? "" : "s"} · {formatCurrency(customer.totalSpent)} · desde{" "}
+                              {formatShortDate(customer.createdAt)}
+                            </span>
+                            <span className="hidden text-right lg:block">
+                              <span
+                                className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusMeta.className}`}
+                              >
+                                {statusMeta.label}
+                              </span>
+                            </span>
+                          </button>
+
+                          {isExpanded && (
+                            <div className="space-y-4 border-t border-black/6 bg-[#fafaf9] px-5 pb-5 pt-4">
+                              <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                                <div>
+                                  <dt className="text-xs text-[#8b8d91]">Teléfono</dt>
+                                  <dd className="font-medium text-[#1f2328]">{customer.phone || "—"}</dd>
+                                </div>
+                                <div>
+                                  <dt className="text-xs text-[#8b8d91]">Empresa</dt>
+                                  <dd className="font-medium text-[#1f2328]">{customer.company || "—"}</dd>
+                                </div>
+                                <div>
+                                  <dt className="text-xs text-[#8b8d91]">Última compra</dt>
+                                  <dd className="font-medium text-[#1f2328]">
+                                    {customer.lastPurchaseAt ? formatShortDate(customer.lastPurchaseAt) : "—"}
+                                  </dd>
+                                </div>
+                                <div>
+                                  <dt className="text-xs text-[#8b8d91]">Productos en el carrito</dt>
+                                  <dd className="font-medium text-[#1f2328]">{customer.cartItemsCount}</dd>
+                                </div>
+                              </dl>
+
+                              {customer.orders.length === 0 ? (
+                                <p className="text-sm text-[#6e7379]">
+                                  Este cliente aún no tiene pedidos en {adminBrand.label}.
+                                </p>
+                              ) : (
+                                <ul className="space-y-2">
+                                  {customer.orders.map((order) => (
+                                    <li
+                                      key={order.id}
+                                      className="rounded-xl border border-black/8 bg-white p-4"
+                                    >
+                                      <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          <span className="text-sm font-semibold text-[#16384f]">
+                                            {formatOrderCode(order.orderNumber)}
+                                          </span>
+                                          <span className="text-xs text-[#8b8d91]">
+                                            {formatShortDate(order.createdAt)}
+                                          </span>
+                                          <span
+                                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                              order.paymentStatus === "PAID"
+                                                ? "bg-emerald-50 text-emerald-700"
+                                                : order.paymentStatus === "FAILED"
+                                                  ? "bg-red-50 text-red-700"
+                                                  : "bg-amber-50 text-amber-700"
+                                            }`}
+                                          >
+                                            {getPaymentStatusLabel(order.paymentStatus)}
+                                          </span>
+                                          <span
+                                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${SHIPPING_STATUS_BADGE_CLASS[order.shippingStatus]}`}
+                                          >
+                                            {getShippingStatusLabel(order.shippingStatus)}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                          <span className="text-sm font-semibold text-[#16384f]">
+                                            {formatCurrency(order.total)}
+                                          </span>
+                                          {canAccessTool("orders") && (
+                                            <button
+                                              type="button"
+                                              onClick={() => openOrderFromCustomer(order.id, order.orderNumber)}
+                                              className="text-xs font-semibold text-[var(--admin-accent)] hover:underline"
+                                            >
+                                              Ver pedido →
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <ul className="mt-2 space-y-0.5 text-xs text-[#5d6167]">
+                                        {order.items.map((item) => (
+                                          <li key={item.id} className="flex justify-between gap-3">
+                                            <span className="truncate">
+                                              {item.quantity} × {item.name}
+                                            </span>
+                                            <span className="shrink-0">{formatCurrency(item.lineTotal)}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeTab === "quotes" && (
             <div className="admin-fade-up space-y-6">
               <div className="rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_14px_28px_rgba(15,23,42,0.05)]">
@@ -6279,7 +6794,7 @@ export default function AdminPage() {
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-[#6e7379]">
                   Estas solicitudes las envían los clientes desde el asistente &quot;Hablemos de tu proyecto&quot; del sitio.
-                  Haz clic en una tarjeta para ver el detalle y responder.
+                  Arrastra una tarjeta a otra columna para cambiar su estado, o haz clic para ver el detalle y responder.
                 </p>
               </div>
 
@@ -6296,7 +6811,30 @@ export default function AdminPage() {
                   {quoteColumns.map(({ status, items }) => {
                     const theme = QUOTE_STATUS_THEME[status];
                     return (
-                      <div key={status} className="flex flex-col gap-3 rounded-[1.5rem] bg-[#f0f1ee] p-4">
+                      <div
+                        key={status}
+                        onDragOver={(event) => {
+                          if (!draggingQuoteId) return;
+                          event.preventDefault();
+                          event.dataTransfer.dropEffect = "move";
+                          if (quoteDropStatus !== status) setQuoteDropStatus(status);
+                        }}
+                        onDragLeave={(event) => {
+                          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                            setQuoteDropStatus((current) => (current === status ? null : current));
+                          }
+                        }}
+                        onDrop={(event) => {
+                          event.preventDefault();
+                          const id = event.dataTransfer.getData("text/plain") || draggingQuoteId;
+                          setDraggingQuoteId(null);
+                          setQuoteDropStatus(null);
+                          if (id) void moveQuoteToStatus(id, status);
+                        }}
+                        className={`flex flex-col gap-3 rounded-[1.5rem] p-4 transition-colors duration-150 ${
+                          quoteDropStatus === status ? "bg-[var(--admin-accent-soft)] ring-2 ring-[var(--admin-accent)]/40" : "bg-[#f0f1ee]"
+                        }`}
+                      >
                         <div className="flex items-center justify-between px-1">
                           <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#5d6167]">
                             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: theme.dot }} />
@@ -6310,15 +6848,27 @@ export default function AdminPage() {
                         <div className="space-y-3">
                           {items.length === 0 ? (
                             <div className="rounded-2xl border border-dashed border-black/10 p-4 text-center text-xs text-[#9a9da2]">
-                              Sin solicitudes
+                              {draggingQuoteId ? "Suelta aquí" : "Sin solicitudes"}
                             </div>
                           ) : (
                             items.map((quote) => (
                               <button
                                 key={quote.id}
                                 type="button"
+                                draggable
+                                onDragStart={(event) => {
+                                  event.dataTransfer.setData("text/plain", quote.id);
+                                  event.dataTransfer.effectAllowed = "move";
+                                  setDraggingQuoteId(quote.id);
+                                }}
+                                onDragEnd={() => {
+                                  setDraggingQuoteId(null);
+                                  setQuoteDropStatus(null);
+                                }}
                                 onClick={() => setSelectedQuoteId(quote.id)}
-                                className="block w-full rounded-2xl border border-black/8 bg-white p-4 text-left shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.1)]"
+                                className={`block w-full cursor-grab rounded-2xl border border-black/8 bg-white p-4 text-left shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.1)] active:cursor-grabbing ${
+                                  draggingQuoteId === quote.id ? "opacity-40" : ""
+                                }`}
                               >
                                 <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9a9da2]">
                                   <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: theme.dot }} />
@@ -6995,7 +7545,7 @@ export default function AdminPage() {
                       return (
                         <article
                           key={`inventory-${product.slug}`}
-                          className="grid gap-4 rounded-[1.25rem] border border-black/8 bg-white p-4 shadow-[0_10px_22px_rgba(15,23,42,0.04)] lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
+                          className="grid gap-4 rounded-[1.25rem] border border-black/8 bg-white p-4 shadow-[0_10px_22px_rgba(15,23,42,0.04)] 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center"
                         >
                           <div className="flex min-w-0 items-center gap-4">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -7039,8 +7589,8 @@ export default function AdminPage() {
                             </div>
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 lg:flex-nowrap">
-                            <div className="w-28 lg:border-l lg:border-black/8 lg:pl-5">
+                          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-black/6 pt-3 2xl:flex-nowrap 2xl:border-t-0 2xl:pt-0">
+                            <div className="w-28 2xl:border-l 2xl:border-black/8 2xl:pl-5">
                               <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
                                 Stock actual
                               </p>
@@ -7048,7 +7598,7 @@ export default function AdminPage() {
                                 {product.stock ?? 0}
                               </p>
                             </div>
-                            <div className="w-28 lg:border-l lg:border-black/8 lg:pl-5">
+                            <div className="w-28 2xl:border-l 2xl:border-black/8 2xl:pl-5">
                               <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
                                 Stock mínimo
                               </p>
@@ -7056,7 +7606,7 @@ export default function AdminPage() {
                                 {product.stockMinimo ?? 0}
                               </p>
                             </div>
-                            <div className="lg:border-l lg:border-black/8 lg:pl-5">
+                            <div className="2xl:border-l 2xl:border-black/8 2xl:pl-5">
                               <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
                                 Ajuste
                               </p>
@@ -7088,7 +7638,7 @@ export default function AdminPage() {
                                 </button>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 lg:ml-2">
+                            <div className="flex items-center gap-2 2xl:ml-2">
                               <button
                                 type="button"
                                 disabled={adjustment === 0}
@@ -7366,63 +7916,78 @@ export default function AdminPage() {
                   }
 
                   return (
-                    <div className="space-y-10">
+                    <div className="space-y-6">
                       {sections.map((section) => (
-                        <div key={section.label}>
-                          <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">
-                            {section.label}
-                          </h3>
-                          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        <section key={section.label} className="rounded-2xl border border-black/8 bg-white">
+                          <header className="flex items-center justify-between gap-3 border-b border-black/6 px-5 py-3.5">
+                            <h3 className="text-sm font-semibold text-[#16384f]">{section.label}</h3>
+                            <span className="text-xs text-[#8b8d91]">
+                              {section.groups.length} {section.groups.length === 1 ? "grupo" : "grupos"}
+                            </span>
+                          </header>
+                          <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
                             {section.groups.map((group) => {
                               const groupSlots = divisionSlots.filter((slot) => slot.group === group);
-                              const previewSrc = groupSlots[0]
-                                ? resolveAdminImageSrc(groupSlots[0].key, groupSlots[0].defaultSrc)
-                                : undefined;
-                              const hasPreview = Boolean(previewSrc) && !isVideoUrl(previewSrc ?? "");
+                              const previews = groupSlots.map((slot) => {
+                                const src = resolveAdminImageSrc(slot.key, slot.defaultSrc);
+                                return { key: slot.key, src, isVideo: Boolean(src) && isVideoUrl(src ?? "") };
+                              });
+                              const cover = previews.find((preview) => preview.src && !preview.isVideo);
+                              const videoCount = previews.filter((preview) => preview.isVideo).length;
 
                               return (
                                 <button
                                   key={group}
                                   type="button"
                                   onClick={() => setSelectedImageGroup(group)}
-                                  className="group overflow-hidden rounded-[1.4rem] border border-black/8 bg-white text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--admin-accent)] hover:shadow-[0_14px_28px_rgba(15,23,42,0.1)]"
+                                  className="group flex items-center gap-4 rounded-xl border border-black/8 bg-white p-2.5 pr-4 text-left transition-colors duration-200 hover:border-[var(--admin-accent)] hover:bg-[var(--admin-accent-soft)]"
                                 >
-                                  <span
-                                    className="relative block w-full overflow-hidden bg-gradient-to-br from-[#f0f2f4] to-[#e5e8eb]"
-                                    style={{ paddingBottom: "62%" }}
-                                  >
-                                    {hasPreview ? (
+                                  <span className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-[#f0f2f4] to-[#e5e8eb]">
+                                    {cover ? (
                                       // eslint-disable-next-line @next/next/no-img-element
-                                      <img
-                                        src={previewSrc}
-                                        alt=""
-                                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                                      />
+                                      <img src={cover.src} alt="" className="h-full w-full object-cover" />
                                     ) : (
-                                      <span className="absolute inset-0 flex items-center justify-center text-[#c3c8cd]">
-                                        <span className="h-9 w-9">{IMAGE_GROUP_ICON}</span>
+                                      <span className="flex h-full w-full items-center justify-center text-[#c3c8cd]">
+                                        <span className="h-6 w-6">{IMAGE_GROUP_ICON}</span>
                                       </span>
                                     )}
-                                    <span className="absolute right-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
-                                      {groupSlots.length} {groupSlots.length === 1 ? "imagen" : "imágenes"}
-                                    </span>
                                   </span>
-                                  <span className="flex items-center justify-between gap-3 px-4 py-3.5">
-                                    <span className="truncate text-sm font-semibold text-[#1f2328]">
-                                      {group}
+                                  <span className="min-w-0 flex-1">
+                                    <span className="block truncate text-sm font-semibold text-[#1f2328]">{group}</span>
+                                    <span className="mt-0.5 block text-xs text-[#8b8d91]">
+                                      {groupSlots.length} {groupSlots.length === 1 ? "imagen" : "imágenes"}
+                                      {videoCount > 0 && ` · ${videoCount} ${videoCount === 1 ? "video" : "videos"}`}
                                     </span>
-                                    <span
-                                      aria-hidden="true"
-                                      className="shrink-0 text-lg text-[#8b8d91] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--admin-accent)]"
-                                    >
-                                      ›
-                                    </span>
+                                    {previews.length > 1 && (
+                                      <span className="mt-2 flex items-center gap-1">
+                                        {previews.slice(0, 5).map((preview) => (
+                                          <span
+                                            key={preview.key}
+                                            className="h-4 w-6 overflow-hidden rounded-[3px] bg-[#e5e8eb] ring-1 ring-black/5"
+                                          >
+                                            {preview.src && !preview.isVideo && (
+                                              // eslint-disable-next-line @next/next/no-img-element
+                                              <img src={preview.src} alt="" className="h-full w-full object-cover" />
+                                            )}
+                                          </span>
+                                        ))}
+                                        {previews.length > 5 && (
+                                          <span className="text-[10px] font-semibold text-[#8b8d91]">+{previews.length - 5}</span>
+                                        )}
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span
+                                    aria-hidden="true"
+                                    className="shrink-0 text-lg text-[#b4b7bb] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--admin-accent)]"
+                                  >
+                                    ›
                                   </span>
                                 </button>
                               );
                             })}
                           </div>
-                        </div>
+                        </section>
                       ))}
                     </div>
                   );
@@ -7437,10 +8002,8 @@ export default function AdminPage() {
                     <span aria-hidden="true">‹</span> Volver a categorías
                   </button>
                   <div className="mb-8 last:mb-0">
-                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">
-                      {selectedImageGroup}
-                    </h3>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <h3 className="mb-4 text-base font-semibold text-[#16384f]">{selectedImageGroup}</h3>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                       {IMAGE_SLOTS.filter(
                         (slot) =>
                           slot.group === selectedImageGroup &&
@@ -7457,10 +8020,10 @@ export default function AdminPage() {
                         return (
                           <div
                             key={slot.key}
-                            className="overflow-hidden rounded-[1.2rem] border border-black/8 bg-white shadow-sm"
+                            className="overflow-hidden rounded-xl border border-black/8 bg-white"
                           >
                             <div
-                              className="relative overflow-hidden bg-[#f0f2f4]"
+                              className="relative overflow-hidden border-b border-black/6 bg-[#f4f5f6]"
                               style={{ paddingBottom: "56.25%" }}
                             >
                               {isVideoUrl(currentSrc) ? (
@@ -7626,7 +8189,7 @@ export default function AdminPage() {
                     Textos del sitio
                   </h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
-                    Títulos, párrafos y botones de la página. Los cambios se guardan al salir del campo.
+                    Títulos, párrafos y botones de la página.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -7640,23 +8203,31 @@ export default function AdminPage() {
                   >
                     Historial
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => void loadSiteTexts()}
-                    className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
-                  >
-                    Recargar
-                  </button>
                 </div>
               </div>
 
-              <div>
-                {textsError && (
-                  <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-                    {textsError}
+              <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--admin-accent)]/20 bg-[var(--admin-accent-soft)] px-5 py-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#16384f]">Edita directamente sobre la página</p>
+                  <p className="mt-0.5 text-sm text-[#6e7379]">
+                    Navega por el sitio, haz clic en cualquier texto resaltado y cámbialo ahí mismo. Arriba verás un aviso para guardar y publicar.
                   </p>
-                )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void startLiveTextEdit()}
+                  disabled={isStartingLiveTextEdit}
+                  className="inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_-8px_rgba(var(--admin-accent-rgb),0.7)] transition-opacity duration-200 hover:opacity-90 disabled:opacity-60"
+                  style={{ backgroundColor: adminBrand.accent }}
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" />
+                  </svg>
+                  {isStartingLiveTextEdit ? "Abriendo…" : "Editar textos en tiempo real"}
+                </button>
+              </div>
 
+              <div>
                 {publishNotice && (
                   <p className="mb-6 rounded-xl bg-[#effaf2] px-4 py-3 text-sm font-semibold text-[#1f6b39]">
                     {publishNotice}
@@ -7679,120 +8250,6 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                {isLoadingTexts ? (
-                  <p className="text-sm text-[#6e7379]">Cargando textos...</p>
-                ) : !selectedTextGroup ? (
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {Array.from(
-                      new Set(
-                        TEXT_SLOTS.filter(
-                          (slot) => slot.division === adminDivision || slot.division === "Global",
-                        ).map((slot) => slot.group),
-                      ),
-                    ).map((group) => {
-                      const groupSlots = TEXT_SLOTS.filter(
-                        (slot) =>
-                          slot.group === group &&
-                          (slot.division === adminDivision || slot.division === "Global"),
-                      );
-
-                      return (
-                        <button
-                          key={group}
-                          type="button"
-                          onClick={() => setSelectedTextGroup(group)}
-                          className="flex items-center justify-between gap-3 rounded-[1.2rem] border border-black/8 bg-white p-4 text-left shadow-sm transition-colors duration-200 hover:border-[var(--admin-accent)] hover:bg-[#f5f9ff]"
-                        >
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-semibold text-[#1f2328]">
-                              {group}
-                            </span>
-                            <span className="mt-0.5 block text-xs font-semibold text-[#8b8d91]">
-                              {groupSlots.length} {groupSlots.length === 1 ? "campo" : "campos"}
-                            </span>
-                          </span>
-                          <span aria-hidden="true" className="shrink-0 text-xl text-[#8b8d91]">
-                            ›
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTextGroup(null)}
-                      className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--admin-accent)] hover:underline"
-                    >
-                      <span aria-hidden="true">‹</span> Volver a grupos
-                    </button>
-                    <h4 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">
-                      {selectedTextGroup}
-                    </h4>
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      {TEXT_SLOTS.filter(
-                        (slot) =>
-                          slot.group === selectedTextGroup &&
-                          (slot.division === adminDivision || slot.division === "Global"),
-                      ).map((slot) => {
-                        const value = resolveAdminText(slot.key, slot.defaultValue);
-                        const isSaving = savingTextKey === slot.key;
-                        const isSaved = savedTextKey === slot.key;
-                        const hasDraft = Boolean(contentDrafts[slot.key]);
-
-                        return (
-                          <div key={slot.key} className="rounded-[1.2rem] border border-black/8 bg-white p-4 shadow-sm">
-                            <label className="mb-1.5 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-[0.06em] text-[#8b8d91]">
-                              <span className="flex items-center gap-2">
-                                {slot.label}
-                                {hasDraft && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-[#b45309] px-2 py-0.5 text-[9px] font-bold normal-case text-white">
-                                    ● Sin publicar
-                                  </span>
-                                )}
-                              </span>
-                              <span className="flex items-center gap-2">
-                                {isSaving && <span className="normal-case text-[#8b8d91]">Guardando...</span>}
-                                {isSaved && <span className="normal-case text-[#1f6b39]">✓ Guardado</span>}
-                                {hasDraft && !isSaving && (
-                                  <button
-                                    type="button"
-                                    onClick={() => void handleDiscardDraft(slot.key)}
-                                    className="normal-case text-[#8b8d91] hover:text-[var(--admin-accent)]"
-                                  >
-                                    ↺ Deshacer
-                                  </button>
-                                )}
-                              </span>
-                            </label>
-                            {slot.multiline ? (
-                              <textarea
-                                key={`${slot.key}:${value}`}
-                                defaultValue={value}
-                                rows={3}
-                                onBlur={(event) => {
-                                  if (event.target.value !== value) void handleSaveText(slot.key, event.target.value);
-                                }}
-                                className="w-full rounded-lg border border-black/10 bg-[#fafaf9] px-3 py-2 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                              />
-                            ) : (
-                              <input
-                                key={`${slot.key}:${value}`}
-                                type="text"
-                                defaultValue={value}
-                                onBlur={(event) => {
-                                  if (event.target.value !== value) void handleSaveText(slot.key, event.target.value);
-                                }}
-                                className="w-full rounded-lg border border-black/10 bg-[#fafaf9] px-3 py-2 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           )}

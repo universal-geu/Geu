@@ -1,16 +1,18 @@
 import { requireAdminUser } from "@/lib/admin";
+import { parseDateRangeParams } from "@/lib/date-range";
 import { getDashboardMetrics, getSalesReport, type DashboardMetrics, type SalesReport } from "@/lib/orders";
 
-function createEmptyMetrics(): DashboardMetrics {
+function createEmptyMetrics(from: Date, to: Date): DashboardMetrics {
   return {
-    todayRevenue: 0,
-    todayOrders: 0,
-    weekRevenue: 0,
-    weekOrders: 0,
-    monthRevenue: 0,
-    monthOrders: 0,
-    newCustomersThisMonth: 0,
-    customersThisMonth: 0,
+    from: from.toISOString(),
+    to: to.toISOString(),
+    revenue: 0,
+    orders: 0,
+    unitsSold: 0,
+    averageTicket: 0,
+    newCustomers: 0,
+    customers: 0,
+    topProduct: null,
     topCategory: null,
   };
 }
@@ -37,18 +39,32 @@ function createEmptyReport(): SalesReport {
   };
 }
 
-export async function GET() {
+function getRange(request: Request) {
+  const range = parseDateRangeParams(request);
+  if (range) return range;
+
+  // Default to the current month.
+  const now = new Date();
+  return {
+    from: new Date(now.getFullYear(), now.getMonth(), 1),
+    to: new Date(now.getFullYear(), now.getMonth() + 1, 1),
+  };
+}
+
+export async function GET(request: Request) {
+  const { from, to } = getRange(request);
+
   try {
     const admin = await requireAdminUser("dashboard");
     const [metrics, report] = await Promise.all([
-      getDashboardMetrics(admin.division),
+      getDashboardMetrics(admin.division, from, to),
       getSalesReport(admin.division),
     ]);
 
     return Response.json({ metrics, report });
   } catch (error) {
     if (error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED") {
-      return Response.json({ metrics: createEmptyMetrics(), report: createEmptyReport() });
+      return Response.json({ metrics: createEmptyMetrics(from, to), report: createEmptyReport() });
     }
 
     const status =

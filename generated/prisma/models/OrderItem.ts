@@ -45,6 +45,7 @@ export type OrderItemMinAggregateOutputType = {
   variantSku: string | null
   variantLabel: string | null
   division: $Enums.Division | null
+  ownerDivision: $Enums.Division | null
   name: string | null
   image: string | null
   unitPrice: number | null
@@ -60,6 +61,7 @@ export type OrderItemMaxAggregateOutputType = {
   variantSku: string | null
   variantLabel: string | null
   division: $Enums.Division | null
+  ownerDivision: $Enums.Division | null
   name: string | null
   image: string | null
   unitPrice: number | null
@@ -75,6 +77,7 @@ export type OrderItemCountAggregateOutputType = {
   variantSku: number
   variantLabel: number
   division: number
+  ownerDivision: number
   name: number
   image: number
   unitPrice: number
@@ -104,6 +107,7 @@ export type OrderItemMinAggregateInputType = {
   variantSku?: true
   variantLabel?: true
   division?: true
+  ownerDivision?: true
   name?: true
   image?: true
   unitPrice?: true
@@ -119,6 +123,7 @@ export type OrderItemMaxAggregateInputType = {
   variantSku?: true
   variantLabel?: true
   division?: true
+  ownerDivision?: true
   name?: true
   image?: true
   unitPrice?: true
@@ -134,6 +139,7 @@ export type OrderItemCountAggregateInputType = {
   variantSku?: true
   variantLabel?: true
   division?: true
+  ownerDivision?: true
   name?: true
   image?: true
   unitPrice?: true
@@ -236,6 +242,7 @@ export type OrderItemGroupByOutputType = {
   variantSku: string | null
   variantLabel: string | null
   division: $Enums.Division
+  ownerDivision: $Enums.Division | null
   name: string
   image: string
   unitPrice: number
@@ -274,6 +281,7 @@ export type OrderItemWhereInput = {
   variantSku?: Prisma.StringNullableFilter<"OrderItem"> | string | null
   variantLabel?: Prisma.StringNullableFilter<"OrderItem"> | string | null
   division?: Prisma.EnumDivisionFilter<"OrderItem"> | $Enums.Division
+  ownerDivision?: Prisma.EnumDivisionNullableFilter<"OrderItem"> | $Enums.Division | null
   name?: Prisma.StringFilter<"OrderItem"> | string
   image?: Prisma.StringFilter<"OrderItem"> | string
   unitPrice?: Prisma.IntFilter<"OrderItem"> | number
@@ -290,6 +298,7 @@ export type OrderItemOrderByWithRelationInput = {
   variantSku?: Prisma.SortOrderInput | Prisma.SortOrder
   variantLabel?: Prisma.SortOrderInput | Prisma.SortOrder
   division?: Prisma.SortOrder
+  ownerDivision?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrder
   image?: Prisma.SortOrder
   unitPrice?: Prisma.SortOrder
@@ -309,6 +318,7 @@ export type OrderItemWhereUniqueInput = Prisma.AtLeast<{
   variantSku?: Prisma.StringNullableFilter<"OrderItem"> | string | null
   variantLabel?: Prisma.StringNullableFilter<"OrderItem"> | string | null
   division?: Prisma.EnumDivisionFilter<"OrderItem"> | $Enums.Division
+  ownerDivision?: Prisma.EnumDivisionNullableFilter<"OrderItem"> | $Enums.Division | null
   name?: Prisma.StringFilter<"OrderItem"> | string
   image?: Prisma.StringFilter<"OrderItem"> | string
   unitPrice?: Prisma.IntFilter<"OrderItem"> | number
@@ -325,6 +335,7 @@ export type OrderItemOrderByWithAggregationInput = {
   variantSku?: Prisma.SortOrderInput | Prisma.SortOrder
   variantLabel?: Prisma.SortOrderInput | Prisma.SortOrder
   division?: Prisma.SortOrder
+  ownerDivision?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrder
   image?: Prisma.SortOrder
   unitPrice?: Prisma.SortOrder
@@ -348,6 +359,7 @@ export type OrderItemScalarWhereWithAggregatesInput = {
   variantSku?: Prisma.StringNullableWithAggregatesFilter<"OrderItem"> | string | null
   variantLabel?: Prisma.StringNullableWithAggregatesFilter<"OrderItem"> | string | null
   division?: Prisma.EnumDivisionWithAggregatesFilter<"OrderItem"> | $Enums.Division
+  ownerDivision?: Prisma.EnumDivisionNullableWithAggregatesFilter<"OrderItem"> | $Enums.Division | null
   name?: Prisma.StringWithAggregatesFilter<"OrderItem"> | string
   image?: Prisma.StringWithAggregatesFilter<"OrderItem"> | string
   unitPrice?: Prisma.IntWithAggregatesFilter<"OrderItem"> | number
@@ -362,6 +374,7 @@ export type OrderItemCreateInput = {
   variantSku?: string | null
   variantLabel?: string | null
   division?: $Enums.Division
+  ownerDivision?: $Enums.Division | null
   name: string
   image: string
   unitPrice: number
@@ -378,6 +391,7 @@ export type OrderItemUncheckedCreateInput = {
   variantSku?: string | null
   variantLabel?: string | null
   division?: $Enums.Division
+  ownerDivision?: $Enums.Division | null
   name: string
   image: string
   unitPrice: number
@@ -392,6 +406,7 @@ export type OrderItemUpdateInput = {
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  ownerDivision?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.StringFieldUpdateOperationsInput | string
   unitPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -408,6 +423,7 @@ export type OrderItemUncheckedUpdateInput = {
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  ownerDivision?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.StringFieldUpdateOperationsInput | string
   unitPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -423,6 +439,7 @@ export type OrderItemCreateManyInput = {
   variantSku?: string | null
   variantLabel?: string | null
   division?: $Enums.Division
+  ownerDivision?: $Enums.Division | null
   name: string
   image: string
   unitPrice: number
@@ -437,6 +454,7 @@ export type OrderItemUpdateManyMutationInput = {
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  ownerDivision?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.StringFieldUpdateOperationsInput | string
   unitPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -452,6 +470,7 @@ export type OrderItemUncheckedUpdateManyInput = {
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  ownerDivision?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.StringFieldUpdateOperationsInput | string
   unitPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -477,6 +496,7 @@ export type OrderItemCountOrderByAggregateInput = {
   variantSku?: Prisma.SortOrder
   variantLabel?: Prisma.SortOrder
   division?: Prisma.SortOrder
+  ownerDivision?: Prisma.SortOrder
   name?: Prisma.SortOrder
   image?: Prisma.SortOrder
   unitPrice?: Prisma.SortOrder
@@ -498,6 +518,7 @@ export type OrderItemMaxOrderByAggregateInput = {
   variantSku?: Prisma.SortOrder
   variantLabel?: Prisma.SortOrder
   division?: Prisma.SortOrder
+  ownerDivision?: Prisma.SortOrder
   name?: Prisma.SortOrder
   image?: Prisma.SortOrder
   unitPrice?: Prisma.SortOrder
@@ -513,6 +534,7 @@ export type OrderItemMinOrderByAggregateInput = {
   variantSku?: Prisma.SortOrder
   variantLabel?: Prisma.SortOrder
   division?: Prisma.SortOrder
+  ownerDivision?: Prisma.SortOrder
   name?: Prisma.SortOrder
   image?: Prisma.SortOrder
   unitPrice?: Prisma.SortOrder
@@ -575,6 +597,7 @@ export type OrderItemCreateWithoutOrderInput = {
   variantSku?: string | null
   variantLabel?: string | null
   division?: $Enums.Division
+  ownerDivision?: $Enums.Division | null
   name: string
   image: string
   unitPrice: number
@@ -589,6 +612,7 @@ export type OrderItemUncheckedCreateWithoutOrderInput = {
   variantSku?: string | null
   variantLabel?: string | null
   division?: $Enums.Division
+  ownerDivision?: $Enums.Division | null
   name: string
   image: string
   unitPrice: number
@@ -633,6 +657,7 @@ export type OrderItemScalarWhereInput = {
   variantSku?: Prisma.StringNullableFilter<"OrderItem"> | string | null
   variantLabel?: Prisma.StringNullableFilter<"OrderItem"> | string | null
   division?: Prisma.EnumDivisionFilter<"OrderItem"> | $Enums.Division
+  ownerDivision?: Prisma.EnumDivisionNullableFilter<"OrderItem"> | $Enums.Division | null
   name?: Prisma.StringFilter<"OrderItem"> | string
   image?: Prisma.StringFilter<"OrderItem"> | string
   unitPrice?: Prisma.IntFilter<"OrderItem"> | number
@@ -647,6 +672,7 @@ export type OrderItemCreateManyOrderInput = {
   variantSku?: string | null
   variantLabel?: string | null
   division?: $Enums.Division
+  ownerDivision?: $Enums.Division | null
   name: string
   image: string
   unitPrice: number
@@ -661,6 +687,7 @@ export type OrderItemUpdateWithoutOrderInput = {
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  ownerDivision?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.StringFieldUpdateOperationsInput | string
   unitPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -675,6 +702,7 @@ export type OrderItemUncheckedUpdateWithoutOrderInput = {
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  ownerDivision?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.StringFieldUpdateOperationsInput | string
   unitPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -689,6 +717,7 @@ export type OrderItemUncheckedUpdateManyWithoutOrderInput = {
   variantSku?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   variantLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   division?: Prisma.EnumDivisionFieldUpdateOperationsInput | $Enums.Division
+  ownerDivision?: Prisma.NullableEnumDivisionFieldUpdateOperationsInput | $Enums.Division | null
   name?: Prisma.StringFieldUpdateOperationsInput | string
   image?: Prisma.StringFieldUpdateOperationsInput | string
   unitPrice?: Prisma.IntFieldUpdateOperationsInput | number
@@ -706,6 +735,7 @@ export type OrderItemSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   variantSku?: boolean
   variantLabel?: boolean
   division?: boolean
+  ownerDivision?: boolean
   name?: boolean
   image?: boolean
   unitPrice?: boolean
@@ -722,6 +752,7 @@ export type OrderItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   variantSku?: boolean
   variantLabel?: boolean
   division?: boolean
+  ownerDivision?: boolean
   name?: boolean
   image?: boolean
   unitPrice?: boolean
@@ -738,6 +769,7 @@ export type OrderItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   variantSku?: boolean
   variantLabel?: boolean
   division?: boolean
+  ownerDivision?: boolean
   name?: boolean
   image?: boolean
   unitPrice?: boolean
@@ -754,6 +786,7 @@ export type OrderItemSelectScalar = {
   variantSku?: boolean
   variantLabel?: boolean
   division?: boolean
+  ownerDivision?: boolean
   name?: boolean
   image?: boolean
   unitPrice?: boolean
@@ -762,7 +795,7 @@ export type OrderItemSelectScalar = {
   createdAt?: boolean
 }
 
-export type OrderItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "productId" | "variantSku" | "variantLabel" | "division" | "name" | "image" | "unitPrice" | "quantity" | "lineTotal" | "createdAt", ExtArgs["result"]["orderItem"]>
+export type OrderItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orderId" | "productId" | "variantSku" | "variantLabel" | "division" | "ownerDivision" | "name" | "image" | "unitPrice" | "quantity" | "lineTotal" | "createdAt", ExtArgs["result"]["orderItem"]>
 export type OrderItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   order?: boolean | Prisma.OrderDefaultArgs<ExtArgs>
 }
@@ -785,6 +818,7 @@ export type $OrderItemPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     variantSku: string | null
     variantLabel: string | null
     division: $Enums.Division
+    ownerDivision: $Enums.Division | null
     name: string
     image: string
     unitPrice: number
@@ -1221,6 +1255,7 @@ export interface OrderItemFieldRefs {
   readonly variantSku: Prisma.FieldRef<"OrderItem", 'String'>
   readonly variantLabel: Prisma.FieldRef<"OrderItem", 'String'>
   readonly division: Prisma.FieldRef<"OrderItem", 'Division'>
+  readonly ownerDivision: Prisma.FieldRef<"OrderItem", 'Division'>
   readonly name: Prisma.FieldRef<"OrderItem", 'String'>
   readonly image: Prisma.FieldRef<"OrderItem", 'String'>
   readonly unitPrice: Prisma.FieldRef<"OrderItem", 'Int'>

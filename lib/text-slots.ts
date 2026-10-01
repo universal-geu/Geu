@@ -1,10 +1,40 @@
+import { LIVE_TEXT_EDIT_FLAG, encodeLiveTextMarker } from "@/lib/live-text-markers";
+
 export type SiteTexts = Record<string, string>;
 
 export function resolveText(key: string, siteTexts: SiteTexts, fallback?: string): string {
+  const value = resolvePlainText(key, siteTexts, fallback);
+  const liveEditDivision = siteTexts[LIVE_TEXT_EDIT_FLAG];
+  if (liveEditDivision && value && isLiveEditableTextKey(key, liveEditDivision)) {
+    return encodeLiveTextMarker(key) + value;
+  }
+  return value;
+}
+
+function resolvePlainText(key: string, siteTexts: SiteTexts, fallback?: string): string {
   const stored = siteTexts[key]?.trim();
   if (stored) return stored;
   if (fallback !== undefined) return fallback;
   return TEXT_SLOTS.find((slot) => slot.key === key)?.defaultValue ?? "";
+}
+
+// URL slots end up in hrefs (and empty = hidden), so they stay out of the
+// on-page editor; the admin form still covers them.
+export function isLiveEditableTextKey(key: string, division: string) {
+  if (key.endsWith("-url")) return false;
+  const slot = TEXT_SLOTS.find((item) => item.key === key);
+  return Boolean(slot) && (slot!.division === division || slot!.division === "Global");
+}
+
+// Current value of every slot the division can edit live, without markers.
+export function getLiveEditableTexts(siteTexts: SiteTexts, division: string) {
+  return TEXT_SLOTS.filter((slot) => isLiveEditableTextKey(slot.key, division)).map((slot) => ({
+    key: slot.key,
+    label: slot.label,
+    group: slot.group,
+    multiline: Boolean(slot.multiline),
+    value: resolvePlainText(slot.key, siteTexts),
+  }));
 }
 
 export type TextSlot = {

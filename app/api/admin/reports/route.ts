@@ -1,4 +1,5 @@
 import { requireAdminUser } from "@/lib/admin";
+import { parseDateRangeParams } from "@/lib/date-range";
 import { getSalesReport, type SalesReport } from "@/lib/orders";
 
 function createEmptyReport(): SalesReport {
@@ -23,10 +24,10 @@ function createEmptyReport(): SalesReport {
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const admin = await requireAdminUser("reports");
-    const report = await getSalesReport(admin.division);
+    const report = await getSalesReport(admin.division, parseDateRangeParams(request) ?? undefined);
 
     return Response.json({ report });
   } catch (error) {

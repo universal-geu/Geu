@@ -1639,6 +1639,7 @@ export const OrderItemScalarFieldEnum = {
   variantSku: 'variantSku',
   variantLabel: 'variantLabel',
   division: 'division',
+  ownerDivision: 'ownerDivision',
   name: 'name',
   image: 'image',
   unitPrice: 'unitPrice',

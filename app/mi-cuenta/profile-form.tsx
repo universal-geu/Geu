@@ -388,7 +388,6 @@ export default function AccountProfileForm({
   const division = divisionProp ?? user.division ?? "Cauchos";
   const brand = DIVISION_BRAND[division];
   const [activePanel, setActivePanel] = useState<AccountPanel>("orders");
-  const [showFullOrderHistory, setShowFullOrderHistory] = useState(false);
   const [orderDivisionFilter, setOrderDivisionFilter] = useState<DivisionName | "all">("all");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(
     orders[0]?.id ?? null,
@@ -433,7 +432,6 @@ export default function AccountProfileForm({
       value: user.addressLine1 || "Sin dirección principal",
     },
   ];
-  const paidOrders = orders.filter((order) => order.paymentStatus === "PAID").length;
   const activeShipments = orders.filter((order) =>
     ["PREPARING", "SHIPPED"].includes(order.shippingStatus),
   ).length;
@@ -445,7 +443,9 @@ export default function AccountProfileForm({
     orderDivisionFilter === "all"
       ? orders
       : orders.filter((order) => getOrderDivisions(order).includes(orderDivisionFilter));
-  const recentOrders = showFullOrderHistory ? filteredOrders : filteredOrders.slice(0, 3);
+  // The list is compact (one row per order), so it always shows every order
+  // matching the filter — the count on the filter chip is what you see.
+  const recentOrders = filteredOrders;
 
   useEffect(() => {
     if (!toast) return;
@@ -911,7 +911,7 @@ export default function AccountProfileForm({
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+          <div className="mt-4 grid grid-cols-3 gap-3">
             {[
               { label: "Pedidos totales", value: orders.length },
               { label: "En proceso", value: activeShipments },
@@ -926,14 +926,6 @@ export default function AccountProfileForm({
                 </p>
               </div>
             ))}
-            <button
-              type="button"
-              onClick={() => setShowFullOrderHistory((current) => !current)}
-              title={`${paidOrders} compra${paidOrders === 1 ? "" : "s"} confirmada${paidOrders === 1 ? "" : "s"} de ${orders.length}`}
-              className="col-span-3 rounded-full border border-[#16384f]/20 px-5 py-3 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white md:col-span-1"
-            >
-              {showFullOrderHistory ? "Ver solo recientes" : "Ver historial completo"}
-            </button>
           </div>
 
           {orders.length === 0 ? (

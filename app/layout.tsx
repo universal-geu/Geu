@@ -9,12 +9,15 @@ import { SalesSettingsProvider } from "./components/sales-settings-provider";
 import HeaderShell from "./components/header-shell";
 import CartDrawer from "./components/cart-drawer";
 import WhatsAppFloatButton from "./components/whatsapp-float-button";
+import LiveTextEditor from "./components/live-text-editor";
 import { getProducts } from "@/lib/products";
 import { getAllCategories } from "@/lib/categories";
 import { getDevAdminUserById, getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import { getCartItemsForUser } from "@/lib/cart";
 import { getAllWhatsAppNumbers, getAllSalesModes } from "@/lib/site-settings";
+import { getLiveTextEditDivision, getSiteTexts } from "@/lib/site-texts";
+import { getLiveEditableTexts } from "@/lib/text-slots";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +48,7 @@ export default async function RootLayout({
   // Promise.all collapses that to the duration of the slowest one — this
   // runs on every request (force-dynamic, no shared layout across brands),
   // so it was on the critical path of every single page load.
-  const [initialProducts, initialCategories, whatsappNumbers, salesModes, requestHeaders, session] =
+  const [initialProducts, initialCategories, whatsappNumbers, salesModes, requestHeaders, session, liveTextEditDivision] =
     await Promise.all([
       getProducts(),
       getAllCategories(),
@@ -53,7 +56,11 @@ export default async function RootLayout({
       getAllSalesModes(),
       headers(),
       getSessionFromCookies(),
+      getLiveTextEditDivision(),
     ]);
+  const liveEditableTexts = liveTextEditDivision
+    ? getLiveEditableTexts(await getSiteTexts(), liveTextEditDivision)
+    : null;
   const host = requestHeaders.get("host");
   const siteOrigin = host ? `${host.startsWith("localhost") ? "http" : "https"}://${host}` : "";
   let currentUser = null;
@@ -104,6 +111,9 @@ export default async function RootLayout({
                 {children}
                 <CartDrawer />
                 <WhatsAppFloatButton whatsappNumbers={whatsappNumbers} />
+                {liveTextEditDivision && liveEditableTexts && (
+                  <LiveTextEditor division={liveTextEditDivision} texts={liveEditableTexts} />
+                )}
               </CartProvider>
             </SalesSettingsProvider>
           </CategoriesProvider>

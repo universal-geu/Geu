@@ -213,7 +213,13 @@ model OrderItem {
   productId    String
   variantSku   String?
   variantLabel String?
+  // Unit credited with the sale (the storefront it was bought from when the
+  // product is cross-listed there, else the product's owner).
   division     Division @default(Cauchos)
+  // Unit that owns the product (and its stock). Differs from `division` for
+  // a cross-listed product bought in another unit's storefront — the order
+  // then reaches both admins.
+  ownerDivision Division?
   name         String
   image        String
   unitPrice    Int
