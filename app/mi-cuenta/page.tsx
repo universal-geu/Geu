@@ -3,18 +3,10 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrdersForUser } from "@/lib/orders";
 import { getQuotesForUser } from "@/lib/quotes";
 import { getUserById } from "@/lib/users";
-import { getDivisionFromBrandParam, type DivisionName } from "@/lib/divisions";
-import { getSiteImages, resolveImage } from "@/lib/site-images";
+import { getDivisionFromBrandParam } from "@/lib/divisions";
 import AccountProfileForm from "./profile-form";
 
 export const dynamic = "force-dynamic";
-
-const ORDERS_BANNER_KEY: Partial<Record<DivisionName, string>> = {
-  Cauchos: "mi-cuenta-banner",
-  Import: "import-mi-cuenta-banner",
-  Energy: "energy-mi-cuenta-banner",
-  Plastic: "plastic-mi-cuenta-banner",
-};
 
 export default async function MiCuentaPage({
   searchParams,
@@ -39,16 +31,12 @@ export default async function MiCuentaPage({
   const { brand } = await searchParams;
   const division = brand ? getDivisionFromBrandParam(brand) : user.division ?? "Cauchos";
 
-  const bannerKey = ORDERS_BANNER_KEY[division];
-  const ordersBannerSrc = bannerKey ? resolveImage(bannerKey, await getSiteImages()) : null;
-
   return (
     <AccountProfileForm
       user={user}
       orders={orders}
       quotes={quotes}
       division={division}
-      ordersBannerSrc={ordersBannerSrc}
     />
   );
 }

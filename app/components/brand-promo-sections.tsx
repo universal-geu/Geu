@@ -35,6 +35,9 @@ type FeaturedSectionProps = {
   surface?: "light" | "dark";
   compact?: boolean;
   maxWidth?: string;
+  // Proporción fija de la tarjeta (p. ej. "aspect-[3/1]") para banners con texto
+  // integrado en la imagen, que se cortan con la altura fija por defecto.
+  aspectClass?: string;
 };
 
 type ClosingBannerProps = {
@@ -107,6 +110,7 @@ export function BrandFeaturedSection({
   surface = "light",
   compact = false,
   maxWidth,
+  aspectClass,
 }: FeaturedSectionProps) {
   const isDark = surface === "dark";
   const containerClass = compact ? "mx-auto px-5 py-7 md:px-8" : "mx-auto px-5 py-10 md:px-8";
@@ -127,7 +131,9 @@ export function BrandFeaturedSection({
   const itemWidthClass = compact
     ? "w-[85vw] shrink-0 snap-start sm:w-auto sm:shrink"
     : "w-[85vw] shrink-0 snap-start lg:w-auto lg:shrink";
-  const cardClass = compact
+  const cardClass = aspectClass
+    ? `group block ${aspectClass} overflow-hidden rounded-[4px] bg-[#071225] shadow-[0_12px_28px_rgba(15,23,42,0.1)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(15,23,42,0.16)]`
+    : compact
     ? "group block aspect-[18/5] overflow-hidden rounded-[4px] bg-[#071225] shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(15,23,42,0.12)]"
     : "group block h-[190px] overflow-hidden rounded-[4px] bg-[#071225] shadow-[0_12px_28px_rgba(15,23,42,0.1)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(15,23,42,0.16)] sm:h-[230px] lg:h-[215px]";
 

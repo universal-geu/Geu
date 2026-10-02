@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import GusOrderRunner from "../components/gus-order-runner";
 import { useRouter } from "next/navigation";
@@ -374,18 +373,27 @@ function OrderProgressTimeline({ order }: { order: AccountOrder }) {
   );
 }
 
+// Banner de "Mis pedidos": cada unidad solo con tonos de su propio color de marca
+// (oscuro → color de marca → claro).
+const ORDERS_BANNER_GRADIENT: Record<DivisionName, string> = {
+  Cauchos: "linear-gradient(90deg, #0a3a8c 0%, #075ed8 55%, #3d8bf0 100%)",
+  Import: "linear-gradient(90deg, #8f0b0b 0%, #e31313 55%, #f25454 100%)",
+  Innovation: "linear-gradient(90deg, #035f72 0%, #0498b4 55%, #3cc3dc 100%)",
+  Energy: "linear-gradient(90deg, #7a6000 0%, #b38f00 55%, #d4a900 100%)",
+  Plastic: "linear-gradient(90deg, #3a3d43 0%, #565c64 55%, #8b919a 100%)",
+  GEU: "linear-gradient(90deg, #0a3a8c 0%, #075ed8 55%, #3d8bf0 100%)",
+};
+
 export default function AccountProfileForm({
   user,
   orders,
   quotes,
   division: divisionProp,
-  ordersBannerSrc,
 }: {
   user: AccountUser;
   orders: AccountOrder[];
   quotes: AccountQuote[];
   division?: DivisionName;
-  ordersBannerSrc?: string | null;
 }) {
   const router = useRouter();
   const division = divisionProp ?? user.division ?? "Cauchos";
@@ -897,36 +905,25 @@ export default function AccountProfileForm({
         {activePanel === "orders" && (
           <section className="rounded-[2rem] bg-white p-5 shadow-lg shadow-black/10 md:p-6">
           <div
-            className={`relative overflow-hidden rounded-[1.5rem] ${
-              ordersBannerSrc ? "bg-[#0b1624] px-6 py-7 text-white md:px-8" : ""
-            }`}
+            className="relative overflow-hidden rounded-[1.5rem] px-6 py-7 text-white md:px-8"
+            style={{ background: ORDERS_BANNER_GRADIENT[division] }}
           >
-            {ordersBannerSrc && (
-              <>
-                <Image src={ordersBannerSrc} alt={brand.label} fill sizes="(min-width: 1280px) 1216px, 100vw" className="object-cover" priority />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
-              </>
-            )}
             <div className="relative flex flex-col items-start gap-4">
               <div>
-                <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${ordersBannerSrc ? "text-white/75" : "text-[var(--brand-accent)]"}`}>
+                <p className={`text-xs font-semibold uppercase tracking-[0.2em] text-white/75`}>
                   Mis pedidos
                 </p>
-                <h2 className={`mt-1 text-2xl font-bold md:text-3xl ${ordersBannerSrc ? "text-white" : "text-[#16384f]"}`}>
+                <h2 className={`mt-1 text-2xl font-bold md:text-3xl text-white`}>
                   Historial de compras
                 </h2>
-                <p className={`mt-1 max-w-2xl text-sm leading-6 ${ordersBannerSrc ? "text-white/80" : "text-slate-600"}`}>
+                <p className={`mt-1 max-w-2xl text-sm leading-6 text-white/80`}>
                   Tus pedidos con su estado y los productos incluidos.
                 </p>
               </div>
 
               <Link
                 href={brand.basePath}
-                className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-colors duration-200 ${
-                  ordersBannerSrc
-                    ? "bg-white text-[#16384f] hover:bg-white/85"
-                    : "border border-[#16384f]/20 text-[#16384f] hover:bg-[#16384f] hover:text-white"
-                }`}
+                className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#16384f] transition-colors duration-200 hover:bg-white/85"
               >
                 Seguir comprando
               </Link>

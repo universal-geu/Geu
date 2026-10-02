@@ -27,14 +27,20 @@ const GREETINGS = [
   "M24: la estructura que se adapta a tu terreno.",
 ];
 
-const WIDGET_SIZE = 190;
+// En celular la mascota tapa mucho contenido, así que se muestra más pequeña.
+const WIDGET_SIZE_DESKTOP = 190;
+const WIDGET_SIZE_MOBILE = 120;
+
+function getWidgetSize() {
+  return window.innerWidth < 768 ? WIDGET_SIZE_MOBILE : WIDGET_SIZE_DESKTOP;
+}
 const STORAGE_KEY = "yulo-widget-position";
 // Below the lg breakpoint the page shows MobileBottomNav, so keep Yulo above it.
 const MOBILE_NAV_HEIGHT = 72;
 
 function getMaxY() {
   const navReserve = window.innerWidth < 1024 ? MOBILE_NAV_HEIGHT : 0;
-  return window.innerHeight - WIDGET_SIZE - 8 - navReserve;
+  return window.innerHeight - getWidgetSize() - 8 - navReserve;
 }
 const WANDER_IDLE_MS = 15000;
 const WANDER_CHECK_MS = 4000;
@@ -232,7 +238,7 @@ export default function YuloWidget() {
   // hydration always matches before this effect fires the one-time update.
   useEffect(() => {
     const clamp = (x: number, y: number) => ({
-      x: Math.min(Math.max(x, 8), window.innerWidth - WIDGET_SIZE - 8),
+      x: Math.min(Math.max(x, 8), window.innerWidth - getWidgetSize() - 8),
       y: Math.min(Math.max(y, 8), getMaxY()),
     });
 
@@ -249,7 +255,7 @@ export default function YuloWidget() {
     }
 
     setPosition(
-      clamp(window.innerWidth - WIDGET_SIZE - 28, getMaxY() - 20),
+      clamp(window.innerWidth - getWidgetSize() - 28, getMaxY() - 20),
     );
   }, []);
 
@@ -300,7 +306,7 @@ export default function YuloWidget() {
 
     const distance = 90 + Math.random() * 70;
     const goLeft = Math.random() > 0.5;
-    const maxX = window.innerWidth - WIDGET_SIZE - 8;
+    const maxX = window.innerWidth - getWidgetSize() - 8;
     const startX = currentPosition.x;
     const targetX = goLeft ? Math.max(8, startX - distance) : Math.min(maxX, startX + distance);
     if (Math.abs(targetX - startX) < 20) return;
@@ -402,7 +408,7 @@ export default function YuloWidget() {
 
     const nextX = Math.min(
       Math.max(event.clientX - dragOffset.current.x, 8),
-      window.innerWidth - WIDGET_SIZE - 8,
+      window.innerWidth - getWidgetSize() - 8,
     );
     const nextY = Math.min(
       Math.max(event.clientY - dragOffset.current.y, 8),
@@ -439,6 +445,8 @@ export default function YuloWidget() {
   };
 
   if (!position) return null;
+  // Solo se llega aquí en el cliente (position se fija en un efecto), así que window existe.
+  const widgetSize = getWidgetSize();
 
   const frames =
     mode === "wave"
@@ -468,7 +476,7 @@ export default function YuloWidget() {
         if (event.key === "Enter" || event.key === " ") greet();
       }}
       className="fixed z-[70] cursor-grab touch-none select-none active:cursor-grabbing"
-      style={{ left: position.x, top: position.y, width: WIDGET_SIZE, height: WIDGET_SIZE }}
+      style={{ left: position.x, top: position.y, width: widgetSize, height: widgetSize }}
     >
       {bubbleText && (
         <div className="pointer-events-none absolute -top-3 left-1/2 w-52 -translate-x-1/2 -translate-y-full rounded-2xl rounded-br-none bg-white px-3.5 py-2.5 text-center text-[11px] font-bold leading-snug text-slate-900 shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
@@ -478,8 +486,8 @@ export default function YuloWidget() {
       <Image
         src={src}
         alt="El hijo de Yulo, mascota de GEU Structure"
-        width={WIDGET_SIZE}
-        height={WIDGET_SIZE}
+        width={widgetSize}
+        height={widgetSize}
         draggable={false}
         priority
         className="h-full w-full object-contain object-bottom drop-shadow-[0_10px_14px_rgba(0,0,0,0.35)]"
@@ -492,7 +500,7 @@ export default function YuloWidget() {
           onPointerDown={(event) => event.stopPropagation()}
           onPointerUp={(event) => event.stopPropagation()}
           onClick={toggleListening}
-          className={`absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white text-white shadow-[0_6px_14px_rgba(0,0,0,0.35)] transition-colors duration-150 ${
+          className={`absolute bottom-1 right-1 flex h-7 w-7 items-center md:bottom-2 md:right-2 md:h-9 md:w-9 justify-center rounded-full border-2 border-white text-white shadow-[0_6px_14px_rgba(0,0,0,0.35)] transition-colors duration-150 ${
             voiceStatus === "listening"
               ? "animate-pulse bg-[#e4002b]"
               : voiceStatus === "thinking" || voiceStatus === "speaking"

@@ -310,6 +310,7 @@ export default async function PlasticPage() {
         items={plasticFeaturedResolved}
         siteImages={siteImages}
         maxWidth="1632px"
+        aspectClass="aspect-[3/1]"
       />
 
       <BrandClosingBanner

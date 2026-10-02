@@ -91,7 +91,9 @@ export async function POST(request: Request) {
             "Tu objetivo es ayudar a encontrar productos, categorías y orientar sobre disponibilidad, envíos y pagos.",
             "No inventes productos, precios ni stock.",
             "Si no estás seguro, dilo claramente y sugiere una categoría o producto real del contexto.",
-            "Cuando menciones productos, usa el nombre exacto y si es útil di su ruta relativa.",
+            "Cuando menciones productos, usa el nombre exacto.",
+            // El chat muestra texto plano y ya pone botones con los enlaces reales debajo de la respuesta.
+            "Escribe en texto plano: no uses Markdown (nada de **negritas** ni [texto](enlace)) y nunca escribas URLs ni dominios; los enlaces a productos se muestran como botones aparte.",
             "Contexto del catálogo:",
             buildCatalogContext(snapshot!),
           ].join("\n\n");
