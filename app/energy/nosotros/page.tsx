@@ -119,14 +119,14 @@ export default async function EnergyNosotrosPage() {
       </section>
 
       <section className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto grid max-w-[1632px] grid-cols-2 gap-3 px-5 py-10 md:grid-cols-4 md:px-8">
+        <div className="mx-auto grid max-w-[1632px] grid-cols-1 gap-4 px-5 py-10 sm:grid-cols-2 md:grid-cols-4 md:gap-3 md:px-8">
           {destacadas.map((image) => (
             <div key={image.src} className="relative aspect-[4/3] overflow-hidden rounded-[6px]">
               <Image
                 src={image.src}
                 alt={image.alt}
                 fill
-                sizes="(min-width: 768px) 25vw, 50vw"
+                sizes="(min-width: 768px) 25vw, (min-width: 640px) 50vw, 100vw"
                 className="object-cover"
               />
             </div>

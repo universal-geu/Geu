@@ -1026,17 +1026,20 @@ export default function AccountProfileForm({
 
                   {expandedOrderId === order.id && (
                     <div className="border-t border-black/8 bg-white/60 px-4 pb-5 pt-4">
-                      <div className="mb-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.12em]">
-                        <span className="rounded-full bg-[#16384f] px-3 py-1 text-white">
-                          {getOrderStatusLabel(order.status)}
+                      {/* Texto informativo, no botones: sin fondos ni bordes para que no parezcan clicables. */}
+                      <p className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#5d6167]">
+                        <span>
+                          Pedido: <span className="font-semibold text-[#16384f]">{getOrderStatusLabel(order.status)}</span>
                         </span>
-                        <span className="rounded-full bg-[#eef5ff] px-3 py-1 text-[var(--brand-accent)]">
-                          {getPaymentStatusLabel(order.paymentStatus)}
+                        <span aria-hidden="true" className="text-[#c4c6ca]">·</span>
+                        <span>
+                          Pago: <span className="font-semibold text-[#16384f]">{getPaymentStatusLabel(order.paymentStatus)}</span>
                         </span>
-                        <span className="rounded-full bg-[#effaf2] px-3 py-1 text-[#1f6b39]">
-                          {getShippingStatusLabel(order.shippingStatus)}
+                        <span aria-hidden="true" className="text-[#c4c6ca]">·</span>
+                        <span>
+                          Envío: <span className="font-semibold text-[#16384f]">{getShippingStatusLabel(order.shippingStatus)}</span>
                         </span>
-                      </div>
+                      </p>
                       <OrderProgressTimeline order={order} />
 
                       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">

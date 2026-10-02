@@ -281,12 +281,6 @@ export default async function CauchosPage() {
                 {t("cauchos-ofertas-titulo")}
               </h2>
             </div>
-            <Link
-              href="/cauchos/categoria/linea-cauchos"
-              className="inline-flex rounded-full border border-[#075ed8] px-5 py-3 text-sm font-black text-[#075ed8] transition hover:bg-[#075ed8] hover:text-white"
-            >
-              Ver todos
-            </Link>
           </div>
 
           <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-4">

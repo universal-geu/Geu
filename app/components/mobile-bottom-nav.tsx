@@ -130,7 +130,16 @@ export default function MobileBottomNav({
       : `/mi-cuenta${brandQuery}`
     : `/login?next=/mi-cuenta${accountBrand ? `&brand=${accountBrand}` : ""}`;
   const accountLabel = user ? "Cuenta" : "Ingresar";
+  // Cada pestaña se pinta con el color de la unidad cuando estás en esa sección.
   const isHomeActive = pathname === homeHref;
+  const categoriasBase = `${homeHref === "/" ? "" : homeHref}/categoria`;
+  const isCategoriasActive =
+    pathname.startsWith(categoriasBase) || (!!categoriasHref && pathname.startsWith(categoriasHref));
+  const isCartActive = pathname.startsWith("/carrito") || pathname.startsWith("/checkout");
+  const isAccountActive = ["/mi-cuenta", "/admin", "/login", "/registro"].some((route) =>
+    pathname.startsWith(route),
+  );
+  const isMoreActive = showMore || moreItems.some((item) => pathname === item.href);
 
   return (
     <>
@@ -181,7 +190,7 @@ export default function MobileBottomNav({
             <Link
               href={categoriasHref}
               className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
-              style={{ color: inactiveColor }}
+              style={{ color: isCategoriasActive ? accent : inactiveColor }}
             >
               <GridIcon />
               {categoriasLabel}
@@ -191,7 +200,7 @@ export default function MobileBottomNav({
               type="button"
               onClick={onCategoriasClick}
               className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
-              style={{ color: inactiveColor }}
+              style={{ color: isCategoriasActive ? accent : inactiveColor }}
             >
               <GridIcon />
               {categoriasLabel}
@@ -202,7 +211,7 @@ export default function MobileBottomNav({
             <Link
               href={cart.href}
               className="relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
-              style={{ color: inactiveColor }}
+              style={{ color: isCartActive ? accent : inactiveColor }}
             >
               <span className="relative">
                 <CartIcon />
@@ -223,7 +232,7 @@ export default function MobileBottomNav({
             <Link
               href={accountHref}
               className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
-              style={{ color: inactiveColor }}
+              style={{ color: isAccountActive ? accent : inactiveColor }}
             >
               <UserIcon />
               {accountLabel}
@@ -245,7 +254,7 @@ export default function MobileBottomNav({
               type="button"
               onClick={() => setShowMore((value) => !value)}
               className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
-              style={{ color: showMore ? accent : inactiveColor }}
+              style={{ color: isMoreActive ? accent : inactiveColor }}
             >
               <MoreIcon />
               Más
