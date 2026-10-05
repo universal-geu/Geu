@@ -804,19 +804,6 @@ export default function CheckoutForm({
                 </datalist>
               </div>
 
-              <div>
-                <label htmlFor="addressLine2" className="mb-2 block text-sm font-medium text-slate-700">
-                  Complemento de dirección
-                </label>
-                <input
-                  id="addressLine2"
-                  value={form.addressLine2}
-                  onChange={handleChange}
-                  placeholder="Apto, interior, piso..."
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
-                />
-              </div>
-
               {hasSavedAddress && (
                 <div className="md:col-span-2 rounded-[1.25rem] border border-black/8 bg-[#fafaf9] p-4">
                   <label className="flex cursor-pointer items-start gap-3">
@@ -849,6 +836,19 @@ export default function CheckoutForm({
                   onChange={handleChange}
                   required
                   placeholder="Calle, carrera, barrio o punto de entrega"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="addressLine2" className="mb-2 block text-sm font-medium text-slate-700">
+                  Complemento de dirección
+                </label>
+                <input
+                  id="addressLine2"
+                  value={form.addressLine2}
+                  onChange={handleChange}
+                  placeholder="Apto, interior, piso..."
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
               </div>

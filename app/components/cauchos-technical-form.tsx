@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
@@ -403,7 +404,7 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
         {triggerLabel}
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/60 px-3 py-3 sm:px-4 sm:py-6 md:items-center"
           style={{ "--brand-accent": "#075ed8", "--brand-accent-hover": "#054eb3" } as React.CSSProperties}
@@ -636,7 +637,8 @@ export default function CauchosTechnicalForm({ triggerLabel = "Diseña tu pieza 
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
