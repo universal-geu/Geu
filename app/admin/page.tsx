@@ -861,8 +861,8 @@ function AdminOrderProgress({ order }: { order: AdminOrder }) {
   ];
 
   return (
-    <div className="rounded-[1.4rem] border border-black/8 bg-[#fafaf9] px-5 py-5">
-      <div className="flex items-center justify-between gap-3">
+    <div className="rounded-[1.4rem] border border-black/8 bg-[#fafaf9] px-4 py-5 sm:px-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
             Flujo del pedido
@@ -877,7 +877,7 @@ function AdminOrderProgress({ order }: { order: AdminOrder }) {
       </div>
 
       <div className="mt-5 overflow-x-auto">
-        <div className="relative min-w-[620px] px-1 py-2">
+        <div className="relative px-1 py-2 sm:min-w-[620px]">
           <GusOrderRunner
             key={activeStep}
             activeStep={activeStep}
@@ -905,7 +905,7 @@ function AdminOrderProgress({ order }: { order: AdminOrder }) {
               return (
                 <div
                   key={step.label}
-                  className="relative flex min-w-[136px] flex-1 flex-col items-center text-center"
+                  className="relative flex min-w-0 flex-1 flex-col items-center text-center sm:min-w-[136px]"
                 >
                   <span
                     className={`relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border ${
@@ -918,14 +918,14 @@ function AdminOrderProgress({ order }: { order: AdminOrder }) {
                   </span>
                   <div className="mt-3">
                     <p
-                      className={`text-sm font-semibold ${
+                      className={`text-[11px] font-semibold leading-4 sm:text-sm ${
                         isCompleted ? "text-[#16384f]" : "text-[#8b8d91]"
                       }`}
                     >
                       {step.label}
                     </p>
                     {isCurrent && (
-                      <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-[var(--admin-accent)]">
+                      <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--admin-accent)] sm:text-xs sm:tracking-[0.14em]">
                         Actual
                       </p>
                     )}
@@ -1955,6 +1955,7 @@ export default function AdminPage() {
   const [isLoadingVersions, setIsLoadingVersions] = useState(false);
   const [restoringVersionId, setRestoringVersionId] = useState<string | null>(null);
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
@@ -4408,17 +4409,36 @@ export default function AdminPage() {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-50 border-b border-slate-200 bg-white text-[#111827] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
             <div className="mx-auto grid min-h-[74px] max-w-[1500px] items-center gap-4 px-5 py-3 md:grid-cols-[auto_1fr_auto] md:px-8">
-              <Link href={adminBrand.siteHref} className="flex shrink-0 items-center md:hidden">
-                <Image
-                  src={adminBrand.logo}
-                  alt={adminBrand.logoAlt}
-                  width={2518}
-                  height={420}
-                  priority
-                  className="h-auto object-contain"
-                  style={{ width: "180px", maxWidth: "100%" }}
-                />
-              </Link>
+              <div className="flex items-center justify-between gap-3 md:hidden">
+                <Link href={adminBrand.siteHref} className="flex min-w-0 shrink items-center">
+                  <Image
+                    src={adminBrand.logo}
+                    alt={adminBrand.logoAlt}
+                    width={2518}
+                    height={420}
+                    priority
+                    className="h-auto object-contain"
+                    style={{ width: "180px", maxWidth: "100%" }}
+                  />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  aria-label="Abrir menú del panel"
+                  aria-expanded={isMobileMenuOpen}
+                  className="flex h-11 shrink-0 items-center gap-2 rounded-full border border-slate-300 px-4 text-xs font-black uppercase tracking-[0.06em] text-slate-700 transition-colors duration-200 hover:border-[var(--admin-accent)] hover:text-[var(--admin-accent)]"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M4 7h16M4 12h16M4 17h16" />
+                  </svg>
+                  Menú
+                  {pendingQuotesCount > 0 && (
+                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#fff1f1] px-1 text-[10px] font-black text-[#c53b3b]">
+                      {pendingQuotesCount}
+                    </span>
+                  )}
+                </button>
+              </div>
 
               <form
                 className="flex min-h-11 overflow-hidden rounded-full border border-slate-300 bg-white transition-shadow duration-200 focus-within:border-[var(--admin-accent)] focus-within:shadow-[0_0_0_3px_rgba(var(--admin-accent-rgb),0.14)]"
@@ -4446,7 +4466,7 @@ export default function AdminPage() {
                 </button>
               </form>
 
-              <div className="flex items-center justify-between gap-4 text-sm text-slate-700 md:justify-end">
+              <div className="hidden items-center justify-end gap-4 text-sm text-slate-700 md:flex">
                 {adminName && (
                   <span className="hidden items-center gap-2.5 lg:flex">
                     <span
@@ -4486,37 +4506,163 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <nav className="border-t border-slate-200 bg-white md:hidden">
-              <div className="mx-auto flex max-w-[1500px] items-center gap-1 overflow-x-auto px-5">
-                {sidebarNavItems.map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={item.onClick}
-                    className="flex min-w-max items-center gap-1.5 border-b-2 px-3 py-3 text-[11px] font-black uppercase tracking-[0.04em] transition-colors duration-200"
-                    style={{
-                      borderColor: item.active ? adminBrand.accent : "transparent",
-                      color: item.active ? adminBrand.accent : "#334155",
-                    }}
-                  >
-                    <span>{item.label}</span>
-                    {"count" in item && Boolean(item.count) && (
-                      <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#fff1f1] px-1 text-[10px] font-black text-[#c53b3b]">
-                        {item.count}
-                      </span>
-                    )}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => router.push(adminBrand.productsHref)}
-                  className="flex min-w-max items-center border-b-2 border-transparent px-3 py-3 text-[11px] font-black uppercase tracking-[0.04em] text-slate-700 transition-colors duration-200"
-                >
-                  Catálogo
-                </button>
-              </div>
-            </nav>
           </header>
+
+          {isMobileMenuOpen && (
+            <div className="fixed inset-0 z-[120] md:hidden" role="dialog" aria-modal="true" aria-label="Menú del panel">
+              <button
+                type="button"
+                aria-label="Cerrar menú"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="absolute inset-0 bg-slate-950/45"
+              />
+              <div className="absolute inset-y-0 left-0 flex w-[84%] max-w-xs flex-col bg-white shadow-[0_24px_60px_rgba(15,23,42,0.3)]">
+                <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-5">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-black text-white"
+                      style={{ backgroundColor: adminBrand.accent }}
+                    >
+                      {adminBrand.label.charAt(0)}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-black text-[#1f2328]">Panel maestro</span>
+                      <span className="block truncate text-xs font-semibold text-[#8b8d91]">{adminBrand.label}</span>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    aria-label="Cerrar menú"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M6 6l12 12M18 6 6 18" />
+                    </svg>
+                  </button>
+                </div>
+
+                <nav className="flex-1 overflow-y-auto px-3 py-4">
+                  <ul className="space-y-1">
+                    {sidebarNavItems.map((item) => {
+                      const Icon = SIDEBAR_ICONS[item.key];
+                      const isSettings = item.key === "settings";
+                      return (
+                        <li key={item.key}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (isSettings) {
+                                setIsSettingsMenuOpen((value) => !value);
+                                return;
+                              }
+                              item.onClick();
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className={`flex w-full items-center justify-between gap-2 rounded-xl px-4 py-3 text-left text-sm font-bold transition-colors duration-200 ${
+                              item.active ? "text-white" : "text-slate-700 hover:bg-[var(--admin-accent-soft)]"
+                            }`}
+                            style={item.active ? { backgroundColor: adminBrand.accent } : undefined}
+                          >
+                            <span className="flex items-center gap-2.5">
+                              {Icon && <Icon />}
+                              {item.label}
+                            </span>
+                            {isSettings ? (
+                              <span aria-hidden="true" className={`text-xs transition-transform duration-200 ${isSettingsMenuOpen ? "rotate-180" : ""}`}>
+                                ▾
+                              </span>
+                            ) : (
+                              "count" in item &&
+                              Boolean(item.count) && (
+                                <span
+                                  className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-black ${
+                                    item.active ? "bg-white/20 text-white" : "bg-[#fff1f1] text-[#c53b3b]"
+                                  }`}
+                                >
+                                  {item.count}
+                                </span>
+                              )
+                            )}
+                          </button>
+                          {isSettings && isSettingsMenuOpen && (
+                            <ul className="mt-1 space-y-0.5 border-l border-slate-200 pl-3 ml-4">
+                              {settingsSubItems.map((subItem) => {
+                                const SubIcon = SETTINGS_SUB_ICONS[subItem.key];
+                                return (
+                                  <li key={subItem.key}>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        subItem.onClick();
+                                        setIsMobileMenuOpen(false);
+                                      }}
+                                      className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-semibold ${
+                                        subItem.active ? "bg-[var(--admin-accent-soft)]" : "text-slate-600"
+                                      }`}
+                                      style={subItem.active ? { color: adminBrand.accent } : undefined}
+                                    >
+                                      <SubIcon />
+                                      {subItem.label}
+                                    </button>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      );
+                    })}
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          router.push(adminBrand.productsHref);
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-4 py-3 text-left text-sm font-bold text-slate-700"
+                      >
+                        <CatalogIcon />
+                        Catálogo
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+
+                <div className="space-y-2 border-t border-slate-200 p-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setShowDivisionSwitcher(true);
+                      void loadDivisionOverview();
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" />
+                    </svg>
+                    Cambiar de unidad
+                  </button>
+                  <Link
+                    href={adminBrand.siteHref}
+                    className="flex w-full items-center justify-center rounded-xl border px-4 py-2.5 text-sm font-black uppercase tracking-[0.06em]"
+                    style={{ borderColor: adminBrand.accent, color: adminBrand.accent }}
+                  >
+                    Ver sitio
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-600"
+                  >
+                    <LogoutIcon />
+                    Cerrar sesión
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <section className="mx-auto w-full max-w-[1440px] px-6 py-12">
         <div className="space-y-8">
@@ -5786,8 +5932,8 @@ export default function AdminPage() {
                             >
                               <span className="text-sm font-semibold tabular-nums text-[#8b8d91]">{index + 1}</span>
                               <div className="min-w-0">
-                                <p className="flex items-center gap-2 truncate text-sm font-semibold text-[#1f2328]">
-                                  <span className="truncate">{product.name}</span>
+                                <p className="flex flex-col-reverse items-start gap-1 text-sm font-semibold text-[#1f2328] sm:flex-row sm:items-center sm:gap-2">
+                                  <span className="max-w-full truncate">{product.name}</span>
                                   {index === 0 && (
                                     <span className="shrink-0 rounded-full bg-[var(--admin-accent-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#16384f]">
                                       Más vendido
@@ -5860,18 +6006,18 @@ export default function AdminPage() {
                       ) : (
                         <ul className="mt-2 divide-y divide-black/6">
                           {salesReport.recentOrders.map((order) => (
-                            <li key={order.id} className="flex items-center gap-3 py-2.5 text-sm">
+                            <li key={order.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2.5 text-sm sm:flex-nowrap">
                               <span className="w-14 shrink-0 font-semibold tabular-nums text-[#16384f]">
                                 {formatOrderCode(order.orderNumber)}
                               </span>
-                              <div className="min-w-0 flex-1">
+                              <div className="min-w-0 flex-1 basis-[calc(100%-4.25rem)] sm:basis-0">
                                 <p className="truncate font-medium text-[#1f2328]">{order.customerName}</p>
                                 <p className="text-xs text-[#8b8d91]">
                                   {new Date(order.createdAt).toLocaleDateString("es-CO")} · {order.totalItems} producto{order.totalItems === 1 ? "" : "s"}
                                 </p>
                               </div>
                               <span
-                                className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                className={`ml-[4.25rem] shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold sm:ml-0 ${
                                   order.paymentStatus === "PAID"
                                     ? "bg-[#effaf2] text-[#1f6b39]"
                                     : order.paymentStatus === "FAILED"
@@ -5881,7 +6027,7 @@ export default function AdminPage() {
                               >
                                 {getPaymentStatusLabel(order.paymentStatus)}
                               </span>
-                              <span className="w-24 shrink-0 text-right font-semibold tabular-nums text-[#16384f]">
+                              <span className="ml-auto shrink-0 text-right font-semibold tabular-nums text-[#16384f] sm:w-24">
                                 {formatCurrency(order.subtotal)}
                               </span>
                             </li>
@@ -7020,11 +7166,11 @@ export default function AdminPage() {
                         );
 
                         const Row = ({ label, children }: { label: string; children: ReactNode }) => (
-                          <div className="flex items-start justify-between gap-6 py-2.5 first:pt-0 last:pb-0">
-                            <dt className="w-40 shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9a9da2]">
+                          <div className="flex flex-col gap-1 py-2.5 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+                            <dt className="pt-0.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9a9da2] sm:w-40 sm:shrink-0">
                               {label}
                             </dt>
-                            <dd className="flex-1 text-sm font-semibold leading-6 text-[#1f2328]">{children}</dd>
+                            <dd className="min-w-0 flex-1 break-words text-sm font-semibold leading-6 text-[#1f2328]">{children}</dd>
                           </div>
                         );
 

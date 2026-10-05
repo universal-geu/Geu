@@ -49,7 +49,7 @@ export default function CitySelect({
         required={required}
         className={`bg-white ${className}`}
       >
-        <option value="">{disabled ? "Primero selecciona un departamento" : "Selecciona tu ciudad"}</option>
+        <option value="">{disabled ? "Elige el departamento" : "Selecciona tu ciudad"}</option>
         {options.map((city) => (
           <option key={city} value={city}>
             {city}

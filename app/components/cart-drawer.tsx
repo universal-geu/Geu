@@ -92,8 +92,10 @@ export default function CartDrawer() {
         aria-modal="true"
         aria-label="Carrito de compras"
         style={{ "--brand-accent": brand.accent } as React.CSSProperties}
-        className={`fixed inset-y-0 right-0 z-[61] flex w-full max-w-[420px] flex-col bg-white shadow-[-24px_0_60px_rgba(2,8,18,0.24)] transition-transform duration-300 ease-out ${
-          isDrawerOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-y-0 right-0 z-[61] flex w-full max-w-[420px] flex-col bg-white transition-[transform,box-shadow,visibility] duration-300 ease-out ${
+          isDrawerOpen
+            ? "visible translate-x-0 shadow-[-24px_0_60px_rgba(2,8,18,0.24)]"
+            : "invisible translate-x-full shadow-none"
         }`}
       >
         <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-6 py-5">

@@ -48,6 +48,13 @@ body {
     color: inherit;
     text-decoration: none;
   }
+
+  /* En celular muchas grillas solo definen columnas desde md/xl; sin esto, un
+     texto largo con truncate ensancha la columna y la página se recorta a la
+     derecha. Las utilidades (min-w-max, etc.) siguen pudiendo sobrescribirlo. */
+  .grid > * {
+    min-width: 0;
+  }
 }
 
 ::selection {
