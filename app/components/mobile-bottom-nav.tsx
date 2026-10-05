@@ -131,15 +131,18 @@ export default function MobileBottomNav({
     : `/login?next=/mi-cuenta${accountBrand ? `&brand=${accountBrand}` : ""}`;
   const accountLabel = user ? "Cuenta" : "Ingresar";
   // Cada pestaña se pinta con el color de la unidad cuando estás en esa sección.
-  const isHomeActive = pathname === homeHref;
+  // Con el menú "Más" abierto solo se resalta "Más", para que no queden dos pestañas activas.
+  const isItemActive = (href: string) => pathname === href.split(/[?#]/)[0];
+  const isHomeActive = !showMore && pathname === homeHref;
   const categoriasBase = `${homeHref === "/" ? "" : homeHref}/categoria`;
   const isCategoriasActive =
-    pathname.startsWith(categoriasBase) || (!!categoriasHref && pathname.startsWith(categoriasHref));
-  const isCartActive = pathname.startsWith("/carrito") || pathname.startsWith("/checkout");
-  const isAccountActive = ["/mi-cuenta", "/admin", "/login", "/registro"].some((route) =>
-    pathname.startsWith(route),
-  );
-  const isMoreActive = showMore || moreItems.some((item) => pathname === item.href);
+    !showMore &&
+    (pathname.startsWith(categoriasBase) || (!!categoriasHref && pathname.startsWith(categoriasHref)));
+  const isCartActive = !showMore && (pathname.startsWith("/carrito") || pathname.startsWith("/checkout"));
+  const isAccountActive =
+    !showMore &&
+    ["/mi-cuenta", "/admin", "/login", "/registro"].some((route) => pathname.startsWith(route));
+  const isMoreActive = showMore || moreItems.some((item) => isItemActive(item.href));
 
   return (
     <>
@@ -163,7 +166,13 @@ export default function MobileBottomNav({
                   key={item.href}
                   href={item.href}
                   onClick={() => setShowMore(false)}
+                  aria-current={isItemActive(item.href) ? "page" : undefined}
                   className="rounded-xl px-3 py-3 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50"
+                  style={
+                    isItemActive(item.href)
+                      ? { color: accent, backgroundColor: `color-mix(in srgb, ${accent} 10%, transparent)`, fontWeight: 700 }
+                      : undefined
+                  }
                 >
                   {item.label}
                 </Link>
@@ -244,7 +253,7 @@ export default function MobileBottomNav({
             <Link
               href={moreItems[0].href}
               className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
-              style={{ color: pathname === moreItems[0].href ? accent : inactiveColor }}
+              style={{ color: isItemActive(moreItems[0].href) ? accent : inactiveColor }}
             >
               <InfoIcon />
               {moreItems[0].label}

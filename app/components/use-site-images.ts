@@ -3,16 +3,18 @@
 import { useEffect, useState } from "react";
 import type { SiteImages } from "@/lib/image-slots";
 
-export function useSiteImages(): SiteImages {
-  const [siteImages, setSiteImages] = useState<SiteImages>({});
+type SiteImageData = { images: SiteImages; links: SiteImages };
+
+export function useSiteImageData(): SiteImageData {
+  const [data, setData] = useState<SiteImageData>({ images: {}, links: {} });
 
   useEffect(() => {
     let cancelled = false;
 
     fetch("/api/site-images")
       .then((response) => response.json())
-      .then((data: { images?: SiteImages }) => {
-        if (!cancelled && data.images) setSiteImages(data.images);
+      .then((json: { images?: SiteImages; links?: SiteImages }) => {
+        if (!cancelled && json.images) setData({ images: json.images, links: json.links ?? {} });
       })
       .catch(() => {});
 
@@ -21,5 +23,9 @@ export function useSiteImages(): SiteImages {
     };
   }, []);
 
-  return siteImages;
+  return data;
+}
+
+export function useSiteImages(): SiteImages {
+  return useSiteImageData().images;
 }

@@ -256,7 +256,6 @@ export default async function PlasticPage() {
         accent="#6b7280"
         eyebrow={t("plastic-ofertas-eyebrow")}
         title={t("plastic-ofertas-titulo")}
-        ctaHref="/plastic"
         items={plasticOffersResolved}
         siteImages={siteImages}
         maxWidth="1632px"

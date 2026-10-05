@@ -5,6 +5,7 @@ import Image from "next/image";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-locations";
+import CitySelect from "@/app/components/city-select";
 import { formatOrderCode } from "@/lib/format-order";
 import { calculateShippingCost } from "@/lib/shipping";
 import CauchosHeader from "../components/cauchos-header";
@@ -700,12 +701,12 @@ export default function CheckoutForm({
           </p>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
           <form
             onSubmit={handleSubmit}
             className="rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8"
           >
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
                 <label htmlFor="customerName" className="mb-2 block text-sm font-medium text-slate-700">
                   Nombre completo
@@ -783,25 +784,16 @@ export default function CheckoutForm({
                 <label htmlFor="city" className="mb-2 block text-sm font-medium text-slate-700">
                   Ciudad
                 </label>
-                <input
+                <CitySelect
+                  key={form.department}
                   id="city"
                   value={form.city}
-                  onChange={handleChange}
-                  list="checkout-cities"
+                  onChange={(city) => setForm((current) => ({ ...current, city }))}
+                  options={cityOptions}
                   required
                   disabled={!form.department}
-                  placeholder={
-                    form.department
-                      ? "Busca o escribe tu ciudad"
-                      : "Primero selecciona un departamento"
-                  }
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
-                <datalist id="checkout-cities">
-                  {cityOptions.map((city) => (
-                    <option key={city} value={city} />
-                  ))}
-                </datalist>
               </div>
 
               {hasSavedAddress && (
@@ -914,7 +906,7 @@ export default function CheckoutForm({
                           )}
                         </div>
 
-                        <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
                           <select
                             value={destination.department}
                             onChange={(event) =>
@@ -929,21 +921,14 @@ export default function CheckoutForm({
                               </option>
                             ))}
                           </select>
-                          <input
+                          <CitySelect
+                            key={destination.department}
                             value={destination.city}
-                            onChange={(event) =>
-                              updateDestinationField(destination.key, "city", event.target.value)
-                            }
-                            list={`destino-cities-${destination.key}`}
+                            onChange={(city) => updateDestinationField(destination.key, "city", city)}
+                            options={getCitiesForDepartment(destination.department)}
                             disabled={!destination.department}
-                            placeholder={destination.department ? "Ciudad" : "Primero elige un departamento"}
                             className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[var(--brand-accent)]"
                           />
-                          <datalist id={`destino-cities-${destination.key}`}>
-                            {getCitiesForDepartment(destination.department).map((city) => (
-                              <option key={city} value={city} />
-                            ))}
-                          </datalist>
                           <input
                             value={destination.addressLine1}
                             onChange={(event) =>

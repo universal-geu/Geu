@@ -1,12 +1,12 @@
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImageLinks, getSiteImages } from "@/lib/site-images";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET() {
-  const images = await getSiteImages();
+  const [images, links] = await Promise.all([getSiteImages(), getSiteImageLinks()]);
   return Response.json(
-    { images },
+    { images, links },
     { headers: { "Cache-Control": "public, max-age=300, stale-while-revalidate=60" } },
   );
 }

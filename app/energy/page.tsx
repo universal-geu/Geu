@@ -242,7 +242,6 @@ export default async function EnergyPage() {
         accent="#d4a900"
         eyebrow={t("energy-ofertas-eyebrow")}
         title={t("energy-ofertas-titulo")}
-        ctaHref="/energy"
         items={energyOffersResolved}
         siteImages={siteImages}
         maxWidth="1632px"

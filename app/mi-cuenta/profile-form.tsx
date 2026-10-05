@@ -5,6 +5,7 @@ import Link from "next/link";
 import GusOrderRunner from "../components/gus-order-runner";
 import { useRouter } from "next/navigation";
 import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-locations";
+import CitySelect from "@/app/components/city-select";
 import { formatOrderCode } from "@/lib/format-order";
 import CauchosHeader from "../components/cauchos-header";
 import { DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
@@ -806,25 +807,15 @@ export default function AccountProfileForm({
                 <label htmlFor="city" className="mb-2 block text-sm font-medium text-slate-700">
                   Ciudad
                 </label>
-                <input
+                <CitySelect
+                  key={form.department}
                   id="city"
-                  type="text"
                   value={form.city}
-                  onChange={handleChange}
-                  list="account-cities"
+                  onChange={(city) => setForm((current) => ({ ...current, city }))}
+                  options={cityOptions}
                   disabled={!form.department}
-                  placeholder={
-                    form.department
-                      ? "Busca o escribe tu ciudad"
-                      : "Primero selecciona un departamento"
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
-                <datalist id="account-cities">
-                  {cityOptions.map((city) => (
-                    <option key={city} value={city} />
-                  ))}
-                </datalist>
               </div>
 
               <div className="md:col-span-2">
@@ -936,8 +927,8 @@ export default function AccountProfileForm({
               { label: "En proceso", value: activeShipments },
               { label: "Entregados", value: deliveredOrders },
             ].map((stat) => (
-              <div key={stat.label} className="flex flex-col-reverse gap-1 rounded-[1rem] border border-black/8 bg-[#fafaf9] px-4 py-3 lg:flex-row lg:items-baseline lg:justify-between lg:gap-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8b8d91]">
+              <div key={stat.label} className="flex min-w-0 flex-col-reverse gap-1 rounded-[1rem] border border-black/8 bg-[#fafaf9] px-3 py-3 sm:px-4 lg:flex-row lg:items-baseline lg:justify-between lg:gap-2">
+                <p className="break-words text-[10px] font-semibold uppercase leading-4 tracking-[0.04em] text-[#8b8d91] sm:text-[11px] sm:tracking-[0.14em]">
                   {stat.label}
                 </p>
                 <p className="text-2xl font-bold tracking-[-0.04em] text-[#16384f]">

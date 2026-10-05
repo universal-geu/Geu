@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, typ
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-locations";
+import CitySelect from "@/app/components/city-select";
 import CauchosHeader from "../components/cauchos-header";
 import { DIVISION_BRAND, getDivisionFromBrandParam } from "@/lib/divisions";
 
@@ -387,26 +388,16 @@ export default function RegistroPage() {
             >
               Ciudad
             </label>
-            <input
+            <CitySelect
+              key={form.department}
               id="city"
-              type="text"
               value={form.city}
-              onChange={handleChange}
-              list="registro-cities"
-              placeholder={
-                form.department
-                  ? "Busca o escribe tu ciudad"
-                  : "Primero selecciona un departamento"
-              }
+              onChange={(city) => setForm((current) => ({ ...current, city }))}
+              options={cityOptions}
               required
               disabled={!form.department}
               className={fieldClass}
             />
-            <datalist id="registro-cities">
-              {cityOptions.map((city) => (
-                <option key={city} value={city} />
-              ))}
-            </datalist>
           </div>
 
           <div className="md:col-span-2">

@@ -18,8 +18,6 @@ type OfferSectionProps = {
   accent: string;
   eyebrow: string;
   title: string;
-  ctaHref: string;
-  ctaLabel?: string;
   items: PromoItem[];
   siteImages: SiteImages;
   surface?: "light" | "dark";
@@ -52,8 +50,6 @@ export function BrandOfferSection({
   accent,
   eyebrow,
   title,
-  ctaHref,
-  ctaLabel = "Ver todos",
   items,
   siteImages,
   surface = "light",
@@ -74,9 +70,6 @@ export function BrandOfferSection({
               {title}
             </h2>
           </div>
-          <Link href={ctaHref} className="inline-flex rounded-full border px-5 py-3 text-sm font-black transition" style={{ borderColor: accent, color: accent }}>
-            {ctaLabel}
-          </Link>
         </div>
 
         <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth scroll-px-5 px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-4">

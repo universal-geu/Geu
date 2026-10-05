@@ -8,7 +8,7 @@ import CauchosAddToCartButton from "./cauchos-add-to-cart-button";
 import CauchosHeader from "./cauchos-header";
 import { useProducts } from "./products-provider";
 import { useCategories } from "./categories-provider";
-import { useSiteImages } from "./use-site-images";
+import { useSiteImageData } from "./use-site-images";
 import { resolveImage } from "@/lib/image-slots";
 import { CART_ACCENT, DIVISION_BRAND, productHref, type DivisionName } from "@/lib/divisions";
 import { expandProductCategoryViews, productSellsInDivision } from "@/lib/product-category-views";
@@ -102,7 +102,7 @@ export default function CauchosCategoryProductsPage({
 }: Props) {
   const { products } = useProducts();
   const { getCategoryNamesForDivision } = useCategories();
-  const siteImages = useSiteImages();
+  const { images: siteImages, links: siteImageLinks } = useSiteImageData();
   const sidebarOffers = SIDEBAR_OFFERS[division] ?? [];
   // Solo se pinta en el cliente (tras cargar las imágenes del admin), así que
   // elegir al azar aquí no genera diferencias de hidratación.
@@ -616,7 +616,7 @@ export default function CauchosCategoryProductsPage({
 
               {sidebarOffer && siteImagesLoaded ? (
                 <Link
-                  href={sidebarOffer.href}
+                  href={siteImageLinks[sidebarOffer.imageKey]?.trim() || sidebarOffer.href}
                   aria-label={sidebarOffer.title}
                   className="group relative hidden aspect-[9/16] overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.08)] lg:sticky lg:top-5 lg:block"
                 >

@@ -250,7 +250,6 @@ export default async function ImportPage() {
         accent="#e31313"
         eyebrow={t("import-ofertas-eyebrow")}
         title={t("import-ofertas-titulo")}
-        ctaHref="/import"
         items={importOffersResolved}
         siteImages={siteImages}
         maxWidth="1632px"
