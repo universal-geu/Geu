@@ -4113,21 +4113,21 @@ export default function AdminPage() {
       )}
 
       {showDivisionSwitcher && (
-        <div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#05070d]/70 px-6 backdrop-blur-md">
-          <div className="relative w-full max-w-3xl overflow-hidden rounded-[2rem] border border-black/[0.06] bg-white shadow-[0_50px_120px_-30px_rgba(2,6,23,0.45),0_18px_40px_rgba(15,23,42,0.14)]">
+        <div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#05070d]/70 px-4 py-4 backdrop-blur-md sm:px-6">
+          <div className="relative flex max-h-full w-full max-w-3xl flex-col overflow-hidden rounded-[1.5rem] border border-black/[0.06] bg-white shadow-[0_50px_120px_-30px_rgba(2,6,23,0.45),0_18px_40px_rgba(15,23,42,0.14)] sm:rounded-[2rem]">
             <div
               className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-black/10 to-transparent"
               aria-hidden="true"
             />
 
-            <div className="relative px-7 pb-7 pt-8 md:px-9">
-              <div className="flex items-start justify-between gap-4">
+            <div className="relative flex min-h-0 flex-col px-5 pb-5 pt-6 sm:px-7 sm:pb-7 sm:pt-8 md:px-9">
+              <div className="flex shrink-0 items-start justify-between gap-4">
                 <div>
                   <p className="flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.32em] text-[#9a9ea3]">
                     <span className="h-px w-7 bg-[#c7cacd]" />
                     Panel maestro
                   </p>
-                  <h2 className="mt-3 text-[26px] font-semibold leading-tight tracking-[-0.02em] text-[#12161c] md:text-3xl">
+                  <h2 className="mt-2 text-xl font-semibold leading-tight tracking-[-0.02em] text-[#12161c] sm:mt-3 sm:text-[26px] md:text-3xl">
                     ¿En qué unidad de negocio quieres trabajar?
                   </h2>
                 </div>
@@ -4145,12 +4145,12 @@ export default function AdminPage() {
               </div>
 
               {switchDivisionError && (
-                <p className="mt-5 rounded-xl border border-[var(--admin-accent)]/25 bg-[var(--admin-accent-soft)] px-4 py-3 text-sm text-[var(--admin-accent)]">
+                <p className="mt-5 shrink-0 rounded-xl border border-[var(--admin-accent)]/25 bg-[var(--admin-accent-soft)] px-4 py-3 text-sm text-[var(--admin-accent)]">
                   {switchDivisionError}
                 </p>
               )}
 
-              <div className="mt-7 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="-mx-1 mt-5 grid min-h-0 gap-2.5 overflow-y-auto px-1 pb-1 sm:mt-7 sm:grid-cols-2 sm:gap-3.5 lg:grid-cols-3">
                 {DIVISIONS.map((division) => {
                   const brand = ADMIN_BRAND_CONFIG[division];
                   const isCurrent = division === adminDivision;
@@ -4161,7 +4161,7 @@ export default function AdminPage() {
                       type="button"
                       onClick={() => void switchDivision(division)}
                       disabled={isSwitchingDivision}
-                      className={`group relative flex flex-col gap-3 overflow-hidden rounded-[1.3rem] border p-5 text-left transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60 ${
+                      className={`group relative flex items-center gap-3 overflow-hidden rounded-[1.1rem] border px-4 py-3 text-left transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-col sm:items-stretch sm:rounded-[1.3rem] sm:p-5 ${
                         isCurrent
                           ? "border-black/[0.06] bg-[#fafaf9]"
                           : "border-black/8 bg-white hover:-translate-y-0.5 hover:border-black/[0.14] hover:shadow-[0_18px_34px_-14px_rgba(15,23,42,0.28)]"
@@ -4174,9 +4174,9 @@ export default function AdminPage() {
                           aria-hidden="true"
                         />
                       )}
-                      <div className="flex items-start justify-between gap-2">
+                      <div className="flex shrink-0 items-start justify-between gap-2">
                         <span
-                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.85rem] text-base font-bold text-white ring-1 ring-black/5"
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.85rem] text-base font-bold text-white ring-1 ring-black/5 sm:h-11 sm:w-11"
                           style={{
                             background: `linear-gradient(155deg, ${brand.accent} 0%, ${brand.accentHover} 100%)`,
                             boxShadow: `0 10px 22px -8px ${brand.accent}66`,
@@ -4187,7 +4187,7 @@ export default function AdminPage() {
                         {!isCurrent && (
                           <svg
                             viewBox="0 0 24 24"
-                            className="mt-1 h-4 w-4 shrink-0 text-[#c4c6c9] transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[#8b8d91]"
+                            className="mt-1 hidden h-4 w-4 shrink-0 text-[#c4c6c9] transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[#8b8d91] sm:block"
                             fill="none"
                             stroke="currentColor"
                             strokeWidth="2"
@@ -4199,8 +4199,8 @@ export default function AdminPage() {
                           </svg>
                         )}
                       </div>
-                      <div>
-                        <span className="block text-[13.5px] font-semibold leading-snug text-[#12161c]">
+                      <div className="min-w-0 flex-1">
+                        <span className="block truncate text-[13.5px] font-semibold leading-snug text-[#12161c]">
                           {brand.label}
                         </span>
                         {isCurrent ? (
@@ -4220,13 +4220,27 @@ export default function AdminPage() {
                           </span>
                         )}
                       </div>
+                      {!isCurrent && (
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="h-4 w-4 shrink-0 text-[#c4c6c9] sm:hidden"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="m9 6 6 6-6 6" />
+                        </svg>
+                      )}
                     </button>
                   );
                 })}
               </div>
 
               {isSwitchingDivision && (
-                <p className="mt-6 flex items-center justify-center gap-2.5 text-sm font-semibold text-[#6e7379]">
+                <p className="mt-4 flex shrink-0 items-center justify-center gap-2.5 text-sm font-semibold text-[#6e7379] sm:mt-6">
                   <svg viewBox="0 0 24 24" className="h-4 w-4 animate-spin" fill="none" aria-hidden="true">
                     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" opacity="0.2" />
                     <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
