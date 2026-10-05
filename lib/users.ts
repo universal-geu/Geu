@@ -302,6 +302,7 @@ export async function getUserByEmail(email: string) {
       addressLine2: true,
       role: true,
       division: true,
+      active: true,
       createdAt: true,
     },
   });

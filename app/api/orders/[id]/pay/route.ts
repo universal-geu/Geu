@@ -41,7 +41,9 @@ export async function POST(
     });
   } catch (error) {
     const message =
-      error instanceof Error && error.message === "INVALID_PAYMENT_CODE"
+      error instanceof Error && error.message === "SIMULATED_PAYMENT_DISABLED"
+        ? "Los pagos de prueba están desactivados. Paga tu pedido con Wompi."
+        : error instanceof Error && error.message === "INVALID_PAYMENT_CODE"
         ? "El código de pago no es válido."
         : error instanceof Error && error.message === "ORDER_NOT_FOUND"
           ? "No encontramos ese pedido para tu cuenta."

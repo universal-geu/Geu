@@ -120,6 +120,7 @@ export default function CheckoutForm({
   division: divisionProp,
   brand: brandParam,
   wompiEnabled = false,
+  testPaymentEnabled = false,
 }: {
   user: CheckoutUser;
   items: CheckoutItem[];
@@ -127,6 +128,7 @@ export default function CheckoutForm({
   division?: DivisionName;
   brand?: string;
   wompiEnabled?: boolean;
+  testPaymentEnabled?: boolean;
 }) {
   const router = useRouter();
   const division = divisionProp ?? user.division ?? "Cauchos";
@@ -600,13 +602,15 @@ export default function CheckoutForm({
                   {isPayingWithWompi ? "Abriendo Wompi..." : "Pagar con Wompi"}
                 </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowTestPayment(true)}
-                className="mt-4 w-full text-center text-sm font-medium text-slate-500 underline-offset-4 transition-colors duration-200 hover:text-[#16384f] hover:underline"
-              >
-                Simular pago de prueba
-              </button>
+              {testPaymentEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setShowTestPayment(true)}
+                  className="mt-4 w-full text-center text-sm font-medium text-slate-500 underline-offset-4 transition-colors duration-200 hover:text-[#16384f] hover:underline"
+                >
+                  Simular pago de prueba
+                </button>
+              )}
               </>
             ) : (
               <form onSubmit={handleConfirmPayment} className="mt-6 space-y-4">

@@ -22,10 +22,12 @@ export default function GuestCheckout({
   division,
   brand,
   wompiEnabled = false,
+  testPaymentEnabled = false,
 }: {
   division: DivisionName;
   brand?: string;
   wompiEnabled?: boolean;
+  testPaymentEnabled?: boolean;
 }) {
   const { items } = useCart();
 
@@ -64,6 +66,7 @@ export default function GuestCheckout({
       division={division}
       brand={brand}
       wompiEnabled={wompiEnabled}
+      testPaymentEnabled={testPaymentEnabled}
     />
   );
 }

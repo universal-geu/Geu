@@ -33,9 +33,6 @@ import { TEXT_SLOTS } from "@/lib/text-slots";
 import { COLOR_SLOTS } from "@/lib/color-slots";
 import {
   DIVISIONS,
-  DIVISION_ADMIN_EMAILS,
-  DIVISION_ADMIN_PASSWORD,
-  DIVISION_ADMIN_PIN,
   DIVISION_BRAND,
   getDivisionFromBrandParam,
   isServiceDivision,
@@ -3892,14 +3889,10 @@ export default function AdminPage() {
     setIsSwitchingDivision(true);
 
     try {
-      const response = await fetch("/api/auth/admin/login", {
+      const response = await fetch("/api/auth/admin/switch-division", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: DIVISION_ADMIN_EMAILS[target],
-          password: DIVISION_ADMIN_PASSWORD,
-          adminPin: DIVISION_ADMIN_PIN,
-        }),
+        body: JSON.stringify({ division: target }),
       });
 
       const payload = (await response.json()) as {

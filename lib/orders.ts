@@ -1182,6 +1182,12 @@ async function sendShippingStatusEmail({
   });
 }
 
+// El pago simulado (código de prueba) solo existe en desarrollo local. En
+// producción todo pago pasa por Wompi.
+export function isSimulatedPaymentEnabled() {
+  return process.env.NODE_ENV !== "production";
+}
+
 export async function confirmSimulatedOrderPayment(
   orderId: string,
   // Null for a guest checkout (no session to scope by) — the order id
@@ -1190,6 +1196,10 @@ export async function confirmSimulatedOrderPayment(
   userId: string | null,
   paymentCode: string,
 ) {
+  if (!isSimulatedPaymentEnabled()) {
+    throw new Error("SIMULATED_PAYMENT_DISABLED");
+  }
+
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
   }

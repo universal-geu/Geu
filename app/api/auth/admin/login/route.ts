@@ -1,6 +1,5 @@
 import { authenticateUser } from "@/lib/users";
-import { getDevAdminUserByEmail, setSessionCookie } from "@/lib/auth";
-import { DIVISION_ADMIN_PASSWORD } from "@/lib/divisions";
+import { setSessionCookie } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -32,25 +31,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const expectedAdminPin = process.env.ADMIN_EXTRA_PIN?.trim() || "1234";
-    let user: Awaited<ReturnType<typeof authenticateUser>>;
-
-    try {
-      user = await authenticateUser(email, password);
-    } catch (error) {
-      const devAdmin = getDevAdminUserByEmail(email);
-
-      if (
-        error instanceof Error &&
-        error.message === "DATABASE_NOT_CONFIGURED" &&
-        devAdmin &&
-        password === DIVISION_ADMIN_PASSWORD
-      ) {
-        user = devAdmin;
-      } else {
-        throw error;
-      }
-    }
+    // En producción el PIN solo existe en la variable ADMIN_EXTRA_PIN; sin ella
+    // nadie puede entrar al panel. En local se acepta 1234 para desarrollo.
+    const expectedAdminPin =
+      process.env.ADMIN_EXTRA_PIN?.trim() || (process.env.NODE_ENV === "production" ? "" : "1234");
+    const user = await authenticateUser(email, password);
 
     if (user.role !== "ADMIN") {
       return Response.json(

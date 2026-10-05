@@ -13,7 +13,6 @@ import {
   DIVISIONS,
   DIVISION_ADMIN_EMAILS,
   DIVISION_ADMIN_NAMES,
-  DIVISION_ADMIN_PASSWORD,
 } from "../lib/divisions";
 
 // Historical product-type categories used by the static seed catalog to
@@ -40,7 +39,13 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  const adminPasswordHash = await hash(DIVISION_ADMIN_PASSWORD, 10);
+  // Contraseña inicial solo para administradores que aún no existen. Nunca se
+  // sobrescribe la de uno existente (se cambia con scripts/set-admin-password.ts).
+  const seedPassword = process.env.ADMIN_SEED_PASSWORD?.trim();
+  if (!seedPassword || seedPassword.length < 12) {
+    throw new Error("Define ADMIN_SEED_PASSWORD (mínimo 12 caracteres) para crear los administradores.");
+  }
+  const adminPasswordHash = await hash(seedPassword, 10);
 
   for (const division of DIVISIONS) {
     const email = DIVISION_ADMIN_EMAILS[division];
@@ -52,7 +57,6 @@ async function main() {
         fullName,
         role: "ADMIN",
         division,
-        passwordHash: adminPasswordHash,
       },
       create: {
         fullName,
