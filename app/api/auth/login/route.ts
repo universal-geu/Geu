@@ -7,12 +7,10 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       email?: string;
       password?: string;
-      adminPin?: string;
     };
 
     const email = body.email?.trim() || "";
     const password = body.password || "";
-    const adminPin = body.adminPin?.trim() || "";
 
     if (!email || !password) {
       return Response.json(
@@ -31,32 +29,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // En producción el PIN solo existe en la variable ADMIN_EXTRA_PIN; sin ella
-    // nadie puede entrar al panel. En local se acepta 1234 para desarrollo.
-    const expectedAdminPin =
-      process.env.ADMIN_EXTRA_PIN?.trim() || (process.env.NODE_ENV === "production" ? "" : "1234");
     const user = await authenticateUser(email, password);
-
-    if (user.role === "ADMIN" && !adminPin) {
-      return Response.json(
-        {
-          requiresAdminPin: true,
-          user: {
-            id: user.id,
-            role: user.role,
-          },
-          message: "Confirma el PIN adicional para entrar al panel.",
-        },
-        { status: 202 },
-      );
-    }
-
-    if (user.role === "ADMIN" && adminPin !== expectedAdminPin) {
-      return Response.json(
-        { error: "El PIN de administrador es incorrecto." },
-        { status: 403 },
-      );
-    }
 
     await setSessionCookie({
       userId: user.id,
