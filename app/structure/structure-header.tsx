@@ -26,6 +26,13 @@ const toolItems = [
 
 const mobileMoreItems = [...navItems, ...toolItems, { label: "Ver todo GEU", href: "/" }];
 
+// Structure no vende productos: en vez de "Categorías", la barra inferior
+// lleva a las dos herramientas principales de la M24.
+const mobileExtraTabs = [
+  { label: "Cómo funciona", href: "/structure/herramientas/como-funciona", icon: "info" as const },
+  { label: "Configurador", href: "/structure/herramientas/configurador-m24", icon: "tool" as const },
+];
+
 function StructureMark() {
   return (
     <Image
@@ -164,8 +171,8 @@ export default function StructureHeader() {
       <MobileBottomNav
         homeHref="/structure"
         accent="#0498b4"
-        categoriasHref="/structure#producto"
-        categoriasLabel="Producto"
+        hideCategorias
+        extraTabs={mobileExtraTabs}
         hideAccount
         moreItems={mobileMoreItems}
         breakpointClassName="lg:hidden"

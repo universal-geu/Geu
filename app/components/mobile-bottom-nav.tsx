@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 
 type MoreItem = { label: string; href: string };
 
+// Pestañas propias de una unidad (ej. herramientas de Structure), entre Categorías y Cuenta.
+type ExtraTab = { label: string; href: string; icon: "tool" | "contact" | "info" };
+
 type AccountUser = {
   fullName: string;
   role: "CUSTOMER" | "ADMIN";
@@ -20,6 +23,8 @@ type Props = {
   categoriasLabel?: string;
   accountBrand?: string;
   hideAccount?: boolean;
+  hideCategorias?: boolean;
+  extraTabs?: ExtraTab[];
   moreItems: MoreItem[];
   breakpointClassName?: string;
 };
@@ -72,6 +77,23 @@ function InfoIcon() {
   );
 }
 
+function ToolIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14.7 6.3a4 4 0 0 0 5 5L21 13l-8 8-3-3 8-8-1.3-1.3a4 4 0 0 0-5-5L14 2.4Z" />
+      <path d="M3 21l6-6" />
+    </svg>
+  );
+}
+
+function ContactIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" />
+    </svg>
+  );
+}
+
 function MoreIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -91,6 +113,8 @@ export default function MobileBottomNav({
   categoriasLabel = "Categorías",
   accountBrand,
   hideAccount = false,
+  hideCategorias = false,
+  extraTabs = [],
   moreItems,
   breakpointClassName = "md:hidden",
 }: Props) {
@@ -195,7 +219,7 @@ export default function MobileBottomNav({
             Inicio
           </Link>
 
-          {categoriasHref ? (
+          {hideCategorias ? null : categoriasHref ? (
             <Link
               href={categoriasHref}
               className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
@@ -215,6 +239,18 @@ export default function MobileBottomNav({
               {categoriasLabel}
             </button>
           )}
+
+          {extraTabs.map((tab) => (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
+              style={{ color: !showMore && !tab.href.includes("#") && isItemActive(tab.href) ? accent : inactiveColor }}
+            >
+              {tab.icon === "tool" ? <ToolIcon /> : tab.icon === "info" ? <InfoIcon /> : <ContactIcon />}
+              {tab.label}
+            </Link>
+          ))}
 
           {cart && (
             <Link
