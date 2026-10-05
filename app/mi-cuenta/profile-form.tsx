@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
 import GusOrderRunner from "../components/gus-order-runner";
+import PasswordVisibilityToggle from "../components/password-visibility-toggle";
 import { useRouter } from "next/navigation";
 import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-locations";
 import CitySelect from "@/app/components/city-select";
@@ -469,6 +470,9 @@ export default function AccountProfileForm({
     return () => window.clearTimeout(timeoutId);
   }, [toast]);
 
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = event.target;
     setForm((current) => {
@@ -849,28 +853,40 @@ export default function AccountProfileForm({
                 <label htmlFor="newPassword" className="mb-2 block text-sm font-medium text-slate-700">
                   Nueva contraseña
                 </label>
+                <div className="relative">
                 <input
                   id="newPassword"
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   value={form.newPassword}
                   onChange={handleChange}
                   placeholder="Opcional"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
+                <PasswordVisibilityToggle
+                  visible={showNewPassword}
+                  onToggle={() => setShowNewPassword((current) => !current)}
+                />
+                </div>
               </div>
 
               <div>
                 <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-slate-700">
                   Confirmar nueva contraseña
                 </label>
+                <div className="relative">
                 <input
                   id="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   value={form.confirmPassword}
                   onChange={handleChange}
                   placeholder="Repite la nueva contraseña"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
                 />
+                <PasswordVisibilityToggle
+                  visible={showConfirmPassword}
+                  onToggle={() => setShowConfirmPassword((current) => !current)}
+                />
+                </div>
               </div>
 
               {inlineError && (

@@ -111,7 +111,7 @@ export default function GusChat({ whatsappHref }: { whatsappHref: string | null 
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-[84px] right-4 z-50 flex max-h-[calc(100dvh-100px)] flex-col items-end gap-3 lg:bottom-5 lg:right-5 lg:max-h-none">
       {isOpen && (
         <div className="w-[min(92vw,380px)] overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#0b0b0b] shadow-[0_24px_60px_rgba(0,0,0,0.55)]">
           <div className="border-b border-[#f5a623]/25 bg-[#0b0b0b] px-4 py-4">

@@ -27,7 +27,7 @@ export default function WhatsAppFloatButton({ whatsappNumbers }: WhatsAppFloatBu
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"
-      className="flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-[0_8px_20px_rgba(0,0,0,0.25)] transition-transform duration-200 hover:scale-105"
+      className="geu-whatsapp-float flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-[0_8px_20px_rgba(0,0,0,0.25)] transition-transform duration-200 hover:scale-105"
       style={{ position: "fixed", right: "1.5rem", bottom: "6rem", zIndex: 90 }}
     >
       <svg viewBox="0 0 32 32" className="h-8 w-8 fill-white" aria-hidden="true">

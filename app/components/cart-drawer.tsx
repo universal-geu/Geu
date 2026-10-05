@@ -82,7 +82,7 @@ export default function CartDrawer() {
       <div
         aria-hidden="true"
         onClick={closeDrawer}
-        className={`fixed inset-0 z-[60] bg-slate-950/40 transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[100] bg-slate-950/40 transition-opacity duration-300 ${
           isDrawerOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
@@ -92,7 +92,7 @@ export default function CartDrawer() {
         aria-modal="true"
         aria-label="Carrito de compras"
         style={{ "--brand-accent": brand.accent } as React.CSSProperties}
-        className={`fixed inset-y-0 right-0 z-[61] flex w-full max-w-[420px] flex-col bg-white transition-[transform,box-shadow,visibility] duration-300 ease-out ${
+        className={`fixed inset-y-0 right-0 z-[101] flex w-full max-w-[420px] flex-col bg-white transition-[transform,box-shadow,visibility] duration-300 ease-out ${
           isDrawerOpen
             ? "visible translate-x-0 shadow-[-24px_0_60px_rgba(2,8,18,0.24)]"
             : "invisible translate-x-full shadow-none"

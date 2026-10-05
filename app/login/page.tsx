@@ -4,6 +4,7 @@ import { useEffect, useState, type CSSProperties, type ChangeEvent, type FormEve
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import CauchosHeader from "../components/cauchos-header";
+import PasswordVisibilityToggle from "../components/password-visibility-toggle";
 import { DIVISION_BRAND, getDivisionFromBrandParam } from "@/lib/divisions";
 
 const LOGIN_ACCENTS: Record<string, { accent: string; accentHover: string; brandName: string }> = {
@@ -82,6 +83,8 @@ export default function LoginPage() {
   const adminRedirectPath = brandParam ? `/admin?brand=${brandParam}` : "/admin";
   const [form, setForm] = useState<LoginFormState>(initialState);
   const [adminPin, setAdminPin] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showAdminPin, setShowAdminPin] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
   const [inlineError, setInlineError] = useState("");
@@ -256,15 +259,16 @@ export default function LoginPage() {
                 >
                   PIN extra
                 </label>
+                <div className="relative">
                 <input
                   id="adminPinModal"
-                  type="password"
+                  type={showAdminPin ? "text" : "password"}
                   value={adminPin}
                   onChange={(event) => setAdminPin(event.target.value)}
                   placeholder="Ingresa el código"
                   autoFocus
                   required
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none transition-colors duration-200 placeholder:text-slate-500"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-11 text-slate-950 outline-none transition-colors duration-200 placeholder:text-slate-500"
                   style={{ "--tw-ring-color": accent } as CSSProperties}
                   onFocus={(event) => {
                     event.currentTarget.style.borderColor = accent;
@@ -273,6 +277,11 @@ export default function LoginPage() {
                     event.currentTarget.style.borderColor = "";
                   }}
                 />
+                <PasswordVisibilityToggle
+                  visible={showAdminPin}
+                  onToggle={() => setShowAdminPin((current) => !current)}
+                />
+                </div>
               </div>
 
               <div className="flex gap-3">
@@ -399,21 +408,27 @@ export default function LoginPage() {
             >
               Contraseña
             </label>
-            <input
-              id="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Ingresa tu contraseña"
-              required
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none transition-colors duration-200 placeholder:text-slate-500"
-              onFocus={(event) => {
-                event.currentTarget.style.borderColor = accent;
-              }}
-              onBlur={(event) => {
-                event.currentTarget.style.borderColor = "";
-              }}
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Ingresa tu contraseña"
+                required
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-11 text-slate-950 outline-none transition-colors duration-200 placeholder:text-slate-500"
+                onFocus={(event) => {
+                  event.currentTarget.style.borderColor = accent;
+                }}
+                onBlur={(event) => {
+                  event.currentTarget.style.borderColor = "";
+                }}
+              />
+              <PasswordVisibilityToggle
+                visible={showPassword}
+                onToggle={() => setShowPassword((current) => !current)}
+              />
+            </div>
           </div>
 
           {inlineError && (

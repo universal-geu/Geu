@@ -435,7 +435,7 @@ export default async function EnergyCatalogoPage() {
                     <li>Platina base 300x300x6.35 mm con 4 perforaciones Ø18 mm para anclaje con espárragos 5/8&quot;.</li>
                   </ul>
                 </div>
-                <div className="relative aspect-square w-full max-w-[280px] justify-self-end overflow-hidden rounded-[10px] border border-slate-200 shadow-[0_2px_10px_rgba(15,23,42,0.04)] md:justify-self-auto">
+                <div className="relative aspect-square w-full max-w-[280px] justify-self-center overflow-hidden rounded-[10px] border border-slate-200 shadow-[0_2px_10px_rgba(15,23,42,0.04)] md:justify-self-auto">
                   <Image
                     src="/energy-cimentacion-anclaje.webp"
                     alt="Dado de concreto con platina de anclaje y espárragos para la cimentación de la estructura"

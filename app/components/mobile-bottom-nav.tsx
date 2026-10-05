@@ -147,6 +147,21 @@ export default function MobileBottomNav({
     setShowMore(false);
   }
 
+  // Mientras la hoja "Más" está abierta se oculta el botón flotante de WhatsApp
+  // (la barra vive dentro del encabezado y no puede quedar por encima de él).
+  useEffect(() => {
+    if (!showMore) return;
+    const buttons = Array.from(document.querySelectorAll<HTMLElement>(".geu-whatsapp-float"));
+    buttons.forEach((button) => {
+      button.style.visibility = "hidden";
+    });
+    return () => {
+      buttons.forEach((button) => {
+        button.style.visibility = "";
+      });
+    };
+  }, [showMore]);
+
   const brandQuery = accountBrand ? `?brand=${accountBrand}` : "";
   const accountHref = user
     ? user.role === "ADMIN"
@@ -156,7 +171,8 @@ export default function MobileBottomNav({
   const accountLabel = user ? "Cuenta" : "Ingresar";
   // Cada pestaña se pinta con el color de la unidad cuando estás en esa sección.
   // Con el menú "Más" abierto solo se resalta "Más", para que no queden dos pestañas activas.
-  const isItemActive = (href: string) => pathname === href.split(/[?#]/)[0];
+  // Un enlace a una sección de la misma página (#ancla) no cuenta como "página actual".
+  const isItemActive = (href: string) => !href.includes("#") && pathname === href.split("?")[0];
   const isHomeActive = !showMore && pathname === homeHref;
   const categoriasBase = `${homeHref === "/" ? "" : homeHref}/categoria`;
   const isCategoriasActive =
@@ -172,14 +188,14 @@ export default function MobileBottomNav({
     <>
       {showMore && (
         <div
-          className={`fixed inset-0 z-40 bg-black/40 ${breakpointClassName}`}
+          className={`fixed inset-0 z-[92] bg-black/40 ${breakpointClassName}`}
           onClick={() => setShowMore(false)}
         />
       )}
 
       {showMore && (
         <div
-          className={`fixed inset-x-0 bottom-[60px] z-50 rounded-t-2xl bg-white shadow-[0_-8px_32px_rgba(15,23,42,0.15)] ${breakpointClassName}`}
+          className={`fixed inset-x-0 bottom-[60px] z-[93] rounded-t-2xl bg-white shadow-[0_-8px_32px_rgba(15,23,42,0.15)] ${breakpointClassName}`}
         >
           <div className="px-4 pb-4 pt-3">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-gray-200" />
@@ -207,7 +223,7 @@ export default function MobileBottomNav({
       )}
 
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.08)] ${breakpointClassName}`}
+        className={`fixed bottom-0 left-0 right-0 ${showMore ? "z-[93]" : "z-50"} border-t border-slate-200 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.08)] ${breakpointClassName}`}
       >
         <div className="flex items-stretch">
           <Link
@@ -245,7 +261,7 @@ export default function MobileBottomNav({
               key={tab.href}
               href={tab.href}
               className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
-              style={{ color: !showMore && !tab.href.includes("#") && isItemActive(tab.href) ? accent : inactiveColor }}
+              style={{ color: !showMore && isItemActive(tab.href) ? accent : inactiveColor }}
             >
               {tab.icon === "tool" ? <ToolIcon /> : tab.icon === "info" ? <InfoIcon /> : <ContactIcon />}
               {tab.label}
