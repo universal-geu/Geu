@@ -17,6 +17,11 @@ export const DIVISION_ADMIN_EMAILS: Record<DivisionName, string> = {
   GEU: "admin.geu@geu.com.co",
 };
 
+// Única cuenta que puede iniciar sesión en el panel. Desde ella se entra a
+// cualquier unidad con "Cambiar de unidad"; las cuentas de cada unidad siguen
+// existiendo (son el destino de ese cambio) pero no inician sesión directamente.
+export const MASTER_ADMIN_EMAIL = DIVISION_ADMIN_EMAILS.Cauchos;
+
 export const DIVISION_ADMIN_NAMES: Record<DivisionName, string> = {
   Cauchos: "Administrador GEU",
   Import: "Administrador GEU Import",

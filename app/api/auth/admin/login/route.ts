@@ -1,5 +1,6 @@
 import { authenticateUser } from "@/lib/users";
 import { setSessionCookie } from "@/lib/auth";
+import { MASTER_ADMIN_EMAIL } from "@/lib/divisions";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -30,6 +31,13 @@ export async function POST(request: Request) {
     }
 
     const user = await authenticateUser(email, password);
+
+    if (user.role === "ADMIN" && user.email.toLowerCase() !== MASTER_ADMIN_EMAIL) {
+      return Response.json(
+        { error: "Para entrar al panel usa la cuenta principal de administración." },
+        { status: 403 },
+      );
+    }
 
     if (user.role !== "ADMIN") {
       return Response.json(
