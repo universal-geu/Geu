@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import CauchosHeader from "../components/cauchos-header";
 import { useCart } from "../components/cart-provider";
@@ -18,6 +19,9 @@ import {
   MINIMUM_ORDER_TOTAL,
 } from "@/lib/cart-format";
 
+// With large carts the full list lives in the table; the summary only previews it.
+const SUMMARY_ITEMS_LIMIT = 5;
+
 export default function CarritoPage() {
   const searchParams = useSearchParams();
   const { items, incrementItem, decrementItem, removeItem, clearCart } =
@@ -27,6 +31,15 @@ export default function CarritoPage() {
   const brandParam = searchParams.get("brand");
   const division = getDivisionFromBrandParam(brandParam);
   const brand = DIVISION_BRAND[division];
+  const [itemQuery, setItemQuery] = useState("");
+  // Variant items are stored as "<slug>::<variantSku>"; otherwise use the
+  // product's SKU, falling back to the same slug-derived code the product page shows.
+  const getItemCode = (itemId: string) => {
+    const [slug, variantSku] = itemId.split("::");
+    if (variantSku) return variantSku;
+    const product = products.find((entry) => entry.slug === slug);
+    return product?.sku || slug.toUpperCase().replace(/-/g, "");
+  };
   const getItemBrand = (itemId: string) => {
     const product = products.find((entry) => entry.slug === resolveProductSlug(itemId));
     return DIVISION_BRAND[product?.division ?? division];
@@ -56,6 +69,20 @@ export default function CarritoPage() {
     0,
   );
   const missingForMinimum = Math.max(0, MINIMUM_ORDER_TOTAL - subtotal);
+  const normalizedQuery = itemQuery
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  const visibleItems = normalizedQuery
+    ? items.filter((item) =>
+        `${item.nombre} ${getItemCode(item.id)}`
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .includes(normalizedQuery),
+      )
+    : items;
 
   if (whatsappModeActive) {
     const whatsappNumber = whatsappNumbers[division];
@@ -154,74 +181,137 @@ export default function CarritoPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-              <div className="space-y-5">
-                {items.map((item) => {
-                  const itemBrand = getItemBrand(item.id);
-                  const unitPrice = parsePrecio(item.precio);
-                  const lineTotal = unitPrice * item.cantidad;
-
-                  return (
-                  <article
-                    key={item.id}
-                    className="flex flex-col gap-5 rounded-[10px] border border-slate-200 bg-white p-5 shadow-[0_14px_36px_rgba(15,23,42,0.07)] md:flex-row md:items-center"
-                  >
-                    <Image
-                      src={item.imagen}
-                      alt={item.nombre}
-                      width={220}
-                      height={160}
-                      className="h-32 w-full rounded-[8px] border border-slate-100 object-cover md:w-44"
+              <div className="min-w-0">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <label className="relative block w-full sm:max-w-sm">
+                    <span className="sr-only">Buscar en el carrito</span>
+                    <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                      <circle cx="11" cy="11" r="7" />
+                      <path d="m20 20-3.5-3.5" />
+                    </svg>
+                    <input
+                      type="search"
+                      value={itemQuery}
+                      onChange={(event) => setItemQuery(event.target.value)}
+                      placeholder="Buscar por nombre o código..."
+                      className="w-full rounded-full border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm font-medium text-slate-900 outline-none transition-colors duration-200 placeholder:text-slate-400 focus:border-slate-400"
                     />
+                  </label>
+                  <p className="text-sm font-semibold text-slate-500">
+                    {visibleItems.length === items.length
+                      ? `${items.length} ${items.length === 1 ? "producto" : "productos"} · ${totalItems} ${totalItems === 1 ? "unidad" : "unidades"}`
+                      : `Mostrando ${visibleItems.length} de ${items.length} productos`}
+                  </p>
+                </div>
 
-                    <div className="flex-1">
-                      <p
-                        className="text-[11px] font-black uppercase tracking-[0.12em]"
-                        style={{ color: itemBrand.accent }}
-                      >
-                        {itemBrand.label}
-                      </p>
-                      <h2 className="mt-2 text-2xl font-black tracking-[-0.02em] text-slate-950">
-                        {item.nombre}
-                      </h2>
-                      <p className="mt-1 text-sm font-semibold text-slate-500">
-                        {formatearMoneda(unitPrice)} c/u
-                      </p>
-                      <div className="mt-4 inline-flex overflow-hidden rounded-full border border-slate-200 bg-white">
-                        <button
-                          type="button"
-                          aria-label={`Disminuir cantidad de ${item.nombre}`}
-                          onClick={() => decrementItem(item.id)}
-                          className="inline-flex h-10 w-10 items-center justify-center text-lg font-bold text-slate-500 transition-colors duration-200 hover:bg-slate-50"
-                        >
-                          -
-                        </button>
-                        <span className="inline-flex h-10 min-w-[3.2rem] items-center justify-center border-x border-slate-200 text-base font-black text-slate-950">
-                          {item.cantidad}
-                        </span>
-                        <button
-                          type="button"
-                          aria-label={`Aumentar cantidad de ${item.nombre}`}
-                          onClick={() => incrementItem(item.id)}
-                          className="inline-flex h-10 w-10 items-center justify-center text-lg font-bold text-slate-500 transition-colors duration-200 hover:bg-slate-50"
-                        >
-                          +
-                        </button>
-                      </div>
-                      <p className="mt-4 text-2xl font-black text-slate-950">
-                        {formatearMoneda(lineTotal)}
-                      </p>
-                    </div>
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+                  <div className="hidden grid-cols-[minmax(0,1fr)_120px_128px_130px_40px] items-center gap-4 border-b border-slate-200 bg-slate-50 px-5 py-3 text-[11px] font-black uppercase tracking-[0.12em] text-slate-500 md:grid">
+                    <span>Producto</span>
+                    <span className="text-right">Precio unit.</span>
+                    <span className="text-center">Cantidad</span>
+                    <span className="text-right">Total</span>
+                    <span />
+                  </div>
 
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.id)}
-                      className="rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.06em] text-slate-600 transition-colors duration-200 hover:border-[#e4002b] hover:bg-[#fff0f3] hover:text-[#e4002b]"
-                    >
-                      Quitar
-                    </button>
-                  </article>
-                  );
-                })}
+                  {visibleItems.length === 0 ? (
+                    <p className="px-5 py-10 text-center text-sm font-semibold text-slate-500">
+                      Ningún producto del carrito coincide con &ldquo;{itemQuery}&rdquo;.
+                    </p>
+                  ) : (
+                    <ul className="divide-y divide-slate-100">
+                      {visibleItems.map((item) => {
+                        const itemBrand = getItemBrand(item.id);
+                        const unitPrice = parsePrecio(item.precio);
+                        const lineTotal = unitPrice * item.cantidad;
+                        const productHref = `/producto/${resolveProductSlug(item.id)}`;
+
+                        return (
+                          <li
+                            key={item.id}
+                            className="grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3 transition-colors duration-150 hover:bg-slate-50/70 md:grid-cols-[minmax(0,1fr)_120px_128px_130px_40px] md:gap-4 md:px-5"
+                          >
+                            <div className="contents md:flex md:min-w-0 md:items-center md:gap-3">
+                              <Link
+                                href={productHref}
+                                className="row-span-2 flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-100 bg-[#f6f7f9] p-1 md:row-span-1"
+                              >
+                                <Image
+                                  src={item.imagen}
+                                  alt={item.nombre}
+                                  width={112}
+                                  height={112}
+                                  className="h-full w-full object-contain"
+                                />
+                              </Link>
+                              <div className="min-w-0">
+                                <Link
+                                  href={productHref}
+                                  className="line-clamp-2 text-sm font-bold leading-snug text-slate-950 hover:underline md:text-[15px]"
+                                >
+                                  {item.nombre}
+                                </Link>
+                                <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+                                  <span className="font-mono font-semibold text-slate-600">{getItemCode(item.id)}</span>
+                                  <span className="text-slate-300">·</span>
+                                  <span className="font-semibold" style={{ color: itemBrand.accent }}>
+                                    {itemBrand.label}
+                                  </span>
+                                  <span className="text-slate-400 md:hidden">· {formatearMoneda(unitPrice)} c/u</span>
+                                </p>
+                              </div>
+                            </div>
+
+                            <p className="hidden text-right text-sm font-medium text-slate-600 md:block">
+                              {formatearMoneda(unitPrice)}
+                            </p>
+
+                            <div className="col-start-2 inline-flex w-fit items-center rounded-full bg-[#f1f3f6] p-0.5 md:col-start-auto md:mx-auto">
+                              <button
+                                type="button"
+                                aria-label={`Disminuir cantidad de ${item.nombre}`}
+                                onClick={() => decrementItem(item.id)}
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-600 transition-colors duration-200 hover:bg-white hover:shadow-sm"
+                              >
+                                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                                  <path d="M5 12h14" />
+                                </svg>
+                              </button>
+                              <span className="inline-flex h-7 min-w-[2.25rem] items-center justify-center text-sm font-black text-slate-950">
+                                {item.cantidad}
+                              </span>
+                              <button
+                                type="button"
+                                aria-label={`Aumentar cantidad de ${item.nombre}`}
+                                onClick={() => incrementItem(item.id)}
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-600 transition-colors duration-200 hover:bg-white hover:shadow-sm"
+                              >
+                                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                                  <path d="M12 5v14M5 12h14" />
+                                </svg>
+                              </button>
+                            </div>
+
+                            <p className="col-start-3 row-start-2 text-right text-sm font-black text-slate-950 md:col-start-auto md:row-start-auto md:text-base">
+                              {formatearMoneda(lineTotal)}
+                            </p>
+
+                            <button
+                              type="button"
+                              aria-label={`Quitar ${item.nombre} del carrito`}
+                              title="Quitar"
+                              onClick={() => removeItem(item.id)}
+                              className="col-start-3 row-start-1 inline-flex h-8 w-8 items-center justify-center justify-self-end rounded-full text-slate-400 transition-colors duration-200 hover:bg-[#fff0f3] hover:text-[#e4002b] md:col-start-auto md:row-start-auto"
+                            >
+                              <svg viewBox="0 0 24 24" className="h-[17px] w-[17px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+                              </svg>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
               </div>
 
               <aside className="h-fit rounded-[10px] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.07)] xl:sticky xl:top-24">
@@ -239,12 +329,12 @@ export default function CarritoPage() {
                 </p>
 
                 <div className="mt-8 space-y-3 border-t border-slate-200 pt-6">
-                  {items.map((item) => (
+                  {items.slice(0, SUMMARY_ITEMS_LIMIT).map((item) => (
                     <div
                       key={item.id}
                       className="flex items-center justify-between gap-3 text-sm"
                     >
-                      <span className="font-semibold text-slate-700">
+                      <span className="min-w-0 truncate font-semibold text-slate-700">
                         {item.nombre} <span className="text-slate-400">×{item.cantidad}</span>
                       </span>
                       <span className="shrink-0 font-black text-slate-900">
@@ -252,6 +342,11 @@ export default function CarritoPage() {
                       </span>
                     </div>
                   ))}
+                  {items.length > SUMMARY_ITEMS_LIMIT && (
+                    <p className="text-sm font-semibold text-slate-400">
+                      y {items.length - SUMMARY_ITEMS_LIMIT} {items.length - SUMMARY_ITEMS_LIMIT === 1 ? "producto más" : "productos más"}
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-6">
