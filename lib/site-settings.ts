@@ -1,11 +1,30 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
-import { DIVISIONS, type DivisionName } from "@/lib/divisions";
+import { DIVISIONS, MASCOT_SCALE_DEFAULT, clampMascotScale, type DivisionName } from "@/lib/divisions";
 
 export const WHATSAPP_NUMBER_KEY = "whatsapp-number";
 export const CAUCHOS_SALES_MODE_KEY = "cauchos-sales-mode";
 
 export type CauchosSalesMode = "precios" | "whatsapp";
+
+export function mascotEnabledKey(division: DivisionName): string {
+  return `mascot-enabled-${division.toLowerCase()}`;
+}
+
+export function mascotScaleKey(division: DivisionName): string {
+  return `mascot-scale-${division.toLowerCase()}`;
+}
+
+/** Mascot size as a percentage of its default size (100 when never set). */
+export async function getMascotScaleForDivision(division: DivisionName): Promise<number> {
+  const value = await getSiteSetting(mascotScaleKey(division));
+  return value ? clampMascotScale(Number(value)) : MASCOT_SCALE_DEFAULT;
+}
+
+/** The mascot is on unless an admin explicitly turned it off. */
+export async function getMascotEnabledForDivision(division: DivisionName): Promise<boolean> {
+  return (await getSiteSetting(mascotEnabledKey(division))) !== "false";
+}
 
 export function whatsappNumberKey(division: DivisionName): string {
   return `whatsapp-number-${division.toLowerCase()}`;

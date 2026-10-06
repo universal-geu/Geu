@@ -39,6 +39,13 @@ import {
   type DivisionName,
 } from "@/lib/divisions";
 import type { CauchosSalesMode } from "@/lib/site-settings";
+import {
+  MASCOT_DIVISIONS,
+  MASCOT_SCALE_DEFAULT,
+  MASCOT_SCALE_MAX,
+  MASCOT_SCALE_MIN,
+  clampMascotScale,
+} from "@/lib/divisions";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
   hasAdminPermission,
@@ -1742,8 +1749,18 @@ function SalesModeSubIcon() {
   );
 }
 
+function MascotSubIcon() {
+  return (
+    <SidebarIconShell>
+      <circle cx="12" cy="9" r="4.5" />
+      <path d="M5 20.5c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" />
+      <path d="M9.6 4.9 8.5 3M14.4 4.9 15.5 3" />
+    </SidebarIconShell>
+  );
+}
+
 const SETTINGS_SUB_ICONS: Record<
-  "images" | "texts" | "colors" | "whatsapp" | "salesMode",
+  "images" | "texts" | "colors" | "whatsapp" | "salesMode" | "mascot",
   () => React.JSX.Element
 > = {
   images: ImagesSubIcon,
@@ -1751,6 +1768,7 @@ const SETTINGS_SUB_ICONS: Record<
   colors: ColorsSubIcon,
   whatsapp: WhatsAppSubIcon,
   salesMode: SalesModeSubIcon,
+  mascot: MascotSubIcon,
 };
 
 function DashboardMetricIconShell({ children }: { children: React.ReactNode }) {
@@ -1926,6 +1944,11 @@ export default function AdminPage() {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [cauchosSalesMode, setCauchosSalesMode] = useState<CauchosSalesMode>("precios");
   const [isSavingSalesMode, setIsSavingSalesMode] = useState(false);
+  const [mascotEnabled, setMascotEnabled] = useState(true);
+  const [isSavingMascot, setIsSavingMascot] = useState(false);
+  const [mascotScale, setMascotScale] = useState(MASCOT_SCALE_DEFAULT);
+  const [savedMascotScale, setSavedMascotScale] = useState(MASCOT_SCALE_DEFAULT);
+  const [isSavingMascotScale, setIsSavingMascotScale] = useState(false);
   const [isLoadingSettings, setIsLoadingSettings] = useState(false);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
@@ -1965,7 +1988,7 @@ export default function AdminPage() {
     window.localStorage.setItem("geu-admin-sidebar-collapsed", isSidebarCollapsed ? "1" : "0");
   }, [isSidebarCollapsed]);
   const [settingsSection, setSettingsSection] = useState<
-    "images" | "texts" | "colors" | "whatsapp" | "salesMode" | null
+    "images" | "texts" | "colors" | "whatsapp" | "salesMode" | "mascot" | null
   >(null);
   const [editSearch, setEditSearch] = useState("");
   const [editCategoryFilter, setEditCategoryFilter] = useState<"Todas" | Categoria>("Todas");
@@ -3596,6 +3619,8 @@ export default function AdminPage() {
       const payload = (await response.json()) as {
         whatsappNumber?: string;
         cauchosSalesMode?: CauchosSalesMode;
+        mascotEnabled?: boolean;
+        mascotScale?: number;
         error?: string;
       };
       if (!response.ok) {
@@ -3603,6 +3628,10 @@ export default function AdminPage() {
       }
       setWhatsappNumber(payload.whatsappNumber ?? "");
       setCauchosSalesMode(payload.cauchosSalesMode === "whatsapp" ? "whatsapp" : "precios");
+      setMascotEnabled(payload.mascotEnabled !== false);
+      const scale = clampMascotScale(payload.mascotScale ?? MASCOT_SCALE_DEFAULT);
+      setMascotScale(scale);
+      setSavedMascotScale(scale);
     } catch (error) {
       setSettingsError(
         error instanceof Error ? error.message : "No fue posible cargar la configuración.",
@@ -3665,6 +3694,63 @@ export default function AdminPage() {
     }
   };
 
+  const handleToggleMascot = async (enabled: boolean) => {
+    const previous = mascotEnabled;
+    setMascotEnabled(enabled);
+    setIsSavingMascot(true);
+    setSettingsSaved(false);
+    setSettingsError(null);
+    try {
+      const response = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mascotEnabled: enabled }),
+      });
+      const payload = (await response.json()) as { mascotEnabled?: boolean; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo guardar el estado de la mascota.");
+      }
+      setMascotEnabled(payload.mascotEnabled !== false);
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 2000);
+    } catch (error) {
+      setMascotEnabled(previous);
+      setSettingsError(
+        error instanceof Error ? error.message : "No se pudo guardar el estado de la mascota.",
+      );
+    } finally {
+      setIsSavingMascot(false);
+    }
+  };
+
+  const handleSaveMascotScale = async () => {
+    setIsSavingMascotScale(true);
+    setSettingsSaved(false);
+    setSettingsError(null);
+    try {
+      const response = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mascotScale }),
+      });
+      const payload = (await response.json()) as { mascotScale?: number; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo guardar el tamaño de la mascota.");
+      }
+      const scale = clampMascotScale(payload.mascotScale ?? mascotScale);
+      setMascotScale(scale);
+      setSavedMascotScale(scale);
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 2000);
+    } catch (error) {
+      setSettingsError(
+        error instanceof Error ? error.message : "No se pudo guardar el tamaño de la mascota.",
+      );
+    } finally {
+      setIsSavingMascotScale(false);
+    }
+  };
+
   const loadSiteColors = async () => {
     setIsLoadingColors(true);
     setColorsError(null);
@@ -3709,7 +3795,9 @@ export default function AdminPage() {
     }
   };
 
-  const openSettingsSection = (section: "images" | "texts" | "colors" | "whatsapp" | "salesMode") => {
+  const openSettingsSection = (
+    section: "images" | "texts" | "colors" | "whatsapp" | "salesMode" | "mascot",
+  ) => {
     setSelectedImage(null);
     setRequestError("");
     setPrimaryImageIndex(0);
@@ -3732,6 +3820,7 @@ export default function AdminPage() {
     }
     if (section === "whatsapp") void loadSiteSettings();
     if (section === "salesMode") void loadSiteSettings();
+    if (section === "mascot") void loadSiteSettings();
   };
 
   const openSettingsView = () => {
@@ -4056,6 +4145,14 @@ export default function AdminPage() {
             label: "Modo de venta",
             active: activeTab === "settings" && settingsSection === "salesMode",
             onClick: () => openSettingsSection("salesMode"),
+          }
+        : null,
+      canAccessTool("settings") && MASCOT_DIVISIONS.includes(adminDivision)
+        ? {
+            key: "mascot" as const,
+            label: "Mascota",
+            active: activeTab === "settings" && settingsSection === "mascot",
+            onClick: () => openSettingsSection("mascot"),
           }
         : null,
     ] as const
@@ -8136,6 +8233,7 @@ export default function AdminPage() {
                               });
                               const cover = previews.find((preview) => preview.src && !preview.isVideo);
                               const videoCount = previews.filter((preview) => preview.isVideo).length;
+                              const imageCount = groupSlots.length - videoCount;
 
                               return (
                                 <button
@@ -8157,19 +8255,31 @@ export default function AdminPage() {
                                   <span className="min-w-0 flex-1">
                                     <span className="block truncate text-sm font-semibold text-[#1f2328]">{group}</span>
                                     <span className="mt-0.5 block text-xs text-[#8b8d91]">
-                                      {groupSlots.length} {groupSlots.length === 1 ? "imagen" : "imágenes"}
-                                      {videoCount > 0 && ` · ${videoCount} ${videoCount === 1 ? "video" : "videos"}`}
+                                      {[
+                                        imageCount > 0 && `${imageCount} ${imageCount === 1 ? "imagen" : "imágenes"}`,
+                                        videoCount > 0 && `${videoCount} ${videoCount === 1 ? "video" : "videos"}`,
+                                      ]
+                                        .filter(Boolean)
+                                        .join(" · ")}
                                     </span>
                                     {previews.length > 1 && (
                                       <span className="mt-2 flex items-center gap-1">
                                         {previews.slice(0, 3).map((preview) => (
                                           <span
                                             key={preview.key}
-                                            className="h-4 w-6 overflow-hidden rounded-[3px] bg-[#e5e8eb] ring-1 ring-black/5"
+                                            className={`flex h-4 w-6 items-center justify-center overflow-hidden rounded-[3px] ring-1 ring-black/5 ${
+                                              preview.isVideo ? "bg-[#1f2328]" : "bg-[#e5e8eb]"
+                                            }`}
                                           >
-                                            {preview.src && !preview.isVideo && (
-                                              // eslint-disable-next-line @next/next/no-img-element
-                                              <img src={preview.src} alt="" className="h-full w-full object-cover" />
+                                            {preview.isVideo ? (
+                                              <svg aria-label="Video" viewBox="0 0 10 10" className="h-2 w-2 fill-white">
+                                                <path d="M2.5 1.5v7l6-3.5-6-3.5Z" />
+                                              </svg>
+                                            ) : (
+                                              preview.src && (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={preview.src} alt="" className="h-full w-full object-cover" />
+                                              )
                                             )}
                                           </span>
                                         ))}
@@ -8709,6 +8819,142 @@ export default function AdminPage() {
 
                 {settingsSaved && (
                   <p className="mt-4 text-sm font-semibold text-[#1f6b39]">✓ Modo de venta guardado</p>
+                )}
+              </div>
+            )}
+
+          {activeTab === "settings" &&
+            settingsSection === "mascot" &&
+            canAccessTool("settings") &&
+            MASCOT_DIVISIONS.includes(adminDivision) && (
+              <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
+                <div className="mb-8">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
+                    {adminBrand.label}
+                  </p>
+                  <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#16384f]">
+                    Mascota
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
+                    Muestra u oculta a Gus, la mascota animada con asistente de voz que aparece
+                    flotando en la página pública, y ajusta su tamaño. Los cambios se aplican de
+                    inmediato.
+                  </p>
+                </div>
+
+                {settingsError && (
+                  <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                    {settingsError}
+                  </p>
+                )}
+
+                <div className="flex max-w-md items-center justify-between gap-6 rounded-2xl border-2 border-black/10 px-5 py-4">
+                  <div>
+                    <span className="block text-sm font-black uppercase tracking-[0.06em] text-[#16384f]">
+                      {mascotEnabled ? "Activada" : "Desactivada"}
+                    </span>
+                    <span className="mt-1 block text-xs leading-5 text-[#6e7379]">
+                      {mascotEnabled
+                        ? "Gus se muestra en el sitio."
+                        : "Gus está oculto para los visitantes."}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={mascotEnabled}
+                    aria-label="Activar o desactivar la mascota"
+                    disabled={isSavingMascot || isLoadingSettings}
+                    onClick={() => void handleToggleMascot(!mascotEnabled)}
+                    className={`relative h-8 w-14 shrink-0 rounded-full transition-colors duration-200 ${
+                      mascotEnabled ? "bg-[var(--admin-accent)]" : "bg-black/20"
+                    } ${isSavingMascot || isLoadingSettings ? "pointer-events-none opacity-60" : ""}`}
+                  >
+                    <span
+                      className={`absolute top-1 left-1 h-6 w-6 rounded-full bg-white shadow transition-transform duration-200 ${
+                        mascotEnabled ? "translate-x-6" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                <div className="mt-6 max-w-md rounded-2xl border-2 border-black/10 px-5 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="block text-sm font-black uppercase tracking-[0.06em] text-[#16384f]">
+                      Tamaño
+                    </span>
+                    <span className="text-sm font-semibold text-[#16384f]">{mascotScale}%</span>
+                  </div>
+                  <span className="mt-1 block text-xs leading-5 text-[#6e7379]">
+                    100% es el tamaño original. En celular se mantiene la misma proporción.
+                  </span>
+
+                  <div className="mt-4 flex items-center gap-3">
+                    <button
+                      type="button"
+                      aria-label="Disminuir tamaño"
+                      disabled={isSavingMascotScale || isLoadingSettings || mascotScale <= MASCOT_SCALE_MIN}
+                      onClick={() => setMascotScale((current) => clampMascotScale(current - 10))}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/15 text-lg font-bold text-[#16384f] hover:border-black/30 disabled:opacity-40"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="range"
+                      min={MASCOT_SCALE_MIN}
+                      max={MASCOT_SCALE_MAX}
+                      step={10}
+                      value={mascotScale}
+                      disabled={isSavingMascotScale || isLoadingSettings}
+                      onChange={(event) => setMascotScale(clampMascotScale(Number(event.target.value)))}
+                      aria-label="Tamaño de la mascota"
+                      className="w-full accent-[var(--admin-accent)]"
+                    />
+                    <button
+                      type="button"
+                      aria-label="Aumentar tamaño"
+                      disabled={isSavingMascotScale || isLoadingSettings || mascotScale >= MASCOT_SCALE_MAX}
+                      onClick={() => setMascotScale((current) => clampMascotScale(current + 10))}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/15 text-lg font-bold text-[#16384f] hover:border-black/30 disabled:opacity-40"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <div className="mt-4 flex h-[200px] items-end justify-center overflow-hidden rounded-xl bg-[#0b1620]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/gus/idle-1.png"
+                      alt="Vista previa del tamaño de la mascota"
+                      style={{ width: Math.round(95 * (mascotScale / 100)), height: "auto" }}
+                      className="object-contain object-bottom"
+                    />
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      disabled={isSavingMascotScale || isLoadingSettings || mascotScale === savedMascotScale}
+                      onClick={() => void handleSaveMascotScale()}
+                      className="rounded-full bg-[var(--admin-accent)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--admin-accent-hover)] disabled:opacity-50"
+                    >
+                      {isSavingMascotScale ? "Guardando..." : "Guardar tamaño"}
+                    </button>
+                    {mascotScale !== MASCOT_SCALE_DEFAULT && (
+                      <button
+                        type="button"
+                        disabled={isSavingMascotScale || isLoadingSettings}
+                        onClick={() => setMascotScale(MASCOT_SCALE_DEFAULT)}
+                        className="text-sm font-semibold text-[#6e7379] underline-offset-2 hover:underline"
+                      >
+                        Volver a 100%
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {settingsSaved && (
+                  <p className="mt-4 text-sm font-semibold text-[#1f6b39]">✓ Mascota actualizada</p>
                 )}
               </div>
             )}

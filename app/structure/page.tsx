@@ -10,7 +10,11 @@ import SiteFooter from "../components/site-footer";
 import { getSiteTexts } from "@/lib/site-texts";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
-import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
+import {
+  getMascotEnabledForDivision,
+  getMascotScaleForDivision,
+  getWhatsAppNumberForDivision,
+} from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -116,6 +120,8 @@ export default async function StructurePage() {
   const siteTexts = await getSiteTexts();
   const siteImages = await getSiteImages();
   const whatsappNumber = await getWhatsAppNumberForDivision("Innovation");
+  const mascotEnabled = await getMascotEnabledForDivision("Innovation");
+  const mascotScale = await getMascotScaleForDivision("Innovation");
   const whatsappHref = whatsappNumber
     ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
         "Hola GEU Structure, quiero hablar con un ingeniero.",
@@ -580,7 +586,7 @@ export default async function StructurePage() {
         columns={[]}
       />
 
-      <YuloWidget />
+      {mascotEnabled && <YuloWidget scale={mascotScale / 100} />}
     </main>
   );
 }

@@ -4,6 +4,19 @@ export type DivisionName = (typeof DIVISIONS)[number];
 
 const SERVICE_DIVISIONS: readonly DivisionName[] = ["Innovation", "GEU"];
 
+/** Divisions whose public page shows the floating mascot (Gus) — Structure's key is "Innovation". */
+export const MASCOT_DIVISIONS: readonly DivisionName[] = ["Innovation"];
+
+/** Mascot size as a percentage of its default size. */
+export const MASCOT_SCALE_MIN = 50;
+export const MASCOT_SCALE_MAX = 200;
+export const MASCOT_SCALE_DEFAULT = 100;
+
+export function clampMascotScale(value: number): number {
+  if (!Number.isFinite(value)) return MASCOT_SCALE_DEFAULT;
+  return Math.min(MASCOT_SCALE_MAX, Math.max(MASCOT_SCALE_MIN, Math.round(value)));
+}
+
 export function isServiceDivision(division: DivisionName) {
   return SERVICE_DIVISIONS.includes(division);
 }

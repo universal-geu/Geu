@@ -31,16 +31,18 @@ const GREETINGS = [
 const WIDGET_SIZE_DESKTOP = 190;
 const WIDGET_SIZE_MOBILE = 120;
 
-function getWidgetSize() {
-  return window.innerWidth < 768 ? WIDGET_SIZE_MOBILE : WIDGET_SIZE_DESKTOP;
+// `scale` es el tamaño configurado desde el admin (1 = tamaño por defecto).
+function getWidgetSize(scale: number) {
+  const base = window.innerWidth < 768 ? WIDGET_SIZE_MOBILE : WIDGET_SIZE_DESKTOP;
+  return Math.round(base * scale);
 }
 const STORAGE_KEY = "yulo-widget-position";
 // Below the lg breakpoint the page shows MobileBottomNav, so keep Yulo above it.
 const MOBILE_NAV_HEIGHT = 72;
 
-function getMaxY() {
+function getMaxY(scale: number) {
   const navReserve = window.innerWidth < 1024 ? MOBILE_NAV_HEIGHT : 0;
-  return window.innerHeight - getWidgetSize() - 8 - navReserve;
+  return window.innerHeight - getWidgetSize(scale) - 8 - navReserve;
 }
 const WANDER_IDLE_MS = 15000;
 const WANDER_CHECK_MS = 4000;
@@ -82,7 +84,9 @@ function MicIcon({ className = "" }: { className?: string }) {
   );
 }
 
-export default function YuloWidget() {
+export default function YuloWidget({ scale = 1 }: { scale?: number }) {
+  // El tamaño viene del servidor y no cambia mientras la página está abierta.
+  const scaleRef = useRef(scale);
   const [position, setPosition] = useState<Position | null>(null);
   const [mode, setMode] = useState<Mode>("idle");
   const [frameIndex, setFrameIndex] = useState(0);
@@ -238,15 +242,14 @@ export default function YuloWidget() {
   // hydration always matches before this effect fires the one-time update.
   useEffect(() => {
     const clamp = (x: number, y: number) => ({
-      x: Math.min(Math.max(x, 8), window.innerWidth - getWidgetSize() - 8),
-      y: Math.min(Math.max(y, 8), getMaxY()),
+      x: Math.min(Math.max(x, 8), window.innerWidth - getWidgetSize(scaleRef.current) - 8),
+      y: Math.min(Math.max(y, 8), getMaxY(scaleRef.current)),
     });
 
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as Position;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPosition(clamp(parsed.x, parsed.y));
         return;
       }
@@ -255,7 +258,7 @@ export default function YuloWidget() {
     }
 
     setPosition(
-      clamp(window.innerWidth - getWidgetSize() - 28, getMaxY() - 20),
+      clamp(window.innerWidth - getWidgetSize(scaleRef.current) - 28, getMaxY(scaleRef.current) - 20),
     );
   }, []);
 
@@ -306,7 +309,7 @@ export default function YuloWidget() {
 
     const distance = 90 + Math.random() * 70;
     const goLeft = Math.random() > 0.5;
-    const maxX = window.innerWidth - getWidgetSize() - 8;
+    const maxX = window.innerWidth - getWidgetSize(scaleRef.current) - 8;
     const startX = currentPosition.x;
     const targetX = goLeft ? Math.max(8, startX - distance) : Math.min(maxX, startX + distance);
     if (Math.abs(targetX - startX) < 20) return;
@@ -408,11 +411,11 @@ export default function YuloWidget() {
 
     const nextX = Math.min(
       Math.max(event.clientX - dragOffset.current.x, 8),
-      window.innerWidth - getWidgetSize() - 8,
+      window.innerWidth - getWidgetSize(scaleRef.current) - 8,
     );
     const nextY = Math.min(
       Math.max(event.clientY - dragOffset.current.y, 8),
-      getMaxY(),
+      getMaxY(scaleRef.current),
     );
     setPosition({ x: nextX, y: nextY });
   };
@@ -446,7 +449,7 @@ export default function YuloWidget() {
 
   if (!position) return null;
   // Solo se llega aquí en el cliente (position se fija en un efecto), así que window existe.
-  const widgetSize = getWidgetSize();
+  const widgetSize = getWidgetSize(scale);
 
   const frames =
     mode === "wave"
