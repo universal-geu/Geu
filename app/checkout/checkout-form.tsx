@@ -545,119 +545,184 @@ export default function CheckoutForm({
       <CauchosHeader division={division} />
       {wompiEnabled && <Script src="https://checkout.wompi.co/widget.js" strategy="afterInteractive" />}
       {pendingOrder && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0f172a]/45 px-6 backdrop-blur-[2px]">
-          <div className="w-full max-w-lg rounded-[1.9rem] border border-black/8 bg-white p-7 shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--brand-accent)]">
-              {wompiEnabled && !showTestPayment ? "Pago con Wompi" : "Pago de prueba"}
-            </p>
-            <h2 className="mt-3 text-3xl font-bold text-[#16384f]">
-              {wompiEnabled && !showTestPayment ? "Paga tu pedido con Wompi" : "Simular pago del pedido"}
-            </h2>
-            <p className="mt-3 text-sm leading-7 text-slate-600">
-              {wompiEnabled && showTestPayment ? (
-                "Aprueba el pedido sin cobro real para probar todo el flujo: confirmación, estado del pedido, mi cuenta y panel admin. Requiere el código de prueba."
-              ) : wompiEnabled ? (
-                "Se abrirá la ventana segura de Wompi para completar el pago con tarjeta, PSE, Nequi u otros medios disponibles."
-              ) : (
-                <>
-                  Mientras conectamos Wompi, este paso te permite mostrar la experiencia completa. Usa el código{" "}
-                  <span className="font-semibold text-[#16384f]">1234</span> para aprobar el pago.
-                </>
-              )}
-            </p>
-
-            <div className="mt-6 grid gap-3 md:grid-cols-2">
-              <div className="rounded-[1.2rem] border border-black/8 bg-[#fafaf9] px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                  Pedido
-                </p>
-                <p className="mt-2 text-sm font-semibold text-[#16384f]">{formatOrderCode(pendingOrder.orderNumber)}</p>
-              </div>
-              <div className="rounded-[1.2rem] border border-black/8 bg-[#fafaf9] px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b8d91]">
-                  Total
-                </p>
-                <p className="mt-2 text-sm font-semibold text-[#16384f]">
-                  {formatCurrency(pendingOrder.subtotal + pendingOrder.shippingCost)}
-                </p>
+        <div className="checkout-pay-backdrop fixed inset-0 z-[90] flex items-end justify-center bg-[#0f172a]/55 backdrop-blur-sm sm:items-center sm:px-6">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="checkout-pay-title"
+            className="checkout-pay-card relative w-full max-w-md overflow-hidden rounded-t-[1.75rem] bg-white shadow-[0_30px_80px_rgba(15,23,42,0.35)] sm:rounded-[1.75rem]"
+          >
+            <div className="relative bg-[var(--brand-accent)] px-6 pb-14 pt-6 text-white sm:px-7">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_-10%,rgba(255,255,255,0.35),transparent_55%)]"
+              />
+              <button
+                type="button"
+                aria-label="Cerrar"
+                onClick={() => {
+                  if (showTestPayment && wompiEnabled) {
+                    setShowTestPayment(false);
+                  } else {
+                    setPendingOrder(null);
+                  }
+                  setPaymentCode("");
+                }}
+                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition-colors duration-200 hover:bg-white/30"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </button>
+              <div className="relative flex items-center gap-3">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="4" y="10.5" width="16" height="10" rx="2.5" />
+                    <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+                  </svg>
+                </span>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/80">
+                    {wompiEnabled && !showTestPayment ? "Pago seguro" : "Pago de prueba"}
+                  </p>
+                  <h2 id="checkout-pay-title" className="text-xl font-bold leading-tight">
+                    {wompiEnabled && !showTestPayment ? "Completa tu pago" : "Simular pago del pedido"}
+                  </h2>
+                </div>
               </div>
             </div>
 
-            {wompiEnabled && !showTestPayment ? (
-              <>
-              <div className="mt-6 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setPendingOrder(null)}
-                  className="flex-1 rounded-xl border border-[#16384f]/20 px-4 py-3 font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
-                >
-                  Pagar luego
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handlePayWithWompi()}
-                  disabled={isPayingWithWompi}
-                  className="flex-1 rounded-xl bg-[var(--brand-accent)] px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {isPayingWithWompi ? "Abriendo Wompi..." : "Pagar con Wompi"}
-                </button>
-              </div>
-              {testPaymentEnabled && (
-                <button
-                  type="button"
-                  onClick={() => setShowTestPayment(true)}
-                  className="mt-4 w-full text-center text-sm font-medium text-slate-500 underline-offset-4 transition-colors duration-200 hover:text-[#16384f] hover:underline"
-                >
-                  Simular pago de prueba
-                </button>
-              )}
-              </>
-            ) : (
-              <form onSubmit={handleConfirmPayment} className="mt-6 space-y-4">
-                <div>
-                  <label
-                    htmlFor="paymentCode"
-                    className="mb-2 block text-sm font-medium text-slate-700"
-                  >
-                    {wompiEnabled ? "Código de pago de prueba" : "Código de pago demo"}
-                  </label>
-                  <input
-                    id="paymentCode"
-                    type="password"
-                    value={paymentCode}
-                    onChange={(event) => setPaymentCode(event.target.value)}
-                    placeholder="Ingresa el código"
-                    autoFocus
-                    required
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
-                  />
+            <div className="relative -mt-9 px-6 pb-6 sm:px-7 sm:pb-7">
+              <div className="rounded-2xl border border-black/6 bg-white px-5 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.10)]">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">Total a pagar</p>
+                  <span className="rounded-full bg-[#f1f5f9] px-2.5 py-1 text-xs font-semibold text-[#16384f]">
+                    Pedido {formatOrderCode(pendingOrder.orderNumber)}
+                  </span>
                 </div>
+                <p className="mt-1.5 text-3xl font-bold tracking-tight text-[#16384f]">
+                  {formatCurrency(pendingOrder.subtotal + pendingOrder.shippingCost)}
+                </p>
+              </div>
 
-                <div className="flex gap-3">
+              <p className="mt-5 text-sm leading-6 text-slate-600">
+                {wompiEnabled && showTestPayment ? (
+                  "Aprueba el pedido sin cobro real para probar todo el flujo: confirmación, estado del pedido, mi cuenta y panel admin. Requiere el código de prueba."
+                ) : wompiEnabled ? (
+                  "Se abrirá la ventana segura de Wompi para que elijas cómo pagar."
+                ) : (
+                  <>
+                    Mientras conectamos Wompi, este paso te permite mostrar la experiencia completa. Usa el código{" "}
+                    <span className="font-semibold text-[#16384f]">1234</span> para aprobar el pago.
+                  </>
+                )}
+              </p>
+
+              {wompiEnabled && !showTestPayment ? (
+                <>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {["Tarjeta", "PSE", "Transferencia Bancolombia"].map((method) => (
+                      <li
+                        key={method}
+                        className="rounded-full border border-black/8 bg-[#fafaf9] px-3 py-1.5 text-xs font-semibold text-[#16384f]"
+                      >
+                        {method}
+                      </li>
+                    ))}
+                  </ul>
+
                   <button
                     type="button"
-                    onClick={() => {
-                      if (wompiEnabled) {
-                        setShowTestPayment(false);
-                      } else {
-                        setPendingOrder(null);
-                      }
-                      setPaymentCode("");
-                    }}
-                    className="flex-1 rounded-xl border border-[#16384f]/20 px-4 py-3 font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                    onClick={() => void handlePayWithWompi()}
+                    disabled={isPayingWithWompi}
+                    className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--brand-accent)] px-5 py-4 text-base font-semibold text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--brand-accent-hover)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    {wompiEnabled ? "Volver" : "Pagar luego"}
+                    {isPayingWithWompi ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                        Abriendo Wompi...
+                      </>
+                    ) : (
+                      <>
+                        Pagar {formatCurrency(pendingOrder.subtotal + pendingOrder.shippingCost)}
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                      </>
+                    )}
                   </button>
                   <button
-                    type="submit"
-                    disabled={isConfirmingPayment}
-                    className="flex-1 rounded-xl bg-[var(--brand-accent)] px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:opacity-70"
+                    type="button"
+                    onClick={() => setPendingOrder(null)}
+                    className="mt-2 w-full rounded-2xl px-5 py-3 text-sm font-semibold text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-[#16384f]"
                   >
-                    {isConfirmingPayment ? "Validando..." : "Confirmar pago"}
+                    Pagar más tarde
                   </button>
-                </div>
-              </form>
-            )}
+                  {testPaymentEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => setShowTestPayment(true)}
+                      className="mt-1 w-full text-center text-xs font-medium text-slate-400 underline-offset-4 transition-colors duration-200 hover:text-[#16384f] hover:underline"
+                    >
+                      Simular pago de prueba
+                    </button>
+                  )}
+
+                  <p className="mt-5 flex items-center justify-center gap-1.5 border-t border-black/6 pt-4 text-xs text-slate-400">
+                    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 3l7 3v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6l7-3Z" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    Pago procesado de forma segura por <span className="font-semibold text-slate-500">Wompi</span>
+                  </p>
+                </>
+              ) : (
+                <form onSubmit={handleConfirmPayment} className="mt-5 space-y-4">
+                  <div>
+                    <label
+                      htmlFor="paymentCode"
+                      className="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                      {wompiEnabled ? "Código de pago de prueba" : "Código de pago demo"}
+                    </label>
+                    <input
+                      id="paymentCode"
+                      type="password"
+                      value={paymentCode}
+                      onChange={(event) => setPaymentCode(event.target.value)}
+                      placeholder="Ingresa el código"
+                      autoFocus
+                      required
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (wompiEnabled) {
+                          setShowTestPayment(false);
+                        } else {
+                          setPendingOrder(null);
+                        }
+                        setPaymentCode("");
+                      }}
+                      className="flex-1 rounded-xl border border-[#16384f]/20 px-4 py-3 font-semibold text-[#16384f] transition-colors duration-200 hover:bg-[#16384f] hover:text-white"
+                    >
+                      {wompiEnabled ? "Volver" : "Pagar luego"}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isConfirmingPayment}
+                      className="flex-1 rounded-xl bg-[var(--brand-accent)] px-4 py-3 font-semibold text-white transition-colors duration-200 hover:bg-[var(--brand-accent-hover)] disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {isConfirmingPayment ? "Validando..." : "Confirmar pago"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -1352,3 +1352,29 @@ html.geu-light-mode .geu-theme-page > section:not(:first-of-type) input {
     animation: none;
   }
 }
+
+/* Checkout · ventana de pago */
+@keyframes checkoutPayBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes checkoutPayCardIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.checkout-pay-backdrop {
+  animation: checkoutPayBackdropIn 180ms ease-out;
+}
+
+.checkout-pay-card {
+  animation: checkoutPayCardIn 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkout-pay-backdrop,
+  .checkout-pay-card {
+    animation: none;
+  }
+}
