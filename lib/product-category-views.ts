@@ -1,5 +1,6 @@
 import type { StoreProduct } from "./products";
 import type { DivisionName } from "./divisions";
+import { cauchosCategorySubcategories } from "@/app/data/catalog";
 
 function normalizeMatchKey(value: string | null | undefined) {
   return (value ?? "").trim().toLowerCase();
@@ -36,6 +37,29 @@ export function expandProductCategoryViews(
 ): StoreProduct[] {
   const views: StoreProduct[] = [];
 
+  // Subcategorías each categoría legitimately has: its official sub-sector
+  // list (e.g. "Alimentos, Farmacéuticos y cosméticos" → Alimentos /
+  // Farmacéuticos / Cosméticos) plus whatever this division's own products
+  // use there (e.g. "Automotriz" under Transporte). Cross-listed products and
+  // categorías adicionales are filtered against it, since they often carry
+  // sub-sectors of other categorías (Logística, Petróleo…) that would
+  // otherwise show up as stray groups.
+  const allowedSubsByCategoria = new Map<string, Set<string>>();
+  const allowSubs = (categoria: string, subs: string[]) => {
+    const key = normalizeMatchKey(categoria);
+    const set = allowedSubsByCategoria.get(key) ?? new Set<string>();
+    subs.forEach((sub) => set.add(normalizeMatchKey(sub)));
+    allowedSubsByCategoria.set(key, set);
+  };
+  for (const [categoria, groups] of Object.entries(cauchosCategorySubcategories)) {
+    allowSubs(categoria, groups.map((group) => group.name));
+  }
+  for (const product of products) {
+    if (product.division === division) {
+      allowSubs(product.categoria, product.subcategorias ?? []);
+    }
+  }
+
   // A product can sit in several subcategorías / categorías menores at once.
   // Emit one flat view per (categoría × subcategoría × categoría menor) combo
   // so category-grouping UI that reads single `subcategoria` / `categoriaMenor`
@@ -45,8 +69,14 @@ export function expandProductCategoryViews(
     categoria: string,
     subcategorias: string[] | undefined,
     categoriasMenores: string[] | undefined,
+    restrictSubs = true,
   ) => {
-    const subs = subcategorias?.length ? subcategorias : [undefined];
+    const allowed = allowedSubsByCategoria.get(normalizeMatchKey(categoria));
+    const allowedSubs =
+      restrictSubs && allowed?.size
+        ? subcategorias?.filter((sub) => allowed.has(normalizeMatchKey(sub)))
+        : subcategorias;
+    const subs = allowedSubs?.length ? allowedSubs : [undefined];
     const minors = categoriasMenores?.length ? categoriasMenores : [undefined];
     for (const subcategoria of subs) {
       for (const categoriaMenor of minors) {
@@ -66,6 +96,7 @@ export function expandProductCategoryViews(
         product.categoria,
         product.subcategorias,
         product.categoriasMenores,
+        false,
       );
       seenCategoryKeys.add(normalizeMatchKey(product.categoria));
     } else {
