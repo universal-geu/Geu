@@ -56,9 +56,12 @@ export async function PATCH(
             ? 404
             : error instanceof Error &&
                 (error.message === "INVALID_SHIPPING_STATUS" ||
-                  error.message === "INVALID_PAYMENT_STATUS")
+                  error.message === "INVALID_PAYMENT_STATUS" ||
+                  error.message === "INVALID_ESTIMATED_DELIVERY")
               ? 400
-              : 500;
+              : error instanceof Error && error.message === "ORDER_CANCELLED"
+                ? 409
+                : 500;
 
     const message =
       error instanceof Error && error.message === "UNAUTHORIZED"
@@ -71,7 +74,11 @@ export async function PATCH(
               ? "El estado de envío no es válido."
               : error instanceof Error && error.message === "INVALID_PAYMENT_STATUS"
                 ? "El estado de pago no es válido."
-                : "No fue posible actualizar el pedido.";
+                : error instanceof Error && error.message === "INVALID_ESTIMATED_DELIVERY"
+                  ? "La fecha estimada de entrega no es válida."
+                  : error instanceof Error && error.message === "ORDER_CANCELLED"
+                    ? "Este pedido ya fue cancelado y su inventario devuelto; no se puede reabrir. El cliente debe hacer un pedido nuevo."
+                    : "No fue posible actualizar el pedido.";
 
     return Response.json({ error: message }, { status });
   }

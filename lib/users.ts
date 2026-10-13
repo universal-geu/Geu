@@ -208,6 +208,7 @@ export async function updateUserProfile(
     addressLine1?: string;
     addressLine2?: string;
     newPassword?: string;
+    currentPassword?: string;
   },
 ) {
   if (!prisma) {
@@ -234,6 +235,27 @@ export async function updateUserProfile(
     throw new Error("EMAIL_ALREADY_EXISTS");
   }
 
+  // The password and the sign-in email can only change with the current
+  // password, so a session left open on a shared computer can't take the
+  // account over.
+  const current = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, passwordHash: true },
+  });
+
+  if (!current) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  if (input.newPassword || email !== current.email) {
+    if (!input.currentPassword) {
+      throw new Error("CURRENT_PASSWORD_REQUIRED");
+    }
+    if (!(await compare(input.currentPassword, current.passwordHash))) {
+      throw new Error("INVALID_CURRENT_PASSWORD");
+    }
+  }
+
   const data: {
     fullName: string;
     company: string | null;
@@ -255,8 +277,8 @@ export async function updateUserProfile(
     addressLine2,
   };
 
-  if (input.newPassword?.trim()) {
-    data.passwordHash = await hash(input.newPassword.trim(), 10);
+  if (input.newPassword) {
+    data.passwordHash = await hash(input.newPassword, 10);
   }
 
   const user = await prisma.user.update({

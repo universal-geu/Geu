@@ -132,6 +132,7 @@ type FormState = {
   addressLine2: string;
   newPassword: string;
   confirmPassword: string;
+  currentPassword: string;
 };
 
 type AccountPanel = "details" | "orders" | "quotes";
@@ -415,6 +416,7 @@ export default function AccountProfileForm({
     addressLine2: user.addressLine2 || "",
     newPassword: "",
     confirmPassword: "",
+    currentPassword: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
@@ -448,6 +450,7 @@ export default function AccountProfileForm({
       addressLine2: user.addressLine2 || "",
       newPassword: "",
       confirmPassword: "",
+      currentPassword: "",
     });
   const activeShipments = orders.filter((order) =>
     ["PREPARING", "SHIPPED"].includes(order.shippingStatus),
@@ -472,6 +475,10 @@ export default function AccountProfileForm({
 
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  // Changing the password or the sign-in email asks for the current password.
+  const needsCurrentPassword =
+    Boolean(form.newPassword) || form.email.trim().toLowerCase() !== user.email.toLowerCase();
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = event.target;
@@ -524,6 +531,7 @@ export default function AccountProfileForm({
       ...current,
       newPassword: "",
       confirmPassword: "",
+      currentPassword: "",
     }));
     setIsEditingDetails(false);
     setToast({
@@ -888,6 +896,30 @@ export default function AccountProfileForm({
                 />
                 </div>
               </div>
+
+              {needsCurrentPassword && (
+                <div className="md:col-span-2">
+                  <label htmlFor="currentPassword" className="mb-2 block text-sm font-medium text-slate-700">
+                    Contraseña actual
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="currentPassword"
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={form.currentPassword}
+                      onChange={handleChange}
+                      required
+                      autoComplete="current-password"
+                      placeholder="Necesaria para cambiar la contraseña o el correo"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-slate-900 outline-none transition-colors duration-200 focus:border-[var(--brand-accent)]"
+                    />
+                    <PasswordVisibilityToggle
+                      visible={showCurrentPassword}
+                      onToggle={() => setShowCurrentPassword((current) => !current)}
+                    />
+                  </div>
+                </div>
+              )}
 
               {inlineError && (
                 <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600 md:col-span-2">

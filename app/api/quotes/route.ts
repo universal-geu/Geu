@@ -2,9 +2,30 @@ import { requireAdminUser } from "@/lib/admin";
 import { getSessionFromCookies } from "@/lib/auth";
 import { createQuote, getQuotesForDivision } from "@/lib/quotes";
 import { DIVISIONS, type DivisionName } from "@/lib/divisions";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 function normalizeDivision(value: unknown): DivisionName {
   return DIVISIONS.includes(value as DivisionName) ? (value as DivisionName) : "Cauchos";
+}
+
+// The body comes straight from the client: keep only strings (trimmed and
+// capped) so a malformed payload can't crash the save or the email.
+function text(value: unknown, max = 2000) {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+function textList(value: unknown) {
+  return Array.isArray(value) ? value.map((item) => text(item, 200)).filter(Boolean).slice(0, 30) : [];
+}
+
+function textRecord(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  return Object.fromEntries(
+    Object.entries(value)
+      .slice(0, 40)
+      .map(([key, item]) => [key.slice(0, 120), text(item)] as const)
+      .filter(([, item]) => item),
+  );
 }
 
 export async function GET() {
@@ -37,6 +58,17 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const rateLimit = checkRateLimit(`quote:${getClientIp(request)}`, {
+    limit: 20,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return Response.json(
+      { error: "Demasiadas solicitudes desde esta conexión. Intenta de nuevo más tarde." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+    );
+  }
+
   try {
     const body = (await request.json()) as {
       fullName?: string;
@@ -46,27 +78,27 @@ export async function POST(request: Request) {
       division?: string;
       requestType?: string;
       productDetails?: string;
-      process?: string[];
-      conditions?: string[];
+      process?: unknown;
+      conditions?: unknown;
       quantityAndDeadline?: string;
-      details?: Record<string, string>;
+      details?: unknown;
     };
 
     const session = await getSessionFromCookies();
 
     const quote = await createQuote({
       userId: session?.userId,
-      fullName: body.fullName || "",
-      company: body.company || "",
-      nit: body.nit || "",
-      phone: body.phone || "",
+      fullName: text(body.fullName, 200),
+      company: text(body.company, 200),
+      nit: text(body.nit, 50),
+      phone: text(body.phone, 50),
       division: normalizeDivision(body.division),
-      requestType: body.requestType || "",
-      productDetails: body.productDetails || "",
-      process: body.process || [],
-      conditions: body.conditions || [],
-      quantityAndDeadline: body.quantityAndDeadline || "",
-      details: body.details,
+      requestType: text(body.requestType, 200),
+      productDetails: text(body.productDetails),
+      process: textList(body.process),
+      conditions: textList(body.conditions),
+      quantityAndDeadline: text(body.quantityAndDeadline, 500),
+      details: textRecord(body.details),
     });
 
     return Response.json({

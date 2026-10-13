@@ -188,6 +188,66 @@ export async function releaseExpiredUnpaidOrdersThrottled() {
   }
 }
 
+type OrderTx = Parameters<Parameters<NonNullable<typeof prisma>["$transaction"]>[0]>[0];
+
+// Puts an order's units back in stock. Mirrors the deductions in
+// createOrderFromCart: variant stock for variant lines, plus the product
+// aggregate for non-service products.
+async function restoreOrderStock(tx: OrderTx, orderId: string, note: string) {
+  const items = await tx.orderItem.findMany({
+    where: { orderId },
+    select: { productId: true, variantSku: true, quantity: true },
+  });
+
+  const quantityBySlug = new Map<string, number>();
+  for (const item of items) {
+    quantityBySlug.set(item.productId, (quantityBySlug.get(item.productId) ?? 0) + item.quantity);
+    if (!item.variantSku) continue;
+
+    const variant = await tx.productVariant.findUnique({ where: { sku: item.variantSku } });
+    if (!variant) continue;
+    const updatedVariant = await tx.productVariant.update({
+      where: { id: variant.id },
+      data: { stock: { increment: item.quantity } },
+      select: { stock: true },
+    });
+    await tx.inventoryMovement.create({
+      data: {
+        productId: variant.productId,
+        productVariantId: variant.id,
+        type: "ADJUSTMENT",
+        quantity: item.quantity,
+        stockAfter: updatedVariant.stock,
+        note,
+      },
+    });
+  }
+
+  for (const [slug, quantity] of quantityBySlug) {
+    const product = await tx.product.findUnique({
+      where: { slug },
+      select: { id: true, division: true, minimumStock: true },
+    });
+    if (!product || isServiceDivision(product.division)) continue;
+
+    const { stock } = await tx.product.update({
+      where: { id: product.id },
+      data: { stock: { increment: quantity } },
+      select: { stock: true },
+    });
+    await tx.product.update({
+      where: { id: product.id },
+      data: {
+        availability:
+          stock <= 0 ? "Agotado" : stock <= product.minimumStock ? "Disponible por pedido" : "Entrega inmediata",
+        inventoryMovements: {
+          create: { type: "ADJUSTMENT", quantity, stockAfter: stock, note },
+        },
+      },
+    });
+  }
+}
+
 export async function releaseExpiredUnpaidOrders() {
   if (!prisma) return 0;
   const db = prisma;
@@ -196,6 +256,9 @@ export async function releaseExpiredUnpaidOrders() {
     where: {
       paymentStatus: { not: "PAID" },
       status: { not: "CANCELLED" },
+      // Only orders still waiting to be prepared — an admin who already
+      // started or shipped an unpaid order (e.g. pago contra entrega) keeps it.
+      shippingStatus: "PENDING",
       updatedAt: { lt: new Date(Date.now() - UNPAID_ORDER_TTL_MS) },
     },
     select: { id: true, orderNumber: true },
@@ -207,7 +270,12 @@ export async function releaseExpiredUnpaidOrders() {
       // Claim the order first: if a payment or another instance got to it
       // in the meantime, the conditions no longer match and nothing happens.
       const claimed = await tx.order.updateMany({
-        where: { id: order.id, paymentStatus: { not: "PAID" }, status: { not: "CANCELLED" } },
+        where: {
+          id: order.id,
+          paymentStatus: { not: "PAID" },
+          status: { not: "CANCELLED" },
+          shippingStatus: "PENDING",
+        },
         data: {
           status: "CANCELLED",
           shippingStatus: "CANCELLED",
@@ -216,61 +284,11 @@ export async function releaseExpiredUnpaidOrders() {
       });
       if (claimed.count === 0) return false;
 
-      const items = await tx.orderItem.findMany({
-        where: { orderId: order.id },
-        select: { productId: true, variantSku: true, quantity: true },
-      });
-      const note = `Devolución automática: pedido ${formatOrderCode(order.orderNumber)} sin pagar en 24 horas`;
-
-      // Mirrors the deductions in createOrderFromCart: variant stock for
-      // variant lines, plus the product aggregate for non-service products.
-      const quantityBySlug = new Map<string, number>();
-      for (const item of items) {
-        quantityBySlug.set(item.productId, (quantityBySlug.get(item.productId) ?? 0) + item.quantity);
-        if (!item.variantSku) continue;
-
-        const variant = await tx.productVariant.findUnique({ where: { sku: item.variantSku } });
-        if (!variant) continue;
-        const updatedVariant = await tx.productVariant.update({
-          where: { id: variant.id },
-          data: { stock: { increment: item.quantity } },
-          select: { stock: true },
-        });
-        await tx.inventoryMovement.create({
-          data: {
-            productId: variant.productId,
-            productVariantId: variant.id,
-            type: "ADJUSTMENT",
-            quantity: item.quantity,
-            stockAfter: updatedVariant.stock,
-            note,
-          },
-        });
-      }
-
-      for (const [slug, quantity] of quantityBySlug) {
-        const product = await tx.product.findUnique({
-          where: { slug },
-          select: { id: true, division: true, minimumStock: true },
-        });
-        if (!product || isServiceDivision(product.division)) continue;
-
-        const { stock } = await tx.product.update({
-          where: { id: product.id },
-          data: { stock: { increment: quantity } },
-          select: { stock: true },
-        });
-        await tx.product.update({
-          where: { id: product.id },
-          data: {
-            availability:
-              stock <= 0 ? "Agotado" : stock <= product.minimumStock ? "Disponible por pedido" : "Entrega inmediata",
-            inventoryMovements: {
-              create: { type: "ADJUSTMENT", quantity, stockAfter: stock, note },
-            },
-          },
-        });
-      }
+      await restoreOrderStock(
+        tx,
+        order.id,
+        `Devolución automática: pedido ${formatOrderCode(order.orderNumber)} sin pagar en 24 horas`,
+      );
 
       return true;
     });
@@ -284,6 +302,12 @@ export async function releaseExpiredUnpaidOrders() {
 export async function createOrderFromCart(userId: string, input: CheckoutInput) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
+  }
+
+  // A session stays valid after an admin disables the account, so check here.
+  const buyer = await prisma.user.findUnique({ where: { id: userId }, select: { active: true } });
+  if (!buyer?.active) {
+    throw new Error("ACCOUNT_DISABLED");
   }
 
   // Free units held by abandoned orders before checking this cart's stock.
@@ -1143,6 +1167,7 @@ export async function updateOrderShipping(
       customerName: true,
       customerEmail: true,
       division: true,
+      orderNumber: true,
       items: { select: { division: true, ownerDivision: true } },
     },
   });
@@ -1158,6 +1183,12 @@ export async function updateOrderShipping(
     )
   ) {
     throw new Error("FORBIDDEN");
+  }
+
+  // A cancelled order's units are already back in stock, so it can't be
+  // reopened — the customer needs a new order.
+  if (currentOrder.status === "CANCELLED" && shippingStatus !== "CANCELLED") {
+    throw new Error("ORDER_CANCELLED");
   }
 
   const nextPaymentStatus = paymentStatus || currentOrder.paymentStatus;
@@ -1181,32 +1212,52 @@ export async function updateOrderShipping(
       ? new Date()
       : currentOrder.preparingAt;
 
-  const updatedOrder = await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      shippingStatus,
-      paymentStatus: nextPaymentStatus,
-      status: nextOrderStatus,
-      carrier,
-      trackingNumber,
-      adminNotes,
-      preparingAt,
-      shippedAt,
-      deliveredAt,
-      estimatedDeliveryAt,
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
+  const isCancelling = currentOrder.status !== "CANCELLED" && shippingStatus === "CANCELLED";
+
+  const updatedOrder = await prisma.$transaction(async (tx) => {
+    if (isCancelling) {
+      // Claim the cancellation so a concurrent auto-release (or a second
+      // click) can't return the same units twice.
+      const claimed = await tx.order.updateMany({
+        where: { id: orderId, status: { not: "CANCELLED" } },
+        data: { status: "CANCELLED", shippingStatus: "CANCELLED" },
+      });
+      if (claimed.count > 0) {
+        await restoreOrderStock(
+          tx,
+          orderId,
+          `Devolución: pedido ${formatOrderCode(currentOrder.orderNumber)} cancelado por el administrador`,
+        );
+      }
+    }
+
+    return tx.order.update({
+      where: { id: orderId },
+      data: {
+        shippingStatus,
+        paymentStatus: nextPaymentStatus,
+        status: nextOrderStatus,
+        carrier,
+        trackingNumber,
+        adminNotes,
+        preparingAt,
+        shippedAt,
+        deliveredAt,
+        estimatedDeliveryAt,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+        items: {
+          orderBy: { createdAt: "asc" },
         },
       },
-      items: {
-        orderBy: { createdAt: "asc" },
-      },
-    },
+    });
   });
 
   if (currentOrder.shippingStatus !== shippingStatus) {

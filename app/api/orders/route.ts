@@ -4,6 +4,7 @@ import { createOrderFromCart, getAllOrders } from "@/lib/orders";
 import { MINIMUM_ORDER_TOTAL } from "@/lib/cart-format";
 import { replaceCartItemsForUser, type PersistedCartItem } from "@/lib/cart";
 import { findOrCreateGuestUser } from "@/lib/users";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import type { ShippingDestinationInput } from "@/lib/shipping-destinations";
 
 function formatCurrency(value: number) {
@@ -46,6 +47,21 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getSessionFromCookies();
+
+    // Each order holds stock for 24 h, so anonymous order creation is capped
+    // per IP — otherwise a script could empty the inventory with fake orders.
+    if (!session) {
+      const rateLimit = checkRateLimit(`guest-order:${getClientIp(request)}`, {
+        limit: 10,
+        windowMs: 60 * 60 * 1000,
+      });
+      if (!rateLimit.allowed) {
+        return Response.json(
+          { error: "Demasiados pedidos desde esta conexión. Intenta de nuevo más tarde." },
+          { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+        );
+      }
+    }
 
     const body = (await request.json()) as {
       customerName?: string;
