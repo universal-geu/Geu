@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { departamentosColombia, getCitiesForDepartment } from "@/lib/colombia-locations";
@@ -148,6 +149,7 @@ export default function CheckoutForm({
   const [useDifferentAddress, setUseDifferentAddress] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inlineError, setInlineError] = useState("");
+  const [emailHasAccount, setEmailHasAccount] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
   const [pendingOrder, setPendingOrder] = useState<PendingOrderState>(null);
   const [paymentCode, setPaymentCode] = useState("");
@@ -360,6 +362,7 @@ export default function CheckoutForm({
 
     const payload = (await response.json()) as {
       error?: string;
+      code?: string;
       message?: string;
       order?: { id: string; orderNumber: number; totalItems: number; subtotal: number; shippingCost: number };
     };
@@ -368,6 +371,7 @@ export default function CheckoutForm({
 
     if (!response.ok || !payload.order) {
       const message = payload.error || "No fue posible crear el pedido.";
+      setEmailHasAccount(payload.code === "EMAIL_HAS_ACCOUNT");
       setInlineError(message);
       setToast({ tone: "error", message });
       return;
@@ -1104,9 +1108,23 @@ export default function CheckoutForm({
             )}
 
             {inlineError && (
-              <p className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
-                {inlineError}
-              </p>
+              <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+                <p>{inlineError}</p>
+                {emailHasAccount && (
+                  <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                    {/* The login page re-appends ?brand= to `next` itself. */}
+                    <Link
+                      href={`/login?next=${encodeURIComponent("/checkout")}${brandParam ? `&brand=${brandParam}` : ""}`}
+                      className="underline"
+                    >
+                      Iniciar sesión
+                    </Link>
+                    <Link href="/olvide-contrasena" className="underline">
+                      No tengo o no recuerdo mi contraseña
+                    </Link>
+                  </p>
+                )}
+              </div>
             )}
 
             <div className="mt-8 flex flex-wrap gap-3">

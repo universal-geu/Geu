@@ -134,6 +134,8 @@ export async function POST(request: Request) {
             ? `La compra mínima es de ${formatCurrency(MINIMUM_ORDER_TOTAL)}. Agrega más productos para continuar.`
           : error instanceof Error && error.message === "ACCOUNT_DISABLED"
             ? "Ese correo pertenece a una cuenta desactivada. Contacta al administrador."
+          : error instanceof Error && error.message === "EMAIL_HAS_ACCOUNT"
+            ? "Ese correo ya tiene una cuenta. Inicia sesión para terminar tu compra; tu carrito se conserva."
           : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
             ? "La base de datos no está configurada todavía."
             : "No fue posible crear el pedido.";
@@ -150,11 +152,14 @@ export async function POST(request: Request) {
             ? 403
           : error instanceof Error &&
               (error.message === "INSUFFICIENT_STOCK" ||
+                error.message === "EMAIL_HAS_ACCOUNT" ||
                 error.message === "VARIANT_NOT_FOUND" ||
                 error.message === "CAUCHOS_WHATSAPP_MODE")
             ? 409
           : 500;
 
-    return Response.json({ error: message }, { status });
+    const code = error instanceof Error && error.message === "EMAIL_HAS_ACCOUNT" ? error.message : undefined;
+
+    return Response.json({ error: message, code }, { status });
   }
 }

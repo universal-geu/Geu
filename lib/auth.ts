@@ -1,63 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import {
-  DIVISIONS,
-  DIVISION_ADMIN_EMAILS,
-  DIVISION_ADMIN_NAMES,
-  type DivisionName,
-} from "@/lib/divisions";
+import type { DivisionName } from "@/lib/divisions";
 
 const SESSION_COOKIE_NAME = "geu_session";
 const encoder = new TextEncoder();
-
-export type DevAdminUser = {
-  id: string;
-  fullName: string;
-  company: string;
-  email: string;
-  phone: null;
-  department: null;
-  city: null;
-  addressLine1: null;
-  addressLine2: null;
-  role: "ADMIN";
-  division: DivisionName;
-  permissions: string[];
-  active: true;
-  createdAt: Date;
-};
-
-export const DEV_ADMIN_USERS: Record<DivisionName, DevAdminUser> = Object.fromEntries(
-  DIVISIONS.map((division) => [
-    division,
-    {
-      id: `dev-admin-${division.toLowerCase()}`,
-      fullName: DIVISION_ADMIN_NAMES[division],
-      company: "GEU",
-      email: DIVISION_ADMIN_EMAILS[division],
-      phone: null,
-      department: null,
-      city: null,
-      addressLine1: null,
-      addressLine2: null,
-      role: "ADMIN" as const,
-      division,
-      permissions: [] as string[],
-      active: true as const,
-      createdAt: new Date(0),
-    },
-  ]),
-) as Record<DivisionName, DevAdminUser>;
-
-export function getDevAdminUserByEmail(email: string) {
-  return Object.values(DEV_ADMIN_USERS).find(
-    (user) => user.email.toLowerCase() === email.toLowerCase(),
-  );
-}
-
-export function getDevAdminUserById(id: string) {
-  return Object.values(DEV_ADMIN_USERS).find((user) => user.id === id);
-}
 
 function getSessionSecret() {
   const secret = process.env.APP_SESSION_SECRET;

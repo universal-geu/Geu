@@ -20,11 +20,8 @@ type Props = {
   division?: DivisionName;
 };
 
-const priceRanges = [
-  { label: "Hasta $100.000", min: 0, max: 100000 },
-  { label: "$100.000 a $300.000", min: 100000, max: 300000 },
-  { label: "Más de $300.000", min: 300000, max: Number.POSITIVE_INFINITY },
-];
+const formatCop = (value: number) =>
+  new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
 
 // Promoción que se muestra al azar debajo de los filtros (mismas ofertas de la
 // portada de cada división).
@@ -115,7 +112,9 @@ export default function CauchosCategoryProductsPage({
   const [subcategorySlug, minorSlug] = segments;
   const [selectedBrand, setSelectedBrand] = useState("Todas");
   const [selectedAvailability, setSelectedAvailability] = useState("Todas");
-  const [selectedPriceRange, setSelectedPriceRange] = useState("Todos");
+  // null = sin límite (sigue el mínimo/máximo real de la categoría).
+  const [priceMin, setPriceMin] = useState<number | null>(null);
+  const [priceMax, setPriceMax] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState("relevance");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -217,11 +216,19 @@ export default function CauchosCategoryProductsPage({
     ],
     [categoryProducts],
   );
+  const priceBounds = useMemo(() => {
+    const values = categoryProducts.map((product) => product.precioValor).filter((value) => Number.isFinite(value));
+    if (values.length === 0) return { min: 0, max: 0 };
+    return { min: Math.min(...values), max: Math.max(...values) };
+  }, [categoryProducts]);
+  const priceStep = Math.max(1, Math.round((priceBounds.max - priceBounds.min) / 100));
+  const effectivePriceMin = Math.max(priceMin ?? priceBounds.min, priceBounds.min);
+  const effectivePriceMax = Math.min(priceMax ?? priceBounds.max, priceBounds.max);
+  const resetPriceRange = () => {
+    setPriceMin(null);
+    setPriceMax(null);
+  };
   const visibleProducts = useMemo(() => {
-    const priceRange = priceRanges.find(
-      (range) => range.label === selectedPriceRange,
-    );
-
     return categoryProducts
       .filter((product) => {
         const matchesBrand =
@@ -230,9 +237,8 @@ export default function CauchosCategoryProductsPage({
           selectedAvailability === "Todas" ||
           product.disponibilidad === selectedAvailability;
         const matchesPrice =
-          !priceRange ||
-          (product.precioValor >= priceRange.min &&
-            product.precioValor < priceRange.max);
+          (priceMin === null || product.precioValor >= priceMin) &&
+          (priceMax === null || product.precioValor <= priceMax);
 
         return matchesBrand && matchesAvailability && matchesPrice;
       })
@@ -246,13 +252,15 @@ export default function CauchosCategoryProductsPage({
     categoryProducts,
     selectedAvailability,
     selectedBrand,
-    selectedPriceRange,
+    priceMin,
+    priceMax,
     sortBy,
   ]);
   const hasActiveFilters =
     selectedBrand !== "Todas" ||
     selectedAvailability !== "Todas" ||
-    selectedPriceRange !== "Todos";
+    priceMin !== null ||
+    priceMax !== null;
   const breadcrumbSubcategory =
     (!minorSlug && matchedDepartment) ||
     categoryProducts[0]?.subcategoria ||
@@ -277,16 +285,6 @@ export default function CauchosCategoryProductsPage({
       : categoryProducts.filter(
           (product) => product.disponibilidad === availability,
         ).length;
-  const countByPriceRange = (rangeLabel: string) => {
-    const range = priceRanges.find((item) => item.label === rangeLabel);
-
-    if (!range) return categoryProducts.length;
-
-    return categoryProducts.filter(
-      (product) =>
-        product.precioValor >= range.min && product.precioValor < range.max,
-    ).length;
-  };
   const renderFilterOption = ({
     group,
     value,
@@ -510,7 +508,7 @@ export default function CauchosCategoryProductsPage({
                         onClick={() => {
                           setSelectedBrand("Todas");
                           setSelectedAvailability("Todas");
-                          setSelectedPriceRange("Todos");
+                          resetPriceRange();
                         }}
                         className="text-xs font-black uppercase tracking-[0.08em] text-[var(--brand-accent)] hover:underline"
                       >
@@ -584,33 +582,49 @@ export default function CauchosCategoryProductsPage({
 
               <div className="px-5 py-5">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-600">
-                  Precio
+                  Rango de precio
                 </p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="mt-4 flex items-center justify-between gap-3 text-sm font-semibold text-slate-600">
+                  <span>Desde {formatCop(effectivePriceMin)}</span>
+                  <span>Hasta {formatCop(effectivePriceMax)}</span>
+                </div>
+                <div className="mt-5 space-y-4">
                   <input
-                    readOnly
-                    value="$0"
+                    type="range"
                     aria-label="Precio mínimo"
-                    className="h-10 rounded-[4px] border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-600 outline-none"
+                    min={priceBounds.min}
+                    max={priceBounds.max}
+                    step={priceStep}
+                    value={effectivePriceMin}
+                    disabled={priceBounds.min === priceBounds.max}
+                    onChange={(event) => {
+                      const value = Math.min(Number(event.target.value), effectivePriceMax);
+                      setPriceMin(value <= priceBounds.min ? null : value);
+                    }}
+                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-[var(--brand-accent)] disabled:cursor-default"
                   />
                   <input
-                    readOnly
-                    value="$300.000+"
+                    type="range"
                     aria-label="Precio máximo"
-                    className="h-10 rounded-[4px] border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-600 outline-none"
+                    min={priceBounds.min}
+                    max={priceBounds.max}
+                    step={priceStep}
+                    value={effectivePriceMax}
+                    disabled={priceBounds.min === priceBounds.max}
+                    onChange={(event) => {
+                      const value = Math.max(Number(event.target.value), effectivePriceMin);
+                      setPriceMax(value + priceStep > priceBounds.max ? null : value);
+                    }}
+                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-slate-800 disabled:cursor-default"
                   />
                 </div>
-                <div className="mt-3 grid gap-2">
-                  {["Todos", ...priceRanges.map((range) => range.label)].map((range) => (
-                    renderFilterOption({
-                      group: "price",
-                      value: range,
-                      count: countByPriceRange(range),
-                      selected: selectedPriceRange === range,
-                      onChange: () => setSelectedPriceRange(range),
-                    })
-                  ))}
-                </div>
+                <button
+                  type="button"
+                  onClick={resetPriceRange}
+                  className="mt-4 text-sm font-black text-slate-700 transition-colors hover:text-[var(--brand-accent)]"
+                >
+                  Restablecer rango
+                </button>
               </div>
               </aside>
 
@@ -751,7 +765,7 @@ export default function CauchosCategoryProductsPage({
                     onClick={() => {
                       setSelectedBrand("Todas");
                       setSelectedAvailability("Todas");
-                      setSelectedPriceRange("Todos");
+                      resetPriceRange();
                     }}
                     className="mt-6 inline-flex rounded-full bg-[var(--brand-accent)] px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-white"
                   >

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Orbitron, Rajdhani } from "next/font/google";
 import { headers } from "next/headers";
+import { after } from "next/server";
 import "./globals.css";
 import { CartProvider } from "./components/cart-provider";
 import { ProductsProvider } from "./components/products-provider";
@@ -12,12 +13,13 @@ import WhatsAppFloatButton from "./components/whatsapp-float-button";
 import LiveTextEditor from "./components/live-text-editor";
 import { getProducts } from "@/lib/products";
 import { getAllCategories } from "@/lib/categories";
-import { getDevAdminUserById, getSessionFromCookies } from "@/lib/auth";
+import { getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import { getCartItemsForUser } from "@/lib/cart";
 import { getAllWhatsAppNumbers, getAllSalesModes } from "@/lib/site-settings";
 import { getLiveTextEditDivision, getSiteTexts } from "@/lib/site-texts";
 import { getLiveEditableTexts } from "@/lib/text-slots";
+import { releaseExpiredUnpaidOrdersThrottled } from "@/lib/orders";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Return stock held by orders left unpaid for 24 h (throttled, after the response).
+  after(releaseExpiredUnpaidOrdersThrottled);
   // These six reads don't depend on one another, so running them
   // sequentially just adds up every one of their round trips to a remote DB.
   // Promise.all collapses that to the duration of the slowest one — this
@@ -70,9 +74,7 @@ export default async function RootLayout({
     try {
       currentUser = await getUserById(session.userId);
     } catch (error) {
-      if (error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED") {
-        currentUser = getDevAdminUserById(session.userId) ?? null;
-      } else {
+      if (!(error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED")) {
         throw error;
       }
     }

@@ -5,7 +5,7 @@ import ProductGallery from "./product-gallery";
 import ProductSpecs from "./product-specs";
 import GalvanizingProcess from "./galvanizing-process";
 import ServiciosTimeline from "./servicios-timeline";
-import YuloWidget from "./yulo-widget";
+import GusWidget from "./gus-widget";
 import SiteFooter from "../components/site-footer";
 import { getSiteTexts } from "@/lib/site-texts";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
@@ -586,7 +586,7 @@ export default async function StructurePage() {
         columns={[]}
       />
 
-      {mascotEnabled && <YuloWidget scale={mascotScale / 100} />}
+      {mascotEnabled && <GusWidget scale={mascotScale / 100} />}
     </main>
   );
 }

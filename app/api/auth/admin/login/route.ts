@@ -67,7 +67,12 @@ export async function POST(request: Request) {
             ? "La base de datos no está configurada todavía."
             : "No fue posible iniciar sesión como administrador.";
 
-    const status = error instanceof Error && error.message === "ACCOUNT_DISABLED" ? 403 : 500;
+    const status =
+      error instanceof Error && error.message === "INVALID_CREDENTIALS"
+        ? 401
+        : error instanceof Error && error.message === "ACCOUNT_DISABLED"
+          ? 403
+          : 500;
 
     return Response.json({ error: message }, { status });
   }

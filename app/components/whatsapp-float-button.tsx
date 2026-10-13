@@ -14,8 +14,8 @@ export default function WhatsAppFloatButton({ whatsappNumbers }: WhatsAppFloatBu
   const whatsappNumber = whatsappNumbers[division];
 
   if (!whatsappNumber) return null;
-  // La página de Energy · Proyectos ya trae su propio CTA de WhatsApp dentro del chat de Gus.
-  if (pathname === "/energy/proyectos") return null;
+  // El portal de inicio (selector de unidades) no lleva botón de WhatsApp.
+  if (pathname === "/") return null;
 
   const href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
     "Hola GEU, quiero más información.",

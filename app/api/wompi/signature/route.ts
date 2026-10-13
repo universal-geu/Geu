@@ -27,16 +27,19 @@ export async function POST(request: Request) {
           ? "No encontramos ese pedido."
           : error instanceof Error && error.message === "ORDER_ALREADY_PAID"
             ? "Este pedido ya fue pagado."
-            : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
-              ? "La base de datos no está configurada todavía."
-              : "No fue posible iniciar el pago con Wompi.";
+            : error instanceof Error && error.message === "ORDER_CANCELLED"
+              ? "Este pedido fue cancelado."
+              : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
+                ? "La base de datos no está configurada todavía."
+                : "No fue posible iniciar el pago con Wompi.";
 
     const status =
       error instanceof Error && error.message === "WOMPI_NOT_CONFIGURED"
         ? 503
         : error instanceof Error && error.message === "ORDER_NOT_FOUND"
           ? 404
-          : error instanceof Error && error.message === "ORDER_ALREADY_PAID"
+          : error instanceof Error &&
+              (error.message === "ORDER_ALREADY_PAID" || error.message === "ORDER_CANCELLED")
             ? 409
             : 500;
 

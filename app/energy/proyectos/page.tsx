@@ -2,12 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import SolutionsCarousel from "../solutions-carousel";
 import EnergyHeader from "../energy-header";
-import GusChat from "../gus-chat";
 import SiteFooter from "../../components/site-footer";
 import { ResponsiveBanner } from "../../components/responsive-banner";
 import { getSiteImages, resolveImage, type SiteImages } from "@/lib/site-images";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
-import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -100,14 +98,8 @@ const systemSteps = [
 export default async function EnergyProyectosPage() {
   const siteImages = await getSiteImages();
   const siteTexts = await getSiteTexts();
-  const whatsappNumber = await getWhatsAppNumberForDivision("Energy");
   const t = (key: string) => resolveText(key, siteTexts);
   const solutions = getSolutions(siteImages);
-  const gusWhatsappHref = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        "Hola Gus, quiero más información sobre energía solar.",
-      )}`
-    : null;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -275,8 +267,6 @@ export default async function EnergyProyectosPage() {
 
         </div>
       </section>
-
-      <GusChat whatsappHref={gusWhatsappHref} />
 
       <SiteFooter
         logoSrc="/logo-geu-energy.png"

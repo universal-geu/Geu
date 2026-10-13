@@ -101,6 +101,9 @@ export async function POST(request: Request) {
           ? "La base de datos no está configurada todavía."
           : "No fue posible crear la cuenta.";
 
-    return Response.json({ error: message }, { status: 500 });
+    const status =
+      error instanceof Error && error.message === "EMAIL_ALREADY_EXISTS" ? 409 : 500;
+
+    return Response.json({ error: message }, { status });
   }
 }

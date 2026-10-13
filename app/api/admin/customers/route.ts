@@ -1,9 +1,11 @@
 import { requireAdminUser } from "@/lib/admin";
 import { getAdminCustomers } from "@/lib/customers";
+import { releaseExpiredUnpaidOrders } from "@/lib/orders";
 
 export async function GET() {
   try {
     const admin = await requireAdminUser("customers");
+    await releaseExpiredUnpaidOrders();
     const customers = await getAdminCustomers(admin.division);
 
     return Response.json({ customers });

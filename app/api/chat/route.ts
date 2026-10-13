@@ -1,7 +1,6 @@
 import OpenAI from "openai";
-import { buildCatalogContext, buildLocalAssistantReply, getCatalogSnapshot } from "@/lib/chatbot";
-import { buildGusLocalReply, GUS_SYSTEM_PROMPT } from "@/lib/gus-context";
-import { buildYuloLocalReply, YULO_SYSTEM_PROMPT } from "@/lib/yulo-context";
+import { buildStructureLocalReply, STRUCTURE_SYSTEM_PROMPT } from "@/lib/structure-assistant";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -41,11 +40,21 @@ function sanitizeMessages(messages: unknown): IncomingMessage[] {
     .slice(-8);
 }
 
+// Assistant behind Gus, the GEU Structure mascot (app/structure/gus-widget.tsx).
 export async function POST(request: Request) {
+  // Public endpoint that can call OpenAI — cap it per IP so it can't be
+  // looped into a large bill.
+  const rateLimit = checkRateLimit(`chat:${getClientIp(request)}`, { limit: 40, windowMs: 10 * 60 * 1000 });
+  if (!rateLimit.allowed) {
+    return Response.json(
+      { error: "Enviaste muchos mensajes seguidos. Intenta de nuevo en unos minutos." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+    );
+  }
+
   try {
     const body = (await request.json()) as {
       messages?: IncomingMessage[];
-      division?: string;
     };
 
     const messages = sanitizeMessages(body.messages);
@@ -58,20 +67,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const division = typeof body.division === "string" ? body.division : undefined;
-    const isEnergy = division === "Energy";
-    // Structure's division key elsewhere in the codebase is "Innovation",
-    // not "Structure" — see DIVISION_BRAND in lib/divisions.ts.
-    const isStructure = division === "Innovation";
-
-    const snapshot =
-      isEnergy || isStructure ? null : await getCatalogSnapshot(latestUserMessage.content, division);
-
-    const fallback = isEnergy
-      ? buildGusLocalReply(latestUserMessage.content)
-      : isStructure
-        ? buildYuloLocalReply(latestUserMessage.content)
-        : buildLocalAssistantReply(latestUserMessage.content, snapshot!, division);
+    const fallback = buildStructureLocalReply(latestUserMessage.content);
 
     if (!openai) {
       return Response.json({
@@ -81,26 +77,9 @@ export async function POST(request: Request) {
       });
     }
 
-    const instructions = isEnergy
-      ? GUS_SYSTEM_PROMPT
-      : isStructure
-        ? YULO_SYSTEM_PROMPT
-        : [
-            "Eres el asistente comercial de GEU Grupo Empresarial Universal.",
-            "Responde siempre en español claro, breve y útil.",
-            "Tu objetivo es ayudar a encontrar productos, categorías y orientar sobre disponibilidad, envíos y pagos.",
-            "No inventes productos, precios ni stock.",
-            "Si no estás seguro, dilo claramente y sugiere una categoría o producto real del contexto.",
-            "Cuando menciones productos, usa el nombre exacto.",
-            // El chat muestra texto plano y ya pone botones con los enlaces reales debajo de la respuesta.
-            "Escribe en texto plano: no uses Markdown (nada de **negritas** ni [texto](enlace)) y nunca escribas URLs ni dominios; los enlaces a productos se muestran como botones aparte.",
-            "Contexto del catálogo:",
-            buildCatalogContext(snapshot!),
-          ].join("\n\n");
-
     const response = await openai.responses.create({
       model: process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini",
-      instructions,
+      instructions: STRUCTURE_SYSTEM_PROMPT,
       input: messages.map((message) => ({
         role: message.role,
         content: [

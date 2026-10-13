@@ -295,6 +295,13 @@ export default function LoginPage() {
                 onToggle={() => setShowPassword((current) => !current)}
               />
             </div>
+            <Link
+              href="/olvide-contrasena"
+              className="mt-2 inline-block text-sm font-semibold hover:underline"
+              style={{ color: accent }}
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
           </div>
 
           {inlineError && (

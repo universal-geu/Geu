@@ -223,6 +223,12 @@ export async function syncCartItemsForUser(
   }
 
   for (const item of items) {
+    // The client sends these quantities (guest checkout is unauthenticated),
+    // so only whole, positive amounts are accepted — a negative line would
+    // lower the order total and add stock back on checkout.
+    const quantity = Math.trunc(Number(item.cantidad));
+    if (!Number.isFinite(quantity) || quantity < 1) continue;
+
     const { slug, variantSku } = parseCartItemId(item.id);
     let trustedPrice: string;
     let variantLabel: string;
@@ -249,7 +255,7 @@ export async function syncCartItemsForUser(
         image: item.imagen,
         variantLabel,
         quantity: {
-          increment: item.cantidad,
+          increment: quantity,
         },
       },
       create: {
@@ -260,7 +266,7 @@ export async function syncCartItemsForUser(
         name: item.nombre,
         price: trustedPrice,
         image: item.imagen,
-        quantity: item.cantidad,
+        quantity,
       },
     });
   }

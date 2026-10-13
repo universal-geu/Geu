@@ -1,9 +1,11 @@
 import { getRecentInventoryMovements } from "@/lib/products";
 import { requireAdminUser } from "@/lib/admin";
+import { releaseExpiredUnpaidOrders } from "@/lib/orders";
 
 export async function GET() {
   try {
     const admin = await requireAdminUser("inventory");
+    await releaseExpiredUnpaidOrders();
     const movements = await getRecentInventoryMovements(admin.division);
 
     return Response.json({ movements });

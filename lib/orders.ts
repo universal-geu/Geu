@@ -169,10 +169,125 @@ function resolveShippingDestinations(
   return destinations;
 }
 
+// Stock is deducted when the order is created, before it's paid. An order
+// left unpaid this long (counted from its last activity, so a recent Wompi
+// attempt keeps it alive) is cancelled and its units go back to inventory.
+const UNPAID_ORDER_TTL_MS = 24 * 60 * 60 * 1000;
+const RELEASE_CHECK_INTERVAL_MS = 10 * 60 * 1000;
+let lastReleaseCheckAt = 0;
+
+/** Cheap enough to call from hot paths: does real work at most every 10 minutes per instance. */
+export async function releaseExpiredUnpaidOrdersThrottled() {
+  const now = Date.now();
+  if (now - lastReleaseCheckAt < RELEASE_CHECK_INTERVAL_MS) return;
+  lastReleaseCheckAt = now;
+  try {
+    await releaseExpiredUnpaidOrders();
+  } catch (error) {
+    console.error("releaseExpiredUnpaidOrders failed", error);
+  }
+}
+
+export async function releaseExpiredUnpaidOrders() {
+  if (!prisma) return 0;
+  const db = prisma;
+
+  const expired = await db.order.findMany({
+    where: {
+      paymentStatus: { not: "PAID" },
+      status: { not: "CANCELLED" },
+      updatedAt: { lt: new Date(Date.now() - UNPAID_ORDER_TTL_MS) },
+    },
+    select: { id: true, orderNumber: true },
+  });
+
+  let released = 0;
+  for (const order of expired) {
+    const didRelease = await db.$transaction(async (tx) => {
+      // Claim the order first: if a payment or another instance got to it
+      // in the meantime, the conditions no longer match and nothing happens.
+      const claimed = await tx.order.updateMany({
+        where: { id: order.id, paymentStatus: { not: "PAID" }, status: { not: "CANCELLED" } },
+        data: {
+          status: "CANCELLED",
+          shippingStatus: "CANCELLED",
+          adminNotes: "Cancelado automáticamente: sin pago en 24 horas. El inventario fue devuelto.",
+        },
+      });
+      if (claimed.count === 0) return false;
+
+      const items = await tx.orderItem.findMany({
+        where: { orderId: order.id },
+        select: { productId: true, variantSku: true, quantity: true },
+      });
+      const note = `Devolución automática: pedido ${formatOrderCode(order.orderNumber)} sin pagar en 24 horas`;
+
+      // Mirrors the deductions in createOrderFromCart: variant stock for
+      // variant lines, plus the product aggregate for non-service products.
+      const quantityBySlug = new Map<string, number>();
+      for (const item of items) {
+        quantityBySlug.set(item.productId, (quantityBySlug.get(item.productId) ?? 0) + item.quantity);
+        if (!item.variantSku) continue;
+
+        const variant = await tx.productVariant.findUnique({ where: { sku: item.variantSku } });
+        if (!variant) continue;
+        const updatedVariant = await tx.productVariant.update({
+          where: { id: variant.id },
+          data: { stock: { increment: item.quantity } },
+          select: { stock: true },
+        });
+        await tx.inventoryMovement.create({
+          data: {
+            productId: variant.productId,
+            productVariantId: variant.id,
+            type: "ADJUSTMENT",
+            quantity: item.quantity,
+            stockAfter: updatedVariant.stock,
+            note,
+          },
+        });
+      }
+
+      for (const [slug, quantity] of quantityBySlug) {
+        const product = await tx.product.findUnique({
+          where: { slug },
+          select: { id: true, division: true, minimumStock: true },
+        });
+        if (!product || isServiceDivision(product.division)) continue;
+
+        const { stock } = await tx.product.update({
+          where: { id: product.id },
+          data: { stock: { increment: quantity } },
+          select: { stock: true },
+        });
+        await tx.product.update({
+          where: { id: product.id },
+          data: {
+            availability:
+              stock <= 0 ? "Agotado" : stock <= product.minimumStock ? "Disponible por pedido" : "Entrega inmediata",
+            inventoryMovements: {
+              create: { type: "ADJUSTMENT", quantity, stockAfter: stock, note },
+            },
+          },
+        });
+      }
+
+      return true;
+    });
+
+    if (didRelease) released += 1;
+  }
+
+  return released;
+}
+
 export async function createOrderFromCart(userId: string, input: CheckoutInput) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");
   }
+
+  // Free units held by abandoned orders before checking this cart's stock.
+  await releaseExpiredUnpaidOrdersThrottled();
 
   const customerName = input.customerName.trim();
   const customerEmail = input.customerEmail.trim().toLowerCase();
@@ -202,6 +317,10 @@ export async function createOrderFromCart(userId: string, input: CheckoutInput) 
 
   if (cartItems.length === 0) {
     throw new Error("EMPTY_CART");
+  }
+
+  if (cartItems.some((item) => item.quantity < 1)) {
+    throw new Error("INVALID_CHECKOUT");
   }
 
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
@@ -620,19 +739,6 @@ async function sendOrderConfirmationEmails(order: {
   );
 }
 
-export async function getOrderDivision(orderId: string): Promise<DivisionName | null> {
-  if (!prisma) {
-    return null;
-  }
-
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: { division: true },
-  });
-
-  return order?.division ?? null;
-}
-
 export async function getOrderConfirmationSummary(
   orderId: string,
 ): Promise<{ division: DivisionName; orderNumber: number } | null> {
@@ -733,18 +839,20 @@ export async function getSalesReport(
       {
         category: product.category,
         stock: product.stock,
-        division: product.division,
       },
     ]),
   );
-  const matchesDivision = (productSlug: string) =>
-    !division || productLookup.get(productSlug)?.division === division;
+  // Each line counts for the unit credited with the sale (OrderItem.division),
+  // so a cross-listed sale shows up where the order list shows it, and lines
+  // of since-deleted products still count.
+  const matchesDivision = (item: { division: DivisionName }) =>
+    !division || item.division === division;
 
   const productSales = new Map<string, SalesReportProduct>();
   const categorySales = new Map<string, SalesReportCategory>();
   const allActiveOrders = orders.filter((order) => order.status !== "CANCELLED");
   const activeOrders = allActiveOrders.filter((order) =>
-    order.items.some((item) => matchesDivision(item.productId)),
+    order.items.some(matchesDivision),
   );
   const paidOrders = activeOrders.filter((order) => order.paymentStatus === "PAID");
 
@@ -753,7 +861,7 @@ export async function getSalesReport(
   let productsSold = 0;
 
   for (const order of activeOrders) {
-    const matchingItems = order.items.filter((item) => matchesDivision(item.productId));
+    const matchingItems = order.items.filter(matchesDivision);
     const orderRevenue = matchingItems.reduce((sum, item) => sum + item.lineTotal, 0);
     const orderQuantity = matchingItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -799,7 +907,7 @@ export async function getSalesReport(
     .sort((a, b) => b.quantitySold - a.quantitySold || b.revenue - a.revenue)
     .slice(0, 6);
   const scopedOrders = division
-    ? orders.filter((order) => order.items.some((item) => matchesDivision(item.productId)))
+    ? orders.filter((order) => order.items.some(matchesDivision))
     : orders;
   const scopedProducts = division
     ? products.filter((product) => product.division === division)
@@ -905,13 +1013,14 @@ export async function getDashboardMetrics(
       include: { items: true },
     }),
     prisma.product.findMany({
-      select: { slug: true, division: true, category: true },
+      select: { slug: true, category: true },
     }),
   ]);
 
   const productLookup = new Map(products.map((p) => [p.slug, p]));
-  const matchesDivision = (productSlug: string) =>
-    !division || productLookup.get(productSlug)?.division === division;
+  // Same attribution as getSalesReport: the unit credited on each line.
+  const matchesDivision = (item: { division: DivisionName }) =>
+    !division || item.division === division;
 
   let revenue = 0;
   let unitsSold = 0;
@@ -921,7 +1030,7 @@ export async function getDashboardMetrics(
   const productQuantity = new Map<string, { name: string; quantitySold: number }>();
 
   for (const order of orders) {
-    const matchingItems = order.items.filter((item) => matchesDivision(item.productId));
+    const matchingItems = order.items.filter(matchesDivision);
     if (matchingItems.length === 0) continue;
 
     orderIds.add(order.id);
@@ -948,12 +1057,12 @@ export async function getDashboardMetrics(
           createdAt: { lt: from },
           customerEmail: { in: Array.from(customers) },
         },
-        select: { customerEmail: true, items: { select: { productId: true } } },
+        select: { customerEmail: true, items: { select: { division: true } } },
       })
     : [];
   const returningCustomers = new Set(
     earlierOrders
-      .filter((order) => order.items.some((item) => matchesDivision(item.productId)))
+      .filter((order) => order.items.some(matchesDivision))
       .map((order) => order.customerEmail),
   );
 
@@ -1276,6 +1385,10 @@ export async function createWompiCheckoutSignature(
     throw new Error("ORDER_NOT_FOUND");
   }
 
+  if (order.status === "CANCELLED" || order.shippingStatus === "CANCELLED") {
+    throw new Error("ORDER_CANCELLED");
+  }
+
   if (order.paymentStatus === "PAID") {
     throw new Error("ORDER_ALREADY_PAID");
   }
@@ -1318,6 +1431,15 @@ async function applyWompiTransaction(order: OrderWithItems, transaction: WompiTr
 
   if (order.paymentStatus === "PAID") {
     return order;
+  }
+
+  // Its stock was already released (e.g. auto-cancelled after 24 h unpaid).
+  // A payment that still lands here needs a human: refund or re-create it.
+  if (order.status === "CANCELLED") {
+    if (transaction.status === "APPROVED") {
+      console.error(`Wompi approved payment ${transaction.id} for cancelled order ${order.id}`);
+    }
+    throw new Error("ORDER_CANCELLED");
   }
 
   if (transaction.reference !== order.paymentReference) {

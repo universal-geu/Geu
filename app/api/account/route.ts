@@ -1,4 +1,4 @@
-import { getDevAdminUserById, getSessionFromCookies, setSessionCookie } from "@/lib/auth";
+import { getSessionFromCookies, setSessionCookie } from "@/lib/auth";
 import { getUserById, updateUserProfile } from "@/lib/users";
 
 export async function GET() {
@@ -7,11 +7,6 @@ export async function GET() {
 
     if (!session) {
       return Response.json({ error: "No autorizado." }, { status: 401 });
-    }
-
-    const devAdmin = getDevAdminUserById(session.userId);
-    if (devAdmin) {
-      return Response.json({ user: devAdmin });
     }
 
     const user = await getUserById(session.userId);

@@ -1,4 +1,4 @@
-import { getDevAdminUserById, getSessionFromCookies } from "@/lib/auth";
+import { getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import type { DivisionName } from "@/lib/divisions";
 import {
@@ -12,14 +12,6 @@ export async function requireAdminUser(permission?: AdminToolKey) {
 
   if (!session) {
     throw new Error("UNAUTHORIZED");
-  }
-
-  const devAdmin = getDevAdminUserById(session.userId);
-  if (devAdmin && session.role === "ADMIN") {
-    if (permission && !isToolAllowedForDivision(devAdmin.division, permission)) {
-      throw new Error("FORBIDDEN");
-    }
-    return devAdmin;
   }
 
   const user = await getUserById(session.userId);

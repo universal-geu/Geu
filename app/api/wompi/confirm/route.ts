@@ -51,17 +51,21 @@ export async function POST(request: Request) {
               ? "El pago fue rechazado. Intenta con otro medio de pago."
               : error instanceof Error && error.message === "PAYMENT_PENDING"
                 ? "El pago quedó pendiente de confirmación por parte de Wompi."
-                : error instanceof Error && error.message === "WOMPI_TRANSACTION_NOT_FOUND"
-                  ? "No fue posible verificar la transacción con Wompi."
-                  : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
-                    ? "La base de datos no está configurada todavía."
-                    : "No fue posible confirmar el pago.";
+                : error instanceof Error && error.message === "ORDER_CANCELLED"
+                  ? "Este pedido fue cancelado. Escríbenos para revisar tu pago."
+                  : error instanceof Error && error.message === "WOMPI_TRANSACTION_NOT_FOUND"
+                    ? "No fue posible verificar la transacción con Wompi."
+                    : error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED"
+                      ? "La base de datos no está configurada todavía."
+                      : "No fue posible confirmar el pago.";
 
     const status =
       error instanceof Error && error.message === "ORDER_NOT_FOUND"
         ? 404
         : error instanceof Error &&
-            (error.message === "REFERENCE_MISMATCH" || error.message === "AMOUNT_MISMATCH")
+            (error.message === "REFERENCE_MISMATCH" ||
+              error.message === "AMOUNT_MISMATCH" ||
+              error.message === "ORDER_CANCELLED")
           ? 409
           : error instanceof Error && error.message === "PAYMENT_DECLINED"
             ? 402

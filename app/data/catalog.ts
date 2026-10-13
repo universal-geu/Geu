@@ -74,7 +74,6 @@ export const importCategoriasData = [
   { nombre: "Mercado Persa", color: "#868e96", icono: "✦", imageKey: "import-categoria-mercado-persa" },
   { nombre: "Autopartes", color: "#c92a2a", icono: "⚙", imageKey: "import-categoria-autopartes" },
 ] as const;
-export const importCategorias: string[] = importCategoriasData.map((item) => item.nombre);
 
 // Plastic's own category taxonomy (transformación de plásticos técnicos) —
 // like Import, each entry is already a single, specific product line, with
@@ -89,7 +88,6 @@ export const plasticCategoriasData = [
   { nombre: "Perfilería para construcción", color: "#868e96", icono: "▲", imageKey: "plastic-categoria-perfileria-construccion" },
   { nombre: "Perfilería para carrocería", color: "#c92a2a", icono: "⚙", imageKey: "plastic-categoria-perfileria-carroceria" },
 ] as const;
-export const plasticCategorias: string[] = plasticCategoriasData.map((item) => item.nombre);
 
 // Energy's own category taxonomy (equipos e instalacion de energia solar) —
 // like Import and Plastic, each entry is already a single, specific product
@@ -104,7 +102,6 @@ export const energyCategoriasData = [
   { nombre: "Medición y monitoreo", color: "#5c940d", icono: "◆", imageKey: "energy-categoria-medicion-monitoreo" },
   { nombre: "Accesorios e instalación", color: "#c92a2a", icono: "⚙", imageKey: "energy-categoria-accesorios-instalacion" },
 ] as const;
-export const energyCategorias: string[] = energyCategoriasData.map((item) => item.nombre);
 
 // Real sub-sector groupings for the Cauchos category menu (e.g. "Alimentos,
 // Farmacéuticos y cosméticos" breaks into its own 3 sectors). The `items`
@@ -625,15 +622,6 @@ export const slugCategoria = (categoria: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
-
-export const categoriaDesdeSlug = (slug: string | null) =>
-  categorias.find((categoria) => slugCategoria(categoria) === slug) ?? null;
-
-export const categoriaMeta = (categoria: string) =>
-  categoriasData.find((item) => item.nombre === categoria) ?? categoriasData[0];
-
-export const productoPorSlug = (slug: string) =>
-  productosCatalogo.find((producto) => producto.slug === slug) ?? null;
 
 export function slugify(value: string) {
   return value

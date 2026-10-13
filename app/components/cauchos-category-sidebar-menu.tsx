@@ -290,7 +290,7 @@ export default function CauchosCategorySidebarMenu({
       departmentMap.set(department, subcategoryMap);
     });
 
-    const buildFromProducts = (subcategoryMap: Map<string, typeof cauchosProducts>) =>
+    const buildFromProducts = (title: string, subcategoryMap: Map<string, typeof cauchosProducts>) =>
       Array.from(subcategoryMap.entries())
         .sort(([a], [b]) => a.localeCompare(b, "es"))
         .map(([name, items]) => {
@@ -301,9 +301,13 @@ export default function CauchosCategorySidebarMenu({
           );
           const groupHref = `${cauchosBasePath}/categoria/${slugify(name)}`;
 
+          // Misma imagen del sector que la página de categoría (editable en el
+          // admin); la foto del primer producto solo si el sector no tiene una.
+          const imageKey = cauchosCategorySubcategories[title]?.find((group) => group.name === name)?.imageKey;
+
           return {
             name,
-            image: items[0]?.imagen ?? null,
+            image: imageKey ? resolveImage(imageKey, siteImages) : items[0]?.imagen ?? null,
             groupHref,
             itemLinks: minorItems.map((product) => ({
               label: product.categoriaMenor || product.nombre,
@@ -340,7 +344,7 @@ export default function CauchosCategorySidebarMenu({
       const subcategoryMap = departmentMap.get(title);
       const subcategories =
         subcategoryMap && subcategoryMap.size > 0
-          ? buildFromProducts(subcategoryMap)
+          ? buildFromProducts(title, subcategoryMap)
           : buildFromPlaceholders(title);
 
       return { title, subcategories };

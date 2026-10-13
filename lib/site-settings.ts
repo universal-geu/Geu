@@ -87,13 +87,6 @@ export function salesModeKey(division: DivisionName): string {
   return division === "Cauchos" ? CAUCHOS_SALES_MODE_KEY : `sales-mode-${division.toLowerCase()}`;
 }
 
-export const getSalesModeForDivision = cache(async function getSalesModeForDivision(
-  division: DivisionName,
-): Promise<CauchosSalesMode> {
-  const value = await getSiteSetting(salesModeKey(division));
-  return value === "whatsapp" ? "whatsapp" : "precios";
-});
-
 /** Every division's sales mode in one query — for the root layout. */
 export const getAllSalesModes = cache(async function getAllSalesModes(): Promise<
   Record<DivisionName, CauchosSalesMode>

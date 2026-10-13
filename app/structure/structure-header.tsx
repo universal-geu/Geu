@@ -41,7 +41,7 @@ function StructureMark() {
       width={947}
       height={162}
       priority
-      className="h-auto w-[210px] max-w-full object-contain"
+      className="h-auto w-[150px] max-w-full object-contain sm:w-[210px]"
     />
   );
 }
@@ -146,15 +146,15 @@ export default function StructureHeader() {
     <>
       {colorOverrideCss && <style dangerouslySetInnerHTML={{ __html: colorOverrideCss }} />}
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/85 backdrop-blur-md">
-        <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-5 md:px-8">
-          <Link href="/structure" className="shrink-0">
+        <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between gap-3 px-4 sm:px-5 md:px-8">
+          <Link href="/structure" className="min-w-0 shrink">
             <StructureMark />
           </Link>
           <nav className="hidden items-center gap-4 text-[11px] font-black uppercase tracking-[0.08em] text-white/85 lg:flex">
             <MainNavMenu />
             <ToolsMenu />
           </nav>
-          <div className="flex items-center gap-5 text-white">
+          <div className="flex shrink-0 items-center gap-5 text-white">
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#d6006e] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.03em] text-white shadow-sm transition-colors duration-150 hover:bg-[#b8005e] active:bg-[#b8005e] lg:px-3.5 lg:py-2 lg:text-[11px] lg:tracking-[0.08em]"

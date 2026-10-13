@@ -843,13 +843,6 @@ export const getProductBySlug = cache(async function getProductBySlug(
   }
 });
 
-export async function getFeaturedProducts() {
-  const products = await getProducts();
-  const destacados = products.filter((product) => product.destacado);
-
-  return (destacados.length > 0 ? destacados : products).slice(0, 4);
-}
-
 export async function createProduct(input: ProductMutationInput) {
   if (!prisma) {
     throw new Error("DATABASE_NOT_CONFIGURED");

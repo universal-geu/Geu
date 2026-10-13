@@ -105,11 +105,11 @@ export async function findOrCreateGuestUser(input: GuestCheckoutInput) {
   const email = input.email.trim().toLowerCase();
   const existing = await prisma.user.findUnique({ where: { email } });
 
+  // An email that already has an account (customer or admin) must sign in:
+  // checking out as a guest would otherwise attach the order to someone
+  // else's account and replace their saved cart.
   if (existing) {
-    if (!existing.active) {
-      throw new Error("ACCOUNT_DISABLED");
-    }
-    return existing;
+    throw new Error(existing.active ? "EMAIL_HAS_ACCOUNT" : "ACCOUNT_DISABLED");
   }
 
   const passwordHash = await hash(randomBytes(32).toString("hex"), 10);

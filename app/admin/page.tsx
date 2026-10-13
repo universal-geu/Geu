@@ -8240,9 +8240,9 @@ export default function AdminPage() {
                                   key={group}
                                   type="button"
                                   onClick={() => setSelectedImageGroup(group)}
-                                  className="group flex items-center gap-4 rounded-xl border border-black/8 bg-white p-2.5 pr-4 text-left transition-colors duration-200 hover:border-[var(--admin-accent)] hover:bg-[var(--admin-accent-soft)]"
+                                  className="group flex flex-col items-stretch gap-3 rounded-xl border border-black/8 bg-white p-2.5 text-left sm:flex-row sm:items-center sm:gap-4 sm:pr-4 transition-colors duration-200 hover:border-[var(--admin-accent)] hover:bg-[var(--admin-accent-soft)]"
                                 >
-                                  <span className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-[#f0f2f4] to-[#e5e8eb]">
+                                  <span className="relative aspect-video w-full shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-[#f0f2f4] to-[#e5e8eb] sm:aspect-auto sm:h-16 sm:w-24">
                                     {cover ? (
                                       // eslint-disable-next-line @next/next/no-img-element
                                       <img src={cover.src} alt="" className="h-full w-full object-cover" />
@@ -8252,8 +8252,8 @@ export default function AdminPage() {
                                       </span>
                                     )}
                                   </span>
-                                  <span className="min-w-0 flex-1">
-                                    <span className="block truncate text-sm font-semibold text-[#1f2328]">{group}</span>
+                                  <span className="min-w-0 flex-1 px-1 pb-1 sm:p-0">
+                                    <span className="block text-sm font-semibold text-[#1f2328] sm:truncate">{group}</span>
                                     <span className="mt-0.5 block text-xs text-[#8b8d91]">
                                       {[
                                         imageCount > 0 && `${imageCount} ${imageCount === 1 ? "imagen" : "imágenes"}`,
@@ -8291,7 +8291,7 @@ export default function AdminPage() {
                                   </span>
                                   <span
                                     aria-hidden="true"
-                                    className="shrink-0 text-lg text-[#b4b7bb] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--admin-accent)]"
+                                    className="hidden shrink-0 text-lg text-[#b4b7bb] transition-transform sm:block duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--admin-accent)]"
                                   >
                                     ›
                                   </span>
