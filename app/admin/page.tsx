@@ -1995,6 +1995,9 @@ export default function AdminPage() {
   const [inventoryStatusFilter, setInventoryStatusFilter] = useState<
     "all" | "low-stock" | "out-of-stock"
   >("all");
+  // Price range shared by Editar and Inventario, in plain pesos ("" = no limit).
+  const [priceFilterMin, setPriceFilterMin] = useState("");
+  const [priceFilterMax, setPriceFilterMax] = useState("");
   const [orderSearch, setOrderSearch] = useState("");
   const [customers, setCustomers] = useState<AdminCustomer[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
@@ -2206,10 +2209,13 @@ export default function AdminPage() {
       const matchesInventory =
         inventoryStatusFilter === "all" ||
         product.estadoInventario === inventoryStatusFilter;
+      const matchesPrice =
+        (priceFilterMin === "" || product.precioValor >= Number(priceFilterMin)) &&
+        (priceFilterMax === "" || product.precioValor <= Number(priceFilterMax));
 
-      return matchesCategory && matchesSearch && matchesInventory;
+      return matchesCategory && matchesSearch && matchesInventory && matchesPrice;
     });
-  }, [adminProducts, editCategoryFilter, editSearch, inventoryStatusFilter]);
+  }, [adminProducts, editCategoryFilter, editSearch, inventoryStatusFilter, priceFilterMin, priceFilterMax]);
   const inventoryCategoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const product of adminProducts) {
@@ -3295,10 +3301,59 @@ export default function AdminPage() {
     setActiveTab("create");
   };
 
+  // Precio mínimo / máximo controls, shared by Editar and Inventario.
+  const renderPriceFilter = (onChange?: () => void) => (
+    <div className="mt-4 flex flex-wrap items-end gap-3">
+      {(
+        [
+          ["Precio mínimo", priceFilterMin, setPriceFilterMin, "0"],
+          ["Precio máximo", priceFilterMax, setPriceFilterMax, "Sin límite"],
+        ] as const
+      ).map(([label, value, setValue, placeholder]) => (
+        <label key={label} className="block space-y-1.5">
+          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8d91]">{label}</span>
+          <span className="relative block">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#8b8d91]">
+              $
+            </span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1000}
+              value={value}
+              onChange={(event) => {
+                setValue(event.target.value.replace(/[^\d]/g, ""));
+                onChange?.();
+              }}
+              placeholder={placeholder}
+              className="w-40 rounded-xl border border-black/10 bg-[#fafaf9] py-2.5 pl-7 pr-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
+            />
+          </span>
+        </label>
+      ))}
+      {(priceFilterMin || priceFilterMax) && (
+        <button
+          type="button"
+          onClick={() => {
+            setPriceFilterMin("");
+            setPriceFilterMax("");
+            onChange?.();
+          }}
+          className="pb-2.5 text-sm font-semibold text-[var(--admin-accent)] hover:underline"
+        >
+          Quitar filtro de precio
+        </button>
+      )}
+    </div>
+  );
+
   const openEditView = () => {
     setSelectedImage(null);
     setRequestError("");
     setPrimaryImageIndex(0);
+    setPriceFilterMin("");
+    setPriceFilterMax("");
     setActiveTab("edit");
   };
 
@@ -3308,6 +3363,8 @@ export default function AdminPage() {
     setPrimaryImageIndex(0);
     setEditingSlug(null);
     setInventoryStatusFilter("all");
+    setPriceFilterMin("");
+    setPriceFilterMax("");
     setActiveTab("inventory");
     void loadInventoryMovements();
   };
@@ -5437,6 +5494,8 @@ export default function AdminPage() {
                         className="w-full rounded-2xl border border-black/10 bg-[#fafaf9] px-4 py-3 text-sm text-[#1f2328] outline-none transition-colors duration-200 focus:border-[var(--admin-accent)]"
                       />
                     </label>
+
+                    {renderPriceFilter()}
 
                     <p className="mt-4 text-sm text-[#6e7379]">
                       Mostrando {filteredProducts.length} producto{filteredProducts.length === 1 ? "" : "s"} según los filtros actuales.
@@ -7825,6 +7884,8 @@ export default function AdminPage() {
                         </button>
                       ))}
                     </div>
+
+                    {renderPriceFilter(() => setInventoryPage(1))}
                   </div>
 
                   <div className="space-y-3">
