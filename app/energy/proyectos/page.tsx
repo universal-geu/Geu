@@ -79,22 +79,6 @@ const heroStats = [
   { icon: PeopleIcon, value: "25", unit: "+", label: "Años de experiencia en el sector" },
 ];
 
-function StepIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <rect x="4" y="4" width="16" height="16" rx="4" />
-      <path d="M9 12h6M12 9v6" />
-    </svg>
-  );
-}
-
-const systemSteps = [
-  { number: "01", label: "Analizamos tu consumo" },
-  { number: "02", label: "Diseñamos tu sistema" },
-  { number: "03", label: "Optimizamos tu inversión" },
-  { number: "04", label: "Acompañamos tu proyecto" },
-];
-
 export default async function EnergyProyectosPage() {
   const siteImages = await getSiteImages();
   const siteTexts = await getSiteTexts();
@@ -191,7 +175,7 @@ export default async function EnergyProyectosPage() {
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.3)_45%,rgba(0,0,0,0.08)_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_28%,rgba(0,0,0,0.05)_72%,rgba(0,0,0,0.4)_100%)]" />
 
-        <div className="relative mx-auto grid min-h-[640px] max-w-[1500px] items-center gap-10 px-5 py-16 md:px-8 lg:grid-cols-[1fr_0.85fr]">
+        <div className="relative mx-auto grid min-h-[640px] max-w-[1500px] items-center gap-10 px-5 py-16 md:px-8">
           <div className="max-w-xl">
             <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.16em] text-[#ffd400]">
               {t("energy-sistema-eyebrow")} <span className="h-px w-10 bg-[#ffd400]" />
@@ -202,29 +186,6 @@ export default async function EnergyProyectosPage() {
             <p className="mt-5 max-w-sm text-sm font-semibold leading-6 text-white/75">
               {t("energy-sistema-subtitulo")}
             </p>
-            <Link
-              href="#contacto"
-              className="mt-7 inline-flex items-center gap-3 rounded-[3px] border border-[#ffd400]/70 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-[#ffd400] hover:bg-[#ffd400] hover:text-black"
-            >
-              Comenzar ahora <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:max-w-xs lg:grid-cols-1 lg:justify-self-end">
-            {systemSteps.map((step) => (
-              <div
-                key={step.number}
-                className="flex items-center justify-between gap-4 rounded-[6px] border border-white/10 bg-black/60 px-5 py-4 backdrop-blur-sm"
-              >
-                <div>
-                  <p className="flex items-center gap-2 text-[11px] font-black text-[#ffd400]">
-                    <StepIcon /> {step.number}
-                  </p>
-                  <p className="mt-1 text-sm font-black uppercase leading-tight text-white">{step.label}</p>
-                </div>
-                <span className="text-lg text-[#ffd400]" aria-hidden="true">→</span>
-              </div>
-            ))}
           </div>
         </div>
       </section>
