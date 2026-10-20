@@ -162,7 +162,11 @@ export default async function EnergyProyectosPage() {
         </div>
       </section>
 
-      <section id="sistema" className="relative isolate overflow-hidden border-b border-white/10 bg-black">
+      {/* El video ya trae el texto y las tarjetas de pasos integrados; se muestra completo, sin capas encima. */}
+      <section id="sistema" className="relative overflow-hidden border-b border-white/10 bg-black">
+        <h2 className="sr-only">
+          {t("energy-sistema-eyebrow")}: {t("energy-sistema-titulo")} {t("energy-sistema-subtitulo")}
+        </h2>
         <video
           src={resolveImage("energy-sistema-video", siteImages)}
           poster={resolveImage("energy-sistema-video-poster", siteImages)}
@@ -170,24 +174,9 @@ export default async function EnergyProyectosPage() {
           muted
           loop
           playsInline
-          className="absolute inset-0 h-full w-full object-cover"
+          aria-hidden="true"
+          className="block aspect-video w-full object-cover"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.78)_0%,rgba(0,0,0,0.3)_45%,rgba(0,0,0,0.08)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_28%,rgba(0,0,0,0.05)_72%,rgba(0,0,0,0.4)_100%)]" />
-
-        <div className="relative mx-auto grid min-h-[640px] max-w-[1500px] items-center gap-10 px-5 py-16 md:px-8">
-          <div className="max-w-xl">
-            <p className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.16em] text-[#ffd400]">
-              {t("energy-sistema-eyebrow")} <span className="h-px w-10 bg-[#ffd400]" />
-            </p>
-            <h2 className="mt-4 font-[family:var(--font-display)] text-4xl font-black leading-[1.05] tracking-[-0.02em] md:text-5xl">
-              {t("energy-sistema-titulo")}
-            </h2>
-            <p className="mt-5 max-w-sm text-sm font-semibold leading-6 text-white/75">
-              {t("energy-sistema-subtitulo")}
-            </p>
-          </div>
-        </div>
       </section>
 
       <section className="relative overflow-hidden bg-black">
