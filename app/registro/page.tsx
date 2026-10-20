@@ -8,6 +8,7 @@ import CitySelect from "@/app/components/city-select";
 import PasswordVisibilityToggle from "@/app/components/password-visibility-toggle";
 import CauchosHeader from "../components/cauchos-header";
 import { DIVISION_BRAND, getDivisionFromBrandParam } from "@/lib/divisions";
+import { syncGuestCartAfterLogin } from "@/lib/guest-cart-sync";
 
 type RegisterFormState = {
   fullName: string;
@@ -110,6 +111,7 @@ export default function RegistroPage() {
     const payload = (await response.json()) as {
       error?: string;
       message?: string;
+      user?: { id: string };
     };
 
     setIsSubmitting(false);
@@ -129,7 +131,10 @@ export default function RegistroPage() {
     });
 
     const nextPath = searchParams.get("next") || "/mi-cuenta";
-    window.setTimeout(() => {
+    window.setTimeout(async () => {
+      if (payload.user?.id) {
+        await syncGuestCartAfterLogin(payload.user.id);
+      }
       router.push(nextPath);
       router.refresh();
     }, 500);

@@ -5,6 +5,7 @@ import { useCart } from "../components/cart-provider";
 import { parsePrecio } from "@/lib/cart-format";
 import { DIVISION_BRAND, type DivisionName } from "@/lib/divisions";
 import CheckoutForm from "./checkout-form";
+import CheckoutLoginPrompt from "./checkout-login-prompt";
 
 const EMPTY_GUEST_USER = {
   fullName: "",
@@ -59,14 +60,17 @@ export default function GuestCheckout({
   );
 
   return (
-    <CheckoutForm
-      user={EMPTY_GUEST_USER}
-      items={items}
-      subtotal={subtotal}
-      division={division}
-      brand={brand}
-      wompiEnabled={wompiEnabled}
-      testPaymentEnabled={testPaymentEnabled}
-    />
+    <>
+      <CheckoutForm
+        user={EMPTY_GUEST_USER}
+        items={items}
+        subtotal={subtotal}
+        division={division}
+        brand={brand}
+        wompiEnabled={wompiEnabled}
+        testPaymentEnabled={testPaymentEnabled}
+      />
+      <CheckoutLoginPrompt division={division} brand={brand} />
+    </>
   );
 }

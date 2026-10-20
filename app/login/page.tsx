@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import CauchosHeader from "../components/cauchos-header";
 import PasswordVisibilityToggle from "../components/password-visibility-toggle";
 import { DIVISION_BRAND, getDivisionFromBrandParam } from "@/lib/divisions";
+import { syncGuestCartAfterLogin } from "@/lib/guest-cart-sync";
 
 const LOGIN_ACCENTS: Record<string, { accent: string; accentHover: string; brandName: string }> = {
   Cauchos: { accent: "#075ed8", accentHover: "#064bb0", brandName: "GEU" },
@@ -26,50 +27,10 @@ type ToastState = {
   message: string;
 } | null;
 
-const GUEST_CART_STORAGE_KEY = "geu-cart";
-const GUEST_CART_SYNC_KEY = "geu-cart-synced-user";
-
 const initialState: LoginFormState = {
   email: "",
   password: "",
 };
-
-async function syncGuestCartAfterLogin(userId: string) {
-  if (typeof window === "undefined") return;
-
-  const storedCart = window.localStorage.getItem(GUEST_CART_STORAGE_KEY);
-  if (!storedCart) {
-    window.sessionStorage.setItem(`${GUEST_CART_SYNC_KEY}:${userId}`, "done");
-    return;
-  }
-
-  try {
-    const items = JSON.parse(storedCart);
-
-    if (!Array.isArray(items) || items.length === 0) {
-      window.localStorage.removeItem(GUEST_CART_STORAGE_KEY);
-      window.sessionStorage.setItem(`${GUEST_CART_SYNC_KEY}:${userId}`, "done");
-      return;
-    }
-
-    const response = await fetch("/api/cart/sync", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ items }),
-    });
-
-    if (!response.ok) {
-      return;
-    }
-
-    window.localStorage.removeItem(GUEST_CART_STORAGE_KEY);
-    window.sessionStorage.setItem(`${GUEST_CART_SYNC_KEY}:${userId}`, "done");
-  } catch {
-    window.localStorage.removeItem(GUEST_CART_STORAGE_KEY);
-  }
-}
 
 export default function LoginPage() {
   const router = useRouter();
