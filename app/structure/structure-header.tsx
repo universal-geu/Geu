@@ -12,7 +12,7 @@ const navItems = [
   { label: "Producto", href: "/structure#producto" },
   { label: "Fabricación", href: "/structure#fabricacion" },
   { label: "Ingeniería", href: "/structure#ingenieria" },
-  { label: "Servicios", href: "/structure#servicios" },
+  // { label: "Servicios", href: "/structure#servicios" }, // sección oculta (SHOW_SERVICIOS en page.tsx)
   { label: "Contacto", href: "/structure#contacto" },
 ];
 

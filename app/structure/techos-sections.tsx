@@ -1,7 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
-import ProductGallery from "./product-gallery";
-import TechosProductTabs from "./techos-product-tabs";
+import { isVideoUrl } from "@/lib/image-slots";
+import TechosCubiertas, { type Cubierta } from "./techos-cubiertas";
 
 // Contenido de la línea "Techos" de GEU Structure (sistemas de fijación para
 // paneles solares sobre cubierta). Fuente: para techos.pdf (Drive › STRUCTURE › PARA TECHOS).
@@ -160,19 +159,37 @@ const detalles = [
   { title: "Estructura de soporte", slot: "structure-techos-detalle-soporte" },
 ];
 
-const cubiertas = [
-  { num: "01", title: "Losa liviana", text: "Sistema de fijación para cubiertas tipo losa.", slot: "structure-techos-losa" },
-  { num: "02", title: "Teja trapezoidal", text: "Componentes adaptados al perfil de la cubierta.", slot: "structure-techos-trapezoidal" },
-  { num: "03", title: "Teja grafada", text: "Fijación para cubiertas de junta grafada.", slot: "structure-techos-grafada" },
-  { num: "04", title: "Teja de barro", text: "Rieles y soportes para cubiertas de teja de barro.", slot: "structure-techos-barro" },
+const materiales = [
+  { title: "AA6005 T5", text: "Aluminio extruido de los perfiles", icon: ProfileIcon },
+  { title: "Clamps", text: "Marcos de panel de 30, 35 y 40 mm", icon: ClampIcon },
+  { title: "Acero inox", text: "Tornillería M8 y 5/16”", icon: BoltIcon },
+  { title: "AISI 304", text: "Platinas y soportes en acero inoxidable", icon: ShieldIcon },
+  { title: "EPDM", text: "Empaques y caucho espuma", icon: LayersIcon },
 ];
 
-const materiales = [
-  { title: "Aluminio", text: "Perfiles del sistema", icon: ProfileIcon },
-  { title: "Clamps", text: "Fijación de módulos", icon: ClampIcon },
-  { title: "Tornillería", text: "Componentes de ensamblaje", icon: BoltIcon },
-  { title: "4 sistemas", text: "Tipos de cubierta del catálogo", icon: RoofIcon },
-  { title: "Compatibilidad", text: "Según cubierta y proyecto", icon: LayersIcon },
+// Perfiles de aluminio extruido usados en los sistemas (guía de fabricación ALUMINA).
+const perfiles = [
+  { code: "SOLAR0011", name: "Perfil clamp principal", length: "3 m" },
+  { code: "SOLAR0014M", name: "Perfil end clamp", length: "3 m" },
+  { code: "SOLAR0015M", name: "Perfil mid clamp", length: "3 m" },
+  { code: "SOLAR0020", name: "Riel liviano", length: "3 m" },
+  { code: "SOLAR0021", name: "Riel principal", length: "6 m" },
+  { code: "SOLAR0022", name: "Riel base losa", length: "6 m" },
+  { code: "SOLAR0016", name: "Perfil mordaza base", length: "3 m" },
+  { code: "SOLAR0017", name: "Perfil mordaza", length: "3 m" },
+  { code: "SOLAR0005", name: "Perfil anclaje en L", length: "3 m" },
+  { code: "SOLAR0008", name: "Perfil conexión a tierra", length: "3 m" },
+  { code: "PLATI0030", name: "Platina unión base losa", length: "3 m" },
+  { code: "ANGU0019", name: "Ángulo unión riel", length: "3 m" },
+  { code: "ANGU0028", name: "Ángulo vertical a losa", length: "3 m" },
+  { code: "TUBOR0004", name: "Tubo para anclaje en L", length: "3 m" },
+];
+
+const especificacionesBase = [
+  { label: "Perfiles", value: "Aluminio AA6005 T5" },
+  { label: "Tornillería", value: "Acero inoxidable" },
+  { label: "Marco del panel", value: "30 · 35 · 40 mm" },
+  { label: "Longitud de perfiles", value: "3 m · rieles 6 m" },
 ];
 
 const pasos = [
@@ -184,19 +201,324 @@ const pasos = [
   { num: "06", title: "Instalación", text: "Según especificación técnica", icon: PanelIcon },
 ];
 
+function buildCubiertas(images: (slot: string) => string): Cubierta[] {
+  return [
+    {
+      id: "losa",
+      num: "01",
+      title: "Losa",
+      text: "Verticales tipo A y B sobre riel base losa.",
+      description:
+        "Sistema para superficies planas tipo losa: verticales de aluminio tipo A y B sobre riel base losa con caucho espuma EPDM, en versión liviana o con riel principal.",
+      cover: images("structure-techos-losa"),
+      shots: [
+        { src: images("structure-techos-losa"), label: "En contexto", alt: "Paneles solares sobre losa con sistema de fijación de aluminio" },
+        { src: images("structure-techos-losa-render"), label: "Componentes", alt: "Render del sistema de fijación para losa con panel, rieles y verticales" },
+      ],
+      descripcion: [
+        { label: "Aplicación", value: "Losa / superficie plana" },
+        { label: "Configuraciones", value: "Liviano · Riel completo" },
+        { label: "Apoyo", value: "Vertical losa tipo A y B" },
+        { label: "Sujeción del panel", value: "End clamp y mid clamp" },
+      ],
+      configuraciones: [
+        {
+          nombre: "liviano",
+          componentes: [
+            "End clamp",
+            "Mid clamp",
+            "Vertical losa tipo A",
+            "Vertical losa tipo B",
+            "Riel base losa",
+            "Caucho espuma EPDM",
+            "Unión base losa",
+            "Conector a tierra",
+          ],
+        },
+        {
+          nombre: "riel completo",
+          componentes: [
+            "End clamp",
+            "Mid clamp",
+            "Riel principal",
+            "Vertical losa RC tipo A",
+            "Vertical losa RC tipo B",
+            "Riel base losa",
+            "Caucho espuma EPDM",
+            "Unión base losa",
+            "Unión riel",
+            "Conector a tierra",
+          ],
+        },
+      ],
+      especificaciones: [
+        ...especificacionesBase,
+        { label: "Vertical losa", value: "A 100 mm · B 200 mm" },
+        { label: "Caucho espuma", value: "EPDM 50 Shore 00" },
+        { label: "Riel base losa", value: "SOLAR0022" },
+        { label: "Unión base losa", value: "PLATI0030" },
+      ],
+    },
+    {
+      id: "trapezoidal",
+      num: "02",
+      title: "Teja trapezoidal",
+      text: "Platina o anclaje en L sobre la cresta de la teja.",
+      description:
+        "Sistema para cubierta metálica trapezoidal: en la versión liviana el panel se apoya en mini rieles de 330 mm sobre platinas en acero inoxidable; en riel completo, sobre riel principal con anclajes en L.",
+      cover: images("structure-techos-trapezoidal"),
+      shots: [
+        { src: images("structure-techos-producto"), label: "Fijación sobre cubierta", alt: "Sistema de fijación con perfiles de aluminio sobre cubierta metálica trapezoidal" },
+        { src: images("structure-techos-trapezoidal"), label: "En contexto", alt: "Paneles solares sobre cubierta trapezoidal con sistema de fijación de aluminio" },
+        { src: images("structure-techos-trapezoidal-render"), label: "Componentes", alt: "Render del sistema de fijación para teja trapezoidal con panel y soportes" },
+        { src: images("structure-techos-detalle-cubierta"), label: "Unión a la cubierta", alt: "Detalle del soporte atornillado a la cubierta trapezoidal" },
+        { src: images("structure-techos-detalle-panel"), label: "Fijación del panel", alt: "Detalle del clamp que fija el panel al perfil de aluminio" },
+      ],
+      descripcion: [
+        { label: "Aplicación", value: "Teja trapezoidal" },
+        { label: "Configuraciones", value: "Liviano · Riel completo" },
+        { label: "Fijación a la teja", value: "Platina o anclaje en L" },
+        { label: "Sujeción del panel", value: "End clamp y mid clamp" },
+      ],
+      configuraciones: [
+        {
+          nombre: "liviano",
+          componentes: ["End clamp", "Mid clamp", "Mini riel 330 mm", "Platina teja trapezoidal"],
+        },
+        {
+          nombre: "riel completo",
+          componentes: ["End clamp", "Mid clamp", "Riel principal", "Anclaje en L", "Unión riel", "Conector a tierra"],
+        },
+      ],
+      especificaciones: [
+        ...especificacionesBase,
+        { label: "Platina", value: "Acero inox AISI 304" },
+        { label: "Empaque de platina", value: "EPDM adhesivo 2,5 mm" },
+        { label: "Anclaje en L", value: "SOLAR0005 + TUBOR0004" },
+        { label: "Altura del anclaje", value: "Según cresta de la teja" },
+      ],
+    },
+    {
+      id: "grafada",
+      num: "03",
+      title: "Teja grafada",
+      text: "TG clamp sujeto a la junta grafada.",
+      description:
+        "Sistema para cubiertas de junta grafada: el TG clamp, formado por mordaza y mordaza base, va sobre la junta grafada y recibe el panel directamente (versión liviana) o a través del riel principal.",
+      cover: images("structure-techos-grafada"),
+      shots: [
+        { src: images("structure-techos-grafada"), label: "En contexto", alt: "Paneles solares sobre cubierta de junta grafada" },
+        { src: images("structure-techos-grafada-render"), label: "Componentes", alt: "Render del sistema de fijación para teja grafada con panel y TG clamps" },
+      ],
+      descripcion: [
+        { label: "Aplicación", value: "Teja grafada" },
+        { label: "Configuraciones", value: "Liviano · Riel completo" },
+        { label: "Fijación a la teja", value: "TG clamp / TG clamp mini" },
+        { label: "Sujeción del panel", value: "End clamp y mid clamp" },
+      ],
+      configuraciones: [
+        {
+          nombre: "liviano",
+          componentes: ["End clamp", "Mid clamp", "TG clamp mini"],
+        },
+        {
+          nombre: "riel completo",
+          componentes: ["End clamp", "Mid clamp", "TG clamp", "Riel principal", "Unión riel", "Conector a tierra"],
+        },
+      ],
+      especificaciones: [
+        ...especificacionesBase,
+        { label: "Mordaza", value: "SOLAR0017" },
+        { label: "Mordaza base", value: "SOLAR0016" },
+        { label: "Riel del TG clamp", value: "SOLAR0020" },
+        { label: "Riel principal", value: "SOLAR0021" },
+      ],
+    },
+    {
+      id: "barro",
+      num: "04",
+      title: "Teja de barro",
+      text: "Soporte en acero inoxidable y riel principal.",
+      description:
+        "Sistema de riel completo para cubiertas de teja de barro: soportes en acero inoxidable AISI 304 con anclaje en L que reciben el riel principal sobre el que se fijan los paneles.",
+      cover: images("structure-techos-barro"),
+      shots: [
+        { src: images("structure-techos-barro"), label: "En contexto", alt: "Paneles solares sobre cubierta de teja de barro con rieles de aluminio" },
+        { src: images("structure-techos-barro-render"), label: "Componentes", alt: "Render del sistema de fijación para teja de barro con rieles y soportes" },
+      ],
+      descripcion: [
+        { label: "Aplicación", value: "Teja de barro" },
+        { label: "Configuración", value: "Riel completo" },
+        { label: "Fijación a la cubierta", value: "Soporte teja de barro" },
+        { label: "Sujeción del panel", value: "End clamp y mid clamp" },
+      ],
+      configuraciones: [
+        {
+          nombre: "riel completo",
+          componentes: [
+            "End clamp",
+            "Mid clamp",
+            "Riel principal",
+            "Anclaje en L",
+            "Soporte teja de barro",
+            "Unión riel",
+            "Conector a tierra",
+          ],
+        },
+      ],
+      especificaciones: [
+        ...especificacionesBase,
+        { label: "Soporte teja de barro", value: "Acero inox AISI 304" },
+        { label: "Fabricación del soporte", value: "Corte láser y doblez" },
+        { label: "Riel principal", value: "SOLAR0021 · 6 m" },
+        { label: "Anclaje en L", value: "SOLAR0005 + TUBOR0004" },
+      ],
+    },
+  ];
+}
+
 export default function TechosSections({
   images,
-  quoteHref,
-  quoteExternal,
+  whatsappNumber,
 }: {
   images: (slot: string) => string;
-  quoteHref: string;
-  quoteExternal: boolean;
+  whatsappNumber: string | null;
 }) {
+  const cubiertas = buildCubiertas(images);
+
   return (
     <>
-      <section className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
-        <div className="mx-auto max-w-[1500px] px-5 pb-16 pt-10 md:px-8">
+      <TechosCubiertas cubiertas={cubiertas} whatsappNumber={whatsappNumber} />
+
+      <section className="relative overflow-hidden border-b border-white/10 bg-black">
+        <div className="relative mx-auto aspect-[1941/809] w-full max-w-[1920px]">
+          {isVideoUrl(images("structure-techos-banner")) ? (
+            <video
+              src={images("structure-techos-banner")}
+              poster="/geu-structure-techos-banner.webp"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-label="Paneles solares sobre la cubierta de una bodega industrial al atardecer"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <Image
+              src={images("structure-techos-banner")}
+              alt="Paneles solares sobre la cubierta de una bodega industrial al atardecer"
+              fill
+              sizes="100vw"
+              className="object-cover"
+            />
+          )}
+        </div>
+      </section>
+
+      <section id="material-techos" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
+        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8 md:py-20">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,520px)_1fr] lg:gap-14 lg:items-stretch">
+            <div className="group relative min-h-[340px] overflow-hidden rounded-[16px] bg-neutral-900 shadow-[0_18px_44px_rgba(15,23,42,0.14)] ring-1 ring-black/5">
+              <Image
+                src={images("structure-techos-material")}
+                alt="Perfiles de aluminio y clamps del sistema de fijación sobre cubierta metálica"
+                fill
+                sizes="(min-width: 1024px) 520px, 100vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+              />
+            </div>
+
+            <div className="flex flex-col justify-center">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Material</p>
+              <h2 className="mt-3 font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-4xl">
+                Perfiles de aluminio | Precisión en cada fijación
+              </h2>
+              <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-slate-600">
+                Los sistemas se fabrican con perfiles de aluminio extruido ALUMINA en aleación AA6005 T5 y
+                tornillería en acero inoxidable. Con sus componentes se instalan sistemas fotovoltaicos sobre losas
+                y sobre tejas trapezoidales, grafadas o de barro de manera rápida y confiable.
+              </p>
+
+              <div className="mt-8 border-t border-slate-200 pt-8">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#0498b4]">Componentes del sistema</p>
+                <ul className="mt-5 grid grid-cols-2 gap-6 sm:grid-cols-4">
+                  {componentes.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <li key={item.label} className="flex flex-col gap-3">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#0498b4]/10 text-[#0498b4]">
+                          <Icon className="h-6 w-6" />
+                        </span>
+                        <span className="text-[11px] font-black uppercase tracking-[0.08em] text-neutral-900">
+                          {item.label}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 border-t border-slate-200 pt-8">
+            <details className="group/perfiles">
+              <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                <span className="text-[10px] font-black uppercase tracking-[0.14em] text-[#0498b4]">Perfiles del sistema</span>
+                <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.1em] text-slate-600 transition-colors hover:text-slate-900">
+                  <span className="group-open/perfiles:hidden">Ver los {perfiles.length} perfiles</span>
+                  <span className="hidden group-open/perfiles:inline">Ocultar perfiles</span>
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 transition-transform group-open/perfiles:rotate-180" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </span>
+              </summary>
+              <ul className="mt-5 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
+                {perfiles.map((item) => (
+                  <li key={item.code} className="flex items-baseline gap-3 border-b border-slate-200/70 py-2.5">
+                    <span className="w-[5.5rem] shrink-0 font-mono text-[11px] font-semibold text-[#0498b4]">{item.code}</span>
+                    <span className="text-[13px] font-semibold text-slate-700">{item.name}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-[11px] font-semibold text-slate-400">
+                Aluminio extruido · acabado crudo · perfiles de 3 m y rieles principal y base losa de 6 m · consulta otras
+                longitudes y acabados.
+              </p>
+            </details>
+          </div>
+
+          <div className="mt-12 border-t border-slate-200 pt-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#0498b4]">Detalles del sistema</p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              {detalles.map((item) => (
+                <figure
+                  key={item.slot}
+                  className="group relative aspect-[3/2] overflow-hidden rounded-[14px] bg-neutral-900 shadow-[0_14px_36px_rgba(15,23,42,0.10)] ring-1 ring-black/5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(4,152,180,0.16)]"
+                >
+                  <Image
+                    src={images(item.slot)}
+                    alt={item.title}
+                    fill
+                    sizes="(min-width: 640px) 440px, 100vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                  <figcaption className="absolute inset-x-0 bottom-0 p-4">
+                    <span className="inline-block h-[3px] w-8 bg-[#0498b4]" />
+                    <span className="mt-2 block text-[12px] font-bold uppercase leading-tight tracking-[0.04em] text-white">
+                      {item.title}
+                    </span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-white/10 bg-white text-slate-950">
+        <div className="mx-auto max-w-[1500px] px-5 py-16 md:py-20 md:px-8">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Propuesta de valor</p>
           <h2 className="mt-3 max-w-2xl font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-4xl">
             Una solución. Cuatro sistemas de fijación.
@@ -232,241 +554,6 @@ export default function TechosSections({
         </div>
       </section>
 
-      <section id="producto-techos" className="border-b border-black/10 bg-white">
-        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8 md:py-20">
-          <div className="grid gap-10 lg:grid-cols-2 lg:gap-x-14 lg:gap-y-12 lg:items-stretch">
-            <div>
-              <ProductGallery
-                theme="light"
-                productName="Teja trapezoidal"
-                items={[
-                  {
-                    src: images("structure-techos-producto"),
-                    label: "Fijación sobre cubierta",
-                    alt: "Sistema de fijación con perfiles de aluminio sobre cubierta metálica trapezoidal",
-                  },
-                  {
-                    src: images("structure-techos-trapezoidal"),
-                    label: "En contexto",
-                    alt: "Paneles solares sobre cubierta trapezoidal con sistema de fijación de aluminio",
-                  },
-                  {
-                    src: images("structure-techos-trapezoidal-render"),
-                    label: "Componentes",
-                    alt: "Render del sistema de fijación para teja trapezoidal con panel y soportes",
-                  },
-                  {
-                    src: images("structure-techos-detalle-cubierta"),
-                    label: "Unión a la cubierta",
-                    alt: "Detalle del soporte atornillado a la cubierta trapezoidal",
-                  },
-                  {
-                    src: images("structure-techos-detalle-panel"),
-                    label: "Fijación del panel",
-                    alt: "Detalle del clamp que fija el panel al perfil de aluminio",
-                  },
-                ]}
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Producto</p>
-              <h2 className="mt-3 font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] text-neutral-900 md:text-[2.75rem] md:leading-[1.05]">
-                Sistema de fijación para teja trapezoidal
-              </h2>
-              <p className="mt-4 max-w-md text-[15px] font-semibold leading-7 text-neutral-600">
-                Sistema de montaje para paneles solares sobre cubierta metálica trapezoidal, con perfiles de
-                aluminio y componentes de fijación.
-              </p>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                <span className="inline-flex rounded-full border border-[#0498b4]/40 bg-[#0498b4]/10 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-[#0498b4]">
-                  Perfiles de aluminio
-                </span>
-                <span className="inline-flex rounded-full border border-black/10 bg-black/[0.04] px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-neutral-500">
-                  Sistema de fijación
-                </span>
-              </div>
-
-              <div className="mt-auto pt-10">
-                <dl className="grid grid-cols-3 gap-4 border-t border-black/10 pt-6">
-                  {[
-                    { value: "4", label: "Tipos de cubierta" },
-                    { value: "Aluminio", label: "Material de perfiles" },
-                    { value: "GEU", label: "Soluciones para techos" },
-                  ].map((stat) => (
-                    <div key={stat.label}>
-                      <dd className="font-[family:var(--font-display)] text-2xl font-black tracking-[-0.02em] text-neutral-900 md:text-[1.75rem]">
-                        {stat.value}
-                      </dd>
-                      <dt className="mt-1 text-[10px] font-bold uppercase leading-tight tracking-[0.06em] text-neutral-400">
-                        {stat.label}
-                      </dt>
-                    </div>
-                  ))}
-                </dl>
-
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <a
-                    href={quoteHref}
-                    target={quoteExternal ? "_blank" : undefined}
-                    rel={quoteExternal ? "noopener noreferrer" : undefined}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-[3px] bg-[#0498b4] px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#03809a]"
-                  >
-                    Solicitar cotización <span aria-hidden="true">→</span>
-                  </a>
-                  <Link
-                    href="#material-techos"
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-[3px] border border-neutral-300 px-6 py-3.5 text-[12px] font-black uppercase tracking-[0.12em] text-neutral-700 transition-colors hover:border-neutral-900 hover:text-neutral-900"
-                  >
-                    Ver componentes
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-2">
-              <TechosProductTabs />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="relative overflow-hidden border-b border-white/10 bg-black">
-        <div className="relative mx-auto aspect-[1941/809] w-full max-w-[1920px]">
-          <Image
-            src={images("structure-techos-banner")}
-            alt="Paneles solares sobre la cubierta de una bodega industrial al atardecer"
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
-        </div>
-      </section>
-
-      <section id="material-techos" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
-        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8 md:py-20">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,520px)_1fr] lg:gap-14 lg:items-stretch">
-            <div className="group relative min-h-[340px] overflow-hidden rounded-[16px] bg-neutral-900 shadow-[0_18px_44px_rgba(15,23,42,0.14)] ring-1 ring-black/5">
-              <Image
-                src={images("structure-techos-material")}
-                alt="Perfiles de aluminio y clamps del sistema de fijación sobre cubierta metálica"
-                fill
-                sizes="(min-width: 1024px) 520px, 100vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
-              />
-            </div>
-
-            <div className="flex flex-col justify-center">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Material</p>
-              <h2 className="mt-3 font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-4xl">
-                Perfiles de aluminio | Precisión en cada fijación
-              </h2>
-              <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-slate-600">
-                Los sistemas de fijación para paneles solares incorporan perfiles de aluminio y componentes de
-                ensamblaje para adaptarse a distintas tipologías de cubierta.
-              </p>
-
-              <div className="mt-8 border-t border-slate-200 pt-8">
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#0498b4]">Componentes del sistema</p>
-                <ul className="mt-5 grid grid-cols-2 gap-6 sm:grid-cols-4">
-                  {componentes.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <li key={item.label} className="flex flex-col gap-3">
-                        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#0498b4]/10 text-[#0498b4]">
-                          <Icon className="h-6 w-6" />
-                        </span>
-                        <span className="text-[11px] font-black uppercase tracking-[0.08em] text-neutral-900">
-                          {item.label}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-12 border-t border-slate-200 pt-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#0498b4]">Detalles del sistema</p>
-            <div className="mt-5 grid gap-4 sm:grid-cols-3">
-              {detalles.map((item) => (
-                <figure
-                  key={item.slot}
-                  className="group relative aspect-[3/2] overflow-hidden rounded-[14px] bg-neutral-900 shadow-[0_14px_36px_rgba(15,23,42,0.10)] ring-1 ring-black/5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(4,152,180,0.16)]"
-                >
-                  <Image
-                    src={images(item.slot)}
-                    alt={item.title}
-                    fill
-                    sizes="(min-width: 640px) 440px, 100vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                  <figcaption className="absolute inset-x-0 bottom-0 p-4">
-                    <span className="inline-block h-[3px] w-8 bg-[#0498b4]" />
-                    <span className="mt-2 block text-[12px] font-bold uppercase leading-tight tracking-[0.04em] text-white">
-                      {item.title}
-                    </span>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="cubiertas" className="border-b border-white/10 bg-white text-slate-950">
-        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8 md:py-20">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Soluciones para techos</p>
-              <h2 className="mt-3 max-w-2xl font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-4xl">
-                Un sistema de fijación para cada cubierta
-              </h2>
-            </div>
-            <p className="max-w-sm text-sm font-semibold leading-6 text-slate-600">
-              Soluciones para integrar paneles solares en distintas tipologías de techo, con perfiles de aluminio
-              y componentes de ensamblaje.
-            </p>
-          </div>
-
-          <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {cubiertas.map((item) => (
-              <li
-                key={item.num}
-                className="group relative aspect-[3/4] overflow-hidden rounded-[16px] bg-neutral-900 shadow-[0_18px_44px_rgba(15,23,42,0.14)] ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_60px_rgba(4,152,180,0.22)]"
-              >
-                <Image
-                  src={images(item.slot)}
-                  alt={`Sistema de fijación para ${item.title.toLowerCase()}`}
-                  fill
-                  sizes="(min-width: 1024px) 340px, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/10" />
-                <span className="absolute right-4 top-4 font-[family:var(--font-display)] text-4xl font-black leading-none text-white/60 transition-colors group-hover:text-[#0498b4]">
-                  {item.num}
-                </span>
-                <div className="absolute inset-x-0 bottom-0 p-5">
-                  <span className="inline-block h-[3px] w-8 bg-[#0498b4]" />
-                  <h3 className="mt-3 text-base font-black uppercase tracking-[0.02em] text-white">{item.title}</h3>
-                  <p className="mt-1.5 text-[12px] font-semibold leading-[1.45] text-white/75">{item.text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-
-          <a
-            href="#material-techos"
-            className="mt-8 inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.12em] text-[#0498b4] transition-colors hover:text-[#03809a]"
-          >
-            Perfiles de aluminio y componentes para sistemas de fijación <span aria-hidden="true">→</span>
-          </a>
-        </div>
-      </section>
-
       <section id="materiales-techos" className="border-b border-white/10 bg-black">
         <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Materiales y durabilidad</p>
@@ -474,8 +561,8 @@ export default function TechosSections({
             Cada componente, seleccionado para su función
           </h2>
           <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-white/70">
-            Perfiles de aluminio y componentes de fijación para sistemas solares sobre distintas tipologías de
-            cubierta.
+            Aluminio extruido en los perfiles, acero inoxidable en la tornillería, platinas y soportes, y
+            caucho EPDM en los puntos de contacto con la cubierta.
           </p>
 
           <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -526,7 +613,8 @@ export default function TechosSections({
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#0498b4] text-[11px] font-black text-[#0498b4]">
               i
             </span>
-            Las especificaciones y compatibilidades deben validarse para cada sistema de fijación.
+            Los accesorios indicados son de gran importancia para el correcto desempeño del sistema. Las
+            especificaciones y compatibilidades deben validarse para cada proyecto.
           </p>
         </div>
       </section>

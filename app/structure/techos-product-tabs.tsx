@@ -2,38 +2,41 @@
 
 import { useId, useState } from "react";
 
-type Spec = { label: string; value: string };
+export type Spec = { label: string; value: string };
+export type Configuracion = { nombre: string; componentes: string[] };
 
-const descripcion: Spec[] = [
-  { label: "Aplicación", value: "Teja trapezoidal" },
-  { label: "Perfiles", value: "Aluminio" },
-  { label: "Sujeción", value: "Clamps y tornillería" },
-  { label: "Montaje", value: "Sobre cubierta" },
+type TabId = "descripcion" | "configuraciones" | "especificaciones";
+
+const tabs: { id: TabId; label: string }[] = [
+  { id: "descripcion", label: "Descripción" },
+  { id: "configuraciones", label: "Componentes" },
+  { id: "especificaciones", label: "Especificaciones" },
 ];
 
-const componentes: Spec[] = [
-  { label: "Perfiles", value: "Aluminio" },
-  { label: "Clamps", value: "Fijación de módulos" },
-  { label: "Tornillería", value: "Componentes de ensamblaje" },
-  { label: "Conexión a tierra", value: "Accesorios del sistema" },
-];
+function SpecGrid({ items }: { items: Spec[] }) {
+  return (
+    <dl className="grid grid-cols-2 gap-x-8 gap-y-6 lg:grid-cols-4 lg:divide-x lg:divide-black/10">
+      {items.map((spec, index) => (
+        <div key={spec.label} className={index % 4 > 0 ? "lg:pl-8" : undefined}>
+          <dt className="text-[10px] font-bold uppercase tracking-[0.06em] text-neutral-400">{spec.label}</dt>
+          <dd className="mt-1.5 text-lg font-black tracking-[-0.01em] text-neutral-900">{spec.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 
-const aplicacion: Spec[] = [
-  { label: "Sistema 01", value: "Losa liviana" },
-  { label: "Sistema 02", value: "Teja trapezoidal" },
-  { label: "Sistema 03", value: "Teja grafada" },
-  { label: "Sistema 04", value: "Teja de barro" },
-];
-
-const tabs = [
-  { id: "descripcion", label: "Descripción", items: descripcion },
-  { id: "componentes", label: "Componentes", items: componentes },
-  { id: "aplicacion", label: "Aplicación", items: aplicacion },
-] as const;
-
-type TabId = (typeof tabs)[number]["id"];
-
-export default function TechosProductTabs() {
+export default function TechosProductTabs({
+  cubierta,
+  descripcion,
+  configuraciones,
+  especificaciones,
+}: {
+  cubierta: string;
+  descripcion: Spec[];
+  configuraciones: Configuracion[];
+  especificaciones: Spec[];
+}) {
   const [active, setActive] = useState<TabId>("descripcion");
   const baseId = useId();
 
@@ -41,7 +44,7 @@ export default function TechosProductTabs() {
     <div className="rounded-2xl border border-black/10 bg-neutral-50/70">
       <div
         role="tablist"
-        aria-label="Ficha del sistema de fijación para teja trapezoidal"
+        aria-label={`Ficha del sistema de fijación para ${cubierta.toLowerCase()}`}
         className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-black/10 px-2 sm:px-4"
       >
         {tabs.map((tab) => {
@@ -71,24 +74,48 @@ export default function TechosProductTabs() {
       </div>
 
       <div className="p-5 sm:p-7">
-        {tabs.map((tab) => (
-          <div
-            key={tab.id}
-            id={`${baseId}-panel-${tab.id}`}
-            role="tabpanel"
-            aria-labelledby={`${baseId}-tab-${tab.id}`}
-            hidden={tab.id !== active}
-          >
-            <dl className="grid grid-cols-2 gap-x-8 gap-y-6 lg:grid-cols-4 lg:divide-x lg:divide-black/10">
-              {tab.items.map((spec, index) => (
-                <div key={spec.label} className={index > 0 ? "lg:pl-8" : undefined}>
-                  <dt className="text-[10px] font-bold uppercase tracking-[0.06em] text-neutral-400">{spec.label}</dt>
-                  <dd className="mt-1.5 text-lg font-black tracking-[-0.01em] text-neutral-900">{spec.value}</dd>
-                </div>
-              ))}
-            </dl>
+        <div
+          id={`${baseId}-panel-descripcion`}
+          role="tabpanel"
+          aria-labelledby={`${baseId}-tab-descripcion`}
+          hidden={active !== "descripcion"}
+        >
+          <SpecGrid items={descripcion} />
+        </div>
+
+        <div
+          id={`${baseId}-panel-configuraciones`}
+          role="tabpanel"
+          aria-labelledby={`${baseId}-tab-configuraciones`}
+          hidden={active !== "configuraciones"}
+        >
+          <div className={`grid gap-6 ${configuraciones.length > 1 ? "md:grid-cols-2" : ""}`}>
+            {configuraciones.map((config) => (
+              <div key={config.nombre}>
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#0498b4]">
+                  Sistema {config.nombre}
+                </p>
+                <ul className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+                  {config.componentes.map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-sm font-semibold leading-6 text-neutral-700">
+                      <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#0498b4]" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+
+        <div
+          id={`${baseId}-panel-especificaciones`}
+          role="tabpanel"
+          aria-labelledby={`${baseId}-tab-especificaciones`}
+          hidden={active !== "especificaciones"}
+        >
+          <SpecGrid items={especificaciones} />
+        </div>
       </div>
     </div>
   );

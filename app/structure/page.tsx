@@ -129,6 +129,9 @@ function RoofIcon() {
   );
 }
 
+// Sección "Servicios" (fases Terreno → Operación) oculta a pedido; se reactiva con true.
+const SHOW_SERVICIOS = false;
+
 const lineas = [
   { id: "granjas", label: "Granjas solares", text: "Estructura M24 para plantas sobre terreno", icon: FarmIcon },
   { id: "techos", label: "Para techos", text: "Sistemas de fijación para cubiertas", icon: RoofIcon },
@@ -162,11 +165,6 @@ export default async function StructurePage({
   const quoteHref = whatsappNumber
     ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
         "Hola GEU Structure, quiero solicitar una cotización de la estructura M24.",
-      )}`
-    : "#contacto";
-  const techosQuoteHref = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        "Hola GEU Structure, quiero solicitar una cotización de un sistema de fijación para techos.",
       )}`
     : "#contacto";
 
@@ -270,8 +268,7 @@ export default async function StructurePage({
       {linea === "techos" ? (
         <TechosSections
           images={(slot) => resolveImage(slot, siteImages)}
-          quoteHref={techosQuoteHref}
-          quoteExternal={Boolean(whatsappNumber)}
+          whatsappNumber={whatsappNumber || null}
         />
       ) : (
       <>
@@ -612,6 +609,7 @@ export default async function StructurePage({
         </div>
       </section>
 
+      {SHOW_SERVICIOS && (
       <section id="servicios" className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
         <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Servicios</p>
@@ -632,6 +630,7 @@ export default async function StructurePage({
           />
         </div>
       </section>
+      )}
 
       </>
       )}
