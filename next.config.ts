@@ -8,8 +8,7 @@ const DIVISION_DOMAINS = [
   { basePath: "/import", domain: "geuimport.com" },
   { basePath: "/plastic", domain: "geuplastic.com" },
   { basePath: "/energy", domain: "geuenergy.com" },
-  // Pendiente: activar cuando geustructure.com apunte a Vercel (DNS aún en el hosting anterior).
-  // { basePath: "/structure", domain: "geustructure.com" },
+  { basePath: "/structure", domain: "geustructure.com" },
 ] as const;
 
 const PRODUCTION_DOMAINS = ["geu-universal.com", ...DIVISION_DOMAINS.map((d) => d.domain)];
