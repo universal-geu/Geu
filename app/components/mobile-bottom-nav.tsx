@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import NavLink from "@/app/components/nav-link";
 
 type MoreItem = { label: string; href: string };
 
@@ -202,7 +203,7 @@ export default function MobileBottomNav({
             <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-400">Más opciones</p>
             <div className="grid grid-cols-1 gap-1">
               {moreItems.map((item) => (
-                <Link
+                <NavLink
                   key={item.href}
                   href={item.href}
                   onClick={() => setShowMore(false)}
@@ -215,7 +216,7 @@ export default function MobileBottomNav({
                   }
                 >
                   {item.label}
-                </Link>
+                </NavLink>
               ))}
             </div>
           </div>
@@ -302,14 +303,14 @@ export default function MobileBottomNav({
 
           {/* Con una sola opción no tiene sentido abrir el menú: se enlaza directo. */}
           {moreItems.length === 1 ? (
-            <Link
+            <NavLink
               href={moreItems[0].href}
               className="flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-semibold"
               style={{ color: isItemActive(moreItems[0].href) ? accent : inactiveColor }}
             >
               <InfoIcon />
               {moreItems[0].label}
-            </Link>
+            </NavLink>
           ) : moreItems.length > 1 ? (
             <button
               type="button"

@@ -4,6 +4,7 @@ import SiteFooter from "../components/site-footer";
 import NosotrosMobileNav from "./nosotros-mobile-nav";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
+import NavLink from "@/app/components/nav-link";
 
 const navItems = [
   { label: "Inicio", href: "/grupo-geu" },
@@ -63,7 +64,7 @@ export default async function QuienesSomosPage() {
     <main className="min-h-screen bg-white text-[#071832]">
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="relative mx-auto flex max-w-[1720px] items-center justify-between px-7 py-8 md:px-12">
-          <Link href="/grupo-geu" className="flex items-center">
+          <NavLink href="/grupo-geu" className="flex items-center">
             <Image
               src="/home-geu-logo.png"
               alt="GEU Grupo Empresarial Universal"
@@ -72,11 +73,11 @@ export default async function QuienesSomosPage() {
               priority
               className="h-auto w-[150px] object-contain md:w-[190px]"
             />
-          </Link>
+          </NavLink>
 
           <nav className="hidden items-center gap-10 text-[12px] font-black uppercase tracking-[0.04em] text-[#061735] lg:flex">
             {navItems.map((item) => (
-              <Link
+              <NavLink
                 key={item.label}
                 href={item.href}
                 className={`border-b-2 pb-3 transition-colors hover:text-[#075ed8] ${
@@ -84,7 +85,7 @@ export default async function QuienesSomosPage() {
                 }`}
               >
                 {item.label}
-              </Link>
+              </NavLink>
             ))}
           </nav>
 

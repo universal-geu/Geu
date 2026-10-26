@@ -6,6 +6,7 @@ import Link from "next/link";
 import MobileBottomNav from "../components/mobile-bottom-nav";
 import { useSiteColors } from "../components/use-site-colors";
 import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
+import NavLink from "@/app/components/nav-link";
 
 const navItems = [
   { label: "Producto", href: "/structure#producto" },
@@ -155,7 +156,7 @@ export default function StructureHeader() {
             <ToolsMenu />
           </nav>
           <div className="flex shrink-0 items-center gap-5 text-white">
-            <Link
+            <NavLink
               href="/grupo-geu"
               className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#d6006e] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.03em] text-white shadow-sm transition-colors duration-150 hover:bg-[#b8005e] active:bg-[#b8005e] lg:px-3.5 lg:py-2 lg:text-[11px] lg:tracking-[0.08em]"
             >
@@ -163,7 +164,7 @@ export default function StructureHeader() {
                 <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" />
               </svg>
               Ver todo GEU
-            </Link>
+            </NavLink>
           </div>
         </div>
       </header>

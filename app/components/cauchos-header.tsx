@@ -18,6 +18,7 @@ import { resolveColor } from "@/lib/color-slots";
 import { useCart } from "./cart-provider";
 import { useSalesSettings } from "./sales-settings-provider";
 import MobileBottomNav from "./mobile-bottom-nav";
+import NavLink from "@/app/components/nav-link";
 
 type BottomNavProps = {
   homeHref: string;
@@ -116,7 +117,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
               />
             </Link>
             <div className="flex shrink-0 items-center gap-1 md:hidden">
-              <Link
+              <NavLink
                 href="/grupo-geu"
                 className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#d6006e] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.03em] text-white shadow-sm transition-colors duration-150 active:bg-[#b8005e]"
               >
@@ -124,7 +125,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
                   <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" />
                 </svg>
                 Ver todo GEU
-              </Link>
+              </NavLink>
               <CauchosMobileSearch basePath={brand.basePath} division={division} accent={resolvedAccent} />
             </div>
           </div>
@@ -142,7 +143,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
             className="hidden items-center justify-end gap-5 text-sm text-slate-700 md:flex"
             style={{ "--brand-accent": resolvedAccent } as React.CSSProperties}
           >
-            <Link
+            <NavLink
               href="/grupo-geu"
               className="hidden items-center gap-1.5 rounded-full bg-[#d6006e] px-3.5 py-2 text-xs font-black uppercase tracking-[0.03em] text-white shadow-sm transition-colors duration-150 hover:bg-[#b8005e] lg:inline-flex"
             >
@@ -150,7 +151,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
                 <path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z" />
               </svg>
               Ver todo GEU
-            </Link>
+            </NavLink>
             <Link href={nosotrosHref} className="font-bold hover:text-[var(--brand-accent)]">
               Nosotros
             </Link>

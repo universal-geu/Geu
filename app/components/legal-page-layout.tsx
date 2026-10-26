@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import SiteFooter from "./site-footer";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
+import NavLink from "@/app/components/nav-link";
 
 const legalNavItems = [
   { label: "Términos y condiciones", href: "/terminos-y-condiciones" },
@@ -24,7 +25,7 @@ export default async function LegalPageLayout({ title, updatedAt, children }: Le
     <main className="min-h-screen bg-white text-[#071832]">
       <header className="border-b border-slate-200">
         <div className="mx-auto flex max-w-[1720px] items-center justify-between px-7 py-6 md:px-12">
-          <Link href="/grupo-geu" className="flex items-center">
+          <NavLink href="/grupo-geu" className="flex items-center">
             <Image
               src="/home-geu-logo.png"
               alt="GEU Grupo Empresarial Universal"
@@ -33,7 +34,7 @@ export default async function LegalPageLayout({ title, updatedAt, children }: Le
               priority
               className="h-auto w-[130px] object-contain md:w-[160px]"
             />
-          </Link>
+          </NavLink>
           <nav className="hidden items-center gap-8 text-[11px] font-black uppercase tracking-[0.04em] text-[#061735] lg:flex">
             {legalNavItems.map((item) => (
               <Link key={item.label} href={item.href} className="transition-colors hover:text-[#075ed8]">
