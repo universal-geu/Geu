@@ -6,6 +6,7 @@ import ProductSpecs from "./product-specs";
 import GalvanizingProcess from "./galvanizing-process";
 import ServiciosTimeline from "./servicios-timeline";
 import GusWidget from "./gus-widget";
+import TechosSections from "./techos-sections";
 import SiteFooter from "../components/site-footer";
 import { getSiteTexts } from "@/lib/site-texts";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
@@ -108,6 +109,31 @@ const fabricacion = [
   },
 ];
 
+function FarmIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 14 6 6h12l3 8H3Z" />
+      <path d="M4.5 10h15M10 6l-1 8M14 6l1 8" />
+      <path d="M8 14v6M16 14v6M5 20h14" />
+    </svg>
+  );
+}
+
+function RoofIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 11 12 4l9 7" />
+      <path d="M5 9.5V20h14V9.5" />
+      <path d="m8 12 3-2h5l-3 2H8Z" />
+    </svg>
+  );
+}
+
+const lineas = [
+  { id: "granjas", label: "Granjas solares", text: "Estructura M24 para plantas sobre terreno", icon: FarmIcon },
+  { id: "techos", label: "Para techos", text: "Sistemas de fijación para cubiertas", icon: RoofIcon },
+] as const;
+
 const durabilidadStats = [
   { value: "80–100", unit: "µm de zinc", label: "Estándar GEU Structure" },
   { value: "450 °C", unit: "", label: "Inmersión en zinc fundido" },
@@ -116,7 +142,13 @@ const durabilidadStats = [
   { value: "25 años", unit: "", label: "Vida útil objetivo de protección*" },
 ];
 
-export default async function StructurePage() {
+export default async function StructurePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ linea?: string }>;
+}) {
+  const { linea: lineaParam } = await searchParams;
+  const linea = lineaParam === "techos" ? "techos" : "granjas";
   const siteTexts = await getSiteTexts();
   const siteImages = await getSiteImages();
   const whatsappNumber = await getWhatsAppNumberForDivision("Innovation");
@@ -130,6 +162,11 @@ export default async function StructurePage() {
   const quoteHref = whatsappNumber
     ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
         "Hola GEU Structure, quiero solicitar una cotización de la estructura M24.",
+      )}`
+    : "#contacto";
+  const techosQuoteHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        "Hola GEU Structure, quiero solicitar una cotización de un sistema de fijación para techos.",
       )}`
     : "#contacto";
 
@@ -183,28 +220,63 @@ export default async function StructurePage() {
           </Link>
         </div>
 
-        <div className="relative z-10 border-t border-white/10 bg-black/55 backdrop-blur-sm">
-          <div className="mx-auto grid max-w-[1500px] grid-cols-4 gap-x-6 gap-y-8 px-5 py-7 max-[560px]:grid-cols-2 md:px-8">
-            {heroStats.map((stat) => (
-              <div key={stat.label} className="flex items-center gap-3">
-                <stat.icon />
-                <div>
-                  <p className="font-[family:var(--font-display)] text-2xl font-black leading-none text-white md:text-3xl">
-                    {stat.value}
-                    <span className="text-sm font-black uppercase text-white/70">{stat.unit}</span>
-                  </p>
-                  <p className="mt-1.5 max-w-[10rem] text-[10px] font-bold uppercase leading-tight tracking-[0.06em] text-white/60">
-                    {stat.label}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </section>
 
+      <nav id="lineas" aria-label="Líneas de GEU Structure" className="scroll-mt-20 bg-[#f2f2f2] text-slate-950">
+        <div className="mx-auto max-w-[1500px] px-5 pt-14 md:px-8">
+          <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-[#0498b4]">Elige tu solución</p>
+          <div className="mx-auto mt-5 grid max-w-3xl grid-cols-2 gap-2 rounded-[20px] border border-slate-200 bg-white p-2 shadow-[0_18px_44px_rgba(15,23,42,0.10)]">
+            {lineas.map((item) => {
+              const selected = item.id === linea;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.id}
+                  href={item.id === "granjas" ? "?#lineas" : `?linea=${item.id}#lineas`}
+                  scroll={false}
+                  aria-current={selected ? "page" : undefined}
+                  className={`group flex items-center gap-3 rounded-[14px] px-4 py-4 transition-all sm:gap-4 sm:px-6 sm:py-5 ${
+                    selected
+                      ? "bg-[#0498b4] text-white shadow-[0_12px_30px_rgba(4,152,180,0.35)]"
+                      : "text-slate-600 hover:bg-[#0498b4]/[0.07] hover:text-slate-950"
+                  }`}
+                >
+                  <span
+                    className={`hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl sm:flex ${
+                      selected ? "bg-white/15 text-white" : "bg-[#0498b4]/10 text-[#0498b4]"
+                    }`}
+                  >
+                    <Icon />
+                  </span>
+                  <span className="min-w-0 text-left">
+                    <span className="block font-[family:var(--font-display)] text-base font-black uppercase tracking-[0.04em] sm:text-xl">
+                      {item.label}
+                    </span>
+                    <span
+                      className={`mt-0.5 block text-[11px] font-semibold leading-snug sm:text-xs ${
+                        selected ? "text-white/80" : "text-slate-400"
+                      }`}
+                    >
+                      {item.text}
+                    </span>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </nav>
+
+      {linea === "techos" ? (
+        <TechosSections
+          images={(slot) => resolveImage(slot, siteImages)}
+          quoteHref={techosQuoteHref}
+          quoteExternal={Boolean(whatsappNumber)}
+        />
+      ) : (
+      <>
       <section className="border-b border-white/10 bg-[#f2f2f2] text-slate-950">
-        <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-8">
+        <div className="mx-auto max-w-[1500px] px-5 pb-16 pt-10 md:px-8">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">Propuesta de valor</p>
           <h2 className="mt-3 max-w-2xl font-[family:var(--font-display)] text-3xl font-black tracking-[-0.02em] md:text-4xl">
             Una estructura. Un solo aliado técnico.
@@ -274,6 +346,23 @@ export default async function StructurePage() {
                 <span className="inline-flex rounded-full border border-black/10 bg-black/[0.04] px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-neutral-500">
                   Vida útil +25 años
                 </span>
+              </div>
+
+              <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6">
+                {heroStats.map((stat) => (
+                  <div key={stat.label} className="flex items-center gap-3 text-[#0498b4]">
+                    <stat.icon />
+                    <div>
+                      <p className="font-[family:var(--font-display)] text-xl font-black leading-none text-neutral-900 md:text-2xl">
+                        {stat.value}
+                        <span className="text-sm font-black text-neutral-500">{stat.unit}</span>
+                      </p>
+                      <p className="mt-1.5 max-w-[11rem] text-[10px] font-bold uppercase leading-tight tracking-[0.06em] text-neutral-400">
+                        {stat.label}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="mt-auto pt-10">
@@ -543,6 +632,9 @@ export default async function StructurePage() {
           />
         </div>
       </section>
+
+      </>
+      )}
 
       <section id="contacto" className="relative overflow-hidden border-b border-white/10">
         <Image

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 
-type Shot = {
+export type Shot = {
   src: string;
   label: string;
   alt: string;
@@ -71,9 +71,13 @@ function ArrowButton({
 export default function ProductGallery({
   sources,
   theme = "dark",
+  items = shots,
+  productName = "M24",
 }: {
   sources?: string[];
   theme?: "dark" | "light";
+  items?: Shot[];
+  productName?: string;
 }) {
   const [active, setActive] = useState(0);
   const [zoom, setZoom] = useState(false);
@@ -83,7 +87,7 @@ export default function ProductGallery({
     ? "border-black/10 hover:border-black/25"
     : "border-white/10 hover:border-white/30";
 
-  const views = shots.map((shot, index) => ({
+  const views = items.map((shot, index) => ({
     ...shot,
     src: sources?.[index]?.trim() || shot.src,
   }));
@@ -190,7 +194,7 @@ export default function ProductGallery({
           onClick={() => setZoom(false)}
           role="dialog"
           aria-modal="true"
-          aria-label={`M24 · ${views[active].label}`}
+          aria-label={`${productName} · ${views[active].label}`}
         >
           <button
             type="button"

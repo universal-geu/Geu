@@ -1,8 +1,44 @@
 import type { NextConfig } from "next";
 
+// Cada unidad tiene su propio dominio: en él, "/" muestra la página de la
+// unidad, y desde cualquier otro dominio de producción sus rutas redirigen
+// allá. localhost y los Preview de Vercel no coinciden con estos hosts, así
+// que siguen funcionando con /import, /plastic, etc.
+const DIVISION_DOMAINS = [
+  { basePath: "/import", domain: "geuimport.com" },
+  { basePath: "/plastic", domain: "geuplastic.com" },
+  { basePath: "/energy", domain: "geuenergy.com" },
+  // Pendiente: activar cuando geustructure.com apunte a Vercel (DNS aún en el hosting anterior).
+  // { basePath: "/structure", domain: "geustructure.com" },
+] as const;
+
+const PRODUCTION_DOMAINS = ["geu-universal.com", ...DIVISION_DOMAINS.map((d) => d.domain)];
+
+const hostPattern = (domains: readonly string[]) =>
+  `(www\\.)?(${domains.map((d) => d.replace(/\./g, "\\.")).join("|")})`;
+
+const divisionDomainRedirects = DIVISION_DOMAINS.flatMap(({ basePath, domain }) => {
+  const otherHosts = [{ type: "host" as const, value: hostPattern(PRODUCTION_DOMAINS.filter((d) => d !== domain)) }];
+  return [
+    { source: basePath, has: otherHosts, destination: `https://www.${domain}/`, permanent: false },
+    { source: `${basePath}/:path*`, has: otherHosts, destination: `https://www.${domain}${basePath}/:path*`, permanent: false },
+    { source: basePath, has: [{ type: "host" as const, value: hostPattern([domain]) }], destination: "/", permanent: false },
+  ];
+});
+
 const nextConfig: NextConfig = {
+  async rewrites() {
+    return {
+      beforeFiles: DIVISION_DOMAINS.map(({ basePath, domain }) => ({
+        source: "/",
+        has: [{ type: "host" as const, value: hostPattern([domain]) }],
+        destination: basePath,
+      })),
+    };
+  },
   async redirects() {
     return [
+      ...divisionDomainRedirects,
       // GEU Structure cambió de /innovation a /structure
       { source: "/innovation", destination: "/structure", permanent: true },
       { source: "/innovation/:path*", destination: "/structure/:path*", permanent: true },
