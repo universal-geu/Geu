@@ -1,31 +1,40 @@
 # GEU
 
-Proyecto `Next.js 16` para la plataforma de GEU, separado de `Unipars` pero reutilizando una base funcional similar.
+Plataforma web del Grupo Empresarial Universal (Next.js 16 + Prisma + Postgres). Un solo proyecto atiende a todas las unidades:
 
-## Base de datos propia para GEU
+| Unidad | Dominio | Ruta en el proyecto |
+|---|---|---|
+| Grupo GEU y Universal de Cauchos | geu-universal.com | `/`, `/cauchos` |
+| GEU Import | geuimport.com | `/import` |
+| GEU Plastic | geuplastic.com | `/plastic` |
+| GEU Energy | geuenergy.com | `/energy` |
+| GEU Structure | geustructure.com | `/structure` |
 
-Este proyecto ya quedó preparado para usar una base de datos independiente.
+En cada dominio de unidad, `/` muestra su página y las rutas de las demás unidades redirigen a su dominio. La configuración está en `next.config.ts` (`DIVISION_DOMAINS`). En local y en los Preview de Vercel todo se navega por rutas (`/import`, `/structure`, …).
 
-### 1. Crear archivo de entorno
+## Puesta en marcha
 
-Copia `.env.example` a `.env.local` y completa al menos:
+### 1. Variables de entorno
+
+Copia `.env.example` a `.env.local` y completa los valores. Mínimo para arrancar:
 
 ```bash
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/geu"
 DIRECT_URL="postgresql://USER:PASSWORD@HOST:5432/geu"
-APP_SESSION_SECRET="un-secreto-largo-y-seguro"
-ADMIN_EXTRA_PIN="1234"
+APP_SESSION_SECRET="un-secreto-largo-y-aleatorio"
 ```
 
-Si usarás Supabase Storage o OpenAI, completa también las demás variables.
+Opcionales según la función:
 
-### 2. Crear la nueva base
+- **Imágenes y archivos:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`
+- **Correos** (pedidos, cotizaciones, restablecer contraseña): `RESEND_API_KEY`, `RESEND_FROM_EMAIL`
+- **Pagos con Wompi:** `WOMPI_PUBLIC_KEY`, `WOMPI_INTEGRITY_SECRET`, `WOMPI_EVENTS_SECRET`. La URL de eventos en el panel de Wompi es `https://geu-universal.com/api/wompi/events` y sirve para todos los dominios.
+- **Asistente de chat:** `OPENAI_API_KEY`, `OPENAI_CHAT_MODEL`
+- **Enlaces en correos:** `APP_BASE_URL` (si no se define, se usa el dominio de producción de Vercel)
 
-Crea una base exclusiva para GEU, por ejemplo:
+Nunca subas `.env.local` ni pegues claves en este README.
 
-- nombre sugerido: `geu`
-
-### 3. Generar y aplicar esquema
+### 2. Base de datos
 
 ```bash
 npm install
@@ -33,33 +42,43 @@ npm run db:generate
 npm run db:push
 ```
 
-### 4. Sembrar datos iniciales
+### 3. Datos iniciales
 
 ```bash
-npm run db:seed
+ADMIN_SEED_PASSWORD="una-clave-de-12-o-mas-caracteres" npm run db:seed
 ```
 
-El seed crea:
+El seed crea las cuentas de administrador de cada unidad con esa clave. Si ya existen, no cambia su contraseña.
 
-- usuario admin: `admin@geu.com.co`
-- clave inicial: `123456789`
+Solo la cuenta maestra (`MASTER_ADMIN_EMAIL` en `lib/divisions.ts`) inicia sesión en `/admin`. Desde ella se pasa a las demás unidades con "Cambiar de unidad".
+
+Para cambiar contraseñas de administradores:
+
+```bash
+npx tsx scripts/set-admin-password.ts            # todas, claves aleatorias
+npx tsx scripts/set-admin-password.ts <correo>   # solo una cuenta
+```
+
+El script muestra las claves nuevas una sola vez. Entrégalas por un canal privado.
 
 ## Desarrollo
 
 ```bash
-npm run dev -- --port 3001
+npm run dev -- --port 3002
 ```
 
-Abrir:
+Abre http://localhost:3002. Si `.env.local` apunta a la base de producción, los cambios que hagas en local (pedidos, productos, contenido del admin) son reales.
 
-- [http://localhost:3001](http://localhost:3001)
+Pagos en local: sin las variables de Wompi el checkout usa el pago simulado (código `SIMULATED_PAYMENT_CODE`, por defecto `1234`). En producción el pago simulado está desactivado.
+
+## Despliegue
+
+El repositorio está conectado a Vercel (proyecto `geu`). Cada push crea un deploy de Preview. Para publicar, promueve ese Preview a producción desde el panel de Vercel ("Promote to Production") o ejecuta:
+
+```bash
+npx vercel@latest deploy --prod --yes
+```
 
 ## Nota
 
-`GEU` y `Unipars` deben usar bases separadas para no mezclar:
-
-- usuarios
-- productos
-- pedidos
-- inventario
-- configuración comercial
+GEU y Unipars usan bases de datos separadas para no mezclar usuarios, productos, pedidos, inventario ni configuración comercial.
