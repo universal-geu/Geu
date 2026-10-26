@@ -153,12 +153,6 @@ const componentes = [
   { label: "Conexión a tierra", icon: GroundIcon },
 ];
 
-const detalles = [
-  { title: "Fijación del panel", slot: "structure-techos-detalle-panel" },
-  { title: "Unión a la cubierta", slot: "structure-techos-detalle-cubierta" },
-  { title: "Estructura de soporte", slot: "structure-techos-detalle-soporte" },
-];
-
 const materiales = [
   { title: "AA6005 T5", text: "Aluminio extruido de los perfiles", icon: ProfileIcon },
   { title: "Clamps", text: "Marcos de panel de 30, 35 y 40 mm", icon: ClampIcon },
@@ -215,6 +209,11 @@ function buildCubiertas(images: (slot: string) => string): Cubierta[] {
         { src: images("structure-techos-losa"), label: "En contexto", alt: "Paneles solares sobre losa con sistema de fijación de aluminio" },
         { src: images("structure-techos-losa-render"), label: "Componentes", alt: "Render del sistema de fijación para losa con panel, rieles y verticales" },
       ],
+      detalles: [
+        { title: "End clamp", src: images("structure-techos-losa-end-clamp") },
+        { title: "Mid clamp", src: images("structure-techos-losa-mid-clamp") },
+        { title: "Vertical losa tipo A", src: images("structure-techos-losa-vertical-a") },
+      ],
       descripcion: [
         { label: "Aplicación", value: "Losa / superficie plana" },
         { label: "Configuraciones", value: "Liviano · Riel completo" },
@@ -268,11 +267,13 @@ function buildCubiertas(images: (slot: string) => string): Cubierta[] {
         "Sistema para cubierta metálica trapezoidal: en la versión liviana el panel se apoya en mini rieles de 330 mm sobre platinas en acero inoxidable; en riel completo, sobre riel principal con anclajes en L.",
       cover: images("structure-techos-trapezoidal"),
       shots: [
-        { src: images("structure-techos-producto"), label: "Fijación sobre cubierta", alt: "Sistema de fijación con perfiles de aluminio sobre cubierta metálica trapezoidal" },
         { src: images("structure-techos-trapezoidal"), label: "En contexto", alt: "Paneles solares sobre cubierta trapezoidal con sistema de fijación de aluminio" },
         { src: images("structure-techos-trapezoidal-render"), label: "Componentes", alt: "Render del sistema de fijación para teja trapezoidal con panel y soportes" },
-        { src: images("structure-techos-detalle-cubierta"), label: "Unión a la cubierta", alt: "Detalle del soporte atornillado a la cubierta trapezoidal" },
-        { src: images("structure-techos-detalle-panel"), label: "Fijación del panel", alt: "Detalle del clamp que fija el panel al perfil de aluminio" },
+      ],
+      detalles: [
+        { title: "End clamp", src: images("structure-techos-trapezoidal-end-clamp") },
+        { title: "Mid clamp", src: images("structure-techos-trapezoidal-mid-clamp") },
+        { title: "Clip de fijación", src: images("structure-techos-trapezoidal-clip") },
       ],
       descripcion: [
         { label: "Aplicación", value: "Teja trapezoidal" },
@@ -310,6 +311,11 @@ function buildCubiertas(images: (slot: string) => string): Cubierta[] {
         { src: images("structure-techos-grafada"), label: "En contexto", alt: "Paneles solares sobre cubierta de junta grafada" },
         { src: images("structure-techos-grafada-render"), label: "Componentes", alt: "Render del sistema de fijación para teja grafada con panel y TG clamps" },
       ],
+      detalles: [
+        { title: "End clamp", src: images("structure-techos-grafada-end-clamp") },
+        { title: "Mid clamp", src: images("structure-techos-grafada-mid-clamp") },
+        { title: "Clip de fijación a la junta", src: images("structure-techos-grafada-clip") },
+      ],
       descripcion: [
         { label: "Aplicación", value: "Teja grafada" },
         { label: "Configuraciones", value: "Liviano · Riel completo" },
@@ -345,6 +351,11 @@ function buildCubiertas(images: (slot: string) => string): Cubierta[] {
       shots: [
         { src: images("structure-techos-barro"), label: "En contexto", alt: "Paneles solares sobre cubierta de teja de barro con rieles de aluminio" },
         { src: images("structure-techos-barro-render"), label: "Componentes", alt: "Render del sistema de fijación para teja de barro con rieles y soportes" },
+      ],
+      detalles: [
+        { title: "End clamp con pin a tierra", src: images("structure-techos-barro-end-clamp-pin") },
+        { title: "Soporte teja de barro", src: images("structure-techos-barro-soporte") },
+        { title: "Anclaje en L", src: images("structure-techos-barro-anclaje-l") },
       ],
       descripcion: [
         { label: "Aplicación", value: "Teja de barro" },
@@ -486,33 +497,6 @@ export default function TechosSections({
                 longitudes y acabados.
               </p>
             </details>
-          </div>
-
-          <div className="mt-12 border-t border-slate-200 pt-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#0498b4]">Detalles del sistema</p>
-            <div className="mt-5 grid gap-4 sm:grid-cols-3">
-              {detalles.map((item) => (
-                <figure
-                  key={item.slot}
-                  className="group relative aspect-[3/2] overflow-hidden rounded-[14px] bg-neutral-900 shadow-[0_14px_36px_rgba(15,23,42,0.10)] ring-1 ring-black/5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(4,152,180,0.16)]"
-                >
-                  <Image
-                    src={images(item.slot)}
-                    alt={item.title}
-                    fill
-                    sizes="(min-width: 640px) 440px, 100vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                  <figcaption className="absolute inset-x-0 bottom-0 p-4">
-                    <span className="inline-block h-[3px] w-8 bg-[#0498b4]" />
-                    <span className="mt-2 block text-[12px] font-bold uppercase leading-tight tracking-[0.04em] text-white">
-                      {item.title}
-                    </span>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
           </div>
         </div>
       </section>

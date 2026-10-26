@@ -13,6 +13,7 @@ export type Cubierta = {
   description: string;
   cover: string;
   shots: Shot[];
+  detalles?: { title: string; src: string }[];
   descripcion: Spec[];
   configuraciones: Configuracion[];
   especificaciones: Spec[];
@@ -235,6 +236,37 @@ export default function TechosCubiertas({
                 especificaciones={selected.especificaciones}
               />
             </div>
+
+            {selected.detalles && selected.detalles.length > 0 && (
+              <div className="lg:col-span-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#0498b4]">
+                  Detalles del sistema · {selected.title}
+                </p>
+                <div className={`mt-5 grid gap-4 ${selected.detalles.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+                  {selected.detalles.map((item) => (
+                    <figure
+                      key={`${selected.id}-${item.title}`}
+                      className="group relative aspect-[4/3] overflow-hidden rounded-[14px] bg-neutral-900 shadow-[0_14px_36px_rgba(15,23,42,0.10)] ring-1 ring-black/5"
+                    >
+                      <Image
+                        src={item.src}
+                        alt={`${item.title} — sistema de fijación para ${selected.title.toLowerCase()}`}
+                        fill
+                        sizes="(min-width: 640px) 440px, 100vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
+                      <figcaption className="absolute inset-x-0 bottom-0 p-4">
+                        <span className="inline-block h-[3px] w-8 bg-[#0498b4]" />
+                        <span className="mt-2 block text-[12px] font-bold uppercase leading-tight tracking-[0.04em] text-white">
+                          {item.title}
+                        </span>
+                      </figcaption>
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

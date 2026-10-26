@@ -636,14 +636,24 @@ export default async function StructurePage({
       )}
 
       <section id="contacto" className="relative overflow-hidden border-b border-white/10">
-        <Image
-          src={resolveImage("structure-hero", siteImages)}
-          alt="Estructura fotovoltaica galvanizada en la montaña"
-          fill
-          sizes="100vw"
-          className="absolute inset-0 object-cover object-[70%_35%]"
-        />
-        <div className="absolute inset-0 bg-black/72" />
+        {linea === "techos" ? (
+          <Image
+            src={resolveImage("structure-techos-cierre", siteImages)}
+            alt="Paneles solares sobre cubierta metálica al atardecer"
+            fill
+            sizes="100vw"
+            className="absolute inset-0 object-cover object-[60%_55%]"
+          />
+        ) : (
+          <Image
+            src={resolveImage("structure-hero", siteImages)}
+            alt="Estructura fotovoltaica galvanizada en la montaña"
+            fill
+            sizes="100vw"
+            className="absolute inset-0 object-cover object-[70%_35%]"
+          />
+        )}
+        <div className={`absolute inset-0 ${linea === "techos" ? "bg-black/60" : "bg-black/72"}`} />
 
         <div className="relative z-10 mx-auto max-w-[1500px] px-5 py-20 text-center md:px-8">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">GEU Structure</p>
@@ -651,7 +661,9 @@ export default async function StructurePage({
             Ingeniería que se convierte en estructura.
           </h2>
           <p className="mt-4 text-xs font-bold uppercase tracking-[0.1em] text-white/60">
-            M24 · Ingeniería estructural · Galvanizado · Servicios de campo
+            {linea === "techos"
+              ? "Losa · Teja trapezoidal · Teja grafada · Teja de barro"
+              : "M24 · Ingeniería estructural · Galvanizado · Servicios de campo"}
           </p>
           <a
             href={whatsappHref}
