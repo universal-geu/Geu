@@ -6,7 +6,7 @@ import { getSiteTexts, resolveText } from "@/lib/site-texts";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
 
 const navItems = [
-  { label: "Inicio", href: "/" },
+  { label: "Inicio", href: "/grupo-geu" },
   { label: "Nosotros", href: "/quienes-somos", active: true },
   { label: "Unidades de negocio", href: "#ecosistema" },
 ];
@@ -63,7 +63,7 @@ export default async function QuienesSomosPage() {
     <main className="min-h-screen bg-white text-[#071832]">
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="relative mx-auto flex max-w-[1720px] items-center justify-between px-7 py-8 md:px-12">
-          <Link href="/" className="flex items-center">
+          <Link href="/grupo-geu" className="flex items-center">
             <Image
               src="/home-geu-logo.png"
               alt="GEU Grupo Empresarial Universal"

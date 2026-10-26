@@ -7,7 +7,7 @@ import MobileBottomNav from "../components/mobile-bottom-nav";
 import { useSiteColors } from "../components/use-site-colors";
 import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
 
-const mobileMoreItems = [{ label: "Ver todo GEU", href: "/" }];
+const mobileMoreItems = [{ label: "Ver todo GEU", href: "/grupo-geu" }];
 
 const solutionsMenu = [
   { label: "Estufas", href: "/autoservicio-inteligente/estufas" },
@@ -91,7 +91,7 @@ export default function InnovationHeader() {
         </nav>
         <div className="flex items-center gap-5 text-white">
           <Link
-            href="/"
+            href="/grupo-geu"
             className="hidden items-center gap-1.5 rounded-full bg-[#d6006e] px-3.5 py-2 text-[11px] font-black uppercase tracking-[0.08em] text-white shadow-sm transition-colors duration-150 hover:bg-[#b8005e] lg:inline-flex"
           >
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-current" aria-hidden="true">

@@ -117,7 +117,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
             </Link>
             <div className="flex shrink-0 items-center gap-1 md:hidden">
               <Link
-                href="/"
+                href="/grupo-geu"
                 className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#d6006e] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.03em] text-white shadow-sm transition-colors duration-150 active:bg-[#b8005e]"
               >
                 <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0 fill-current" aria-hidden="true">
@@ -143,7 +143,7 @@ export default function CauchosHeader({ division = "Cauchos", extraNavLink }: Pr
             style={{ "--brand-accent": resolvedAccent } as React.CSSProperties}
           >
             <Link
-              href="/"
+              href="/grupo-geu"
               className="hidden items-center gap-1.5 rounded-full bg-[#d6006e] px-3.5 py-2 text-xs font-black uppercase tracking-[0.03em] text-white shadow-sm transition-colors duration-150 hover:bg-[#b8005e] lg:inline-flex"
             >
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 fill-current" aria-hidden="true">

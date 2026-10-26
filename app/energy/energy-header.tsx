@@ -18,7 +18,7 @@ const moreItems = [
   { label: "Tienda", href: "/energy" },
   { label: "Nosotros", href: "/energy/nosotros" },
   { label: "Contacto", href: "/energy/proyectos#contacto" },
-  { label: "Ver todo GEU", href: "/" },
+  { label: "Ver todo GEU", href: "/grupo-geu" },
 ];
 
 function EnergyMark() {
@@ -55,7 +55,7 @@ export default function EnergyHeader() {
         </nav>
         <div className="flex items-center gap-5 text-white">
           <Link
-            href="/"
+            href="/grupo-geu"
             className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#d6006e] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.03em] text-white shadow-sm transition-colors duration-150 hover:bg-[#b8005e] active:bg-[#b8005e] lg:px-3.5 lg:py-2 lg:text-[11px] lg:tracking-[0.08em]"
           >
             <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0 fill-current lg:h-3.5 lg:w-3.5" aria-hidden="true">

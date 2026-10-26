@@ -37,6 +37,15 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // "Ver todo GEU": en el dominio de una unidad "/" es esa unidad, así que
+      // el home del grupo se enlaza con /grupo-geu y aquí se resuelve al dominio principal.
+      {
+        source: "/grupo-geu",
+        has: [{ type: "host" as const, value: hostPattern(DIVISION_DOMAINS.map((d) => d.domain)) }],
+        destination: "https://www.geu-universal.com/",
+        permanent: false,
+      },
+      { source: "/grupo-geu", destination: "/", permanent: false },
       ...divisionDomainRedirects,
       // GEU Structure cambió de /innovation a /structure
       { source: "/innovation", destination: "/structure", permanent: true },

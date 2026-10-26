@@ -24,7 +24,7 @@ export default async function LegalPageLayout({ title, updatedAt, children }: Le
     <main className="min-h-screen bg-white text-[#071832]">
       <header className="border-b border-slate-200">
         <div className="mx-auto flex max-w-[1720px] items-center justify-between px-7 py-6 md:px-12">
-          <Link href="/" className="flex items-center">
+          <Link href="/grupo-geu" className="flex items-center">
             <Image
               src="/home-geu-logo.png"
               alt="GEU Grupo Empresarial Universal"
