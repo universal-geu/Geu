@@ -1,4 +1,4 @@
-import { requireAdminUser } from "@/lib/admin";
+import { redactSalesReport, requireAdminUser } from "@/lib/admin";
 import { parseDateRangeParams } from "@/lib/date-range";
 import { getSalesReport, type SalesReport } from "@/lib/orders";
 
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     const admin = await requireAdminUser("reports");
     const report = await getSalesReport(admin.division, parseDateRangeParams(request) ?? undefined);
 
-    return Response.json({ report });
+    return Response.json({ report: redactSalesReport(report, admin.permissions, "reports") });
   } catch (error) {
     if (error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED") {
       return Response.json({ report: createEmptyReport() });

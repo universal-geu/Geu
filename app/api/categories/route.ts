@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminUser("categories");
+    const admin = await requireAdminUser("categories", "edit");
     const body = (await request.json()) as { name?: string; color?: string; icon?: string };
 
     const category = await createCategory({

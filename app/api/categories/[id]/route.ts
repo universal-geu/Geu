@@ -6,7 +6,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const admin = await requireAdminUser("categories");
+    const admin = await requireAdminUser("categories", "edit");
     const { id } = await params;
     const body = (await request.json()) as { name?: string };
 
@@ -48,7 +48,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const admin = await requireAdminUser("categories");
+    const admin = await requireAdminUser("categories", "edit");
     const { id } = await params;
 
     const existing = await getCategoryById(id);

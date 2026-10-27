@@ -7,7 +7,7 @@ import { LIVE_TEXT_EDIT_COOKIE } from "@/lib/live-text-markers";
 // admin session before marking anything editable.
 export async function POST() {
   try {
-    await requireAdminUser("settings");
+    await requireAdminUser("settings", "edit");
     const cookieStore = await cookies();
     cookieStore.set(LIVE_TEXT_EDIT_COOKIE, "1", {
       httpOnly: true,

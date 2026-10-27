@@ -3,7 +3,7 @@ import { reorderCategories } from "@/lib/categories";
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminUser("categories");
+    const admin = await requireAdminUser("categories", "edit");
     const body = (await request.json()) as { orderedIds?: string[] };
 
     if (!Array.isArray(body.orderedIds) || body.orderedIds.length === 0) {

@@ -1,6 +1,6 @@
 import { getStorageBucket, createSupabaseStorageClient, getSupabaseUrl } from "@/lib/supabase-storage";
 import { slugify } from "@/app/data/catalog";
-import { requireAdminUser } from "@/lib/admin";
+import { requireAdminUserWithAny } from "@/lib/admin";
 import {
   ALLOWED_FILE_TYPES,
   ALLOWED_PDF_TYPES,
@@ -11,7 +11,7 @@ import {
 
 export async function POST(request: Request) {
   try {
-    await requireAdminUser();
+    await requireAdminUserWithAny(["create", "edit", "images"], "edit");
     const supabase = createSupabaseStorageClient();
     const supabaseUrl = getSupabaseUrl();
 

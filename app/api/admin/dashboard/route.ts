@@ -1,4 +1,4 @@
-import { requireAdminUser } from "@/lib/admin";
+import { redactDashboardMetrics, redactSalesReport, requireAdminUser } from "@/lib/admin";
 import { parseDateRangeParams } from "@/lib/date-range";
 import { getDashboardMetrics, getSalesReport, type DashboardMetrics, type SalesReport } from "@/lib/orders";
 
@@ -61,7 +61,10 @@ export async function GET(request: Request) {
       getSalesReport(admin.division),
     ]);
 
-    return Response.json({ metrics, report });
+    return Response.json({
+      metrics: redactDashboardMetrics(metrics, admin.permissions),
+      report: redactSalesReport(report, admin.permissions, "dashboard"),
+    });
   } catch (error) {
     if (error instanceof Error && error.message === "DATABASE_NOT_CONFIGURED") {
       return Response.json({ metrics: createEmptyMetrics(from, to), report: createEmptyReport() });

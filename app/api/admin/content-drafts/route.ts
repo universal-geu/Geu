@@ -1,4 +1,4 @@
-import { requireAdminUser } from "@/lib/admin";
+import { requireAdminUserWithAny } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { IMAGE_SLOTS } from "@/lib/image-slots";
 import { TEXT_SLOTS } from "@/lib/text-slots";
@@ -6,7 +6,7 @@ import { COLOR_SLOTS } from "@/lib/color-slots";
 
 export async function GET() {
   try {
-    await requireAdminUser();
+    await requireAdminUserWithAny(["images", "settings"]);
     if (!prisma) return Response.json({ drafts: [] });
     const drafts = await prisma.siteContentDraft.findMany();
     return Response.json({ drafts });
@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUserWithAny(["images", "settings"], "edit");
     if (!prisma) return Response.json({ error: "BD no disponible." }, { status: 503 });
 
     const body = (await request.json()) as {

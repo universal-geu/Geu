@@ -1,9 +1,9 @@
-import { requireAdminUser } from "@/lib/admin";
+import { requireAdminUserWithAny } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUserWithAny(["images", "settings"], "edit");
     if (!prisma) return Response.json({ error: "BD no disponible." }, { status: 503 });
 
     const body = (await request.json()) as { key?: string };

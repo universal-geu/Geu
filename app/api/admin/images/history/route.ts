@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    await requireAdminUser();
+    await requireAdminUser("images");
     if (!prisma) return Response.json({ history: {} });
 
     const rows = await prisma.siteImageHistory.findMany({ orderBy: { createdAt: "desc" } });

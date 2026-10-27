@@ -1,4 +1,4 @@
-import { requireAdminUser } from "@/lib/admin";
+import { requireAdminUserWithAny } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 import { IMAGE_SLOTS } from "@/lib/image-slots";
 import { TEXT_SLOTS } from "@/lib/text-slots";
@@ -20,7 +20,7 @@ function defaultSettingValue(key: string) {
 
 export async function POST() {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUserWithAny(["images", "settings"], "edit");
     if (!prisma) return Response.json({ error: "BD no disponible." }, { status: 503 });
     const db = prisma;
 

@@ -48,10 +48,15 @@ import {
 } from "@/lib/divisions";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
+  ADMIN_TOOL_OPTIONS,
+  canManageAdminUsers,
+  hasAdminExtra,
   hasAdminPermission,
   isToolAllowedForDivision,
+  type AdminExtraKey,
   type AdminToolKey,
 } from "@/lib/admin-permissions";
+import AdminUsersPanel from "./admin-users-panel";
 import GusOrderRunner from "../components/gus-order-runner";
 import {
   formatShippingDestinationAddress,
@@ -1664,6 +1669,16 @@ function CustomersIcon() {
   );
 }
 
+function UsersIcon() {
+  return (
+    <SidebarIconShell>
+      <circle cx="10" cy="8" r="3.4" />
+      <path d="M3.5 20a6.5 6.5 0 0 1 10.4-5.2" />
+      <path d="M18 13.5 20.5 14.6v2.1c0 1.7-1.1 3-2.5 3.6-1.4-.6-2.5-1.9-2.5-3.6v-2.1Z" />
+    </SidebarIconShell>
+  );
+}
+
 function ReportsIcon() {
   return (
     <SidebarIconShell>
@@ -1863,7 +1878,7 @@ function DashboardTagIcon() {
   );
 }
 
-const SIDEBAR_ICONS: Partial<Record<AdminToolKey | "dashboard" | "overview", () => React.JSX.Element>> = {
+const SIDEBAR_ICONS: Partial<Record<AdminToolKey | "dashboard" | "overview" | "users", () => React.JSX.Element>> = {
   dashboard: DashboardIcon,
   create: CreateIcon,
   edit: EditIcon,
@@ -1874,6 +1889,7 @@ const SIDEBAR_ICONS: Partial<Record<AdminToolKey | "dashboard" | "overview", () 
   categories: CategoriesIcon,
   reports: ReportsIcon,
   overview: ReportsIcon,
+  users: UsersIcon,
   settings: SettingsIcon,
 };
 
@@ -1926,6 +1942,7 @@ export default function AdminPage() {
     | "categories"
     | "reports"
     | "overview"
+    | "users"
     | "settings"
     | null
   >(null);
@@ -3450,6 +3467,14 @@ export default function AdminPage() {
     void loadQuotes();
   };
 
+  const openUsersView = () => {
+    setSelectedImage(null);
+    setRequestError("");
+    setPrimaryImageIndex(0);
+    setEditingSlug(null);
+    setActiveTab("users");
+  };
+
   const openCategoriesView = () => {
     setSelectedImage(null);
     setRequestError("");
@@ -4109,6 +4134,29 @@ export default function AdminPage() {
 
   const canAccessTool = (tool: AdminToolKey) =>
     isToolAllowedForDivision(adminDivision, tool) && hasAdminPermission(adminPermissions, tool);
+  const canEditTool = (tool: AdminToolKey) =>
+    isToolAllowedForDivision(adminDivision, tool) && hasAdminPermission(adminPermissions, tool, "edit");
+  // Amounts hidden by the user's permissions arrive as 0 from the API; show a
+  // mask instead so they don't read as real zero sales.
+  const formatAmount = (value: number, extra: AdminExtraKey) =>
+    hasAdminExtra(adminPermissions, extra) ? formatCurrency(value) : "••••";
+  const showReportCharts = hasAdminExtra(adminPermissions, "reports.charts");
+  const showReportRecent = hasAdminExtra(adminPermissions, "reports.recent");
+  const activeToolKey: AdminToolKey | null =
+    activeTab === "settings"
+      ? settingsSection === "images"
+        ? "images"
+        : "settings"
+      : activeTab === "overview" || activeTab === "users"
+        ? null
+        : activeTab;
+  // Tools the user may open but not change: the API rejects writes, and the
+  // panel says so up front instead of failing on save.
+  const isReadOnlyView =
+    activeToolKey !== null &&
+    ADMIN_TOOL_OPTIONS[activeToolKey].levels.includes("edit") &&
+    canAccessTool(activeToolKey) &&
+    !canEditTool(activeToolKey);
 
   const sidebarNavItems = (
     [
@@ -4141,6 +4189,7 @@ export default function AdminPage() {
             },
           ]
         : []),
+      { key: "users", label: "Usuarios", active: activeTab === "users", onClick: openUsersView },
       {
         key: "settings",
         label: "Configuración",
@@ -4148,7 +4197,7 @@ export default function AdminPage() {
         onClick: openSettingsView,
       },
     ] as Array<{
-      key: AdminToolKey | "overview";
+      key: AdminToolKey | "overview" | "users";
       label: string;
       active: boolean;
       onClick: () => void;
@@ -4157,7 +4206,9 @@ export default function AdminPage() {
   ).filter((item) =>
     item.key === "overview"
       ? true
-      : item.key === "settings"
+      : item.key === "users"
+        ? canManageAdminUsers(adminPermissions)
+        : item.key === "settings"
         ? canAccessTool("settings") || canAccessTool("images")
         : canAccessTool(item.key),
   );
@@ -4441,6 +4492,7 @@ export default function AdminPage() {
                 <span className="block truncate text-xs font-semibold text-[#8b8d91]">{adminBrand.label}</span>
               </span>
             </Link>
+            {canManageAdminUsers(adminPermissions) && (
             <button
               type="button"
               onClick={() => {
@@ -4454,6 +4506,7 @@ export default function AdminPage() {
               </svg>
               Cambiar de unidad
             </button>
+            )}
           </div>
 
           <nav className="w-64 flex-1 overflow-y-auto px-3 py-4">
@@ -4791,6 +4844,7 @@ export default function AdminPage() {
                 </nav>
 
                 <div className="space-y-2 border-t border-slate-200 p-3">
+                  {canManageAdminUsers(adminPermissions) && (
                   <button
                     type="button"
                     onClick={() => {
@@ -4805,6 +4859,7 @@ export default function AdminPage() {
                     </svg>
                     Cambiar de unidad
                   </button>
+                  )}
                   <Link
                     href={adminBrand.siteHref}
                     className="flex w-full items-center justify-center rounded-xl border px-4 py-2.5 text-sm font-black uppercase tracking-[0.06em]"
@@ -4826,7 +4881,26 @@ export default function AdminPage() {
           )}
 
           <section className="mx-auto w-full max-w-[1440px] px-6 py-12">
-        <div className="space-y-8">
+        <div
+          className="space-y-8"
+          onSubmitCapture={(event) => {
+            if (!isReadOnlyView) return;
+            event.preventDefault();
+            event.stopPropagation();
+            setToast({ tone: "error", message: "Tu usuario solo puede ver esta sección, no modificarla." });
+          }}
+        >
+          {isReadOnlyView && (
+            <div className="flex items-center gap-3 rounded-2xl border border-[#f0d9a8] bg-[#fff8e8] px-5 py-3 text-sm text-[#7a5300]">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <span>
+                <span className="font-semibold">Solo lectura.</span> Puedes consultar esta sección, pero los cambios no se guardarán.
+              </span>
+            </div>
+          )}
           {!activeTab && (
             <div className="admin-fade-up space-y-8">
               <div>
@@ -4875,7 +4949,7 @@ export default function AdminPage() {
                       {[
                         {
                           label: "Vendido",
-                          value: formatCurrency(dashboardMetrics.revenue),
+                          value: formatAmount(dashboardMetrics.revenue, "dashboard.amounts"),
                           helper: "Solo pedidos pagados",
                           Icon: DashboardMetricRevenueIcon,
                         },
@@ -4887,7 +4961,7 @@ export default function AdminPage() {
                         },
                         {
                           label: "Ticket promedio",
-                          value: formatCurrency(dashboardMetrics.averageTicket),
+                          value: formatAmount(dashboardMetrics.averageTicket, "dashboard.amounts"),
                           helper: "Valor promedio por pedido",
                           Icon: DashboardMetricTicketIcon,
                         },
@@ -6041,7 +6115,7 @@ export default function AdminPage() {
                     {[
                       {
                         label: "Ingresos confirmados",
-                        value: formatCurrency(salesReport.totals.paidRevenue),
+                        value: formatAmount(salesReport.totals.paidRevenue, "reports.amounts"),
                         helper: `${formatNumber(salesReport.totals.paidOrders)} ${salesReport.totals.paidOrders === 1 ? "pago confirmado" : "pagos confirmados"}`,
                         primary: true,
                       },
@@ -6052,7 +6126,7 @@ export default function AdminPage() {
                       },
                       {
                         label: "Ticket promedio",
-                        value: formatCurrency(salesReport.totals.averageOrderValue),
+                        value: formatAmount(salesReport.totals.averageOrderValue, "reports.amounts"),
                         helper: "Por pedido activo",
                       },
                       {
@@ -6076,6 +6150,7 @@ export default function AdminPage() {
                     ))}
                   </div>
 
+                  {showReportCharts && (
                   <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 shadow-[0_10px_22px_rgba(15,23,42,0.04)]">
                     <div className="flex items-baseline justify-between gap-3">
                       <h3 className="text-base font-semibold text-[#16384f]">Productos más vendidos</h3>
@@ -6116,7 +6191,7 @@ export default function AdminPage() {
                               </span>
                               <span className="text-right text-sm tabular-nums text-[#5d6167]">
                                 <span className="font-semibold text-[#16384f] md:hidden">{formatNumber(product.quantitySold)} und. · </span>
-                                {formatCurrency(product.revenue)}
+                                {formatAmount(product.revenue, "reports.amounts")}
                               </span>
                             </li>
                           );
@@ -6125,7 +6200,10 @@ export default function AdminPage() {
                     )}
                   </div>
 
-                  <div className="grid gap-4 xl:grid-cols-2">
+                  )}
+
+                  <div className={`grid gap-4 ${showReportCharts && showReportRecent ? "xl:grid-cols-2" : ""}`}>
+                    {showReportCharts && (
                     <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 shadow-[0_10px_22px_rgba(15,23,42,0.04)]">
                       <div className="flex items-baseline justify-between gap-3">
                         <h3 className="text-base font-semibold text-[#16384f]">Ventas por categoría</h3>
@@ -6143,12 +6221,12 @@ export default function AdminPage() {
                                   <span className="min-w-0 truncate font-medium text-[#1f2328]">{category.category}</span>
                                   <span className="shrink-0 tabular-nums text-[#5d6167]">
                                     <span className="text-xs text-[#8b8d91]">{formatNumber(category.quantitySold)} und. · </span>
-                                    <span className="font-semibold text-[#16384f]">{formatCurrency(category.revenue)}</span>
+                                    <span className="font-semibold text-[#16384f]">{formatAmount(category.revenue, "reports.amounts")}</span>
                                   </span>
                                 </div>
                                 <div
                                   className="mt-1.5 h-1.5 rounded-full bg-[#eef0f2]"
-                                  title={`${category.category}: ${formatCurrency(category.revenue)}`}
+                                  title={`${category.category}: ${formatAmount(category.revenue, "reports.amounts")}`}
                                 >
                                   <span
                                     className="block h-full rounded-full bg-[var(--admin-accent)]"
@@ -6162,6 +6240,9 @@ export default function AdminPage() {
                       )}
                     </div>
 
+                    )}
+
+                    {showReportRecent && (
                     <div className="rounded-[1.5rem] border border-black/8 bg-white p-5 shadow-[0_10px_22px_rgba(15,23,42,0.04)]">
                       <h3 className="text-base font-semibold text-[#16384f]">Pedidos recientes</h3>
                       {salesReport.recentOrders.length === 0 ? (
@@ -6191,13 +6272,14 @@ export default function AdminPage() {
                                 {getPaymentStatusLabel(order.paymentStatus)}
                               </span>
                               <span className="ml-auto shrink-0 text-right font-semibold tabular-nums text-[#16384f] sm:w-24">
-                                {formatCurrency(order.subtotal)}
+                                {formatAmount(order.subtotal, "reports.amounts")}
                               </span>
                             </li>
                           ))}
                         </ul>
                       )}
                     </div>
+                    )}
                   </div>
                 </>
               )}
@@ -7132,7 +7214,9 @@ export default function AdminPage() {
                   Solicitudes de evaluación técnica
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-[#6e7379]">
-                  Estas solicitudes las envían los clientes desde el asistente &quot;Hablemos de tu proyecto&quot; del sitio.
+                  {adminDivision === "Innovation"
+                    ? "Estas solicitudes las envían los clientes desde el asesor técnico y simulador de GEU Structure."
+                    : "Estas solicitudes las envían los clientes desde el asistente \"Hablemos de tu proyecto\" del sitio."}
                   Arrastra una tarjeta a otra columna para cambiar su estado, o haz clic para ver el detalle y responder.
                 </p>
               </div>
@@ -7232,11 +7316,11 @@ export default function AdminPage() {
 
               {selectedQuote && (
                 <div
-                  className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-8"
+                  className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-6 md:px-8"
                   onClick={() => setSelectedQuoteId(null)}
                 >
                   <div
-                    className="w-full max-w-3xl rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_30px_80px_rgba(2,6,23,0.25)] md:p-8"
+                    className="w-full max-w-6xl rounded-[1.75rem] border border-black/8 bg-white p-6 shadow-[0_30px_80px_rgba(2,6,23,0.25)] md:p-10"
                     onClick={(event) => event.stopPropagation()}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-4">
@@ -7352,6 +7436,87 @@ export default function AdminPage() {
                             </div>
                           );
                         };
+
+                        // Requests from the GEU Structure technical advisor
+                        // (public/structure-tools/simulador-inversion.html)
+                        // carry their own fields, not the Cauchos form's.
+                        if (selectedQuote.requestType.startsWith("Asesor técnico GEU Structure")) {
+                          const DetailRows = ({ keys }: { keys: string[] }) => (
+                            <>
+                              {keys.map((key) => (
+                                <Row key={key} label={key}>
+                                  {getDetail(key) || <Empty />}
+                                </Row>
+                              ))}
+                            </>
+                          );
+                          const Chips = ({ items }: { items: string[] }) =>
+                            items.length ? (
+                              <div className="flex flex-wrap gap-1.5">
+                                {items.map((item) => (
+                                  <span
+                                    key={item}
+                                    className="rounded-full bg-[var(--admin-accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--admin-accent)]"
+                                  >
+                                    {item}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <Empty />
+                            );
+
+                          return (
+                            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+                              <Card title="Proyecto">
+                                <DetailRows
+                                  keys={[
+                                    "Tipo de proyecto",
+                                    "Potencia (MWp)",
+                                    "Paneles",
+                                    "Módulo fotovoltaico",
+                                    "Estructuras",
+                                    "Tipo de estructura",
+                                    "Cimentación",
+                                    "Ubicación",
+                                    "Coordenadas",
+                                  ]}
+                                />
+                              </Card>
+                              <div className="space-y-4">
+                                <Card title="Contacto">
+                                  <Row label="Nombre">{selectedQuote.fullName}</Row>
+                                  <Row label="Empresa">{selectedQuote.company || <Empty />}</Row>
+                                  <Row label="NIT">{selectedQuote.nit || <Empty />}</Row>
+                                  <Row label="Teléfono">{selectedQuote.phone || <Empty />}</Row>
+                                  <DetailRows keys={["Correo", "Cargo"]} />
+                                </Card>
+                                <Card title="Estado y compra">
+                                  <DetailRows
+                                    keys={["Estado del proyecto", "Fecha objetivo", "Proceso de compra", "Presupuesto", "Compara proveedores"]}
+                                  />
+                                </Card>
+                              </div>
+                              <Card title="Alcance e información">
+                                <Row label="Alcance">
+                                  <Chips items={selectedQuote.process} />
+                                </Row>
+                                <Row label="Información disponible">
+                                  <Chips items={selectedQuote.conditions} />
+                                </Row>
+                                <DetailRows keys={["Información pendiente", "Nota del cliente"]} />
+                              </Card>
+                              <Card title="Evaluación interna">
+                                <DetailRows keys={["Prioridad", "Puntaje", "Encaje GEU", "Siguiente acción"]} />
+                                <Row label="Resumen">
+                                  <span className="whitespace-pre-line font-normal">
+                                    {getDetail("Resumen interno") || selectedQuote.productDetails}
+                                  </span>
+                                </Row>
+                              </Card>
+                            </div>
+                          );
+                        }
 
                         return (
                           <div className="mt-6 space-y-4">
@@ -7494,6 +7659,14 @@ export default function AdminPage() {
                 )}
               </div>
             )}
+
+          {activeTab === "users" && canManageAdminUsers(adminPermissions) && (
+            <AdminUsersPanel
+              division={adminDivision}
+              brandLabel={adminBrand.label}
+              notify={(tone, message) => setToast({ tone, message })}
+            />
+          )}
 
           {activeTab === "categories" && (
             <div className="admin-fade-up space-y-6">

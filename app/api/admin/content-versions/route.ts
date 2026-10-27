@@ -1,9 +1,9 @@
-import { requireAdminUser } from "@/lib/admin";
+import { requireAdminUserWithAny } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const admin = await requireAdminUser();
+    const admin = await requireAdminUserWithAny(["images", "settings"]);
     if (!prisma) return Response.json({ versions: [] });
 
     const versions = await prisma.siteContentVersion.findMany({

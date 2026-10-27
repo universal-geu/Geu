@@ -32,7 +32,14 @@ export async function POST(request: Request) {
 
     const user = await authenticateUser(email, password);
 
-    if (user.role === "ADMIN" && user.email.toLowerCase() !== MASTER_ADMIN_EMAIL) {
+    // Además de la cuenta maestra, entran los usuarios del equipo creados en
+    // "Usuarios" (siempre tienen permisos asignados). Las cuentas raíz de cada
+    // unidad tienen acceso completo y solo se usan vía "Cambiar de unidad".
+    if (
+      user.role === "ADMIN" &&
+      user.email.toLowerCase() !== MASTER_ADMIN_EMAIL &&
+      user.permissions.length === 0
+    ) {
       return Response.json(
         { error: "Para entrar al panel usa la cuenta principal de administración." },
         { status: 403 },
