@@ -5,6 +5,7 @@ import { after } from "next/server";
 import "./globals.css";
 import { CartProvider } from "./components/cart-provider";
 import { ProductsProvider } from "./components/products-provider";
+import { CATALOG_OMITTED_HEADER } from "@/lib/catalog-omitted";
 import { CategoriesProvider } from "./components/categories-provider";
 import { SalesSettingsProvider } from "./components/sales-settings-provider";
 import HeaderShell from "./components/header-shell";
@@ -52,13 +53,16 @@ export default async function RootLayout({
   // Promise.all collapses that to the duration of the slowest one — this
   // runs on every request (force-dynamic, no shared layout across brands),
   // so it was on the critical path of every single page load.
-  const [initialProducts, initialCategories, whatsappNumbers, salesModes, requestHeaders, session, liveTextEditDivision] =
+  const requestHeaders = await headers();
+  // Structure pages don't use the catalog (see proxy.ts); the provider loads
+  // it in the background if the visitor navigates to a store page.
+  const catalogOmitted = requestHeaders.get(CATALOG_OMITTED_HEADER) === "1";
+  const [initialProducts, initialCategories, whatsappNumbers, salesModes, session, liveTextEditDivision] =
     await Promise.all([
-      getProducts(),
+      catalogOmitted ? Promise.resolve([]) : getProducts(),
       getAllCategories(),
       getAllWhatsAppNumbers(),
       getAllSalesModes(),
-      headers(),
       getSessionFromCookies(),
       getLiveTextEditDivision(),
     ]);
@@ -101,7 +105,7 @@ export default async function RootLayout({
       className={`${orbitron.variable} ${rajdhani.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ProductsProvider initialProducts={initialProducts}>
+        <ProductsProvider initialProducts={initialProducts} catalogOmitted={catalogOmitted}>
           <CategoriesProvider initialCategories={initialCategories}>
             <SalesSettingsProvider salesModes={salesModes} whatsappNumbers={whatsappNumbers} siteOrigin={siteOrigin}>
               <CartProvider

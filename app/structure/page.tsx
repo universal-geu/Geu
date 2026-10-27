@@ -228,10 +228,11 @@ export default async function StructurePage({
               const selected = item.id === linea;
               const Icon = item.icon;
               return (
-                <Link
+                // <a> y no <Link>: en geustructure.com "/" es un rewrite por host que
+                // el router del cliente no aplica, así que la navegación debe ir al servidor.
+                <a
                   key={item.id}
                   href={item.id === "granjas" ? "?#lineas" : `?linea=${item.id}#lineas`}
-                  scroll={false}
                   aria-current={selected ? "page" : undefined}
                   className={`group flex items-center gap-3 rounded-[14px] px-4 py-4 transition-all sm:gap-4 sm:px-6 sm:py-5 ${
                     selected
@@ -258,7 +259,7 @@ export default async function StructurePage({
                       {item.text}
                     </span>
                   </span>
-                </Link>
+                </a>
               );
             })}
           </div>

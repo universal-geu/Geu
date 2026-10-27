@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import {
   descripcionProducto,
   formatearDescuento,
@@ -177,11 +178,32 @@ function persistLocalProducts(products: StoreProduct[]) {
 export function ProductsProvider({
   children,
   initialProducts,
+  catalogOmitted = false,
 }: {
   children: ReactNode;
   initialProducts: StoreProduct[];
+  // The server skipped the catalog for this page (GEU Structure). The root
+  // layout isn't re-rendered on client navigation, so load it here as soon
+  // as the visitor leaves the page they landed on.
+  catalogOmitted?: boolean;
 }) {
   const [products, setProducts] = useState<StoreProduct[]>(initialProducts);
+  const pathname = usePathname();
+  const landingPathname = useRef(pathname);
+  const catalogRequested = useRef(false);
+
+  useEffect(() => {
+    if (!catalogOmitted || catalogRequested.current || pathname === landingPathname.current) return;
+    catalogRequested.current = true;
+    void fetch("/api/products")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload: { products?: StoreProduct[] } | null) => {
+        if (payload?.products) setProducts(payload.products);
+      })
+      .catch(() => {
+        catalogRequested.current = false;
+      });
+  }, [catalogOmitted, pathname]);
   // When each product was last saved from this tab. A full-catalog fetch
   // that started before a save carries a stale copy of that product, so it
   // must not overwrite the fresher one already in state (in dev the load
