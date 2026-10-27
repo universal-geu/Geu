@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import CauchosAccountLink from "../components/cauchos-account-link";
 import MobileBottomNav from "../components/mobile-bottom-nav";
 import { useSiteColors } from "../components/use-site-colors";
 import { buildDivisionColorOverrideCss } from "@/lib/color-overrides";
@@ -165,6 +166,11 @@ export default function StructureHeader() {
               </svg>
               Ver todo GEU
             </NavLink>
+            <CauchosAccountLink
+              brand="innovation"
+              accent="#0498b4"
+              className="hidden text-[11px] font-black uppercase tracking-[0.08em] hover:text-[#0498b4] lg:inline-flex"
+            />
           </div>
         </div>
       </header>
@@ -174,7 +180,7 @@ export default function StructureHeader() {
         accent="#0498b4"
         hideCategorias
         extraTabs={mobileExtraTabs}
-        hideAccount
+        accountBrand="innovation"
         moreItems={mobileMoreItems}
         breakpointClassName="lg:hidden"
       />

@@ -7,6 +7,7 @@ import GalvanizingProcess from "./galvanizing-process";
 import ServiciosTimeline from "./servicios-timeline";
 import GusWidget from "./gus-widget";
 import TechosSections from "./techos-sections";
+import TornilloSections from "./tornillo-sections";
 import SiteFooter from "../components/site-footer";
 import { getSiteTexts } from "@/lib/site-texts";
 import { getSiteImages, resolveImage } from "@/lib/site-images";
@@ -129,12 +130,21 @@ function RoofIcon() {
   );
 }
 
+function ScrewIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 3h4v9h-4zM10 12l2 9 2-9M9 14h6M9.5 16.5h5" />
+    </svg>
+  );
+}
+
 // Sección "Servicios" (fases Terreno → Operación) oculta a pedido; se reactiva con true.
 const SHOW_SERVICIOS = false;
 
 const lineas = [
   { id: "granjas", label: "Granjas solares", text: "Estructura M24 para plantas sobre terreno", icon: FarmIcon },
   { id: "techos", label: "Para techos", text: "Sistemas de fijación para cubiertas", icon: RoofIcon },
+  { id: "tornillo", label: "Tornillo", text: "Cimentación sin concreto", icon: ScrewIcon },
 ] as const;
 
 const durabilidadStats = [
@@ -151,7 +161,7 @@ export default async function StructurePage({
   searchParams: Promise<{ linea?: string }>;
 }) {
   const { linea: lineaParam } = await searchParams;
-  const linea = lineaParam === "techos" ? "techos" : "granjas";
+  const linea = lineaParam === "techos" || lineaParam === "tornillo" ? lineaParam : "granjas";
   const siteTexts = await getSiteTexts();
   const siteImages = await getSiteImages();
   const whatsappNumber = await getWhatsAppNumberForDivision("Innovation");
@@ -223,7 +233,7 @@ export default async function StructurePage({
       <nav id="lineas" aria-label="Líneas de GEU Structure" className="scroll-mt-20 bg-[#f2f2f2] text-slate-950">
         <div className="mx-auto max-w-[1500px] px-5 pt-14 md:px-8">
           <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-[#0498b4]">Elige tu solución</p>
-          <div className="mx-auto mt-5 grid max-w-3xl grid-cols-2 gap-2 rounded-[20px] border border-slate-200 bg-white p-2 shadow-[0_18px_44px_rgba(15,23,42,0.10)]">
+          <div className="mx-auto mt-5 grid max-w-5xl grid-cols-1 gap-2 sm:grid-cols-3 rounded-[20px] border border-slate-200 bg-white p-2 shadow-[0_18px_44px_rgba(15,23,42,0.10)]">
             {lineas.map((item) => {
               const selected = item.id === linea;
               const Icon = item.icon;
@@ -266,7 +276,9 @@ export default async function StructurePage({
         </div>
       </nav>
 
-      {linea === "techos" ? (
+      {linea === "tornillo" ? (
+        <TornilloSections />
+      ) : linea === "techos" ? (
         <TechosSections
           images={(slot) => resolveImage(slot, siteImages)}
           whatsappNumber={whatsappNumber || null}
@@ -637,7 +649,15 @@ export default async function StructurePage({
       )}
 
       <section id="contacto" className="relative overflow-hidden border-b border-white/10">
-        {linea === "techos" ? (
+        {linea === "tornillo" ? (
+          <Image
+            src="/structure-tornillo/cta-granja-atardecer.jpg"
+            alt="Tornillo de cimentación anclado en la tierra frente a una granja solar al atardecer"
+            fill
+            sizes="100vw"
+            className="absolute inset-0 object-cover object-[85%_40%]"
+          />
+        ) : linea === "techos" ? (
           <Image
             src={resolveImage("structure-techos-cierre", siteImages)}
             alt="Paneles solares sobre cubierta metálica al atardecer"
@@ -654,7 +674,7 @@ export default async function StructurePage({
             className="absolute inset-0 object-cover object-[70%_35%]"
           />
         )}
-        <div className={`absolute inset-0 ${linea === "techos" ? "bg-black/60" : "bg-black/72"}`} />
+        <div className={`absolute inset-0 ${linea === "granjas" ? "bg-black/72" : "bg-black/60"}`} />
 
         <div className="relative z-10 mx-auto max-w-[1500px] px-5 py-20 text-center md:px-8">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0498b4]">GEU Structure</p>
@@ -662,7 +682,9 @@ export default async function StructurePage({
             Ingeniería que se convierte en estructura.
           </h2>
           <p className="mt-4 text-xs font-bold uppercase tracking-[0.1em] text-white/60">
-            {linea === "techos"
+            {linea === "tornillo"
+              ? "Cimentación sencilla, sólida y sostenible · Sin concreto · Carga el mismo día"
+              : linea === "techos"
               ? "Losa · Teja trapezoidal · Teja grafada · Teja de barro"
               : "M24 · Ingeniería estructural · Galvanizado · Servicios de campo"}
           </p>
