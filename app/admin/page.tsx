@@ -50,7 +50,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
   ADMIN_TOOL_OPTIONS,
   canManageAdminUsers,
-  getAdminExtraUnits,
+  getAdminUnits,
   hasAdminExtra,
   hasAdminPermission,
   isToolAllowedForDivision,
@@ -4156,11 +4156,7 @@ export default function AdminPage() {
   const isMasterAccess = canManageAdminUsers(adminPermissions);
   const switchableDivisions = isMasterAccess
     ? DIVISIONS
-    : DIVISIONS.filter(
-        (division) =>
-          division === adminHomeDivision ||
-          getAdminExtraUnits(adminPermissions, adminHomeDivision ?? undefined).includes(division),
-      );
+    : getAdminUnits(adminHomeDivision ?? adminDivision, adminPermissions);
   const canSwitchDivision = switchableDivisions.length > 1;
   // Team users see their area instead of "Panel maestro", never their name.
   const panelTitle = isMasterAccess ? "Panel maestro" : adminArea ? `Panel de ${adminArea}` : "Panel de equipo";

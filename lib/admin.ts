@@ -4,6 +4,7 @@ import type { DivisionName } from "@/lib/divisions";
 import type { DashboardMetrics, SalesReport } from "@/lib/orders";
 import {
   canEnterAdminDivision,
+  getAdminUnits,
   canManageAdminUsers,
   hasAdminExtra,
   hasAdminPermission,
@@ -41,7 +42,8 @@ export async function requireAdminUser(permission?: AdminToolKey, level: AdminAc
 }
 
 // The unit a team user is working in: the one chosen with "Cambiar de unidad"
-// (kept in the session) if it still has access to it, otherwise its own.
+// (kept in the session) if it still has access to it, otherwise its own, or
+// its first assigned unit when its own is turned off.
 export function getActiveAdminDivision(
   home: DivisionName,
   permissions: string[],
@@ -49,7 +51,7 @@ export function getActiveAdminDivision(
 ): DivisionName {
   return sessionDivision && canEnterAdminDivision(home, permissions, sessionDivision)
     ? sessionDivision
-    : home;
+    : getAdminUnits(home, permissions)[0];
 }
 
 export async function requireUserManager() {

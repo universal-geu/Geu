@@ -1,6 +1,7 @@
 import { authenticateUser } from "@/lib/users";
 import { setSessionCookie } from "@/lib/auth";
-import { MASTER_ADMIN_EMAIL } from "@/lib/divisions";
+import { MASTER_ADMIN_EMAIL, type DivisionName } from "@/lib/divisions";
+import { getActiveAdminDivision } from "@/lib/admin";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -57,7 +58,11 @@ export async function POST(request: Request) {
       userId: user.id,
       email: user.email,
       role: user.role,
-      division: user.division ?? undefined,
+      // A team user whose own unit is turned off starts in its first unit.
+      division:
+        user.role === "ADMIN" && user.division
+          ? getActiveAdminDivision(user.division as DivisionName, user.permissions, undefined)
+          : (user.division ?? undefined),
     });
 
     return Response.json({

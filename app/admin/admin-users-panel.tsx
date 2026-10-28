@@ -5,7 +5,8 @@ import {
   ADMIN_TOOL_KEYS,
   ADMIN_TOOL_OPTIONS,
   getAdminAccessLevel,
-  getAdminExtraUnits,
+  getAdminUnits,
+  grantsAnyAdminTool,
   hasAdminExtra,
   isToolAllowedForDivision,
   type AdminAccessLevel,
@@ -33,7 +34,7 @@ type FormState = {
   password: string;
   levels: Partial<Record<AdminToolKey, ToolLevel>>;
   hiddenExtras: AdminExtraKey[];
-  // Other units the user can enter besides this one.
+  // Units the user can enter; this one included unless turned off.
   units: DivisionName[];
 };
 
@@ -180,14 +181,15 @@ export default function AdminUsersPanel({
   brandLabel: string;
   notify: (tone: "success" | "error", message: string) => void;
 }) {
-  // Tools offered for a user: those of this unit plus the extra ones given.
+  // Tools offered for a user: those of the units it can enter.
   const toolsFor = (units: DivisionName[]) =>
     ADMIN_TOOL_KEYS.filter((tool) =>
-      [division, ...units].some(
+      units.some(
         (unit) => isToolAllowedForDivision(unit, tool) && !(tool === "inventory" && isServiceDivision(unit)),
       ),
     );
-  const otherUnits = DIVISIONS.filter((unit) => unit !== division);
+  // This unit first, then the rest.
+  const unitOptions = [division, ...DIVISIONS.filter((unit) => unit !== division)];
   const [users, setUsers] = useState<TeamUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -226,16 +228,20 @@ export default function AdminUsersPanel({
         if (form.hiddenExtras.includes(extra.key)) permissions.push(`no:${extra.key}`);
       }
     }
-    return [...permissions, ...form.units.map((unit) => `unit:${unit}`)];
+    return [
+      ...permissions,
+      ...form.units.filter((unit) => unit !== division).map((unit) => `unit:${unit}`),
+      ...(form.units.includes(division) ? [] : ["home:off"]),
+    ];
   };
 
   const openNew = () => {
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, units: [division] });
     setEditing("new");
   };
 
   const openEdit = (user: TeamUser) => {
-    const units = getAdminExtraUnits(user.permissions, division);
+    const units = getAdminUnits(division, user.permissions);
     const userTools = toolsFor(units);
     const levels: FormState["levels"] = {};
     for (const tool of userTools) {
@@ -297,6 +303,8 @@ export default function AdminUsersPanel({
 
   const toggleUnit = (unit: DivisionName) =>
     setForm((current) => {
+      // At least one unit has to stay checked.
+      if (current.units.length === 1 && current.units[0] === unit) return current;
       const units = current.units.includes(unit)
         ? current.units.filter((item) => item !== unit)
         : [...current.units, unit];
@@ -331,7 +339,7 @@ export default function AdminUsersPanel({
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     const permissions = toPermissions();
-    if (!permissions.some((token) => !token.startsWith("no:"))) {
+    if (!grantsAnyAdminTool(permissions)) {
       notify("error", "Dale acceso al menos a una herramienta.");
       return;
     }
@@ -490,15 +498,11 @@ export default function AdminUsersPanel({
               <div className="space-y-2">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">Unidades</p>
                 <p className="text-xs text-[#8b8d91]">
-                  Siempre entra a {brandLabel}. Marca otras unidades a las que también puede pasar con
-                  &ldquo;Cambiar de unidad&rdquo;, con los mismos permisos.
+                  Marca las unidades que puede manejar; pasa de una a otra con &ldquo;Cambiar de
+                  unidad&rdquo;, con los mismos permisos. Se sigue administrando desde {brandLabel}.
                 </p>
                 <div className="space-y-1">
-                  <div className="flex items-center gap-3 rounded-xl px-3 py-2 opacity-60">
-                    <Check label={brandLabel} checked onChange={() => undefined} />
-                    <span className="text-sm font-semibold text-[#16384f]">{brandLabel}</span>
-                  </div>
-                  {otherUnits.map((unit) => (
+                  {unitOptions.map((unit) => (
                     <label
                       key={unit}
                       className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors duration-150 hover:bg-[#f6f7f8]"
@@ -738,15 +742,18 @@ export default function AdminUsersPanel({
                   </div>
                   <p className="truncate text-xs text-[#8b8d91]">{user.email}</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {getAdminExtraUnits(user.permissions, division).map((unit) => (
-                      <span
-                        key={unit}
-                        className="rounded-full bg-[var(--admin-accent-soft)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--admin-accent)]"
-                      >
-                        + {DIVISION_BRAND[unit].label}
-                      </span>
-                    ))}
-                    {toolsFor(getAdminExtraUnits(user.permissions, division)).map((tool) => {
+                    {getAdminUnits(division, user.permissions).length > 1 ||
+                    !getAdminUnits(division, user.permissions).includes(division)
+                      ? getAdminUnits(division, user.permissions).map((unit) => (
+                          <span
+                            key={unit}
+                            className="rounded-full bg-[var(--admin-accent-soft)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--admin-accent)]"
+                          >
+                            {DIVISION_BRAND[unit].label}
+                          </span>
+                        ))
+                      : null}
+                    {toolsFor(getAdminUnits(division, user.permissions)).map((tool) => {
                       const level = getAdminAccessLevel(user.permissions, tool);
                       if (!level) return null;
                       const isViewOnly = level === "view" && ADMIN_TOOL_OPTIONS[tool].levels.includes("edit");

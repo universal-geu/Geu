@@ -25,6 +25,8 @@ export type AdminAccessLevel = "view" | "edit";
 //   "no:<extra>"   → hides one part of a view (amounts, charts...)
 //   "unit:<Division>" → can also enter that unit's panel (besides its own
 //                    User.division) via "Cambiar de unidad", with the same tools
+//   "home:off"     → can't enter its own unit (only the "unit:" ones); the
+//                    user is still managed from there
 // An empty permissions array means unrestricted (full) access — this keeps
 // the seeded division root admins working without needing to backfill data.
 export function hasAdminPermission(
@@ -164,19 +166,31 @@ export function canManageAdminUsers(permissions: string[]): boolean {
   return permissions.length === 0;
 }
 
+const HOME_OFF = "home:off";
+
 // Other units a team user can enter besides its own (see "unit:" tokens).
 export function getAdminExtraUnits(permissions: string[], home?: DivisionName): DivisionName[] {
   return DIVISIONS.filter((division) => division !== home && permissions.includes(`unit:${division}`));
 }
 
-// Units a team user can work in: its own plus the extra ones. Accounts with
-// unrestricted access switch by other means (the division root accounts).
+export function hasAdminHomeAccess(permissions: string[]): boolean {
+  return !permissions.includes(HOME_OFF);
+}
+
+// Units a team user can work in: its own (unless "home:off") plus the extra
+// ones. Accounts with unrestricted access switch by other means (the
+// division root accounts).
+export function getAdminUnits(home: DivisionName, permissions: string[]): DivisionName[] {
+  const extra = getAdminExtraUnits(permissions, home);
+  return hasAdminHomeAccess(permissions) || extra.length === 0 ? [home, ...extra] : extra;
+}
+
 export function canEnterAdminDivision(
   home: DivisionName,
   permissions: string[],
   target: DivisionName,
 ): boolean {
-  return target === home || getAdminExtraUnits(permissions, home).includes(target);
+  return getAdminUnits(home, permissions).includes(target);
 }
 
 // Normalizes what the user form sends: drops unknown tokens, tools none of
@@ -186,9 +200,12 @@ export function sanitizeAdminPermissions(
   permissions: unknown,
 ): string[] {
   if (!Array.isArray(permissions)) return [];
-  const units = getAdminExtraUnits(permissions.filter((token) => typeof token === "string"), division);
+  const tokens = permissions.filter((token): token is string => typeof token === "string");
+  const units = getAdminExtraUnits(tokens, division);
+  // Turning off the own unit only counts when another one is left.
+  const homeOff = !hasAdminHomeAccess(tokens) && units.length > 0;
   const tools = ADMIN_TOOL_KEYS.filter((tool) =>
-    [division, ...units].some((unit) => isToolAllowedForDivision(unit, tool)),
+    (homeOff ? units : [division, ...units]).some((unit) => isToolAllowedForDivision(unit, tool)),
   );
   const result: string[] = [];
 
@@ -215,10 +232,12 @@ export function sanitizeAdminPermissions(
     }
   }
 
-  return [...result, ...units.map((unit) => `unit:${unit}`)];
+  return [...result, ...units.map((unit) => `unit:${unit}`), ...(homeOff ? [HOME_OFF] : [])];
 }
 
 // True when the list grants at least one tool (restriction and unit tokens alone don't count).
 export function grantsAnyAdminTool(permissions: string[]): boolean {
-  return permissions.some((token) => !token.startsWith("no:") && !token.startsWith("unit:"));
+  return permissions.some(
+    (token) => !token.startsWith("no:") && !token.startsWith("unit:") && token !== HOME_OFF,
+  );
 }
