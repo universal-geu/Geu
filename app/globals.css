@@ -27,9 +27,11 @@
   box-sizing: border-box;
 }
 
+/* overflow-x only on body (it's applied to the viewport): setting it on both
+   html and body turns body into a scroll container that never scrolls, so
+   position: sticky (admin sidebar, headers) stops sticking. */
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
 }
 
 body {
