@@ -4162,8 +4162,8 @@ export default function AdminPage() {
           getAdminExtraUnits(adminPermissions, adminHomeDivision ?? undefined).includes(division),
       );
   const canSwitchDivision = switchableDivisions.length > 1;
-  // Team users see their area (or name) instead of "Panel maestro".
-  const panelTitle = isMasterAccess ? "Panel maestro" : `Panel de ${adminArea || adminName}`;
+  // Team users see their area instead of "Panel maestro", never their name.
+  const panelTitle = isMasterAccess ? "Panel maestro" : adminArea ? `Panel de ${adminArea}` : "Panel de equipo";
   const showReportRecent = hasAdminExtra(adminPermissions, "reports.recent");
   const activeToolKey: AdminToolKey | null =
     activeTab === "settings"

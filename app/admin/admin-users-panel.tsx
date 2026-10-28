@@ -456,7 +456,7 @@ export default function AdminUsersPanel({
                     className={inputClass}
                   />
                   <span className="block text-xs font-normal text-[#8b8d91]">
-                    Su panel se llamará &ldquo;Panel de {form.area.trim() || "…"}&rdquo;.
+                    Su panel se llamará &ldquo;{form.area.trim() ? `Panel de ${form.area.trim()}` : "Panel de equipo"}&rdquo;.
                   </span>
                 </label>
                 <label className="block space-y-1.5 text-sm font-semibold text-[#5d6167]">
