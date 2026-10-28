@@ -1,11 +1,13 @@
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { DIVISION_ADMIN_EMAILS, type DivisionName } from "@/lib/divisions";
+import { DIVISION_ADMIN_EMAILS, DIVISIONS, type DivisionName } from "@/lib/divisions";
 import { grantsAnyAdminTool, sanitizeAdminPermissions } from "@/lib/admin-permissions";
 
-// Team users are ADMIN accounts of one division with a non-empty permission
-// list. The division root accounts (DIVISION_ADMIN_EMAILS, empty permissions)
-// are not team users and can't be listed or edited from here.
+// Team users are ADMIN accounts with a non-empty permission list, all managed
+// from the GEU panel. Their User.division is the unit they belong to ("home");
+// "unit:"/"home:off" tokens set which units they can actually enter. The
+// division root accounts (DIVISION_ADMIN_EMAILS, empty permissions) are not
+// team users and can't be listed or edited from here.
 const ROOT_ADMIN_EMAILS = Object.values(DIVISION_ADMIN_EMAILS).map((email) => email.toLowerCase());
 
 export const MIN_ADMIN_PASSWORD_LENGTH = 8;
@@ -18,6 +20,7 @@ const TEAM_USER_SELECT = {
   fullName: true,
   email: true,
   company: true,
+  division: true,
   permissions: true,
   active: true,
   createdAt: true,
@@ -28,6 +31,7 @@ export type AdminTeamUser = {
   fullName: string;
   email: string;
   company: string | null;
+  division: DivisionName | null;
   permissions: string[];
   active: boolean;
   createdAt: Date;
@@ -40,27 +44,31 @@ function getPrisma() {
   return prisma;
 }
 
-function teamUserWhere(division: DivisionName) {
-  return {
-    role: "ADMIN" as const,
-    division,
-    email: { notIn: ROOT_ADMIN_EMAILS },
-  };
-}
+const TEAM_USER_WHERE = {
+  role: "ADMIN" as const,
+  email: { notIn: ROOT_ADMIN_EMAILS },
+};
 
-export async function getAdminTeamUsers(division: DivisionName): Promise<AdminTeamUser[]> {
+export async function getAdminTeamUsers(): Promise<AdminTeamUser[]> {
   return await getPrisma().user.findMany({
-    where: teamUserWhere(division),
+    where: TEAM_USER_WHERE,
     select: TEAM_USER_SELECT,
     orderBy: { createdAt: "desc" },
   });
 }
 
-export async function createAdminTeamUser(
-  division: DivisionName,
-  input: { fullName?: string; email?: string; area?: string; password?: string; permissions?: unknown },
-) {
+// A new user belongs to the first unit it was given (in DIVISIONS order).
+export async function createAdminTeamUser(input: {
+  fullName?: string;
+  email?: string;
+  area?: string;
+  password?: string;
+  division?: string;
+  permissions?: unknown;
+}) {
   const db = getPrisma();
+  const division = DIVISIONS.find((item) => item === input.division);
+  if (!division) throw new Error("INVALID_INPUT");
   const fullName = input.fullName?.trim() || "";
   const email = input.email?.trim().toLowerCase() || "";
   const password = input.password || "";
@@ -89,21 +97,20 @@ export async function createAdminTeamUser(
   });
 }
 
-async function findTeamUser(division: DivisionName, id: string) {
+async function findTeamUser(id: string) {
   const user = await getPrisma().user.findFirst({
-    where: { ...teamUserWhere(division), id },
-    select: { id: true },
+    where: { ...TEAM_USER_WHERE, id },
+    select: { id: true, division: true },
   });
-  if (!user) throw new Error("NOT_FOUND");
-  return user;
+  if (!user || !user.division) throw new Error("NOT_FOUND");
+  return { id: user.id, division: user.division as DivisionName };
 }
 
 export async function updateAdminTeamUser(
-  division: DivisionName,
   id: string,
   input: { fullName?: string; area?: string; password?: string; permissions?: unknown; active?: unknown },
 ) {
-  await findTeamUser(division, id);
+  const { division } = await findTeamUser(id);
 
   const data: {
     fullName?: string;
@@ -143,8 +150,8 @@ export async function updateAdminTeamUser(
 
 // Deleting a user cascades to its orders, so a team user with orders or
 // quotes is only deactivated to keep that history.
-export async function deleteAdminTeamUser(division: DivisionName, id: string) {
-  await findTeamUser(division, id);
+export async function deleteAdminTeamUser(id: string) {
+  await findTeamUser(id);
   const db = getPrisma();
   const [orders, quotes] = await Promise.all([
     db.order.count({ where: { userId: id } }),

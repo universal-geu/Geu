@@ -20,6 +20,7 @@ type TeamUser = {
   fullName: string;
   email: string;
   company: string | null;
+  division: DivisionName | null;
   permissions: string[];
   active: boolean;
   createdAt: string;
@@ -34,11 +35,14 @@ type FormState = {
   password: string;
   levels: Partial<Record<AdminToolKey, ToolLevel>>;
   hiddenExtras: AdminExtraKey[];
-  // Units the user can enter; this one included unless turned off.
+  // Units the user can enter.
   units: DivisionName[];
+  // Unit the user belongs to (User.division); null while creating, when it
+  // becomes the first unit checked.
+  home: DivisionName | null;
 };
 
-const EMPTY_FORM: FormState = { fullName: "", email: "", area: "", password: "", levels: {}, hiddenExtras: [], units: [] };
+const EMPTY_FORM: FormState = { fullName: "", email: "", area: "", password: "", levels: {}, hiddenExtras: [], units: [], home: null };
 
 // Quick profiles for the form. Each maps a tool to the level it gets; tools
 // left out get no access, and levels a tool doesn't offer fall back to the
@@ -172,13 +176,10 @@ function fitLevel(tool: AdminToolKey, level: AdminAccessLevel): AdminAccessLevel
   return levels.includes(level) ? level : levels[levels.length - 1];
 }
 
+// Lives only in the GEU panel and manages the team users of every unit.
 export default function AdminUsersPanel({
-  division,
-  brandLabel,
   notify,
 }: {
-  division: DivisionName;
-  brandLabel: string;
   notify: (tone: "success" | "error", message: string) => void;
 }) {
   // Tools offered for a user: those of the units it can enter.
@@ -188,8 +189,7 @@ export default function AdminUsersPanel({
         (unit) => isToolAllowedForDivision(unit, tool) && !(tool === "inventory" && isServiceDivision(unit)),
       ),
     );
-  // This unit first, then the rest.
-  const unitOptions = [division, ...DIVISIONS.filter((unit) => unit !== division)];
+  const homeOf = (user: TeamUser): DivisionName => user.division ?? "Cauchos";
   const [users, setUsers] = useState<TeamUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -211,9 +211,8 @@ export default function AdminUsersPanel({
 
   useEffect(() => {
     void loadUsers();
-    // Reload when the master admin switches to another unit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [division]);
+  }, []);
 
   const tools = toolsFor(form.units);
   const levelOf = (tool: AdminToolKey): ToolLevel => form.levels[tool] ?? "none";
@@ -228,20 +227,24 @@ export default function AdminUsersPanel({
         if (form.hiddenExtras.includes(extra.key)) permissions.push(`no:${extra.key}`);
       }
     }
+    const home = formHome();
+    if (!home) return permissions;
     return [
       ...permissions,
-      ...form.units.filter((unit) => unit !== division).map((unit) => `unit:${unit}`),
-      ...(form.units.includes(division) ? [] : ["home:off"]),
+      ...form.units.filter((unit) => unit !== home).map((unit) => `unit:${unit}`),
+      ...(form.units.includes(home) ? [] : ["home:off"]),
     ];
   };
 
+  const formHome = () => form.home ?? DIVISIONS.find((unit) => form.units.includes(unit)) ?? null;
+
   const openNew = () => {
-    setForm({ ...EMPTY_FORM, units: [division] });
+    setForm(EMPTY_FORM);
     setEditing("new");
   };
 
   const openEdit = (user: TeamUser) => {
-    const units = getAdminUnits(division, user.permissions);
+    const units = getAdminUnits(homeOf(user), user.permissions);
     const userTools = toolsFor(units);
     const levels: FormState["levels"] = {};
     for (const tool of userTools) {
@@ -260,6 +263,7 @@ export default function AdminUsersPanel({
           .map((extra) => extra.key),
       ),
       units,
+      home: homeOf(user),
     });
     setEditing(user.id);
   };
@@ -303,8 +307,6 @@ export default function AdminUsersPanel({
 
   const toggleUnit = (unit: DivisionName) =>
     setForm((current) => {
-      // At least one unit has to stay checked.
-      if (current.units.length === 1 && current.units[0] === unit) return current;
       const units = current.units.includes(unit)
         ? current.units.filter((item) => item !== unit)
         : [...current.units, unit];
@@ -338,6 +340,10 @@ export default function AdminUsersPanel({
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+    if (form.units.length === 0) {
+      notify("error", "Elige al menos una unidad.");
+      return;
+    }
     const permissions = toPermissions();
     if (!grantsAnyAdminTool(permissions)) {
       notify("error", "Dale acceso al menos a una herramienta.");
@@ -350,7 +356,14 @@ export default function AdminUsersPanel({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(
         isNew
-          ? { fullName: form.fullName, email: form.email, area: form.area, password: form.password, permissions }
+          ? {
+              fullName: form.fullName,
+              email: form.email,
+              area: form.area,
+              password: form.password,
+              division: formHome(),
+              permissions,
+            }
           : {
               fullName: form.fullName,
               area: form.area,
@@ -407,7 +420,8 @@ export default function AdminUsersPanel({
         <div>
           <h2 className="text-3xl font-semibold tracking-[-0.03em] text-[#16384f]">Usuarios</h2>
           <p className="mt-1 text-sm text-[#6e7379]">
-            Crea cuentas para tu equipo en {brandLabel} y define qué puede ver o modificar cada una.
+            Crea las cuentas del equipo de todas las unidades y define a qué unidades entra cada una y
+            qué puede ver o modificar.
           </p>
         </div>
         {editing === null && (
@@ -499,10 +513,10 @@ export default function AdminUsersPanel({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8b8d91]">Unidades</p>
                 <p className="text-xs text-[#8b8d91]">
                   Marca las unidades que puede manejar; pasa de una a otra con &ldquo;Cambiar de
-                  unidad&rdquo;, con los mismos permisos. Se sigue administrando desde {brandLabel}.
+                  unidad&rdquo;, con los mismos permisos.
                 </p>
                 <div className="space-y-1">
-                  {unitOptions.map((unit) => (
+                  {DIVISIONS.map((unit) => (
                     <label
                       key={unit}
                       className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors duration-150 hover:bg-[#f6f7f8]"
@@ -722,7 +736,7 @@ export default function AdminUsersPanel({
           <p className="px-5 py-6 text-sm text-[#6e7379]">Cargando usuarios...</p>
         ) : users.length === 0 ? (
           <p className="px-5 py-6 text-sm text-[#6e7379]">
-            Aún no has creado usuarios para {brandLabel}.
+            Aún no has creado usuarios.
           </p>
         ) : (
           <ul className="divide-y divide-black/6">
@@ -742,18 +756,15 @@ export default function AdminUsersPanel({
                   </div>
                   <p className="truncate text-xs text-[#8b8d91]">{user.email}</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {getAdminUnits(division, user.permissions).length > 1 ||
-                    !getAdminUnits(division, user.permissions).includes(division)
-                      ? getAdminUnits(division, user.permissions).map((unit) => (
-                          <span
-                            key={unit}
-                            className="rounded-full bg-[var(--admin-accent-soft)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--admin-accent)]"
-                          >
-                            {DIVISION_BRAND[unit].label}
-                          </span>
-                        ))
-                      : null}
-                    {toolsFor(getAdminUnits(division, user.permissions)).map((tool) => {
+                    {getAdminUnits(homeOf(user), user.permissions).map((unit) => (
+                      <span
+                        key={unit}
+                        className="rounded-full bg-[var(--admin-accent-soft)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--admin-accent)]"
+                      >
+                        {DIVISION_BRAND[unit].label}
+                      </span>
+                    ))}
+                    {toolsFor(getAdminUnits(homeOf(user), user.permissions)).map((tool) => {
                       const level = getAdminAccessLevel(user.permissions, tool);
                       if (!level) return null;
                       const isViewOnly = level === "view" && ADMIN_TOOL_OPTIONS[tool].levels.includes("edit");

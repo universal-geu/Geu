@@ -1,9 +1,9 @@
-import { requireUserManager } from "@/lib/admin";
+import { requireMasterAdmin } from "@/lib/admin";
 import { getSalesReportOverview, type SalesReportOverview } from "@/lib/orders";
 
 export async function GET() {
   try {
-    await requireUserManager();
+    await requireMasterAdmin();
     const overview = await getSalesReportOverview();
 
     return Response.json({ overview });

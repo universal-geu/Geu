@@ -35,6 +35,10 @@ export const DIVISION_ADMIN_EMAILS: Record<DivisionName, string> = {
 // existiendo (son el destino de ese cambio) pero no inician sesión directamente.
 export const MASTER_ADMIN_EMAIL = DIVISION_ADMIN_EMAILS.Cauchos;
 
+// Unit whose panel holds "Usuarios": team users of every unit are created and
+// edited only from there.
+export const USER_MANAGEMENT_DIVISION: DivisionName = "GEU";
+
 export const DIVISION_ADMIN_NAMES: Record<DivisionName, string> = {
   Cauchos: "Administrador GEU",
   Import: "Administrador GEU Import",

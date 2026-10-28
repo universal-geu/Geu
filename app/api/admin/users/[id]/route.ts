@@ -4,7 +4,7 @@ import { adminUsersErrorResponse } from "../errors";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const admin = await requireUserManager();
+    await requireUserManager();
     const { id } = await params;
     const body = (await request.json()) as {
       fullName?: string;
@@ -13,7 +13,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       permissions?: unknown;
       active?: unknown;
     };
-    const user = await updateAdminTeamUser(admin.division, id, body);
+    const user = await updateAdminTeamUser(id, body);
     return Response.json({ user });
   } catch (error) {
     return adminUsersErrorResponse(error, "No fue posible actualizar el usuario.");
@@ -22,9 +22,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const admin = await requireUserManager();
+    await requireUserManager();
     const { id } = await params;
-    const result = await deleteAdminTeamUser(admin.division, id);
+    const result = await deleteAdminTeamUser(id);
     return Response.json(result);
   } catch (error) {
     return adminUsersErrorResponse(error, "No fue posible eliminar el usuario.");

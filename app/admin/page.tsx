@@ -36,6 +36,7 @@ import {
   DIVISION_BRAND,
   getDivisionFromBrandParam,
   isServiceDivision,
+  USER_MANAGEMENT_DIVISION,
   type DivisionName,
 } from "@/lib/divisions";
 import type { CauchosSalesMode } from "@/lib/site-settings";
@@ -4158,6 +4159,8 @@ export default function AdminPage() {
     ? DIVISIONS
     : getAdminUnits(adminHomeDivision ?? adminDivision, adminPermissions);
   const canSwitchDivision = switchableDivisions.length > 1;
+  // "Usuarios" (team users of every unit) lives only in the GEU panel.
+  const canManageUsersHere = isMasterAccess && adminDivision === USER_MANAGEMENT_DIVISION;
   // Team users see their area instead of "Panel maestro", never their name.
   const panelTitle = isMasterAccess ? "Panel maestro" : adminArea ? `Panel de ${adminArea}` : "Panel de equipo";
   const showReportRecent = hasAdminExtra(adminPermissions, "reports.recent");
@@ -4226,7 +4229,7 @@ export default function AdminPage() {
     item.key === "overview"
       ? true
       : item.key === "users"
-        ? canManageAdminUsers(adminPermissions)
+        ? canManageUsersHere
         : item.key === "settings"
         ? canAccessTool("settings") || canAccessTool("images") || canAccessTool("store")
         : canAccessTool(item.key),
@@ -7679,10 +7682,8 @@ export default function AdminPage() {
               </div>
             )}
 
-          {activeTab === "users" && canManageAdminUsers(adminPermissions) && (
+          {activeTab === "users" && canManageUsersHere && (
             <AdminUsersPanel
-              division={adminDivision}
-              brandLabel={adminBrand.label}
               notify={(tone, message) => setToast({ tone, message })}
             />
           )}

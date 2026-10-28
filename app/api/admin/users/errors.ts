@@ -1,6 +1,6 @@
 const ERRORS: Record<string, [number, string]> = {
   UNAUTHORIZED: [401, "No autorizado."],
-  FORBIDDEN: [403, "Solo la administración principal puede gestionar usuarios."],
+  FORBIDDEN: [403, "Los usuarios se gestionan desde el panel de GEU con la cuenta principal."],
   INVALID_INPUT: [400, "Revisa el nombre y el correo."],
   WEAK_PASSWORD: [400, "La contraseña debe tener al menos 8 caracteres."],
   NO_PERMISSIONS: [400, "Elige al menos una herramienta para el usuario."],

@@ -1,6 +1,6 @@
 import { getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
-import type { DivisionName } from "@/lib/divisions";
+import { USER_MANAGEMENT_DIVISION, type DivisionName } from "@/lib/divisions";
 import type { DashboardMetrics, SalesReport } from "@/lib/orders";
 import {
   canEnterAdminDivision,
@@ -54,9 +54,20 @@ export function getActiveAdminDivision(
     : getAdminUnits(home, permissions)[0];
 }
 
-export async function requireUserManager() {
+// Accounts with unrestricted access (the master account and the unit root
+// accounts it switches to).
+export async function requireMasterAdmin() {
   const admin = await requireAdminUser();
   if (!canManageAdminUsers(admin.permissions)) {
+    throw new Error("FORBIDDEN");
+  }
+  return admin;
+}
+
+// Team users are managed only from the GEU unit.
+export async function requireUserManager() {
+  const admin = await requireMasterAdmin();
+  if (admin.division !== USER_MANAGEMENT_DIVISION) {
     throw new Error("FORBIDDEN");
   }
   return admin;
