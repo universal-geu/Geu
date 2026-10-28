@@ -8,6 +8,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const { id } = await params;
     const body = (await request.json()) as {
       fullName?: string;
+      area?: string;
       password?: string;
       permissions?: unknown;
       active?: unknown;

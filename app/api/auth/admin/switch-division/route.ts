@@ -1,4 +1,5 @@
 import { requireAdminUser } from "@/lib/admin";
+import { canEnterAdminDivision } from "@/lib/admin-permissions";
 import { setSessionCookie } from "@/lib/auth";
 import { DIVISIONS, DIVISION_ADMIN_EMAILS, type DivisionName } from "@/lib/divisions";
 import { getUserByEmail } from "@/lib/users";
@@ -6,23 +7,34 @@ import { getUserByEmail } from "@/lib/users";
 // "Cambiar de unidad" del panel: un administrador con acceso completo (sin
 // permisos restringidos) pasa al panel de otra unidad usando la sesión que ya
 // tiene, sin volver a escribir contraseña ni PIN. Antes esto reenviaba una
-// contraseña compartida desde el navegador.
+// contraseña compartida desde el navegador. Un usuario del equipo solo pasa a
+// las unidades que se le asignaron en "Usuarios" y sigue siendo él mismo.
 export async function POST(request: Request) {
   try {
     const admin = await requireAdminUser();
-
-    if ("permissions" in admin && admin.permissions.length > 0) {
-      return Response.json(
-        { error: "Tu usuario solo tiene acceso a su propia unidad." },
-        { status: 403 },
-      );
-    }
-
     const body = (await request.json()) as { division?: string };
     const division = DIVISIONS.find((item) => item === body.division) as DivisionName | undefined;
 
     if (!division) {
       return Response.json({ error: "Unidad no válida." }, { status: 400 });
+    }
+
+    if (admin.permissions.length > 0) {
+      if (!canEnterAdminDivision(admin.homeDivision, admin.permissions, division)) {
+        return Response.json(
+          { error: "Tu usuario no tiene acceso a esa unidad." },
+          { status: 403 },
+        );
+      }
+
+      await setSessionCookie({
+        userId: admin.id,
+        email: admin.email,
+        role: "ADMIN",
+        division,
+      });
+
+      return Response.json({ user: { id: admin.id, fullName: admin.fullName, role: "ADMIN", division } });
     }
 
     const target = await getUserByEmail(DIVISION_ADMIN_EMAILS[division]);

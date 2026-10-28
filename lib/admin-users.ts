@@ -10,10 +10,14 @@ const ROOT_ADMIN_EMAILS = Object.values(DIVISION_ADMIN_EMAILS).map((email) => em
 
 export const MIN_ADMIN_PASSWORD_LENGTH = 8;
 
+// Team users keep their area (Diseño, Ventas...) in User.company, which only
+// customers use otherwise; the panel shows it as "Panel de <área>".
+
 const TEAM_USER_SELECT = {
   id: true,
   fullName: true,
   email: true,
+  company: true,
   permissions: true,
   active: true,
   createdAt: true,
@@ -23,6 +27,7 @@ export type AdminTeamUser = {
   id: string;
   fullName: string;
   email: string;
+  company: string | null;
   permissions: string[];
   active: boolean;
   createdAt: Date;
@@ -53,7 +58,7 @@ export async function getAdminTeamUsers(division: DivisionName): Promise<AdminTe
 
 export async function createAdminTeamUser(
   division: DivisionName,
-  input: { fullName?: string; email?: string; password?: string; permissions?: unknown },
+  input: { fullName?: string; email?: string; area?: string; password?: string; permissions?: unknown },
 ) {
   const db = getPrisma();
   const fullName = input.fullName?.trim() || "";
@@ -73,6 +78,7 @@ export async function createAdminTeamUser(
     data: {
       fullName,
       email,
+      company: input.area?.trim() || null,
       passwordHash: await hash(password, 10),
       role: "ADMIN",
       division,
@@ -95,12 +101,13 @@ async function findTeamUser(division: DivisionName, id: string) {
 export async function updateAdminTeamUser(
   division: DivisionName,
   id: string,
-  input: { fullName?: string; password?: string; permissions?: unknown; active?: unknown },
+  input: { fullName?: string; area?: string; password?: string; permissions?: unknown; active?: unknown },
 ) {
   await findTeamUser(division, id);
 
   const data: {
     fullName?: string;
+    company?: string | null;
     passwordHash?: string;
     permissions?: string[];
     active?: boolean;
@@ -110,6 +117,10 @@ export async function updateAdminTeamUser(
     const fullName = input.fullName.trim();
     if (!fullName) throw new Error("INVALID_INPUT");
     data.fullName = fullName;
+  }
+
+  if (typeof input.area === "string") {
+    data.company = input.area.trim() || null;
   }
 
   if (input.password) {

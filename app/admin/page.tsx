@@ -50,6 +50,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
   ADMIN_TOOL_OPTIONS,
   canManageAdminUsers,
+  getAdminExtraUnits,
   hasAdminExtra,
   hasAdminPermission,
   isToolAllowedForDivision,
@@ -2052,7 +2053,9 @@ export default function AdminPage() {
   const [isSwitchingDivision, setIsSwitchingDivision] = useState(false);
   const [switchDivisionError, setSwitchDivisionError] = useState("");
   const [adminName, setAdminName] = useState("");
+  const [adminArea, setAdminArea] = useState("");
   const [adminPermissions, setAdminPermissions] = useState<string[]>([]);
+  const [adminHomeDivision, setAdminHomeDivision] = useState<DivisionName | null>(null);
   const [inventoryAdjustments, setInventoryAdjustments] = useState<Record<string, string>>({});
   const [inventoryPage, setInventoryPage] = useState(1);
   // Quick-edit modal opened by the pencil in the inventory list, so stock
@@ -2402,8 +2405,10 @@ export default function AdminPage() {
         user?: {
           id: string;
           fullName: string;
+          company?: string | null;
           role: "CUSTOMER" | "ADMIN";
           division?: DivisionName | null;
+          homeDivision?: DivisionName;
           permissions?: string[];
         };
       };
@@ -2415,6 +2420,8 @@ export default function AdminPage() {
         setAdminName(payload.user.fullName);
         setAdminDivision(division);
         setAdminPermissions(permissions);
+        setAdminHomeDivision(payload.user.homeDivision ?? division);
+        setAdminArea(payload.user.company?.trim() ?? "");
 
         const canAccess = (tool: AdminToolKey) =>
           isToolAllowedForDivision(division, tool) && hasAdminPermission(permissions, tool);
@@ -2434,6 +2441,7 @@ export default function AdminPage() {
             ["reports", openReportsView],
             ["images", () => openSettingsSection("images")],
             ["settings", () => openSettingsSection("texts")],
+            ["store", () => openSettingsSection("whatsapp")],
           ];
           const firstAllowed = fallback.find(([tool]) => canAccess(tool));
           firstAllowed?.[1]();
@@ -3908,8 +3916,10 @@ export default function AdminPage() {
   const openSettingsView = () => {
     if (canAccessTool("images")) {
       openSettingsSection("images");
-    } else {
+    } else if (canAccessTool("settings")) {
       openSettingsSection("texts");
+    } else {
+      openSettingsSection("whatsapp");
     }
   };
 
@@ -4141,6 +4151,19 @@ export default function AdminPage() {
   const formatAmount = (value: number, extra: AdminExtraKey) =>
     hasAdminExtra(adminPermissions, extra) ? formatCurrency(value) : "••••";
   const showReportCharts = hasAdminExtra(adminPermissions, "reports.charts");
+  // Full-access accounts switch to any unit; team users only to their own
+  // and the ones assigned to them in "Usuarios".
+  const isMasterAccess = canManageAdminUsers(adminPermissions);
+  const switchableDivisions = isMasterAccess
+    ? DIVISIONS
+    : DIVISIONS.filter(
+        (division) =>
+          division === adminHomeDivision ||
+          getAdminExtraUnits(adminPermissions, adminHomeDivision ?? undefined).includes(division),
+      );
+  const canSwitchDivision = switchableDivisions.length > 1;
+  // Team users see their area (or name) instead of "Panel maestro".
+  const panelTitle = isMasterAccess ? "Panel maestro" : `Panel de ${adminArea || adminName}`;
   const showReportRecent = hasAdminExtra(adminPermissions, "reports.recent");
   const activeToolKey: AdminToolKey | null =
     activeTab === "settings"
@@ -4209,7 +4232,7 @@ export default function AdminPage() {
       : item.key === "users"
         ? canManageAdminUsers(adminPermissions)
         : item.key === "settings"
-        ? canAccessTool("settings") || canAccessTool("images")
+        ? canAccessTool("settings") || canAccessTool("images") || canAccessTool("store")
         : canAccessTool(item.key),
   );
 
@@ -4239,7 +4262,7 @@ export default function AdminPage() {
             onClick: () => openSettingsSection("colors"),
           }
         : null,
-      canAccessTool("settings")
+      canAccessTool("store")
         ? {
             key: "whatsapp" as const,
             label: "WhatsApp",
@@ -4247,7 +4270,7 @@ export default function AdminPage() {
             onClick: () => openSettingsSection("whatsapp"),
           }
         : null,
-      canAccessTool("settings") && !isServiceDivision(adminDivision)
+      canAccessTool("store") && !isServiceDivision(adminDivision)
         ? {
             key: "salesMode" as const,
             label: "Modo de venta",
@@ -4255,7 +4278,7 @@ export default function AdminPage() {
             onClick: () => openSettingsSection("salesMode"),
           }
         : null,
-      canAccessTool("settings") && MASCOT_DIVISIONS.includes(adminDivision)
+      canAccessTool("store") && MASCOT_DIVISIONS.includes(adminDivision)
         ? {
             key: "mascot" as const,
             label: "Mascota",
@@ -4323,7 +4346,7 @@ export default function AdminPage() {
                 <div>
                   <p className="flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.32em] text-[#9a9ea3]">
                     <span className="h-px w-7 bg-[#c7cacd]" />
-                    Panel maestro
+                    {panelTitle}
                   </p>
                   <h2 className="mt-2 text-xl font-semibold leading-tight tracking-[-0.02em] text-[#12161c] sm:mt-3 sm:text-[26px] md:text-3xl">
                     ¿En qué unidad de negocio quieres trabajar?
@@ -4349,7 +4372,7 @@ export default function AdminPage() {
               )}
 
               <div className="-mx-1 mt-5 grid min-h-0 gap-2.5 overflow-y-auto px-1 pb-1 sm:mt-7 sm:grid-cols-2 sm:gap-3.5 lg:grid-cols-3">
-                {DIVISIONS.map((division) => {
+                {switchableDivisions.map((division) => {
                   const brand = ADMIN_BRAND_CONFIG[division];
                   const isCurrent = division === adminDivision;
 
@@ -4488,16 +4511,16 @@ export default function AdminPage() {
                 {adminBrand.label.charAt(0)}
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-black text-[#1f2328]">Panel maestro</span>
+                <span className="block truncate text-sm font-black text-[#1f2328]">{panelTitle}</span>
                 <span className="block truncate text-xs font-semibold text-[#8b8d91]">{adminBrand.label}</span>
               </span>
             </Link>
-            {canManageAdminUsers(adminPermissions) && (
+            {canSwitchDivision && (
             <button
               type="button"
               onClick={() => {
                 setShowDivisionSwitcher(true);
-                void loadDivisionOverview();
+                if (isMasterAccess) void loadDivisionOverview();
               }}
               className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors duration-200 hover:border-[var(--admin-accent)] hover:text-[var(--admin-accent)]"
             >
@@ -4740,7 +4763,7 @@ export default function AdminPage() {
                       {adminBrand.label.charAt(0)}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-black text-[#1f2328]">Panel maestro</span>
+                      <span className="block truncate text-sm font-black text-[#1f2328]">{panelTitle}</span>
                       <span className="block truncate text-xs font-semibold text-[#8b8d91]">{adminBrand.label}</span>
                     </span>
                   </div>
@@ -4844,13 +4867,13 @@ export default function AdminPage() {
                 </nav>
 
                 <div className="space-y-2 border-t border-slate-200 p-3">
-                  {canManageAdminUsers(adminPermissions) && (
+                  {canSwitchDivision && (
                   <button
                     type="button"
                     onClick={() => {
                       setIsMobileMenuOpen(false);
                       setShowDivisionSwitcher(true);
-                      void loadDivisionOverview();
+                      if (isMasterAccess) void loadDivisionOverview();
                     }}
                     className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700"
                   >
@@ -8937,7 +8960,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === "settings" && settingsSection === "whatsapp" && canAccessTool("settings") && (
+          {activeTab === "settings" && settingsSection === "whatsapp" && canAccessTool("store") && (
             <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
               <div className="mb-8">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8b8d91]">
@@ -8990,7 +9013,7 @@ export default function AdminPage() {
 
           {activeTab === "settings" &&
             settingsSection === "salesMode" &&
-            canAccessTool("settings") &&
+            canAccessTool("store") &&
             !isServiceDivision(adminDivision) && (
               <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
                 <div className="mb-8">
@@ -9059,7 +9082,7 @@ export default function AdminPage() {
 
           {activeTab === "settings" &&
             settingsSection === "mascot" &&
-            canAccessTool("settings") &&
+            canAccessTool("store") &&
             MASCOT_DIVISIONS.includes(adminDivision) && (
               <div className="admin-fade-up rounded-[2rem] border border-black/8 bg-white p-6 shadow-[0_16px_35px_rgba(15,23,42,0.05)] md:p-8">
                 <div className="mb-8">

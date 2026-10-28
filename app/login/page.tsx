@@ -213,7 +213,9 @@ export default function LoginPage() {
             </label>
             <input
               id="email"
-              type="email"
+              type="text"
+              inputMode="email"
+              autoComplete="email"
               value={form.email}
               onChange={handleChange}
               placeholder="tu@correo.com"

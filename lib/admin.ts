@@ -3,6 +3,7 @@ import { getUserById } from "@/lib/users";
 import type { DivisionName } from "@/lib/divisions";
 import type { DashboardMetrics, SalesReport } from "@/lib/orders";
 import {
+  canEnterAdminDivision,
   canManageAdminUsers,
   hasAdminExtra,
   hasAdminPermission,
@@ -25,15 +26,30 @@ export async function requireAdminUser(permission?: AdminToolKey, level: AdminAc
     throw new Error("FORBIDDEN");
   }
 
+  const homeDivision = user.division as DivisionName;
+  const division = getActiveAdminDivision(homeDivision, user.permissions, session.division);
+
   if (
     permission &&
-    (!isToolAllowedForDivision(user.division as DivisionName, permission) ||
+    (!isToolAllowedForDivision(division, permission) ||
       !hasAdminPermission(user.permissions, permission, level))
   ) {
     throw new Error("FORBIDDEN");
   }
 
-  return { ...user, division: user.division as DivisionName };
+  return { ...user, division, homeDivision };
+}
+
+// The unit a team user is working in: the one chosen with "Cambiar de unidad"
+// (kept in the session) if it still has access to it, otherwise its own.
+export function getActiveAdminDivision(
+  home: DivisionName,
+  permissions: string[],
+  sessionDivision: DivisionName | undefined,
+): DivisionName {
+  return sessionDivision && canEnterAdminDivision(home, permissions, sessionDivision)
+    ? sessionDivision
+    : home;
 }
 
 export async function requireUserManager() {

@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       fullName?: string;
       email?: string;
+      area?: string;
       password?: string;
       permissions?: unknown;
     };

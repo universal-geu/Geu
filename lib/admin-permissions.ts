@@ -1,4 +1,4 @@
-import type { DivisionName } from "@/lib/divisions";
+import { DIVISIONS, type DivisionName } from "@/lib/divisions";
 
 export const ADMIN_TOOL_KEYS = [
   "dashboard",
@@ -12,6 +12,7 @@ export const ADMIN_TOOL_KEYS = [
   "reports",
   "images",
   "settings",
+  "store",
 ] as const;
 
 export type AdminToolKey = (typeof ADMIN_TOOL_KEYS)[number];
@@ -22,6 +23,8 @@ export type AdminAccessLevel = "view" | "edit";
 //   "<tool>"       → ver y editar (also what older accounts have stored)
 //   "<tool>:view"  → solo ver; the API rejects writes for that tool
 //   "no:<extra>"   → hides one part of a view (amounts, charts...)
+//   "unit:<Division>" → can also enter that unit's panel (besides its own
+//                    User.division) via "Cambiar de unidad", with the same tools
 // An empty permissions array means unrestricted (full) access — this keeps
 // the seeded division root admins working without needing to backfill data.
 export function hasAdminPermission(
@@ -59,8 +62,8 @@ export function hasAdminExtra(permissions: string[], extra: AdminExtraKey): bool
 // team-account management (plus quote requests for Innovation) — the rest
 // (dashboard, product CRUD, orders, reports) has nothing to show.
 const DIVISION_TOOL_RESTRICTIONS: Partial<Record<DivisionName, readonly AdminToolKey[]>> = {
-  Innovation: ["images", "settings", "quotes"],
-  GEU: ["images", "settings"],
+  Innovation: ["images", "settings", "store", "quotes"],
+  GEU: ["images", "settings", "store"],
 };
 
 export function isToolAllowedForDivision(
@@ -142,8 +145,15 @@ export const ADMIN_TOOL_OPTIONS: Record<AdminToolKey, AdminToolOption> = {
     levels: ["view", "edit"],
   },
   settings: {
-    label: "Textos y ajustes",
-    description: "Textos, colores, WhatsApp, modo de venta y mascota.",
+    label: "Textos y colores",
+    description: "Consultar o cambiar los textos y colores del sitio.",
+    levels: ["view", "edit"],
+  },
+  // Split from "settings" so content roles (diseño) don't get the WhatsApp
+  // number or the sales mode.
+  store: {
+    label: "WhatsApp y venta",
+    description: "Número de WhatsApp, modo de venta y mascota.",
     levels: ["view", "edit"],
   },
 };
@@ -154,14 +164,32 @@ export function canManageAdminUsers(permissions: string[]): boolean {
   return permissions.length === 0;
 }
 
-// Normalizes what the user form sends: drops unknown tokens, tools the
-// division doesn't have and levels the tool doesn't offer.
+// Other units a team user can enter besides its own (see "unit:" tokens).
+export function getAdminExtraUnits(permissions: string[], home?: DivisionName): DivisionName[] {
+  return DIVISIONS.filter((division) => division !== home && permissions.includes(`unit:${division}`));
+}
+
+// Units a team user can work in: its own plus the extra ones. Accounts with
+// unrestricted access switch by other means (the division root accounts).
+export function canEnterAdminDivision(
+  home: DivisionName,
+  permissions: string[],
+  target: DivisionName,
+): boolean {
+  return target === home || getAdminExtraUnits(permissions, home).includes(target);
+}
+
+// Normalizes what the user form sends: drops unknown tokens, tools none of
+// the user's units have and levels the tool doesn't offer.
 export function sanitizeAdminPermissions(
   division: DivisionName,
   permissions: unknown,
 ): string[] {
   if (!Array.isArray(permissions)) return [];
-  const tools = ADMIN_TOOL_KEYS.filter((tool) => isToolAllowedForDivision(division, tool));
+  const units = getAdminExtraUnits(permissions.filter((token) => typeof token === "string"), division);
+  const tools = ADMIN_TOOL_KEYS.filter((tool) =>
+    [division, ...units].some((unit) => isToolAllowedForDivision(unit, tool)),
+  );
   const result: string[] = [];
 
   for (const tool of tools) {
@@ -187,10 +215,10 @@ export function sanitizeAdminPermissions(
     }
   }
 
-  return result;
+  return [...result, ...units.map((unit) => `unit:${unit}`)];
 }
 
-// True when the list grants at least one tool (restriction tokens alone don't count).
+// True when the list grants at least one tool (restriction and unit tokens alone don't count).
 export function grantsAnyAdminTool(permissions: string[]): boolean {
-  return permissions.some((token) => !token.startsWith("no:"));
+  return permissions.some((token) => !token.startsWith("no:") && !token.startsWith("unit:"));
 }

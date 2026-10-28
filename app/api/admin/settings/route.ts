@@ -11,7 +11,7 @@ import {
 
 export async function GET() {
   try {
-    const admin = await requireAdminUser("settings");
+    const admin = await requireAdminUser("store");
     if (!prisma) return Response.json({ whatsappNumber: "", cauchosSalesMode: "precios", mascotEnabled: true, mascotScale: MASCOT_SCALE_DEFAULT });
     const [whatsappRow, salesModeRow, mascotRow, mascotScaleRow] = await Promise.all([
       prisma.siteSetting.findUnique({ where: { key: whatsappNumberKey(admin.division) } }),
@@ -33,7 +33,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const admin = await requireAdminUser("settings", "edit");
+    const admin = await requireAdminUser("store", "edit");
     if (!prisma) return Response.json({ error: "BD no disponible." }, { status: 503 });
 
     const body = (await request.json()) as {

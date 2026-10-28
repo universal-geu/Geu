@@ -1,6 +1,23 @@
 import { getSessionFromCookies, setSessionCookie } from "@/lib/auth";
 import { getUserById, updateUserProfile } from "@/lib/users";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getActiveAdminDivision } from "@/lib/admin";
+import type { DivisionName } from "@/lib/divisions";
+
+// Admins report the unit they're working in (it can differ from their own
+// after "Cambiar de unidad"); homeDivision stays the one they belong to.
+function withActiveDivision<T extends { role: string; division: string | null; permissions: string[] }>(
+  user: T,
+  sessionDivision: DivisionName | undefined,
+) {
+  if (user.role !== "ADMIN" || !user.division) return user;
+  const homeDivision = user.division as DivisionName;
+  return {
+    ...user,
+    homeDivision,
+    division: getActiveAdminDivision(homeDivision, user.permissions, sessionDivision),
+  };
+}
 
 export async function GET() {
   try {
@@ -16,7 +33,7 @@ export async function GET() {
       return Response.json({ error: "No autorizado." }, { status: 401 });
     }
 
-    return Response.json({ user });
+    return Response.json({ user: withActiveDivision(user, session.division) });
   } catch {
     return Response.json(
       { error: "No fue posible cargar la cuenta." },
@@ -95,15 +112,17 @@ export async function PATCH(request: Request) {
       currentPassword: body.currentPassword || undefined,
     });
 
+    const sessionUser = withActiveDivision(user, session.division);
+
     await setSessionCookie({
       userId: user.id,
       email: user.email,
       role: user.role,
-      division: user.division ?? undefined,
+      division: (sessionUser.division as DivisionName | null) ?? undefined,
     });
 
     return Response.json({
-      user,
+      user: sessionUser,
       message: "Cuenta actualizada correctamente.",
     });
   } catch (error) {
