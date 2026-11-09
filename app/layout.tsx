@@ -17,7 +17,7 @@ import { getAllCategories } from "@/lib/categories";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
 import { getCartItemsForUser } from "@/lib/cart";
-import { getAllWhatsAppNumbers, getAllSalesModes } from "@/lib/site-settings";
+import { getAllWhatsAppNumbers, getAllSalesModes, getAllPricesHidden } from "@/lib/site-settings";
 import { getLiveTextEditDivision, getSiteTexts } from "@/lib/site-texts";
 import { getLiveEditableTexts } from "@/lib/text-slots";
 import { releaseExpiredUnpaidOrdersThrottled } from "@/lib/orders";
@@ -57,12 +57,13 @@ export default async function RootLayout({
   // Structure pages don't use the catalog (see proxy.ts); the provider loads
   // it in the background if the visitor navigates to a store page.
   const catalogOmitted = requestHeaders.get(CATALOG_OMITTED_HEADER) === "1";
-  const [initialProducts, initialCategories, whatsappNumbers, salesModes, session, liveTextEditDivision] =
+  const [initialProducts, initialCategories, whatsappNumbers, salesModes, pricesHidden, session, liveTextEditDivision] =
     await Promise.all([
       catalogOmitted ? Promise.resolve([]) : getProducts(),
       getAllCategories(),
       getAllWhatsAppNumbers(),
       getAllSalesModes(),
+      getAllPricesHidden(),
       getSessionFromCookies(),
       getLiveTextEditDivision(),
     ]);
@@ -107,7 +108,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <ProductsProvider initialProducts={initialProducts} catalogOmitted={catalogOmitted}>
           <CategoriesProvider initialCategories={initialCategories}>
-            <SalesSettingsProvider salesModes={salesModes} whatsappNumbers={whatsappNumbers} siteOrigin={siteOrigin}>
+            <SalesSettingsProvider salesModes={salesModes} pricesHidden={pricesHidden} whatsappNumbers={whatsappNumbers} siteOrigin={siteOrigin}>
               <CartProvider
                 key={cartProviderKey}
                 initialItems={initialCartItems}

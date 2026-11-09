@@ -1963,6 +1963,8 @@ export default function AdminPage() {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [cauchosSalesMode, setCauchosSalesMode] = useState<CauchosSalesMode>("precios");
   const [isSavingSalesMode, setIsSavingSalesMode] = useState(false);
+  const [whatsappShowPrices, setWhatsappShowPrices] = useState(true);
+  const [isSavingShowPrices, setIsSavingShowPrices] = useState(false);
   const [mascotEnabled, setMascotEnabled] = useState(true);
   const [isSavingMascot, setIsSavingMascot] = useState(false);
   const [mascotScale, setMascotScale] = useState(MASCOT_SCALE_DEFAULT);
@@ -3710,6 +3712,7 @@ export default function AdminPage() {
       const payload = (await response.json()) as {
         whatsappNumber?: string;
         cauchosSalesMode?: CauchosSalesMode;
+        whatsappShowPrices?: boolean;
         mascotEnabled?: boolean;
         mascotScale?: number;
         error?: string;
@@ -3719,6 +3722,7 @@ export default function AdminPage() {
       }
       setWhatsappNumber(payload.whatsappNumber ?? "");
       setCauchosSalesMode(payload.cauchosSalesMode === "whatsapp" ? "whatsapp" : "precios");
+      setWhatsappShowPrices(payload.whatsappShowPrices !== false);
       setMascotEnabled(payload.mascotEnabled !== false);
       const scale = clampMascotScale(payload.mascotScale ?? MASCOT_SCALE_DEFAULT);
       setMascotScale(scale);
@@ -3782,6 +3786,35 @@ export default function AdminPage() {
       );
     } finally {
       setIsSavingSalesMode(false);
+    }
+  };
+
+  const handleToggleShowPrices = async (show: boolean) => {
+    const previous = whatsappShowPrices;
+    setWhatsappShowPrices(show);
+    setIsSavingShowPrices(true);
+    setSettingsSaved(false);
+    setSettingsError(null);
+    try {
+      const response = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ whatsappShowPrices: show }),
+      });
+      const payload = (await response.json()) as { whatsappShowPrices?: boolean; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo guardar la visibilidad de los precios.");
+      }
+      setWhatsappShowPrices(payload.whatsappShowPrices !== false);
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 2000);
+    } catch (error) {
+      setWhatsappShowPrices(previous);
+      setSettingsError(
+        error instanceof Error ? error.message : "No se pudo guardar la visibilidad de los precios.",
+      );
+    } finally {
+      setIsSavingShowPrices(false);
     }
   };
 
@@ -9022,9 +9055,10 @@ export default function AdminPage() {
                   </h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6e7379]">
                     En modo Precios, el sitio funciona como una tienda normal: los clientes agregan
-                    productos al carrito y pagan en línea. En modo WhatsApp, el precio se sigue
-                    mostrando pero el botón de compra y el carrito se reemplazan por un contacto
-                    directo por WhatsApp — útil si prefieres cerrar las ventas por chat.
+                    productos al carrito y pagan en línea. En modo WhatsApp, el botón de compra y el
+                    carrito se reemplazan por un contacto directo por WhatsApp, y puedes elegir si
+                    los precios se muestran o se ocultan — útil si prefieres cerrar las ventas por
+                    chat.
                   </p>
                 </div>
 
@@ -9070,6 +9104,38 @@ export default function AdminPage() {
                     </span>
                   </button>
                 </div>
+
+                {cauchosSalesMode === "whatsapp" && (
+                  <div className="mt-3 flex max-w-md items-center justify-between gap-6 rounded-2xl border-2 border-black/10 px-5 py-4">
+                    <div>
+                      <span className="block text-sm font-black uppercase tracking-[0.06em] text-[#16384f]">
+                        {whatsappShowPrices ? "Precios visibles" : "Precios ocultos"}
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-[#6e7379]">
+                        {whatsappShowPrices
+                          ? "Los clientes ven el precio de cada producto."
+                          : "No se muestran precios ni descuentos; el mensaje de WhatsApp va sin precio."}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={whatsappShowPrices}
+                      aria-label="Mostrar u ocultar los precios en modo WhatsApp"
+                      disabled={isSavingShowPrices || isLoadingSettings}
+                      onClick={() => void handleToggleShowPrices(!whatsappShowPrices)}
+                      className={`relative h-8 w-14 shrink-0 rounded-full transition-colors duration-200 ${
+                        whatsappShowPrices ? "bg-[#25D366]" : "bg-black/20"
+                      } ${isSavingShowPrices || isLoadingSettings ? "pointer-events-none opacity-60" : ""}`}
+                    >
+                      <span
+                        className={`absolute top-1 left-1 h-6 w-6 rounded-full bg-white shadow transition-transform duration-200 ${
+                          whatsappShowPrices ? "translate-x-6" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
 
                 {settingsSaved && (
                   <p className="mt-4 text-sm font-semibold text-[#1f6b39]">✓ Modo de venta guardado</p>

@@ -7,6 +7,7 @@ import { cauchosCategorySubcategories, slugify } from "../data/catalog";
 import CauchosAddToCartButton from "./cauchos-add-to-cart-button";
 import CauchosHeader from "./cauchos-header";
 import { useProducts } from "./products-provider";
+import { useSalesSettings } from "./sales-settings-provider";
 import { useCategories } from "./categories-provider";
 import { useSiteImageData } from "./use-site-images";
 import { resolveImage } from "@/lib/image-slots";
@@ -98,6 +99,7 @@ export default function CauchosCategoryProductsPage({
   division = "Cauchos",
 }: Props) {
   const { products } = useProducts();
+  const pricesHidden = useSalesSettings().pricesHidden[division] === true;
   const { getCategoryNamesForDivision } = useCategories();
   const { images: siteImages, links: siteImageLinks } = useSiteImageData();
   const sidebarOffers = SIDEBAR_OFFERS[division] ?? [];
@@ -580,6 +582,7 @@ export default function CauchosCategoryProductsPage({
                 </div>
               </div>
 
+              {!pricesHidden && (
               <div className="px-5 py-5">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-600">
                   Rango de precio
@@ -626,6 +629,7 @@ export default function CauchosCategoryProductsPage({
                   Restablecer rango
                 </button>
               </div>
+              )}
               </aside>
 
               {sidebarOffer && siteImagesLoaded ? (
@@ -670,8 +674,8 @@ export default function CauchosCategoryProductsPage({
                     className="h-10 rounded-full border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 outline-none focus:border-[var(--brand-accent)]"
                   >
                     <option value="relevance">Relevancia</option>
-                    <option value="price-asc">Menor precio</option>
-                    <option value="price-desc">Mayor precio</option>
+                    {!pricesHidden && <option value="price-asc">Menor precio</option>}
+                    {!pricesHidden && <option value="price-desc">Mayor precio</option>}
                     <option value="name">Nombre A-Z</option>
                   </select>
                 </label>
@@ -701,9 +705,11 @@ export default function CauchosCategoryProductsPage({
                       sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, 50vw"
                       className="object-contain p-2 transition duration-500 group-hover:scale-105 sm:p-4"
                     />
-                    <span className="absolute left-2 top-2 rounded-[4px] bg-[#e4002b] px-2 py-1 text-[10px] font-black sm:left-3 sm:top-3 sm:px-2.5 sm:py-1.5 sm:text-xs text-white shadow-[0_10px_22px_rgba(228,0,43,0.24)]">
+                    {!pricesHidden && (
+                      <span className="absolute left-2 top-2 rounded-[4px] bg-[#e4002b] px-2 py-1 text-[10px] font-black sm:left-3 sm:top-3 sm:px-2.5 sm:py-1.5 sm:text-xs text-white shadow-[0_10px_22px_rgba(228,0,43,0.24)]">
                       {product.descuento}
                     </span>
+                    )}
                     <span className="absolute bottom-3 right-3 hidden rounded-full bg-white/92 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--brand-accent)] shadow-sm sm:block">
                       Industrial
                     </span>
@@ -724,6 +730,9 @@ export default function CauchosCategoryProductsPage({
                     <span className="mt-2 inline-flex w-fit rounded-full bg-[#eef5ff] px-2 py-0.5 text-[10px] font-black text-slate-600 sm:mt-3 sm:px-3 sm:py-1 sm:text-xs">
                       {product.disponibilidad}
                     </span>
+                    {pricesHidden ? (
+                      <div className="mt-auto" />
+                    ) : (
                     <div className="mt-auto border-t border-slate-100 pt-3 sm:pt-5">
                       <span className="block text-xs font-bold text-slate-400 line-through decoration-[#e4002b]/50">
                         {product.precioAnterior}
@@ -732,6 +741,7 @@ export default function CauchosCategoryProductsPage({
                         {product.precio}
                       </span>
                     </div>
+                    )}
                     <CauchosAddToCartButton
                       id={product.slug}
                       slug={product.slug}

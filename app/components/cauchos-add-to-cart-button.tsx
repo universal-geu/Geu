@@ -49,7 +49,7 @@ export default function CauchosAddToCartButton({
   compact = false,
 }: Props) {
   const { addItem } = useCart();
-  const { salesModes, whatsappNumbers, siteOrigin } = useSalesSettings();
+  const { salesModes, pricesHidden, whatsappNumbers, siteOrigin } = useSalesSettings();
   const [added, setAdded] = useState(false);
 
   const whatsappModeActive = salesModes[division] === "whatsapp";
@@ -59,7 +59,7 @@ export default function CauchosAddToCartButton({
 
   if (whatsappModeActive) {
     const productLink = siteOrigin ? `${siteOrigin}${productHref(slug, division)}` : null;
-    const message = `Hola GEU, quiero comprar: ${nombre}${sku ? ` (SKU: ${sku})` : ""} (x${cantidad}). Precio: ${precio}.${productLink ? ` Ver producto: ${productLink}` : ""}`;
+    const message = `Hola GEU, quiero comprar: ${nombre}${sku ? ` (SKU: ${sku})` : ""} (x${cantidad}).${pricesHidden[division] ? "" : ` Precio: ${precio}.`}${productLink ? ` Ver producto: ${productLink}` : ""}`;
     const whatsappNumber = whatsappNumbers[division];
     const href = whatsappNumber
       ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`

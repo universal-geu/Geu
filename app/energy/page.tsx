@@ -10,7 +10,7 @@ import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
-import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
+import { getAllPricesHidden, getWhatsAppNumberForDivision } from "@/lib/site-settings";
 import { getCategoriesForDivision } from "@/lib/categories";
 import { getProducts, productSellsInDivision } from "@/lib/products";
 import { productHref } from "@/lib/divisions";
@@ -33,6 +33,7 @@ const energyFeatured = [
 ];
 
 export default async function EnergyPage() {
+  const pricesHidden = (await getAllPricesHidden()).Energy;
   // Independent reads — fetch them together instead of paying for six
   // sequential round trips to a remote DB on every page load.
   const [siteImages, siteImageLinks, siteTexts, whatsappNumber, allProducts, energyCategoryRecords] =
@@ -183,9 +184,11 @@ export default async function EnergyPage() {
                       backgroundRepeat: "no-repeat",
                     }}
                   >
-                    <span className="absolute left-3 top-3 rounded-[4px] bg-[#d4a900] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(212,169,0,0.24)]">
+                    {!pricesHidden && (
+                      <span className="absolute left-3 top-3 rounded-[4px] bg-[#d4a900] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(212,169,0,0.24)]">
                       {product.descuento}
                     </span>
+                    )}
                     <span className="absolute bottom-3 right-3 rounded-full bg-white/92 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#b38f00] shadow-sm">
                       Energy
                     </span>
@@ -206,6 +209,9 @@ export default async function EnergyPage() {
                     <span className="mt-3 inline-flex w-fit rounded-full bg-[#fff9e5] px-3 py-1 text-xs font-black text-slate-600">
                       {product.disponibilidad}
                     </span>
+                    {pricesHidden ? (
+                      <span className="mt-auto" />
+                    ) : (
                     <span className="mt-auto border-t border-slate-100 pt-5">
                       <span className="block text-xs font-bold text-slate-400 line-through decoration-[#d4a900]/50">
                         {product.precioAnterior}
@@ -214,6 +220,7 @@ export default async function EnergyPage() {
                         {product.precio}
                       </span>
                     </span>
+                    )}
                     <CauchosAddToCartButton
                       id={product.slug}
                       slug={product.slug}

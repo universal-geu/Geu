@@ -5,6 +5,7 @@ import {
   mascotEnabledKey,
   mascotScaleKey,
   salesModeKey,
+  showPricesKey,
   whatsappNumberKey,
   type CauchosSalesMode,
 } from "@/lib/site-settings";
@@ -12,16 +13,18 @@ import {
 export async function GET() {
   try {
     const admin = await requireAdminUser("store");
-    if (!prisma) return Response.json({ whatsappNumber: "", cauchosSalesMode: "precios", mascotEnabled: true, mascotScale: MASCOT_SCALE_DEFAULT });
-    const [whatsappRow, salesModeRow, mascotRow, mascotScaleRow] = await Promise.all([
+    if (!prisma) return Response.json({ whatsappNumber: "", cauchosSalesMode: "precios", whatsappShowPrices: true, mascotEnabled: true, mascotScale: MASCOT_SCALE_DEFAULT });
+    const [whatsappRow, salesModeRow, showPricesRow, mascotRow, mascotScaleRow] = await Promise.all([
       prisma.siteSetting.findUnique({ where: { key: whatsappNumberKey(admin.division) } }),
       prisma.siteSetting.findUnique({ where: { key: salesModeKey(admin.division) } }),
+      prisma.siteSetting.findUnique({ where: { key: showPricesKey(admin.division) } }),
       prisma.siteSetting.findUnique({ where: { key: mascotEnabledKey(admin.division) } }),
       prisma.siteSetting.findUnique({ where: { key: mascotScaleKey(admin.division) } }),
     ]);
     return Response.json({
       whatsappNumber: whatsappRow?.value ?? "",
       cauchosSalesMode: salesModeRow?.value === "whatsapp" ? "whatsapp" : "precios",
+      whatsappShowPrices: showPricesRow?.value !== "false",
       mascotEnabled: mascotRow?.value !== "false",
       mascotScale: mascotScaleRow ? clampMascotScale(Number(mascotScaleRow.value)) : MASCOT_SCALE_DEFAULT,
     });
@@ -39,6 +42,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       whatsappNumber?: string;
       cauchosSalesMode?: CauchosSalesMode;
+      whatsappShowPrices?: boolean;
       mascotEnabled?: boolean;
       mascotScale?: number;
     };
@@ -77,6 +81,21 @@ export async function POST(request: Request) {
         create: { key, value },
       });
       return Response.json({ mascotEnabled: setting.value !== "false" });
+    }
+
+    if (body.whatsappShowPrices !== undefined) {
+      if (typeof body.whatsappShowPrices !== "boolean") {
+        return Response.json({ error: "Valor inválido." }, { status: 400 });
+      }
+
+      const key = showPricesKey(admin.division);
+      const value = body.whatsappShowPrices ? "true" : "false";
+      const setting = await prisma.siteSetting.upsert({
+        where: { key },
+        update: { value },
+        create: { key, value },
+      });
+      return Response.json({ whatsappShowPrices: setting.value !== "false" });
     }
 
     if (body.cauchosSalesMode !== undefined) {

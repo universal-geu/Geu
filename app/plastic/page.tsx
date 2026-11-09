@@ -10,7 +10,7 @@ import SiteFooter from "../components/site-footer";
 import { getSiteImageLinks, getSiteImages, resolveImage, resolveLink } from "@/lib/site-images";
 import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
-import { getWhatsAppNumberForDivision } from "@/lib/site-settings";
+import { getAllPricesHidden, getWhatsAppNumberForDivision } from "@/lib/site-settings";
 import { getCategoriesForDivision } from "@/lib/categories";
 import { getProducts, productSellsInDivision } from "@/lib/products";
 import { productHref } from "@/lib/divisions";
@@ -49,6 +49,7 @@ const plasticFeatured = [
 ];
 
 export default async function PlasticPage() {
+  const pricesHidden = (await getAllPricesHidden()).Plastic;
   // Independent reads — fetch them together instead of paying for six
   // sequential round trips to a remote DB on every page load.
   const [siteImages, siteImageLinks, siteTexts, whatsappNumber, allProducts, plasticCategoryRecords] =
@@ -192,9 +193,11 @@ export default async function PlasticPage() {
                       backgroundRepeat: "no-repeat",
                     }}
                   >
-                    <span className="absolute left-3 top-3 rounded-[4px] bg-[#6b7280] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(107,114,128,0.24)]">
+                    {!pricesHidden && (
+                      <span className="absolute left-3 top-3 rounded-[4px] bg-[#6b7280] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(107,114,128,0.24)]">
                       {product.descuento}
                     </span>
+                    )}
                     <span className="absolute bottom-3 right-3 rounded-full bg-white/92 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#6b7280] shadow-sm">
                       Técnico
                     </span>
@@ -215,6 +218,9 @@ export default async function PlasticPage() {
                     <span className="mt-3 inline-flex w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
                       {product.disponibilidad}
                     </span>
+                    {pricesHidden ? (
+                      <span className="mt-auto" />
+                    ) : (
                     <span className="mt-auto border-t border-slate-100 pt-5">
                       <span className="block text-xs font-bold text-slate-400 line-through decoration-[#6b7280]/50">
                         {product.precioAnterior}
@@ -223,6 +229,7 @@ export default async function PlasticPage() {
                         {product.precio}
                       </span>
                     </span>
+                    )}
                     <CauchosAddToCartButton
                       id={product.slug}
                       slug={product.slug}

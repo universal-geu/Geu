@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import CauchosAddToCartButton from "../../components/cauchos-add-to-cart-button";
+import { useSalesSettings } from "@/app/components/sales-settings-provider";
 import CauchosHeader from "../../components/cauchos-header";
 import { useProducts } from "../../components/products-provider";
 import { FALLBACK_PRODUCT_IMAGE } from "../../components/cauchos-category-products-page";
@@ -304,6 +305,7 @@ export default function ProductoDetallePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [producto?.slug]);
 
+  const { pricesHidden: pricesHiddenByDivision } = useSalesSettings();
   const hasVariants = Boolean(producto?.variantes?.length);
   const selectedVariant = hasVariants
     ? producto?.variantes?.find((variante) => variante.sku === selectedVariantSku) ?? null
@@ -387,6 +389,7 @@ export default function ProductoDetallePage() {
       ? requestedDivision
       : producto.division ?? "Cauchos";
   const cartAccent = CART_ACCENT[productDivision];
+  const pricesHidden = pricesHiddenByDivision[productDivision] === true;
   const isRed = cartAccent === "red";
   const accentTextClass = ACCENT_TEXT_CLASS[cartAccent];
   const isService = isServiceDivision(productDivision);
@@ -527,12 +530,16 @@ export default function ProductoDetallePage() {
             </div>
 
             <div>
+              {!pricesHidden && (
+              <>
               <p className={`text-xs font-bold text-slate-400 line-through ${ACCENT_DECORATION_CLASS[cartAccent]}`}>
                 {producto.precioAnterior}
               </p>
               <p className="mt-1 text-4xl font-black tracking-[-0.02em] text-slate-950">
                 {displayPrecio}
               </p>
+              </>
+              )}
               {!isService && (
                 <p className="mt-3 text-sm font-bold text-slate-500">
                   Stock disponible: {(hasVariants ? selectedVariant?.stock : producto.stock) ?? 0}
@@ -600,7 +607,7 @@ export default function ProductoDetallePage() {
                           >
                             <span className="flex items-baseline gap-2">
                               <span>{variante.medida}</span>
-                              {variante.precio && (
+                              {variante.precio && !pricesHidden && (
                                 <span className="text-xs font-semibold text-slate-400">
                                   {variante.precio}
                                 </span>
@@ -721,9 +728,11 @@ export default function ProductoDetallePage() {
                   </h3>
                 </div>
 
-                <p className="text-2xl font-black text-slate-950">
+                {!pricesHidden && (
+                  <p className="text-2xl font-black text-slate-950">
                   {item.precio}
                 </p>
+                )}
 
                 <Link
                   href={productHref(item.slug, productDivision)}

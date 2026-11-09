@@ -13,6 +13,7 @@ import { isVideoUrl } from "@/lib/image-slots";
 import { getSiteTexts, resolveText } from "@/lib/site-texts";
 import { getCategoriesForDivision } from "@/lib/categories";
 import { getProducts, productSellsInDivision } from "@/lib/products";
+import { getAllPricesHidden } from "@/lib/site-settings";
 import { productHref } from "@/lib/divisions";
 import { slugify } from "../data/catalog";
 
@@ -65,6 +66,7 @@ const featuredBrands = [
 ];
 
 export default async function CauchosPage() {
+  const pricesHidden = (await getAllPricesHidden()).Cauchos;
   // Independent reads — fetch them together instead of paying for five
   // sequential round trips to a remote DB on every page load.
   const [siteImages, siteImageLinks, siteTexts, cauchosCategoryRecords, allProducts] = await Promise.all([
@@ -215,9 +217,11 @@ export default async function CauchosPage() {
                         backgroundRepeat: "no-repeat",
                       }}
                     >
-                      <span className="absolute left-3 top-3 rounded-[4px] bg-[#e4002b] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(228,0,43,0.24)]">
+                      {!pricesHidden && (
+                        <span className="absolute left-3 top-3 rounded-[4px] bg-[#e4002b] px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(228,0,43,0.24)]">
                         {product.descuento}
                       </span>
+                      )}
                       <span className="absolute bottom-3 right-3 rounded-full bg-white/92 px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#075ed8] shadow-sm">
                         Industrial
                       </span>
@@ -238,6 +242,9 @@ export default async function CauchosPage() {
                       <span className="mt-3 inline-flex w-fit rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-black text-slate-600">
                         {product.disponibilidad}
                       </span>
+                      {pricesHidden ? (
+                        <span className="mt-auto" />
+                      ) : (
                       <span className="mt-auto border-t border-slate-100 pt-5">
                         <span className="block text-xs font-bold text-slate-400 line-through decoration-[#e4002b]/50">
                           {product.precioAnterior}
@@ -246,6 +253,7 @@ export default async function CauchosPage() {
                           {product.precio}
                         </span>
                       </span>
+                      )}
                       <CauchosAddToCartButton
                         id={product.slug}
                         slug={product.slug}

@@ -26,6 +26,11 @@ export async function getMascotEnabledForDivision(division: DivisionName): Promi
   return (await getSiteSetting(mascotEnabledKey(division))) !== "false";
 }
 
+/** Only matters in WhatsApp mode; prices stay visible unless explicitly turned off. */
+export function showPricesKey(division: DivisionName): string {
+  return `show-prices-${division.toLowerCase()}`;
+}
+
 export function whatsappNumberKey(division: DivisionName): string {
   return `whatsapp-number-${division.toLowerCase()}`;
 }
@@ -110,5 +115,33 @@ export const getAllSalesModes = cache(async function getAllSalesModes(): Promise
     ) as Record<DivisionName, CauchosSalesMode>;
   } catch {
     return empty;
+  }
+});
+
+/** Divisions whose storefront hides prices: WhatsApp mode with prices turned off. */
+export const getAllPricesHidden = cache(async function getAllPricesHidden(): Promise<
+  Record<DivisionName, boolean>
+> {
+  const none = Object.fromEntries(DIVISIONS.map((division) => [division, false])) as Record<
+    DivisionName,
+    boolean
+  >;
+  if (!prisma) return none;
+
+  try {
+    const [salesModes, rows] = await Promise.all([
+      getAllSalesModes(),
+      prisma.siteSetting.findMany({ where: { key: { in: DIVISIONS.map(showPricesKey) } } }),
+    ]);
+    const byKey = new Map(rows.map((row) => [row.key, row.value.trim()]));
+
+    return Object.fromEntries(
+      DIVISIONS.map((division) => [
+        division,
+        salesModes[division] === "whatsapp" && byKey.get(showPricesKey(division)) === "false",
+      ]),
+    ) as Record<DivisionName, boolean>;
+  } catch {
+    return none;
   }
 });
